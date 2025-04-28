@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root{
-    --primary: #0e0e0e;
+    --primary: #f5fbff;
     --secondary: #ffffff;
     --poppins: "Poppins", sans-serif;
     --inter:  "Inter", sans-serif;
