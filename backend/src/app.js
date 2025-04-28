@@ -1,10 +1,19 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const itemRoutes = require('./route/itemRoutes');
+
 const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static('public'));
+
+const connectionString = process.env.MONGODB_URI;
 
 async function databaseConnection() {
     try {
-        await mongoose.connect("mongodb+srv://ocraksa:MyMongo123@cluster0.xdar3x8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
+        await mongoose.connect(connectionString, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
@@ -14,13 +23,8 @@ async function databaseConnection() {
     }
 }
 
-// Call the function to connect to the database
 databaseConnection();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(express.static('public'));
+app.use("/", itemRoutes);
 
-app.listen(3000, () => {
-    console.log('Server started on port 3000');
-});
+module.exports = app;
