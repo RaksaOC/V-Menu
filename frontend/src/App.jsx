@@ -1,8 +1,8 @@
 import './App.css'
 import Items from './pages/Items';
 import Cart from './pages/Cart';
-import {Link,  Routes, Route} from 'react-router';
-
+import {Routes, Route} from 'react-router'
+import {ToastContainer} from "react-toastify";
 
 
 function App() {
@@ -14,6 +14,18 @@ function App() {
                 <Route path="/" element={<Items/>}/>
                 <Route path="/cart" element={<Cart/>}/>
             </Routes>
+            <ToastContainer
+                position="top-center"
+                autoClose={1000}
+                hideProgressBar
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss={false}
+                draggable={false}
+                pauseOnHover={false}
+                theme="light"
+            />
         </>
     )
 }

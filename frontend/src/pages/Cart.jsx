@@ -60,30 +60,34 @@ export default function Cart() {
                          className="bg-white rounded-xl shadow-md flex items-center p-4 gap-4 flex-wrap justify-center md:justify-between">
                         <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg"/>
                         <div className="flex-1">
-                            <h2 className="font-semibold text-lg">{item.name}</h2>
+                            <h2 className="font-semibold text-s">{item.name}</h2>
                             <p className="text-gray-600">${(item.price * item.quantity).toFixed(2)}</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => decreaseQuantity(index)}
-                                className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-1 px-3 rounded"
+                                className="bg-gray-300 hover:bg-gray-400 text-black text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center"
                             >
                                 -
                             </button>
-                            <span className="font-semibold">{item.quantity}</span>
+
+                            <span className="font-semibold text-base w-6 text-center">{item.quantity}</span>
+
                             <button
                                 onClick={() => increaseQuantity(index)}
-                                className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-1 px-3 rounded"
+                                className="bg-gray-300 hover:bg-gray-400 text-black text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center"
                             >
                                 +
                             </button>
+
                             <button
                                 onClick={() => removeItem(index)}
-                                className="text-red-500 hover:text-red-700 font-bold ml-2"
+                                className="ml-2 w-8 h-8 flex items-center justify-center"
                             >
-                                ✕
+                                 <img src="src/assets/delete.svg" alt="Delete" className="w-5 h-5 invert"/>
                             </button>
                         </div>
+
                     </div>
                 ))}
             </div>

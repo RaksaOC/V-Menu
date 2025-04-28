@@ -21,7 +21,10 @@ function Items() {
 
     return (
         <>
-            <div className="items-wrapper max-w-[1024px] mx-auto p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <header className="header p-2.5">
+                <p className={"text-center text-black text-3xl"}>LOGO</p>
+            </header>
+            <div className="items-wrapper max-w-[1024px] mx-auto p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-24">
                 {items.map(item => (
                     <Card key={item._id} id={item._id} name={item.name} image={item.image} price={item.price}/>
                 ))}
