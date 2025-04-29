@@ -1,5 +1,7 @@
 import {useState, useEffect} from "react";
 import {Link} from "react-router";
+import {toast} from "react-toastify";
+import axios from "axios";
 
 export default function Cart() {
     const [cartItems, setCartItems] = useState([]);
@@ -35,15 +37,36 @@ export default function Cart() {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     function placeOrder() {
-        alert('Order placed successfully!');
-        setCartItems([]);
-        localStorage.removeItem("cartItems");
+
+        axios.post("http://localhost:3000/order", {table: "1", orders: cartItems}).then((res) => {
+            if (!res.ok) {
+                console.log("An Error occured");
+            }
+            console.log(res);
+        });
+
+        toast.success("Order has been placed!", {
+            position: "top-center",  // mobile-friendly placement
+            autoClose: 1000,            // close after 2 seconds
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: false,
+            draggable: false,
+            theme: "light",             // you can also use "dark" if you prefer
+        });
+        setTimeout(() => {
+            setCartItems([]);
+            localStorage.removeItem("cartItems");
+            window.location.href = "/";
+        }, 1000);
+
+
     }
 
     return (
         <div className="relative min-h-screen p-4 pb-32 bg-gray-100 flex flex-col justify-start items-center">
             <div className={"header-wrapper w-full"}>
-                <div className="header justify-between flex flex-row w-full w-full items-center md:max-w-[50%]">
+                <div className="header justify-between flex flex-row w-full items-center md:max-w-[50%]">
                     <Link
                         to={"/"}
                         className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl h-[40px]"
@@ -84,10 +107,9 @@ export default function Cart() {
                                 onClick={() => removeItem(index)}
                                 className="ml-2 w-8 h-8 flex items-center justify-center"
                             >
-                                 <img src="src/assets/delete.svg" alt="Delete" className="w-5 h-5 invert"/>
+                                <img src="src/assets/delete.svg" alt="Delete" className="w-5 h-5 invert"/>
                             </button>
                         </div>
-
                     </div>
                 ))}
             </div>
