@@ -37,8 +37,22 @@ export default function Cart() {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     function placeOrder() {
-
-        axios.post("http://localhost:3000/order", {table: "1", orders: cartItems}).then((res) => {
+        if (!cartItems.length) {
+            toast.error("No items in cart!", {
+                position: "top-center",  // mobile-friendly placement
+                autoClose: 1000,            // close after 2 seconds
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+                theme: "light",             // you can also use "dark" if you prefer
+            });
+            return;
+        }
+        axios.post("http://localhost:3000/order", {
+            table: `${localStorage.getItem("tableId")}`,
+            orders: cartItems
+        }).then((res) => {
             if (!res.ok) {
                 console.log("An Error occured");
             }
@@ -57,8 +71,9 @@ export default function Cart() {
         setTimeout(() => {
             setCartItems([]);
             localStorage.removeItem("cartItems");
-            window.location.href = "/";
+            window.location.href = `/items/${localStorage.getItem("tableId")}`;
         }, 1000);
+
 
 
     }
@@ -68,7 +83,7 @@ export default function Cart() {
             <div className={"header-wrapper w-full"}>
                 <div className="header justify-between flex flex-row w-full items-center md:max-w-[50%]">
                     <Link
-                        to={"/"}
+                        to={`/items/${localStorage.getItem("tableId")}`}
                         className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl h-[40px]"
                     >
                         Go Back
@@ -78,40 +93,47 @@ export default function Cart() {
             </div>
 
             <div className="flex flex-col gap-4 w-[98%] mt-14">
-                {cartItems.map((item, index) => (
-                    <div key={index}
-                         className="bg-white rounded-xl shadow-md flex items-center p-4 gap-4 flex-wrap justify-center md:justify-between">
-                        <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg"/>
-                        <div className="flex-1">
-                            <h2 className="font-semibold text-s">{item.name}</h2>
-                            <p className="text-gray-600">${(item.price * item.quantity).toFixed(2)}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => decreaseQuantity(index)}
-                                className="bg-gray-300 hover:bg-gray-400 text-black text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center"
-                            >
-                                -
-                            </button>
+                {
+                    cartItems.length > 0 ?
+                        cartItems.map((item, index) => (
+                                <div key={index}
+                                     className="bg-white rounded-xl shadow-md flex items-center p-4 gap-4 flex-wrap justify-center md:justify-between">
+                                    <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg"/>
+                                    <div className="flex-1">
+                                        <h2 className="font-semibold text-s">{item.name}</h2>
+                                        <p className="text-gray-600">${(item.price * item.quantity).toFixed(2)}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => decreaseQuantity(index)}
+                                            className="bg-gray-300 hover:bg-gray-400 text-black text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center"
+                                        >
+                                            -
+                                        </button>
 
-                            <span className="font-semibold text-base w-6 text-center">{item.quantity}</span>
+                                        <span className="font-semibold text-base w-6 text-center">{item.quantity}</span>
 
-                            <button
-                                onClick={() => increaseQuantity(index)}
-                                className="bg-gray-300 hover:bg-gray-400 text-black text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center"
-                            >
-                                +
-                            </button>
+                                        <button
+                                            onClick={() => increaseQuantity(index)}
+                                            className="bg-gray-300 hover:bg-gray-400 text-black text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center"
+                                        >
+                                            +
+                                        </button>
 
-                            <button
-                                onClick={() => removeItem(index)}
-                                className="ml-2 w-8 h-8 flex items-center justify-center"
-                            >
-                                <img src="src/assets/delete.svg" alt="Delete" className="w-5 h-5 invert"/>
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                                        <button
+                                            onClick={() => removeItem(index)}
+                                            className="ml-2 w-8 h-8 flex items-center justify-center cursor-pointer"
+                                        >
+                                            <img src="/src/assets/delete.svg" alt="Delete" className="w-5 h-5 invert"/>
+                                        </button>
+                                    </div>
+                                </div>
+                            )
+                        )
+                        :
+                        <h1 className={"mt-[40vh] text-4xl text-center"}>Cart is Empty</h1>
+                }
+
             </div>
 
             {/* Fixed bottom bar */}

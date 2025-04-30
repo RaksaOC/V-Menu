@@ -23,7 +23,7 @@ function Card({orderId, table, orders, onDone}) {
                             />
                             <span className="text-gray-800">{item.name}</span>
                         </div>
-                        <p className="text-sm text-gray-600">x{item.quantity}</p>
+                        <p className="text-m font-bold text-gray-600">x{item.quantity}</p>
                     </div>
                 ))}
             </div>

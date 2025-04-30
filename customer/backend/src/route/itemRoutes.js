@@ -3,6 +3,6 @@ const getItems = require('../controller/itemController');
 
 const router = express.Router();
 
-router.get("/items", getItems);
+router.get("/:id", getItems);
 
 module.exports = router;

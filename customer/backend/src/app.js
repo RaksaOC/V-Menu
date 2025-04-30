@@ -28,7 +28,7 @@ async function databaseConnection() {
 
 databaseConnection();
 
-app.use("/", itemRoutes);
-app.use("/", orderRoutes);
+app.use("/items", itemRoutes);
+app.use("/order", orderRoutes);
 
 module.exports = app;

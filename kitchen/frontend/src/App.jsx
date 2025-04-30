@@ -99,7 +99,7 @@ function App() {
                         onDone={handleOnDone}
                     />
                 )) : (
-                    <h1 className={"mt-[50vh] text-5xl text-center"}>No Orders To Display</h1>
+                    <h1 className={"mt-[50vh] text-4xl text-center"}>No Orders To Display</h1>
                 )}
             </div>
         </>

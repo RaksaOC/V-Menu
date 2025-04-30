@@ -6,26 +6,16 @@ import {ToastContainer} from "react-toastify";
 
 
 function App() {
-
-    localStorage.clear()
+    const pathParts = window.location.pathname.split("/");
+    const tableId = pathParts[pathParts.length - 1];
+    localStorage.setItem("tableId", tableId);
     return (
         <>
             <Routes>
-                <Route path="/" element={<Items/>}/>
+                <Route path= {`/items/${tableId}`} element={<Items/>}/>
                 <Route path="/cart" element={<Cart/>}/>
             </Routes>
-            <ToastContainer
-                position="top-center"
-                autoClose={1000}
-                hideProgressBar
-                newestOnTop={true}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss={false}
-                draggable={false}
-                pauseOnHover={false}
-                theme="light"
-            />
+            <ToastContainer/>
         </>
     )
 }
