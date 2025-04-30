@@ -4,6 +4,7 @@ const saveOrder = async (req, res) => {
     const newOrder = new Order({
         table: req.body.table,
         orders: req.body.orders,
+        isDone: false
     });
     newOrder.save().then(result => {
         console.log(result + "has been saved");

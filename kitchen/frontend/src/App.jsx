@@ -1,14 +1,19 @@
 import './App.css';
 import {useEffect, useState} from "react";
-import {ToastContainer} from "react-toastify";
+import {toast, ToastContainer} from "react-toastify";
 import Card from "./components/Card.jsx";
 import axios from "axios";
 
 async function getAllOrders() {
     const response = await axios.get("http://localhost:3001/");
-    return response.data;
+    return response.data.filter(order => order.isDone === false);
 }
 
+async function markOrderAsDone(order) {
+    order.isDone = true;
+    const response = await axios.put("http://localhost:3001/", order);
+    return response.data;
+}
 
 function App() {
     const [orders, setOrders] = useState([]);
@@ -21,11 +26,35 @@ function App() {
         });
     }, []);
 
-    const handleOnDone = (orderId) => {
-        const filteredOrders = orders.filter(order => order._id !== orderId);
-        setOrders(filteredOrders);
-    };
+    const handleOnDone = async (orderId) => {
+        try {
+            const orderToUpdate = orders.find(order => order._id === orderId);
+            if (!orderToUpdate) {
+                console.error("Order not found.");
+                return;
+            }
 
+            const updatedOrder = await markOrderAsDone(orderToUpdate);
+            if (updatedOrder) {
+                setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+
+                toast.success("Order has been completed!", {
+                    position: "top-center",
+                    autoClose: 1000,
+                    hideProgressBar: true,
+                    closeOnClick: true,
+                    pauseOnHover: false,
+                    draggable: false,
+                    theme: "light",
+                });
+            } else {
+                console.error("Failed to update the order.");
+            }
+
+        } catch (error) {
+            console.error("Failed to update order:", error);
+        }
+    };
 
     return (
         <>
@@ -36,11 +65,11 @@ function App() {
                             key={order._id}
                             orderId={order._id}
                             table={order.table}
-                            orders={order.orders} // this is a sub-array of items in one order
+                            orders={order.orders}
                             onDone={handleOnDone}
                         />
                     )) :
-                    <h1 className={"mt-[50vh] text-5xl"}>No Orders To Display</h1>
+                    <h1 className={"mt-[50vh] text-5xl text-center"}>No Orders To Display</h1>
                 }
             </div>
         </>

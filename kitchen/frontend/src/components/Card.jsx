@@ -1,4 +1,4 @@
-import {toast} from "react-toastify";
+
 
 function Card({orderId, table, orders, onDone}) {
     return (
@@ -31,15 +31,6 @@ function Card({orderId, table, orders, onDone}) {
             <button
                 onClick={() => {
                     onDone(orderId)
-                    toast.success("Order has been completed!", {
-                        position: "top-center",  // mobile-friendly placement
-                        autoClose: 1000,            // close after 2 seconds
-                        hideProgressBar: true,
-                        closeOnClick: true,
-                        pauseOnHover: false,
-                        draggable: false,
-                        theme: "light",             // you can also use "dark" if you prefer
-                    });
                 }}
                 className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-200 cursor-pointer"
             >
