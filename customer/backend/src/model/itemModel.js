@@ -10,6 +10,10 @@ const itemSchema = new mongoose.Schema({
         required: true,
     },
     image: String,
+    isEnabled: {
+        type: Boolean,
+        required: true,
+    }
 });
 
 const item = mongoose.model("Item", itemSchema);

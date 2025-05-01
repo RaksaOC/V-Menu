@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const orderRoutes = require('./route/orderRoutes');
+const menuRoutes = require('./route/menuRoutes');
 
 const app = express();
 
@@ -27,6 +28,7 @@ async function databaseConnection() {
 
 databaseConnection();
 
+app.use("/menu", menuRoutes);
 app.use("/order", orderRoutes);
 
 module.exports = app;

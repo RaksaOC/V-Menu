@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import Table from "./Table.jsx";
+import {toast} from "react-toastify";
 
 export default function Tables() {
     const [tables, setTables] = useState([]);
@@ -24,10 +25,19 @@ export default function Tables() {
                     onToggleStatus={(id) => {
                         const updatedTables = tables.map((t) =>
                             t.id === id
-                                ? { ...t, status: t.status === "open" ? "closed" : "open" }
+                                ? {...t, status: t.status === "open" ? "closed" : "open"}
                                 : t
                         );
                         setTables(updatedTables);
+                        toast.info("Table updated!", {
+                            position: "top-center",
+                            autoClose: 1000,
+                            hideProgressBar: true,
+                            closeOnClick: true,
+                            pauseOnHover: false,
+                            draggable: false,
+                            theme: "light",
+                        });
                     }}
                 />
             ))}

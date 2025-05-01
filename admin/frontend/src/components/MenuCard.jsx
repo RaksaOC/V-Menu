@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { toast } from "react-toastify";
+import {useEffect, useState} from "react";
+import {toast} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { MoreVertical } from "lucide-react";
+import {MoreVertical} from "lucide-react";
+import axios from "axios";
 
-const MenuCard = ({ id, name, price, image }) => {
-    const [enabled, setEnabled] = useState(true);
+const MenuCard = ({id, name, price, image, isAvailable, onToggle}) => {
+    const [enabled, setEnabled] = useState(isAvailable);
 
     const handleToggle = () => {
         setEnabled(!enabled);
@@ -19,24 +20,32 @@ const MenuCard = ({ id, name, price, image }) => {
         });
     };
 
+
     return (
-        <div className="relative max-w-full rounded-2xl overflow-hidden shadow-md bg-white dark:bg-zinc-800 hover:scale-[1.02] transition-transform duration-300">
-            <img className="w-full h-48 object-cover" src={image} alt={name} />
+        <div
+            className="w-full max-w-xs rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden bg-white dark:bg-zinc-800 shadow-sm hover:shadow-md transition-shadow duration-300 m-2">
+            <img
+                src={image}
+                alt={name}
+                className="w-full h-44 object-cover"
+            />
 
             <div className="p-4">
-                {/* Flex container for name + icon */}
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{name}</h3>
-                    <button className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700">
-                        <MoreVertical size={20} className="text-zinc-600 dark:text-white" />
+                    <button className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-700">
+                        <MoreVertical size={20} className="text-zinc-600 dark:text-white"/>
                     </button>
                 </div>
 
-                <p className="text-zinc-600 dark:text-zinc-400 mb-4">${price.toFixed(2)}</p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">${price.toFixed(2)}</p>
 
                 <button
-                    onClick={handleToggle}
-                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl transition duration-200 font-semibold cursor-pointer ${
+                    onClick={() => {
+                        onToggle(id);
+                        handleToggle()
+                    }}
+                    className={`w-full py-2 px-4 text-sm font-semibold rounded-xl transition-colors duration-200 ${
                         enabled
                             ? "bg-green-500 hover:bg-green-600 text-white"
                             : "bg-red-500 hover:bg-red-600 text-white"
@@ -44,10 +53,8 @@ const MenuCard = ({ id, name, price, image }) => {
                 >
                     {enabled ? "Enabled" : "Disabled"}
                 </button>
-
             </div>
         </div>
-
     );
 };
 
