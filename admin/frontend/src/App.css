@@ -22,4 +22,7 @@
         background-color: var(--primary);
         font-family: var(--poppins);
     }
+    button {
+        cursor: pointer;
+    }
 }
