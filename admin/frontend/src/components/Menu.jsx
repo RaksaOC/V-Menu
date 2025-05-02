@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import axios from "axios";
 import MenuCard from "./MenuCard.jsx";
 
 const Menu = () => {
     const [menuItems, setMenuItems] = useState([]);
+    const [loading, setLoading] = useState(true); // <--- track loading state
 
     useEffect(() => {
         async function fetchMenu() {
@@ -12,6 +13,8 @@ const Menu = () => {
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);
+            } finally {
+                setLoading(false); // <--- stop loading no matter what
             }
         }
 
@@ -22,13 +25,21 @@ const Menu = () => {
         const itemToUpdate = menuItems.find((item) => item._id === id);
         itemToUpdate.isAvailable = !itemToUpdate.isAvailable;
         const res = await axios.put("http://localhost:3002/menu", itemToUpdate);
-        console.log("responce from update: ", res.data);
+        console.log("response from update: ", res.data);
+        // optionally update the UI immediately
+        setMenuItems((prev) =>
+            prev.map((item) =>
+                item._id === id ? {...item, isAvailable: !item.isAvailable} : item
+            )
+        );
     }
 
     return (
-        <div className="menu flex  justify-center items-center">
-            <div className={"menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]"}>
-                {menuItems.length > 0 ? (
+        <div className="menu flex justify-center items-center">
+            <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]">
+                {loading ? (
+                    <h1>Loading menu...</h1>
+                ) : menuItems.length > 0 ? (
                     menuItems.map((item) => (
                         <MenuCard
                             key={item._id}
@@ -41,9 +52,7 @@ const Menu = () => {
                         />
                     ))
                 ) : (
-                    setTimeout(() => {
-                        return <h1>No Menu Items to display</h1>
-                    }, 2000)
+                    <h1>No Menu Items to display</h1>
                 )}
             </div>
         </div>

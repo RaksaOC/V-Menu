@@ -5,19 +5,19 @@ function Table({ table, onToggleStatus }) {
         <div className="p-4 flex justify-center w-full md:max-w-[300px]">
             <div
                 className={`min-h-[250px] w-full p-4 rounded-lg border text-center flex flex-col justify-between ${
-                    table.status === "open"
+                    table.isEnabled === "open"
                         ? "border-zinc-300 bg-green-400"
                         : "border-zinc-300 bg-zinc-100 dark:bg-zinc-800"
                 }`}
             >
                 <div>
-                    <div className="text-xl font-bold">{table.name}</div>
+                    <div className="text-xl font-bold">Table {table.id}</div>
                     <div
                         className={`text-xs mt-1 ${
-                            table.status === "open" ? "text-green-800" : "text-zinc-500"
+                            table.isEnabled === true ? "text-green-800" : "text-red-700"
                         }`}
                     >
-                        {table.status === "open" ? "Open" : "Closed"}
+                        {table.isEnabled === true ? "Open" : "Closed"}
                     </div>
                 </div>
 
@@ -25,12 +25,12 @@ function Table({ table, onToggleStatus }) {
                     <button
                         onClick={() => onToggleStatus(table.id)}
                         className={`w-full text-sm px-3 py-2 rounded-lg font-medium ${
-                            table.status === "open"
+                            table.isEnabled === true
                                 ? "bg-red-100 text-red-700 hover:bg-red-200"
                                 : "bg-green-600 text-white hover:bg-green-700"
                         }`}
                     >
-                        {table.status === "open" ? "Close Table" : "Open Table"}
+                        {table.isEnabled === true ? "Close Table" : "Open Table"}
                     </button>
 
                     <button

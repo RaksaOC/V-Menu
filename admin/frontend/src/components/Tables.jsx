@@ -1,46 +1,60 @@
 import {useEffect, useState} from "react";
 import Table from "./Table.jsx";
 import {toast} from "react-toastify";
+import axios from "axios";
+
+async function getTables() {
+    const response = await axios.get("http://localhost:3002/tables");
+    return response.data;
+}
+
 
 export default function Tables() {
     const [tables, setTables] = useState([]);
 
     useEffect(() => {
-        if (tables.length === 0) {
-            setTables([
-                {id: 1, name: "Table 1", status: "open"},
-                {id: 2, name: "Table 2", status: "closed"},
-                {id: 3, name: "Table 3", status: "open"},
-                {id: 4, name: "Table 4", status: "closed"}
-            ]);
+        async function fetchTables() {
+            setTables(await getTables());
         }
+
+        fetchTables();
     }, []);
 
+    async function toggleTableAvailability(id) {
+        const updatedTables = tables.map((t) => {
+            if (t.id === id) {
+                const updatedTable = {...t, isEnabled: !t.isEnabled};
+                // Send updated table to backend
+                axios.put("http://localhost:3002/tables", updatedTable);
+                return updatedTable;
+            }
+            return t;
+        });
+
+        setTables(updatedTables);
+
+        toast.info("Table updated!", {
+            position: "top-center",
+            autoClose: 1000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: false,
+            draggable: false,
+            theme: "light",
+        });
+    }
+
     return (
-        <div className="tables flex gap-2.5 flex-wrap">
-            {tables.map((table) => (
-                <Table
-                    key={table.id}
-                    table={table}
-                    onToggleStatus={(id) => {
-                        const updatedTables = tables.map((t) =>
-                            t.id === id
-                                ? {...t, status: t.status === "open" ? "closed" : "open"}
-                                : t
-                        );
-                        setTables(updatedTables);
-                        toast.info("Table updated!", {
-                            position: "top-center",
-                            autoClose: 1000,
-                            hideProgressBar: true,
-                            closeOnClick: true,
-                            pauseOnHover: false,
-                            draggable: false,
-                            theme: "light",
-                        });
-                    }}
-                />
-            ))}
+        <div className="tables flex gap-2.5 justify-center items-center">
+            <div className={"tables-wrapper max-w-[1024px] w-full flex justify-center items-center flex-wrap"}>
+                {tables.map((table) => (
+                    <Table
+                        key={table.id}
+                        table={table}
+                        onToggleStatus={() => toggleTableAvailability(table.id)}
+                    />
+                ))}
+            </div>
         </div>
-    )
+    );
 }
