@@ -11,7 +11,8 @@ function Items() {
             const tableId = localStorage.getItem("tableId");
             try {
                 const response = await axios.get(`http://localhost:3000/items/${tableId}`);
-                setItems(response.data);
+                const data = await response.data;
+                setItems(data.filter(d => d.isAvailable === true));
             } catch (err) {
                 console.log(err);
             }
