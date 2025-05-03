@@ -5,7 +5,7 @@ function Table({ table, onToggleStatus }) {
         <div className="p-4 flex justify-center w-full md:max-w-[300px]">
             <div
                 className={`min-h-[250px] w-full p-4 rounded-lg border text-center flex flex-col justify-between ${
-                    table.isEnabled === "open"
+                    table.isEnabled === true
                         ? "border-zinc-300 bg-green-400"
                         : "border-zinc-300 bg-zinc-100 dark:bg-zinc-800"
                 }`}

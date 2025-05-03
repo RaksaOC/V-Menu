@@ -1,4 +1,22 @@
-function Invoice({ businessName, address, phone, invoiceId, date, items, total, onClose }) {
+function Invoice({ businessName, address, phone, invoiceId, date, items, onClose }) {
+    // Combine duplicate items by name (or use item.id if preferred)
+    const mergedItems = [];
+
+    items.forEach((item) => {
+        const existing = mergedItems.find((i) => i.id === item.id);
+        if (existing) {
+            existing.quantity += item.quantity;
+        } else {
+            mergedItems.push({ ...item }); // shallow copy to avoid mutating original
+        }
+    });
+
+    // Calculate total from merged items
+    const total = mergedItems.reduce(
+        (sum, item) => sum + parseFloat(item.price) * item.quantity,
+        0
+    );
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex flex-col items-center justify-center px-4 py-6 space-y-4">
             <div className="relative bg-white text-black p-8 font-mono border border-black max-w-[1024px] w-full max-h-[90vh] overflow-y-auto shadow-xl rounded-xl">
@@ -23,12 +41,14 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, total, 
                     </tr>
                     </thead>
                     <tbody>
-                    {items.map((item) => (
-                        <tr key={item.id} className="border-b border-dashed">
+                    {mergedItems.map((item, index) => (
+                        <tr key={index} className="border-b border-dashed">
                             <td className="py-2">{item.name}</td>
                             <td className="py-2">{item.quantity}</td>
-                            <td className="py-2">${item.price.toFixed(2)}</td>
-                            <td className="py-2 text-right">${(item.price * item.quantity).toFixed(2)}</td>
+                            <td className="py-2">${parseFloat(item.price).toFixed(2)}</td>
+                            <td className="py-2 text-right">
+                                ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                            </td>
                         </tr>
                     ))}
                     </tbody>
@@ -43,7 +63,6 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, total, 
                     </div>
                 </div>
 
-                {/* QR Code (mock image) */}
                 <div className="mt-8 flex justify-center">
                     <img
                         src=""
@@ -58,13 +77,11 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, total, 
                 </footer>
             </div>
 
-            {/* Close Button BELOW the invoice */}
             <button
                 onClick={onClose}
                 className="mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded flex items-center gap-2"
             >
-                <span>&#10005;</span> {/* Unicode for × icon */}
-                Close
+                <span>&#10005;</span> Close
             </button>
         </div>
     );

@@ -30,7 +30,8 @@ async function databaseConnection() {
 databaseConnection();
 
 app.use("/menu", menuRoutes);
-app.use("/order", orderRoutes);
+app.use("/orders", orderRoutes);
 app.use("/tables", tableRoutes)
+
 
 module.exports = app;
