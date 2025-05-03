@@ -43,7 +43,6 @@ function Items() {
                 <Link to="/cart">
                     <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl">
                         View Cart
-
                     </button>
                 </Link>
             </div>
