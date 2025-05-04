@@ -19,11 +19,10 @@ const Menu = () => {
         }
 
         fetchMenu();
-    }, []);
+    }, [menuItems]);
 
     async function handleToggle(id) {
         const itemToUpdate = menuItems.find((item) => item._id === id);
-        itemToUpdate.isAvailable = !itemToUpdate.isAvailable;
         const res = await axios.put("http://localhost:3002/menu", itemToUpdate);
         console.log("response from update: ", res.data);
         // optionally update the UI immediately

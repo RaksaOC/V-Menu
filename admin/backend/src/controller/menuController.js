@@ -16,7 +16,7 @@ const toggleAvailability = async (req, res) => {
     try {
         updatedItem = await Item.findByIdAndUpdate(
             _id,
-            {isAvailable: isAvailable},
+            {isAvailable: !isAvailable},
             {new: true}
         )
         console.log("after update", updatedItem);
