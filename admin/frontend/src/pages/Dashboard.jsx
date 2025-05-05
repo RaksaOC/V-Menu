@@ -33,7 +33,7 @@ const Dashboard = () => {
             {/* Mobile nav */}
             <div
                 className="nav flex justify-center bg-zinc-100 dark:bg-zinc-800 p-2 rounded-xl mb-4 text-sm font-medium flex-wrap sm:justify-center items-center">
-                <div className={"nav-wrapper max-w-[1024px] flex justify-between h-full w-full"}>
+                <div className={"nav-wrapper max-w-[1024px] flex justify-between h-full w-full flex-wrap gap-1"}>
                     <button
                         onClick={() => setSection("overview")}
                         className={`flex-1 py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-100px ${

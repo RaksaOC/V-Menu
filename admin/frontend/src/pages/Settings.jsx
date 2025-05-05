@@ -1,10 +1,15 @@
 import {useEffect, useState} from "react";
 import {ArrowLeft} from "lucide-react";
 import {useLocation, useNavigate} from "react-router";
+import Menu from "../components/Menu";
+import Tables from "../components/Tables.jsx";
+import AddItemPopup from "../components/AddItemPopup.jsx";
+import SettingsMenu from "../components/SettingsMenu.jsx";
+import SettingsTables from "../components/SettingsTables.jsx";
 
 const Settings = () => {
     const location = useLocation();
-    const initialSection = location.state?.section || "appearance";
+    const initialSection = location.state?.section || "menus";
     const [section, setSection] = useState(initialSection);
     const navigate = useNavigate();
 
@@ -12,11 +17,11 @@ const Settings = () => {
     const renderContent = () => {
         switch (section) {
             case "preferences":
-                return <div className="p-4">Preferences Settings Placeholder</div>;
+                return <div className="p-4">Preference Management Placeholder</div>;
             case "menus":
-                return <div className="p-4">Menu Management Placeholder</div>;
+                return <SettingsMenu></SettingsMenu>
             case "tables":
-                return <div className="p-4">Table Management Placeholder</div>;
+                return <SettingsTables></SettingsTables>
             default:
                 return null;
         }
@@ -36,7 +41,7 @@ const Settings = () => {
             {/* Tabs */}
             <div
                 className="nav flex justify-center bg-zinc-100 dark:bg-zinc-800 p-2 rounded-xl mb-4 text-sm font-medium flex-wrap sm:justify-center items-center">
-                <div className="nav-wrapper max-w-[1024px] flex justify-between h-full w-full">
+                <div className="nav-wrapper max-w-[1024px] flex justify-between h-full w-full flex-wrap gap-1">
                     <button
                         onClick={() => setSection("menus")}
                         className={`flex-1 py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
@@ -71,7 +76,7 @@ const Settings = () => {
             </div>
 
             {/* Section Content */}
-            <div className="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-md">
+            <div className="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-md flex flex-col items-center justify-center">
                 {renderContent()}
             </div>
         </div>
