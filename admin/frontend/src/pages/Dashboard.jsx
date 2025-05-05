@@ -7,6 +7,7 @@ import Tables from "../components/Tables.jsx";
 import Orders from "../components/Orders.jsx";
 import Overview from "../components/Overview.jsx";
 import Header from "../components/Header.jsx";
+import SettingsPage from "../pages/Settings.jsx";
 
 const Dashboard = () => {
     const [section, setSection] = useState("overview");
@@ -14,7 +15,7 @@ const Dashboard = () => {
     const renderContent = () => {
         switch (section) {
             case "overview":
-                return <Overview />;
+                return <Overview/>;
             case "orders":
                 return <Orders/>
             case "menu":
@@ -28,9 +29,10 @@ const Dashboard = () => {
 
     return (
         <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white p-4">
-            <Header />
+            <Header/>
             {/* Mobile nav */}
-            <div className="nav flex justify-center bg-zinc-100 dark:bg-zinc-800 p-2 rounded-xl mb-4 text-sm font-medium flex-wrap sm:justify-center items-center">
+            <div
+                className="nav flex justify-center bg-zinc-100 dark:bg-zinc-800 p-2 rounded-xl mb-4 text-sm font-medium flex-wrap sm:justify-center items-center">
                 <div className={"nav-wrapper max-w-[1024px] flex justify-between h-full w-full"}>
                     <button
                         onClick={() => setSection("overview")}
