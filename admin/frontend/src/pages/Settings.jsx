@@ -4,8 +4,8 @@ import {useLocation, useNavigate} from "react-router";
 import Menu from "../components/Menu";
 import Tables from "../components/Tables.jsx";
 import AddItemPopup from "../components/AddItemPopup.jsx";
-import SettingsMenu from "../components/SettingsMenu.jsx";
-import SettingsTables from "../components/SettingsTables.jsx";
+import SettingsMenuSection from "../components/SettingsMenuSection.jsx";
+import SettingsTablesSection from "../components/SettingsTablesSection.jsx";
 
 const Settings = () => {
     const location = useLocation();
@@ -19,9 +19,9 @@ const Settings = () => {
             case "preferences":
                 return <div className="p-4">Preference Management Placeholder</div>;
             case "menus":
-                return <SettingsMenu></SettingsMenu>
+                return <SettingsMenuSection></SettingsMenuSection>
             case "tables":
-                return <SettingsTables></SettingsTables>
+                return <SettingsTablesSection></SettingsTablesSection>
             default:
                 return null;
         }

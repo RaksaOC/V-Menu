@@ -1,8 +1,9 @@
 import Tables from "./Tables.jsx";
 import {useState} from "react";
 import AddTablePopup from "./AddTablePopup.jsx";
+import SettingsTables from "./SettingsTable.jsx";
 
-function SettingsTables() {
+function SettingsTablesSection() {
     const [showAddTable, setShowAddTable] = useState(false);
 
     const handleOnClose = () => {
@@ -23,7 +24,7 @@ function SettingsTables() {
                         + Add Table
                     </button>
                 </div>
-                <Tables/>
+                <SettingsTables/>
                 {
                     showAddTable && <AddTablePopup onClose={handleOnClose}></AddTablePopup>
                 }
@@ -32,4 +33,4 @@ function SettingsTables() {
     );
 }
 
-export default SettingsTables;
+export default SettingsTablesSection;

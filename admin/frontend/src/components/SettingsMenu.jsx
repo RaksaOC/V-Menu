@@ -1,35 +1,64 @@
-import AddItemPopup from "./AddItemPopup.jsx";
-import Menu from "./Menu.jsx";
-import {useState} from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import SettingsMenuCard from "./SettingsMenuCard.jsx";
+import EditItemPopup from "./EditItemPopup.jsx";
 
-function SettingsMenu() {
-    const [showAddItem, setShowAddItem] = useState(false);
+const SettingsMenu = () => {
+    const [menuItems, setMenuItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
 
-    const handleOnClose = () => {
-        setShowAddItem(false);
+    useEffect(() => {
+        async function fetchMenu() {
+            try {
+                const res = await axios.get("http://localhost:3002/menu");
+                setMenuItems(res.data);
+            } catch (err) {
+                console.error("Error fetching menu:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchMenu();
+    }, []); // Removed dependency on `menuItems` to avoid infinite loop
+
+    function handleEdit(id) {
+        console.log("Edit item:", id);
+        setIsEditing(true);
+        // You can open a modal here to edit the item
+    }
+
+    function handleOnClose(){
+        setIsEditing(false);
     }
 
     return (
-        <>
-            <div className="menu-wrapper max-w-[1024px] w-full flex flex-col items-center justify-center">
-                <div className="flex items-center justify-between mb-4 w-full">
-                    <h2 className="text-xl font-semibold">Menu Items</h2>
-                    <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-xl transition-colors duration-200"
-                        onClick={() => {
-                            setShowAddItem(!showAddItem);
-                        }}
-                    >
-                        + Add Item
-                    </button>
-                </div>
-                <Menu/>
+        <div className="menu flex justify-center items-center">
+            <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]">
+                {loading ? (
+                    <h1>Loading menu...</h1>
+                ) : menuItems.length > 0 ? (
+                    menuItems.map((item) => (
+                        <SettingsMenuCard
+                            key={item._id}
+                            id={item._id}
+                            name={item.name}
+                            price={item.price}
+                            image={item.image}
+                            onEdit={handleEdit}
+                        />
+                    ))
+                ) : (
+                    <h1>No Menu Items to display</h1>
+                )}
             </div>
             {
-                showAddItem && <AddItemPopup onClose={handleOnClose}></AddItemPopup>
+                isEditing && <EditItemPopup name={"NULL"} image={"NULL"} price={0} onClose={handleOnClose}></EditItemPopup>
             }
-        </>
+        </div>
+
     );
-}
+};
 
 export default SettingsMenu;
