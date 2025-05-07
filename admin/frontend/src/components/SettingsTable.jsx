@@ -11,7 +11,6 @@ async function getTables() {
 
 export default function SettingsTables() {
     const [tables, setTables] = useState([]);
-    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         async function fetchTables() {
@@ -21,16 +20,6 @@ export default function SettingsTables() {
         fetchTables();
     }, []);
 
-    function handleEdit(id) {
-        // Replace this with your actual edit popup or logic
-        console.log("Edit table", id);
-        setIsEditing(true);
-    }
-
-    function handleClose() {
-        setIsEditing(false);
-    }
-
     return (
         <div className="tables flex gap-2.5 justify-center items-center">
             <div className="tables-wrapper max-w-[1024px] w-full flex justify-center items-center flex-wrap">
@@ -38,13 +27,9 @@ export default function SettingsTables() {
                     <SettingsTableCard
                         key={table.id}
                         table={table}
-                        onEdit={() => handleEdit()}
                     />
                 ))}
             </div>
-            {
-                isEditing && <EditTablePopup onClose={handleClose} />
-            }
         </div>
     );
 }

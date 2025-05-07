@@ -61,45 +61,31 @@ const addTable = async (req, res) => {
 
 const editTable = async (req, res) => {
     const currentId = req.params.id;
-    const {type, name} = req.body;
+    const { name } = req.body;
 
     try {
-        const table = await Table.findOne({_id: currentId});
+        const table = await Table.findOne({ _id: currentId });
+        console.log("Found table:", table);
+
         if (!table) {
-            return res.status(404).json({message: "Table not found"});
+            return res.status(404).json({ message: "Table not found" });
         }
 
-        let newId;
-
-        if (type === 'manual') {
-            if (!name) {
-                return res.status(400).json({message: "Manual name is required"});
-            }
-
-            const isTaken = await Table.exists({id: name});
-            if (isTaken && name !== currentId) {
-                return res.status(409).json({message: "Table name is already taken"});
-            }
-
-            newId = name;
-        } else if (type === 'auto') {
-            const allTables = await Table.find();
-            const numericIds = allTables.map(t => parseInt(t.id)).filter(id => id);
-            const nextId = numericIds.length ? Math.max(...numericIds) + 1 : 1;
-
-            newId = nextId.toString();
-        } else {
-            return res.status(400).json({message: "Invalid type"});
+        const isTaken = await Table.exists({ id: name });
+        if (isTaken) {
+            return res.status(409).json({ message: "Table name is already taken" });
         }
 
-        table.id = newId;
+        table.id = name;
         const updated = await table.save();
+
         return res.status(200).json(updated);
     } catch (err) {
         console.error(err);
-        return res.status(500).json({message: "Error updating table"});
+        return res.status(500).json({ message: "Error updating table" });
     }
 };
+
 
 const deleteTable = async (req, res) => {
     const {id} = req.params;

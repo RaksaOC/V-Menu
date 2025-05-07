@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import {useState} from "react";
+import {X} from "lucide-react";
 
-export default function AddTablePopup({ val, onClose, onSave, onDelete }) {
-    const [useAutoIncrement, setUseAutoIncrement] = useState(true);
-    const [tableName, setTableName] = useState("");
+export default function EditTablePopup({id, name, onClose, onSave, onDelete}) {
+    const [tableName, setTableName] = useState(name || "");
+    const [touched, setTouched] = useState(false);
+    const [isTaken, setIsTaken] = useState(false);
 
-    const isSaveDisabled = !useAutoIncrement && tableName.trim() === "";
+    const isSaveDisabled = tableName.trim() === "";
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
@@ -15,54 +16,48 @@ export default function AddTablePopup({ val, onClose, onSave, onDelete }) {
                     onClick={onClose}
                     className="absolute top-3 right-3 text-zinc-500 hover:text-zinc-800 dark:hover:text-white"
                 >
-                    <X size={20} />
+                    <X size={20}/>
                 </button>
 
                 {/* Form */}
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
+                        setTouched(true);
                         if (!isSaveDisabled) {
-                            onSave({ name: useAutoIncrement ? null : tableName });
+                            onSave(id, tableName).then((result) => {
+                                if (result === "taken") {
+                                    console.log("name is taken so we display the text next");
+                                    setIsTaken(true);
+                                } else {
+                                    setIsTaken(false);
+                                }
+                            });
                         }
                     }}
                     className="flex flex-col gap-6"
                 >
-                    <h2 className="text-xl font-semibold mb-2">Add Table</h2>
-
-                    {/* Radio Options */}
-                    <div className="flex gap-4">
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="radio"
-                                name="tableNameMode"
-                                checked={useAutoIncrement}
-                                onChange={() => setUseAutoIncrement(true)}
-                            />
-                            Auto-increment
-                        </label>
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="radio"
-                                name="tableNameMode"
-                                checked={!useAutoIncrement}
-                                onChange={() => setUseAutoIncrement(false)}
-                            />
-                            Manual Name
-                        </label>
-                    </div>
+                    <h2 className="text-xl font-semibold mb-2">Edit Table</h2>
 
                     {/* Name Input */}
                     <div>
                         <label className="block text-sm font-medium mb-1">Table Name</label>
                         <input
                             type="text"
-                            placeholder="e.g. Table 7"
-                            value={val}
-                            onChange={(e) => setTableName(e.target.value)}
-                            disabled={useAutoIncrement}
-                            className="w-full p-2 bg-zinc-100 dark:bg-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white disabled:opacity-50"
+                            value={tableName}
+                            onChange={(e) => {
+                                setTableName(e.target.value)
+                                setIsTaken(false)
+                            }}
+                            onBlur={() => setTouched(true)}
+                            className="w-full p-2 bg-zinc-100 dark:bg-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white"
                         />
+                        {touched && isSaveDisabled && (
+                            <p className="text-red-500 text-xs mt-1">Table name cannot be empty.</p>
+                        )}
+                        {isTaken && (
+                            <p className="text-red-500 text-xs mt-1">Table name is taken.</p>
+                        )}
                     </div>
 
                     {/* Action Buttons */}
@@ -70,7 +65,7 @@ export default function AddTablePopup({ val, onClose, onSave, onDelete }) {
                         {/* Delete Button */}
                         <button
                             type="button"
-                            onClick={onDelete}
+                            onClick={() => onDelete(id)}
                             className="px-4 py-2 rounded-xl text-sm bg-red-600 text-white hover:bg-red-700 transition"
                         >
                             Delete

@@ -6,7 +6,6 @@ import EditItemPopup from "./EditItemPopup.jsx";
 const SettingsMenu = () => {
     const [menuItems, setMenuItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         async function fetchMenu() {
