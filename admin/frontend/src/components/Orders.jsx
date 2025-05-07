@@ -38,8 +38,8 @@ export default function Orders() {
 
 
     return (
-        <div className="orders p-4 flex justify-center items-center">
-            <div className={"orders-wrapper max-w-[1024px] w-full text-center"}>
+        <div className="orders flex justify-center items-center">
+            <div className={"orders-wrapper max-w-[1024px] w-full text-center flex flex-col gap-6"}>
                 {
                     orders.length > 0 ?
                         orders.map((order) => (

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import SettingsMenuCard from "./SettingsMenuCard.jsx";
 import EditItemPopup from "./EditItemPopup.jsx";
+import SkeletonMenuCards from "./SkeletonMenuCards.jsx";
 
 const SettingsMenu = () => {
     const [menuItems, setMenuItems] = useState([]);
@@ -24,9 +25,11 @@ const SettingsMenu = () => {
 
     return (
         <div className="menu w-full flex justify-center items-center">
-            <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px] gap-2.5">
+            <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]">
                 {loading ? (
-                    <h1>Loading menu...</h1>
+                    <div className={"flex flex-wrap items-center justify-center w-full"}>
+                        < SkeletonMenuCards> < /SkeletonMenuCards>
+                    </div>
                 ) : menuItems.length > 0 ? (
                     menuItems.map((item) => (
                         <SettingsMenuCard

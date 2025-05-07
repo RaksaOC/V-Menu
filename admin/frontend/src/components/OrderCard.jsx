@@ -8,10 +8,10 @@ function OrderCard({ order, onMarkPaid }) {
     const subOrders = order.orders;
 
     return (
-        <div className="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-zinc-800 p-4">
+        <div className="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-zinc-800">
             <div className="flex justify-between items-center mb-2">
-                <h3 className="text-xl font-bold text-zinc-800 dark:text-white">Table {order.table}</h3>
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">Order ID: {order._id}</span>
+                <h3 className="text-xl font-bold text-zinc-800 dark:text-white mb-2.5">Table {order.table}</h3>
+                {/*<span className="text-sm text-zinc-500 dark:text-zinc-400">Order ID: {order._id}</span>*/}
             </div>
 
             <div className="bg-gray-50 dark:bg-zinc-700 rounded-xl p-3 mb-4">

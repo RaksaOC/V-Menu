@@ -89,6 +89,9 @@ function App() {
     return (
         <>
             <ToastContainer />
+            <header className="header p-2.5">
+                <p className="text-center text-black text-3xl">V-Menu Kitchen</p>
+            </header>
             <div className={"chef-card-wrapper flex flex-col justify-center items-center"}>
                 {orders.length > 0 ? orders.map((order) => (
                     <Card

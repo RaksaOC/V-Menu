@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import axios from "axios";
 import MenuCard from "./MenuCard.jsx";
+import SkeletonMenuCards from "./SkeletonMenuCards.jsx";
 
 const Menu = () => {
     const [menuItems, setMenuItems] = useState([]);
@@ -37,7 +38,9 @@ const Menu = () => {
         <div className="menu flex justify-center items-center">
             <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]">
                 {loading ? (
-                    <h1>Loading menu...</h1>
+                    <div className={"flex flex-wrap items-center justify-center w-full"}>
+                        < SkeletonMenuCards> < /SkeletonMenuCards>
+                    </div>
                 ) : menuItems.length > 0 ? (
                     menuItems.map((item) => (
                         <MenuCard
