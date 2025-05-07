@@ -23,19 +23,9 @@ const SettingsMenu = () => {
         fetchMenu();
     }, []); // Removed dependency on `menuItems` to avoid infinite loop
 
-    function handleEdit(id) {
-        console.log("Edit item:", id);
-        setIsEditing(true);
-        // You can open a modal here to edit the item
-    }
-
-    function handleOnClose(){
-        setIsEditing(false);
-    }
-
     return (
-        <div className="menu flex justify-center items-center">
-            <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]">
+        <div className="menu w-full flex justify-center items-center">
+            <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px] gap-2.5">
                 {loading ? (
                     <h1>Loading menu...</h1>
                 ) : menuItems.length > 0 ? (
@@ -46,16 +36,12 @@ const SettingsMenu = () => {
                             name={item.name}
                             price={item.price}
                             image={item.image}
-                            onEdit={handleEdit}
                         />
                     ))
                 ) : (
                     <h1>No Menu Items to display</h1>
                 )}
             </div>
-            {
-                isEditing && <EditItemPopup name={"NULL"} image={"NULL"} price={0} onClose={handleOnClose}></EditItemPopup>
-            }
         </div>
 
     );

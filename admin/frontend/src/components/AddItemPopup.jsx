@@ -1,8 +1,12 @@
 import {useState} from "react";
 import {X} from "lucide-react";
+import axios from "axios";
 
 export default function AddItemPopup({onClose, onSave}) {
     const [imagePreview, setImagePreview] = useState(null);
+    const [name, setName] = useState("");
+    const [price, setPrice] = useState(0);
+    const [showError, setShowError] = useState(false);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -14,6 +18,24 @@ export default function AddItemPopup({onClose, onSave}) {
             reader.readAsDataURL(file);
         }
     };
+
+    const handleOnAdd = async () => {
+        if (name === "") {
+            setShowError(true);
+            setName("");
+            setPrice(0);
+            return;
+        }
+
+        const newItem = {
+            image: "/src/assets/img.png",
+            name: name,
+            price: price,
+        }
+
+        const response = await axios.post("http://localhost:3002/menu/add", newItem);
+        console.log(response);
+    }
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
@@ -79,9 +101,22 @@ export default function AddItemPopup({onClose, onSave}) {
                         <label className="block text-sm font-medium mb-1">Item Name</label>
                         <input
                             type="text"
-                            className="w-full p-2 bg-zinc-100 dark:bg-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white"
+                            className={`w-full p-2 rounded-lg text-sm text-zinc-900 dark:text-white 
+                                bg-zinc-100 dark:bg-zinc-700 
+                                ${showError ? 'border border-red-500' : 'border border-transparent'}
+                            `}
                             required
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                if (e.target.value.trim() !== "") setShowError(false);
+                            }}
+                            value={name}
                         />
+                        {showError && (
+                            <p className="text-xs text-red-500 mt-1 animate-fade-in">
+                                Item name cannot be empty.
+                            </p>
+                        )}
                     </div>
 
                     {/* Price */}
@@ -92,6 +127,7 @@ export default function AddItemPopup({onClose, onSave}) {
                             step="0.01"
                             className="w-full p-2 bg-zinc-100 dark:bg-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white"
                             required
+                            onChange={(e) => setPrice(parseInt(e.target.value))}
                         />
                     </div>
 
@@ -107,6 +143,7 @@ export default function AddItemPopup({onClose, onSave}) {
                         <button
                             type="submit"
                             className="px-4 py-2 rounded-xl text-sm bg-blue-600 text-white hover:bg-blue-700 transition"
+                            onClick={handleOnAdd}
                         >
                             Save
                         </button>

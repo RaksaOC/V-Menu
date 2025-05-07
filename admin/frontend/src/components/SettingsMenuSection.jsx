@@ -10,6 +10,11 @@ function SettingsMenuSection() {
         setShowAddItem(false);
     }
 
+    const handleOnSave = () => {
+        location.reload();
+    }
+
+
     return (
         <>
             <div className="menu-wrapper max-w-[1024px] w-full flex flex-col items-center justify-center">
@@ -27,7 +32,7 @@ function SettingsMenuSection() {
                 <SettingsMenu/>
             </div>
             {
-                showAddItem && <AddItemPopup onClose={handleOnClose}></AddItemPopup>
+                showAddItem && <AddItemPopup onClose={handleOnClose} onSave={handleOnSave}></AddItemPopup>
             }
         </>
     );

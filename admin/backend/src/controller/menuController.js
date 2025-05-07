@@ -54,7 +54,13 @@ const editItem = async (req, res) => {
 }
 
 const addItem = async (req, res) => {
-    let newItem = new Item(req.body);
+    let {name, price, image} = req.body;
+    let newItem = new Item({
+        name: name,
+        price: price,
+        image: image,
+        isAvailable: true,
+    });
     try {
         const result = await newItem.save();
         return res.status(200).json(result);
@@ -78,4 +84,19 @@ const deleteItem = async (req, res) => {
     }
 }
 
-module.exports = {getMenuItems, toggleAvailability, editItem, addItem, deleteItem};
+const getItem = async (req, res) => {
+    const id = req.params.id;
+    try{
+        const result = await Item.findOne({_id: id})
+        if (!result) {
+            console.log("Item not found");
+            return res.status(404).json({message: 'Item not found'});
+        }
+        return res.status(200).json(result);
+    }catch (err) {
+        res.status(404).json({message: 'Error deleting item'});
+        console.log(err);
+    }
+}
+
+module.exports = {getMenuItems, toggleAvailability, editItem, addItem, deleteItem, getItem};
