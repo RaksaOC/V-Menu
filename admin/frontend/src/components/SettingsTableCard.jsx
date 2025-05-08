@@ -46,7 +46,7 @@ function SettingsTableCard({ table}) {
     }
 
     return (
-        <div className="p-4 flex justify-center w-full md:max-w-[300px]">
+        <div className="p-2 flex justify-center w-full min-w-[300px] max-w-[400px]">
             <div className="min-h-[250px] w-full p-4 rounded-lg border text-center flex flex-col justify-between border-zinc-300 bg-zinc-100 dark:bg-zinc-800">
                 <div>
                     <div className="text-xl font-bold">Table {table.id}</div>

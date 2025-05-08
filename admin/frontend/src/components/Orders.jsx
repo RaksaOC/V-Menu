@@ -1,6 +1,7 @@
 import OrderCard from "./OrderCard.jsx";
 import axios from "axios";
 import {useEffect, useState} from "react";
+import SkeletonOrderCard from "./SkeletonOrderCard.jsx";
 
 async function getTableOrders() {
     const response = await axios.get("http://localhost:3002/orders");
@@ -14,6 +15,7 @@ async function markTableOrderAsPayed(order) {
 
 export default function Orders() {
     const [orders, setOrders] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         async function fetchOrders() {
             const data = await getTableOrders();
@@ -21,6 +23,7 @@ export default function Orders() {
                 (order) => order.isPayed === false && order.orders.length > 0
             );
             setOrders(filtered);
+            setIsLoading(false);
         }
 
         fetchOrders();
@@ -40,6 +43,15 @@ export default function Orders() {
     return (
         <div className="orders flex justify-center items-center">
             <div className={"orders-wrapper max-w-[1024px] w-full text-center flex flex-col gap-6"}>
+                {
+                    isLoading && (
+                        <>
+                            <SkeletonOrderCard/>
+                            <SkeletonOrderCard/>
+                            <SkeletonOrderCard/>
+                        </>
+                    )
+                }
                 {
                     orders.length > 0 ?
                         orders.map((order) => (

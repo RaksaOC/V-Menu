@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import SettingsMenuCard from "./SettingsMenuCard.jsx";
-import EditItemPopup from "./EditItemPopup.jsx";
 import SkeletonMenuCards from "./SkeletonMenuCards.jsx";
 
 const SettingsMenu = () => {
@@ -21,14 +20,14 @@ const SettingsMenu = () => {
         }
 
         fetchMenu();
-    }, []); // Removed dependency on `menuItems` to avoid infinite loop
+    }, []);
 
     return (
         <div className="menu w-full flex justify-center items-center">
-            <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]">
+            <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px] ">
                 {loading ? (
                     <div className={"flex flex-wrap items-center justify-center w-full"}>
-                        < SkeletonMenuCards> < /SkeletonMenuCards>
+                        <SkeletonMenuCards></SkeletonMenuCards>
                     </div>
                 ) : menuItems.length > 0 ? (
                     menuItems.map((item) => (

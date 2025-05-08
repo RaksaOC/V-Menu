@@ -2,11 +2,26 @@ import Tables from "./Tables.jsx";
 import {useState} from "react";
 import AddTablePopup from "./AddTablePopup.jsx";
 import SettingsTables from "./SettingsTable.jsx";
+import axios from "axios";
 
 function SettingsTablesSection() {
     const [showAddTable, setShowAddTable] = useState(false);
 
     const handleOnClose = () => {
+        setShowAddTable(false);
+    }
+
+    const  handleOnSave = async (table) => {
+        try {
+            const response = await axios.post("http://localhost:3002/tables/add", table)
+            if (response.status === 200) {
+                console.log("response", response);
+            }
+            setShowAddTable(false);
+            location.reload();
+        } catch (err) {
+            console.log(err);
+        }
         setShowAddTable(false);
     }
 
@@ -26,7 +41,7 @@ function SettingsTablesSection() {
                 </div>
                 <SettingsTables/>
                 {
-                    showAddTable && <AddTablePopup onClose={handleOnClose}></AddTablePopup>
+                    showAddTable && <AddTablePopup onClose={handleOnClose} onSave={handleOnSave}></AddTablePopup>
                 }
             </div>
         </>

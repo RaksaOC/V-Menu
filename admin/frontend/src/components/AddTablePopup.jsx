@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import {useState} from "react";
+import {X} from "lucide-react";
 
-export default function AddTablePopup({ onClose, onSave }) {
+export default function AddTablePopup({onClose, onSave}) {
     const [useAutoIncrement, setUseAutoIncrement] = useState(true);
     const [tableName, setTableName] = useState("");
 
@@ -15,7 +15,7 @@ export default function AddTablePopup({ onClose, onSave }) {
                     onClick={onClose}
                     className="absolute top-3 right-3 text-zinc-500 hover:text-zinc-800 dark:hover:text-white"
                 >
-                    <X size={20} />
+                    <X size={20}/>
                 </button>
 
                 {/* Form */}
@@ -23,7 +23,10 @@ export default function AddTablePopup({ onClose, onSave }) {
                     onSubmit={(e) => {
                         e.preventDefault();
                         if (!isSaveDisabled) {
-                            onSave({ name: useAutoIncrement ? null : tableName });
+                            onSave({
+                                name: useAutoIncrement ? "" : tableName,
+                                type: useAutoIncrement ? "auto" : "manual"
+                            });
                         }
                     }}
                     className="flex flex-col gap-6"

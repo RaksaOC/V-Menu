@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import Table from "./Table.jsx";
 import {toast} from "react-toastify";
 import axios from "axios";
+import SkeletonTableCard from "./SkeletonTableCard.jsx";
 
 async function getTables() {
     const response = await axios.get("http://localhost:3002/tables");
@@ -11,10 +12,12 @@ async function getTables() {
 
 export default function Tables() {
     const [tables, setTables] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         async function fetchTables() {
             setTables(await getTables());
+            setIsLoading(false);
         }
 
         fetchTables();
@@ -46,7 +49,15 @@ export default function Tables() {
 
     return (
         <div className="tables flex gap-2.5 justify-center items-center">
-            <div className={"tables-wrapper max-w-[1024px] w-full flex justify-center items-center flex-wrap"}>
+            <div className={"tables-wrapper max-w-[1024px] w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 place-items-center"}>
+                {
+                    isLoading && (
+                        <>
+                            <SkeletonTableCard/>
+                            <SkeletonTableCard/>
+                            <SkeletonTableCard/>
+                        </>)
+                }
                 {tables.map((table) => (
                     <Table
                         key={table.id}
