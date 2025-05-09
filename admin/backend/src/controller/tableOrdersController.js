@@ -34,5 +34,25 @@ const markTableOrderAsPayed = async (req, res) => {
     }
 };
 
+const getPaidTableOrders = async (req, res) => {
+    try {
+        console.log("got to getPaidTableOrders");
+        const tableOrders = await TableOrder.find({ isPayed: true }).populate("orders").exec();
+        console.log("Incoming data:", tableOrders);
 
-module.exports = {getTableOrders, markTableOrderAsPayed};
+        res.setHeader("Cache-Control", "no-store");
+
+        if (!tableOrders || tableOrders.length === 0) {
+            return res.status(404).json({ message: 'Table orders not found' });
+        }
+
+        return res.status(200).json(tableOrders);
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+
+module.exports = {getTableOrders, markTableOrderAsPayed, getPaidTableOrders};

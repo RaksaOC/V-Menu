@@ -2,6 +2,7 @@ import OrderCard from "./OrderCard.jsx";
 import axios from "axios";
 import {useEffect, useState} from "react";
 import SkeletonOrderCard from "./SkeletonOrderCard.jsx";
+import {Link} from "react-router";
 
 async function getTableOrders() {
     const response = await axios.get("http://localhost:3002/orders");
@@ -36,7 +37,11 @@ export default function Orders() {
         await markTableOrderAsPayed(orderToUpdate);
 
         const response = await axios.put(`http://localhost:3002/orders`, orderToUpdate);
-        return response.data;
+        if (response.status === 200) {
+            console.log(response);
+        }
+
+        location.reload();
     };
 
 
@@ -52,6 +57,13 @@ export default function Orders() {
                         </>
                     )
                 }
+                <div className={"order-history w-full flex justify-end items-center"}>
+                    <Link to="/orderHistory">
+                        <button className={"bg-blue-600 text-white p-2.5 rounded-xl cursor-pointer "}>View Order
+                            History
+                        </button>
+                    </Link>
+                </div>
                 {
                     orders.length > 0 ?
                         orders.map((order) => (

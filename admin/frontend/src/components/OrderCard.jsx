@@ -8,7 +8,7 @@ function OrderCard({ order, onMarkPaid }) {
     const subOrders = order.orders;
 
     return (
-        <div className="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-zinc-800">
+        <div className="rounded-2xl overflow-hidden shadow-lg bg-none">
             <div className="flex justify-between items-center mb-2">
                 <h3 className="text-xl font-bold text-zinc-800 dark:text-white mb-2.5">Table {order.table}</h3>
                 {/*<span className="text-sm text-zinc-500 dark:text-zinc-400">Order ID: {order._id}</span>*/}
@@ -68,12 +68,16 @@ function OrderCard({ order, onMarkPaid }) {
                 >
                     {showInvoice ? "Hide Invoice" : "Show Invoice"}
                 </button>
-                <button
-                    onClick={() => onMarkPaid(order._id)}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-200 cursor-pointer"
-                >
-                    Mark as Paid
-                </button>
+                {
+                    !order.isPayed ? (<button
+                        onClick={() => onMarkPaid(order._id)}
+                        className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-200 cursor-pointer"
+                        disabled={order.isPayed === false}
+                    >
+                        Mark as Paid
+                    </button>) : null
+                }
+
             </div>
         </div>
     );

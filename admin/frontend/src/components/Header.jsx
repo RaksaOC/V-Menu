@@ -1,4 +1,5 @@
-import {Settings} from "lucide-react";
+import {MoreHorizontal, MoreVertical, Settings} from "lucide-react";
+import { Menu as LucideMenu } from "lucide-react";
 import {Menu, MenuButton} from "@headlessui/react";
 import {Link} from "react-router"
 
@@ -11,7 +12,7 @@ export default function Header() {
 
                 <Menu as="div" className="relative">
                     <Menu.Button className="flex gap-2.5 cursor-pointer focus:outline-none">
-                        <Settings size={20} className="text-white"/>
+                        <LucideMenu size={30} className="text-white"/>
                     </Menu.Button>
 
                     <Menu.Items
