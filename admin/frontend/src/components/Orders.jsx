@@ -5,12 +5,22 @@ import SkeletonOrderCard from "./SkeletonOrderCard.jsx";
 import {Link} from "react-router";
 
 async function getTableOrders() {
-    const response = await axios.get("http://localhost:3002/orders");
+    const response = await axios.get("http://localhost:3002/orders",
+        {
+            headers: {
+                Authorization: localStorage.getItem("token")
+            }
+        });
     return response.data;
 }
 
 async function markTableOrderAsPayed(order) {
-    const response = await axios.put(`http://localhost:3002/orders`, order);
+    const response = await axios.put(`http://localhost:3002/orders`, order,
+        {
+            headers: {
+                Authorization: localStorage.getItem("token")
+            }
+        });
     return response.data;
 }
 

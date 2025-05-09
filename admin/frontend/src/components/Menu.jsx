@@ -10,7 +10,11 @@ const Menu = () => {
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await axios.get("http://localhost:3002/menu");
+                const res = await axios.get("http://localhost:3002/menu", {
+                    headers: {
+                        Authorization: `${localStorage.getItem("token")}`,
+                    }
+                });
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);
@@ -20,11 +24,14 @@ const Menu = () => {
         }
 
         fetchMenu();
-    }, [menuItems]);
+    }, []);
 
     async function handleToggle(id) {
         const itemToUpdate = menuItems.find((item) => item._id === id);
-        const res = await axios.put("http://localhost:3002/menu", itemToUpdate);
+        const res = await axios.put("http://localhost:3002/menu", itemToUpdate, {
+            headers: {
+                Authorization: localStorage.getItem("token")
+            }});
         console.log("response from update: ", res.data);
         // optionally update the UI immediately
         setMenuItems((prev) =>

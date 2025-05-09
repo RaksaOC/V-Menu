@@ -10,7 +10,10 @@ const SettingsMenu = () => {
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await axios.get("http://localhost:3002/menu");
+                const res = await axios.get("http://localhost:3002/menu", {
+                    headers: {
+                        Authorization: localStorage.getItem("token")
+                    }});
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);

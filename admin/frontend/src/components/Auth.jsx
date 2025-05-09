@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase/config.js";
+import {useState} from "react";
+import {signInWithEmailAndPassword, createUserWithEmailAndPassword} from "firebase/auth";
+import {auth} from "../firebase/config.js";
 import axios from "axios";
-import { Eye, EyeOff } from "lucide-react";
+import {Eye, EyeOff} from "lucide-react";
 import {useLocation} from "react-router";
 
 const Auth = () => {
@@ -26,15 +26,9 @@ const Auth = () => {
 
             const token = await userCred.user.getIdToken();
 
-            const res = await axios.get("http://localhost:3002/order/protected", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const data = await res.data;
-            alert(`Backend says: ${data.message}`);
-
+            // will include the authorization token for all headers for further requests
+            localStorage.setItem("token", "Bearer " + token);
+            // axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
             window.location.href = "/dashboard";
         } catch (err) {
             console.error(err);
@@ -77,7 +71,7 @@ const Auth = () => {
                     className="absolute right-3 top-9 text-zinc-500 dark:text-zinc-400 cursor-pointer"
                     tabIndex={-1}
                 >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
                 </button>
             </div>
 

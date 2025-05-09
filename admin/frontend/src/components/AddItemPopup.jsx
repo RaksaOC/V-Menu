@@ -19,24 +19,6 @@ export default function AddItemPopup({onClose, onSave}) {
         }
     };
 
-    const handleOnAdd = async () => {
-        if (name === "") {
-            setShowError(true);
-            setName("");
-            setPrice(0);
-            return;
-        }
-
-        const newItem = {
-            image: "/src/assets/img.png",
-            name: name,
-            price: price,
-        }
-
-        const response = await axios.post("http://localhost:3002/menu/add", newItem);
-        console.log(response);
-    }
-
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
             <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg w-full max-w-md p-8 relative">
@@ -52,7 +34,11 @@ export default function AddItemPopup({onClose, onSave}) {
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        onSave(); // Handle actual form data in real use
+                        onSave({
+                            name: name,
+                            price: price,
+                            image: "/src/assets/img.png",
+                        }); // Handle actual form data in real use
                     }}
                     className="flex flex-col gap-6"
                 >
@@ -143,7 +129,13 @@ export default function AddItemPopup({onClose, onSave}) {
                         <button
                             type="submit"
                             className="px-4 py-2 rounded-xl text-sm bg-blue-600 text-white hover:bg-blue-700 transition"
-                            onClick={handleOnAdd}
+                            onClick={() => {
+                                if (name === "") {
+                                    setShowError(true);
+                                    setName("");
+                                    setPrice(0);
+                                }
+                            }}
                         >
                             Save
                         </button>

@@ -2,6 +2,7 @@ import AddItemPopup from "./AddItemPopup.jsx";
 import Menu from "./Menu.jsx";
 import {useState} from "react";
 import SettingsMenu from "./SettingsMenu.jsx";
+import axios from "axios";
 
 function SettingsMenuSection() {
     const [showAddItem, setShowAddItem] = useState(false);
@@ -10,7 +11,13 @@ function SettingsMenuSection() {
         setShowAddItem(false);
     }
 
-    const handleOnSave = () => {
+    const handleOnSave = async (newItem) => {
+        const response = await axios.post("http://localhost:3002/menu/add", newItem, {
+            headers: {
+                Authorization: localStorage.getItem("token")
+            }
+        });
+        console.log(response);
         location.reload();
     }
 

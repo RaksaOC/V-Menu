@@ -6,7 +6,7 @@ import {Link} from "react-router"
 export default function Header() {
     return (
         <div
-            className="header w-full flex border-b-1 bg-zinc-900 border-zinc-200 items-center justify-center mb-6 sticky top-0 right-0 left-0 p-2.5 z-50">
+            className="header w-full flex bg-zinc-900  items-center justify-center mb-6 sticky top-0 right-0 left-0 p-2.5 z-50">
             <div className="header-wrapper flex justify-between max-w-[1024px] w-full">
                 <h1 className="text-2xl font-bold">V-Menu Admin</h1>
 

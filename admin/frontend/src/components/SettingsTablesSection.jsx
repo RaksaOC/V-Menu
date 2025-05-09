@@ -13,7 +13,11 @@ function SettingsTablesSection() {
 
     const  handleOnSave = async (table) => {
         try {
-            const response = await axios.post("http://localhost:3002/tables/add", table)
+            const response = await axios.post("http://localhost:3002/tables/add", table,
+                {
+                    headers: {
+                        Authorization: localStorage.getItem("token")
+                    }})
             if (response.status === 200) {
                 console.log("response", response);
             }

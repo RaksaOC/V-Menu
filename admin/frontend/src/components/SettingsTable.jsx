@@ -4,7 +4,10 @@ import SkeletonSettingsTableCard from "./SkeletonSettingsTableCard.jsx"; // Impo
 import axios from "axios";
 
 async function getTables() {
-    const response = await axios.get("http://localhost:3002/tables");
+    const response = await axios.get("http://localhost:3002/tables", {
+        headers: {
+            Authorization: localStorage.getItem("token")
+        }});
     return response.data;
 }
 

@@ -27,7 +27,7 @@ export default function OrdersHistory() {
                     </button>
                 </Link>
             </div>
-            <h1 className={"mt-2 text-xl font-semibold "}>Orders Completed</h1>
+            <h1 className={"mt-2 text-3xl font-semibold "}>Orders Completed</h1>
             {
                 history.length > 0 ? (
                     history.map((item, index) => (

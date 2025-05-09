@@ -5,7 +5,12 @@ import axios from "axios";
 import SkeletonTableCard from "./SkeletonTableCard.jsx";
 
 async function getTables() {
-    const response = await axios.get("http://localhost:3002/tables");
+    const response = await axios.get("http://localhost:3002/tables",
+        {
+            headers: {
+                Authorization: localStorage.getItem("token")
+            }
+        });
     return response.data;
 }
 
@@ -28,7 +33,12 @@ export default function Tables() {
             if (t.id === id) {
                 const updatedTable = {...t, isEnabled: !t.isEnabled};
                 // Send updated table to backend
-                axios.put("http://localhost:3002/tables", updatedTable);
+                axios.put("http://localhost:3002/tables", updatedTable,
+                    {
+                        headers: {
+                            Authorization: localStorage.getItem("token")
+                        }
+                    });
                 return updatedTable;
             }
             return t;
@@ -49,7 +59,8 @@ export default function Tables() {
 
     return (
         <div className="tables flex gap-2.5 justify-center items-center">
-            <div className={"tables-wrapper max-w-[1024px] w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 place-items-center"}>
+            <div
+                className={"tables-wrapper max-w-[1024px] w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 place-items-center"}>
                 {
                     isLoading && (
                         <>

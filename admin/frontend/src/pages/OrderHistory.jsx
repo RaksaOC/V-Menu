@@ -11,7 +11,10 @@ export function OrderHistory() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get("http://localhost:3002/orders/orderHistory");
+                const response = await axios.get("http://localhost:3002/orders/orderHistory", {
+                    headers: {
+                        Authorization: localStorage.getItem("token")
+                    }});
                 if (response.status === 200) {
                     setOrderHistory(response.data);
                 }

@@ -11,7 +11,10 @@ const SettingsMenuCard = ({id, name, price, image}) => {
     }
 
     async function handleOnSave(editedItem) {
-        const response = await axios.put(`http://localhost:3002/menu/${editedItem.id}/edit`, editedItem);
+        const response = await axios.put(`http://localhost:3002/menu/${editedItem.id}/edit`, editedItem, {
+            headers: {
+                Authorization: localStorage.getItem("token")
+            }});
         if (response.status === 200) {
             console.log(response);
         }
@@ -20,7 +23,10 @@ const SettingsMenuCard = ({id, name, price, image}) => {
     }
 
     async function handleOnDelete(id) {
-        const response = await axios.delete(`http://localhost:3002/menu/${id}/delete`);
+        const response = await axios.delete(`http://localhost:3002/menu/${id}/delete`, {
+            headers: {
+                Authorization: localStorage.getItem("token")
+            }});
         if (response.status === 200) {
             console.log(response);
         }

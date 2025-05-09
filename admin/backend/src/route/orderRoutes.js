@@ -3,8 +3,8 @@ const {getTableOrders, markTableOrderAsPayed, getPaidTableOrders} = require("../
 const router = express.Router();
 const verifyToken = require("../middleware/verifyToken");
 
-router.get("/", getTableOrders);
-router.put("/", markTableOrderAsPayed);
-router.get('/orderHistory', getPaidTableOrders);
+router.get("/", verifyToken, getTableOrders);
+router.put("/", verifyToken, markTableOrderAsPayed);
+router.get('/orderHistory', verifyToken, getPaidTableOrders);
 
 module.exports = router;
