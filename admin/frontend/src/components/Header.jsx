@@ -1,5 +1,5 @@
 import {MoreHorizontal, MoreVertical, Settings} from "lucide-react";
-import { Menu as LucideMenu } from "lucide-react";
+import {Menu as LucideMenu} from "lucide-react";
 import {Menu, MenuButton} from "@headlessui/react";
 import {Link} from "react-router"
 

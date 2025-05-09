@@ -69,7 +69,7 @@ export default function Orders() {
                 }
                 <div className={"order-history w-full flex justify-end items-center"}>
                     <Link to="/orderHistory">
-                        <button className={"bg-blue-600 text-white p-2.5 rounded-xl cursor-pointer "}>View Order
+                        <button className={"bg-blue-600 text-white py-2 px-4 rounded-xl cursor-pointer "}>View Order
                             History
                         </button>
                     </Link>
@@ -79,7 +79,7 @@ export default function Orders() {
                         orders.map((order) => (
                             <OrderCard key={order._id} order={order} onMarkPaid={handleMarkPaid}/>
                         )) :
-                        <h1>No orders to display</h1>
+                        <h1 className={"text-3xl m-48"}>No orders to display</h1>
                 }
             </div>
 

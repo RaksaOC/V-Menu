@@ -69,13 +69,14 @@ export default function Tables() {
                             <SkeletonTableCard/>
                         </>)
                 }
-                {tables.map((table) => (
-                    <Table
-                        key={table.id}
-                        table={table}
-                        onToggleStatus={() => toggleTableAvailability(table.id)}
-                    />
-                ))}
+                {tables.length > 0 ?
+                    tables.map((table) => (
+                        <Table
+                            key={table.id}
+                            table={table}
+                            onToggleStatus={() => toggleTableAvailability(table.id)}
+                        />
+                    )) : <h1 className={"text-3xl m-48"}>No Tables to display</h1>}
             </div>
         </div>
     );

@@ -10,7 +10,20 @@ import Header from "../components/Header.jsx";
 import SettingsPage from "../pages/Settings.jsx";
 
 const Dashboard = () => {
-    const [section, setSection] = useState("overview");
+    const savedSection = localStorage.getItem("dashboardSection");
+    const [section, setSection] = useState("");
+
+    useEffect(() => {
+        if (!savedSection) {
+            setSection("overview");
+        } else {
+            setSection(savedSection);
+        }
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem("dashboardSection", section);
+    }, [section])
 
     const renderContent = () => {
         switch (section) {

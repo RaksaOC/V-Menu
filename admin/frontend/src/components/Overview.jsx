@@ -16,7 +16,7 @@ export default function Overview() {
                 {/*        4 Pending Payments*/}
                 {/*    </div>*/}
                 {/*</div>*/}
-                <h1>Coming Soon</h1>
+                <h1 className={"text-3xl m-48"}>Coming Soon</h1>
             </div>
         </div>
     );

@@ -35,12 +35,13 @@ export default function SettingsTables() {
                         <SkeletonSettingsTableCard />
                     </>
                 ) : (
+                    tables.length > 0 ?
                     tables.map((table) => (
                         <SettingsTableCard
                             key={table.id}
                             table={table}
                         />
-                    ))
+                    )) : <h1 className={"text-3xl m-48"}>No Tables to display</h1>
                 )}
             </div>
         </div>

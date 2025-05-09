@@ -43,7 +43,7 @@ const SettingsMenu = () => {
                         />
                     ))
                 ) : (
-                    <h1>No Menu Items to display</h1>
+                    <h1 className={"text-3xl m-48"}>No Menu Items to display</h1>
                 )}
             </div>
         </div>

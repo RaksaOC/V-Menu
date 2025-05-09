@@ -33,9 +33,6 @@ const MenuCard = ({id, name, price, image, isAvailable, onToggle}) => {
             <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{name}</h3>
-                    <button className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-700">
-                        <MoreVertical size={20} className="text-zinc-600 dark:text-white"/>
-                    </button>
                 </div>
 
                 <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">${price.toFixed(2)}</p>
