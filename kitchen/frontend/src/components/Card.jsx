@@ -1,6 +1,4 @@
-
-
-function Card({orderId, table, orders, onDone}) {
+function Card({orderId, table, orders, isDone, onDone}) {
     return (
 
         <div className="max-w-[1024px] w-[98%] rounded-2xl overflow-hidden shadow-lg bg-white p-4 my-6">
@@ -26,15 +24,18 @@ function Card({orderId, table, orders, onDone}) {
                     </div>
                 ))}
             </div>
+            {
+                !isDone && (<button
+                    onClick={() => {
+                        onDone(orderId)
+                    }}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-200 cursor-pointer"
+                >
+                    Mark as Done
+                </button>)
 
-            <button
-                onClick={() => {
-                    onDone(orderId)
-                }}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-200 cursor-pointer"
-            >
-                Mark as Done
-            </button>
+
+            }
         </div>
 
     );

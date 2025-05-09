@@ -25,7 +25,7 @@ export function OrderHistory() {
     }, []);
 
     return (
-        <div className="orders flex justify-center items-center py-10 px-4 min-h-screen bg-zinc-900">
+        <div className="orders flex justify-center items-start py-10 px-4 min-h-screen bg-zinc-900">
             <div className="orders-wrapper max-w-[1024px] w-full text-center flex flex-col gap-6">
 
                 {/* Back to orders button */}

@@ -72,7 +72,6 @@ function OrderCard({ order, onMarkPaid }) {
                     !order.isPayed ? (<button
                         onClick={() => onMarkPaid(order._id)}
                         className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-200 cursor-pointer"
-                        disabled={order.isPayed === false}
                     >
                         Mark as Paid
                     </button>) : null
