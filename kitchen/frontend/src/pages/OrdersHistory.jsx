@@ -8,7 +8,7 @@ export default function OrdersHistory() {
     const [history, setHistory] = useState([]);
     useEffect(() => {
         const fetchData = async () => {
-            const response = await axios.get("http://localhost:3001/ordersHistory");
+            const response = await axios.get("http://localhost:3001/api/orders/history");
             if (response && response.status === 200) {
                 setHistory(response.data);
             }
@@ -19,7 +19,7 @@ export default function OrdersHistory() {
     return (
         <div className={"order-history flex flex-col justify-start items-center"}>
             <div className={"back-button flex justify-start w-full p-4"}>
-                <Link to={"/orders"}>
+                <Link to={"/"}>
                     <button
                         className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl cursor-pointer"
                     >
@@ -27,7 +27,7 @@ export default function OrdersHistory() {
                     </button>
                 </Link>
             </div>
-            <h1 className={"mt-2 text-3xl font-semibold "}>Orders Completed</h1>
+            <h1 className={"mt-2 text-3xl font-semibold "}>Order History</h1>
             {
                 history.length > 0 ? (
                     history.map((item, index) => (
@@ -40,7 +40,9 @@ export default function OrdersHistory() {
                         />
                     ))
                 ) : (
-                    <h2>No order history to display</h2>
+                    <div className={"w-full h-96 flex justify-center items-center"}>
+                        <h1 className={"text-3xl text-center"}>No Order History to display</h1>
+                    </div>
                 )
             }
 

@@ -12,8 +12,8 @@ function App() {
     return (
         <>
             <Routes>
-                <Route path="/orders" element={<Orders/>} />
-                <Route path="/orderHistory" element={<OrdersHistory/>} />
+                <Route path="/" element={<Orders/>} />
+                <Route path="/history" element={<OrdersHistory/>} />
             </Routes>
         </>
     );

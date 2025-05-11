@@ -1,4 +1,4 @@
-// controllers/item.controller.js
+// controllers/item.controllers.js
 const itemService = require('../services/item.services');
 
 const getMenuItems = async (req, res) => {

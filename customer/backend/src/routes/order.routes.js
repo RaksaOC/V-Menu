@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const saveOrder = require("../controller/orderController");
+const saveOrder = require("../controllers/order.controller");
 
 router.post("/", saveOrder);
 

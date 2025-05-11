@@ -16,7 +16,7 @@ function App() {
     useEffect(() => {
         const checkTable = async () => {
             try {
-                const res = await axios.get(`http://localhost:3000/tables/${tableId}`);
+                const res = await axios.get(`http://localhost:3000/api/tables/${tableId}`);
                 setIsValidTable(res.status === 200);
             } catch (err) {
                 console.log(err);

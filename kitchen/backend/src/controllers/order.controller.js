@@ -1,4 +1,4 @@
-const Order = require("../model/orderModel");
+const Order = require("../models/Order");
 
 const getOrders = async (req, res) => {
     try {
@@ -12,11 +12,12 @@ const getOrders = async (req, res) => {
 
 const markOrderAsDone = async (req, res) => {
     try {
-        const {_id, isDone} = req.body;
+        const {isDone} = req.body;
+        const id = req.params.id;
 
         const updatedItem = await Order.findByIdAndUpdate(
-            _id,
-            {isDone: isDone},
+            id,
+            {isDone: !isDone},
             {new: true}
         );
 

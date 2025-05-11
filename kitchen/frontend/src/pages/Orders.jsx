@@ -6,13 +6,15 @@ import Card from "../components/Card.jsx";
 import {Link} from "react-router";
 
 async function getAllOrders() {
-    const response = await axios.get("http://localhost:3001/");
+    const response = await axios.get("http://localhost:3001/api/orders");
     return response.data.filter(order => order.isDone === false);
 }
 
 async function markOrderAsDone(order) {
-    order.isDone = true;
-    const response = await axios.put("http://localhost:3001/", order);
+    const response = await axios.patch(`http://localhost:3001/api/orders/${order._id}`, {isDone: order.isDone});
+    if (response.status !== 200) {
+        return toast.error("Error!");
+    }
     return response.data;
 }
 
@@ -84,7 +86,7 @@ export default function Orders() {
                 <p className="text-center text-black text-3xl">V-Menu Kitchen</p>
             </header>
             <div className={"back-button flex justify-end w-full p-4"}>
-                <Link to={"/orderHistory"}>
+                <Link to={"/history"}>
                     <button
                         className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl cursor-pointer"
                     >

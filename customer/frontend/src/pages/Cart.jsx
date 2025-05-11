@@ -49,7 +49,7 @@ export default function Cart() {
             });
             return;
         }
-        axios.post("http://localhost:3000/order", {
+        axios.post("http://localhost:3000/api/orders", {
             table: `${localStorage.getItem("tableId")}`,
             orders: cartItems
         }).then((res) => {

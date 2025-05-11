@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const orderRoutes = require('./route/orderRoutes');
+const orderRoutes = require('./routes/order.routes');
 
 const app = express();
 
@@ -27,6 +27,6 @@ async function databaseConnection() {
 
 databaseConnection();
 
-app.use("/", orderRoutes);
+app.use("/api/orders", orderRoutes);
 
 module.exports = app;

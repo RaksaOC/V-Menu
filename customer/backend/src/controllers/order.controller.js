@@ -1,5 +1,5 @@
-const Order = require("../model/orderModel");
-const TableOrder = require("../model/table_ordersModel");
+const Order = require("../models/Order");
+const TableOrder = require("../models/TableOrder");
 
 const saveOrder = async (req, res) => {
     try {

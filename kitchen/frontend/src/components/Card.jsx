@@ -33,8 +33,6 @@ function Card({orderId, table, orders, isDone, onDone}) {
                 >
                     Mark as Done
                 </button>)
-
-
             }
         </div>
 

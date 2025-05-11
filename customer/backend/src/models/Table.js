@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const tableSchema = new mongoose.Schema({
-    id: {
+    name: {
         type: String,
         required: true,
         unique: true

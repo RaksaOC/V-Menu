@@ -1,10 +1,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const Table = require("../model/tableModel");
+const Table = require("../models/Table");
 
 const isTableOpened = async (req, res) => {
     try {
-        const table = await Table.findOne({id: req.params.id});
+        const table = await Table.findOne({name: req.params.id});
         console.log(req.params.id);
         if (!table || !table.isEnabled) {
             console.log(table);

@@ -10,9 +10,8 @@ function Items() {
 
     useEffect(() => {
         async function getItems() {
-            const tableId = localStorage.getItem("tableId");
             try {
-                const response = await axios.get(`http://localhost:3000/items/${tableId}`);
+                const response = await axios.get(`http://localhost:3000/api/items`);
                 const data = await response.data;
                 setItems(data.filter(d => d.isAvailable === true));
             } catch (err) {
