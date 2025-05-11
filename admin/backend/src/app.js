@@ -2,9 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const orderRoutes = require('./route/orderRoutes');
-const menuRoutes = require('./route/menuRoutes');
-const tableRoutes = require('./route/tableRoutes');
+const orderRoutes = require('./routes/table-order.routes');
+const itemRoutes = require('./routes/item.routes');
+const tableRoutes = require('./routes/table.routes');
 
 const app = express();
 
@@ -33,9 +33,9 @@ async function databaseConnection() {
 
 databaseConnection();
 
-app.use("/menu", menuRoutes);
-app.use("/orders", orderRoutes);
-app.use("/tables", tableRoutes)
+app.use("/api/items", itemRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/tables", tableRoutes)
 
 
 module.exports = app;

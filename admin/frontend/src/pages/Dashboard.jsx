@@ -1,12 +1,12 @@
 import {useEffect, useState} from "react";
 import {LogOut, Settings} from "lucide-react";
-import Menu from "../components/Menu";
-import OrderCard from "../components/OrderCard.jsx";
-import Table from "../components/Table.jsx";
-import Tables from "../components/Tables.jsx";
-import Orders from "../components/Orders.jsx";
-import Overview from "../components/Overview.jsx";
-import Header from "../components/Header.jsx";
+import Menu from "../components/dashboard/Menu.jsx";
+import OrderCard from "../components/dashboard/OrderCard.jsx";
+import TableCard from "../components/dashboard/TableCard.jsx";
+import Tables from "../components/dashboard/Tables.jsx";
+import Orders from "../components/dashboard/Orders.jsx";
+import Overview from "../components/dashboard/Overview.jsx";
+import Header from "../components/common/Header.jsx";
 import SettingsPage from "../pages/Settings.jsx";
 
 const Dashboard = () => {

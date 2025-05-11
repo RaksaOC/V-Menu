@@ -9,11 +9,12 @@ const isTableOpened = async (req, res) => {
         if (!table || !table.isEnabled) {
             console.log(table);
             console.log(!table.isEnabled);
-            return res.status(403).json({message: "Table not enabled"});
+            return res.status(403).json({message: "TableCard not enabled"});
         }
-        return res.status(200).json({message: "Table enabled."});
+        return res.status(200).json({message: "TableCard enabled."});
     } catch (err) {
         console.log(err);
+        return res.status(400).json({message: "Error occured"});
     }
 
 }

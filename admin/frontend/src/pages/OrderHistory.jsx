@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import OrderCard from "../components/OrderCard.jsx";
+import OrderCard from "../components/dashboard/OrderCard.jsx";
 import { Link } from "react-router";
-import SkeletonOrderCard from "../components/SkeletonOrderCard.jsx";
+import SkeletonOrderCard from "../components/common/skeleton/SkeletonOrderCard.jsx";
 
 export function OrderHistory() {
     const [orderHistory, setOrderHistory] = useState([]);

@@ -1,12 +1,12 @@
-# V-Menu 🍽️
+# V-Menus 🍽️
 
-**V-Menu** is a modern digital menu and ordering system designed for restaurants, cafés, and food businesses. It offers an intuitive interface for customers to browse menus and place orders, while giving admins powerful tools to manage everything behind the scenes.
+**V-Menus** is a modern digital menu and ordering system designed for restaurants, cafés, and food businesses. It offers an intuitive interface for customers to browse menus and place orders, while giving admins powerful tools to manage everything behind the scenes.
 
 ---
 
 ## 🎯 Purpose
 
-The goal of V-Menu is to **replace traditional paper menus** and outdated ordering workflows with a clean, interactive, and mobile-friendly platform. It streamlines both the customer experience and restaurant management through one unified system.
+The goal of V-Menus is to **replace traditional paper menus** and outdated ordering workflows with a clean, interactive, and mobile-friendly platform. It streamlines both the customer experience and restaurant management through one unified system.
 
 ---
 
@@ -42,7 +42,7 @@ The goal of V-Menu is to **replace traditional paper menus** and outdated orderi
 - Payment integration (Stripe or similar)
 
 ### For Admins
-- Menu item CRUD (Create, Read, Update, Delete)
+- Menus item CRUD (Create, Read, Update, Delete)
 - Category management
 - Order dashboard with status tracking
 - Analytics (popular items, traffic, sales trends)

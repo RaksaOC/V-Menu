@@ -1,8 +1,8 @@
 import {useEffect, useState} from "react";
 import {ArrowLeft} from "lucide-react";
 import {useLocation, useNavigate} from "react-router";
-import SettingsMenuSection from "../components/SettingsMenuSection.jsx";
-import SettingsTablesSection from "../components/SettingsTablesSection.jsx";
+import MenuSection from "../components/settings/MenuSection.jsx";
+import TablesSection from "../components/settings/TablesSection.jsx";
 
 const Settings = () => {
     const location = useLocation();
@@ -29,11 +29,13 @@ const Settings = () => {
     const renderContent = () => {
         switch (section) {
             case "preferences":
-                return <div className="p-4"><h1 className="text-3xl m-48">Coming Soon</h1></div>;
+                return (<div className={"w-full h-96 flex justify-center items-center"}>
+                    <h1 className={"text-3xl text-center"}>Coming Soon</h1>
+                </div>)
             case "menus":
-                return <SettingsMenuSection/>;
+                return <MenuSection/>;
             case "tables":
-                return <SettingsTablesSection/>;
+                return <TablesSection/>;
             default:
                 return null;
         }
