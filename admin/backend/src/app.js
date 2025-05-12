@@ -5,6 +5,7 @@ const cors = require('cors');
 const orderRoutes = require('./routes/table-order.routes');
 const itemRoutes = require('./routes/item.routes');
 const tableRoutes = require('./routes/table.routes');
+const overviewRoutes = require('./routes/overview.routes');
 
 const app = express();
 
@@ -35,7 +36,8 @@ databaseConnection();
 
 app.use("/api/items", itemRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/tables", tableRoutes)
+app.use("/api/tables", tableRoutes);
+app.use("/api/overview", overviewRoutes);
 
 
 module.exports = app;

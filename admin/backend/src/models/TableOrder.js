@@ -18,5 +18,5 @@ const TableOrderSchema = new mongoose.Schema({
     }
 });
 
-const TableOrder =  mongoose.model("TableOrder", TableOrderSchema, "table_orders");
+const TableOrder = mongoose.models.TableOrder || mongoose.model("TableOrder", TableOrderSchema, "table_orders");
 module.exports = TableOrder;

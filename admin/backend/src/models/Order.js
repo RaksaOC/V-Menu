@@ -6,6 +6,6 @@ const orderSchema = new mongoose.Schema({
     isDone: Boolean,
 })
 
-const order = mongoose.model("Order", orderSchema);
+const order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 
 module.exports = order;
