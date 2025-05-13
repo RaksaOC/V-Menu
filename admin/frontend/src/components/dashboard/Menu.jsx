@@ -59,7 +59,7 @@ const Menu = () => {
                             name={item.name}
                             price={item.price}
                             image={item.image}
-                            isAvailable={item.isAvailable}
+                            isEnabled={item.isEnabled}
                             onToggle={handleToggle}
                         />
                     ))

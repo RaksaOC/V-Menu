@@ -4,8 +4,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import {MoreVertical} from "lucide-react";
 import axios from "axios";
 
-const MenuCard = ({id, name, price, image, isAvailable, onToggle}) => {
-    const [enabled, setEnabled] = useState(isAvailable);
+const MenuCard = ({id, name, price, image, isEnabled, onToggle}) => {
+    const [enabled, setEnabled] = useState(isEnabled);
 
     const handleToggle = () => {
         setEnabled(!enabled);

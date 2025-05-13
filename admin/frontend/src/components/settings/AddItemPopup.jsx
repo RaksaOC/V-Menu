@@ -1,9 +1,13 @@
 import {useState} from "react";
 import {X} from "lucide-react";
+import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
+import {storage} from "../../firebase/config.js";
 import axios from "axios";
 
 export default function AddItemPopup({onClose, onSave}) {
     const [imagePreview, setImagePreview] = useState(null);
+    const [imageFile, setImageFile] = useState(null);
+    const [imageUrl, setImageUrl] = useState(null);
     const [name, setName] = useState("");
     const [price, setPrice] = useState(0);
     const [showError, setShowError] = useState(false);
@@ -11,6 +15,7 @@ export default function AddItemPopup({onClose, onSave}) {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            setImageFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImagePreview(reader.result);
@@ -32,14 +37,31 @@ export default function AddItemPopup({onClose, onSave}) {
 
                 {/* Form */}
                 <form
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                         e.preventDefault();
+
+                        // Default image URL if no image is selected
+                        let imageUrl = "https://firebasestorage.googleapis.com/v0/b/v-menu-e9835.firebasestorage.app/o/grey_fork_and_knife.png?alt=media&token=0dab98b1-1fd9-4035-86d3-0e8f5755c9c1";
+
+                        if (imageFile) {
+                            try {
+                                const imageRef = ref(storage, `menu-images/${imageFile.name}`);
+                                await uploadBytes(imageRef, imageFile);
+                                imageUrl = await getDownloadURL(imageRef); // get the uploaded image URL
+                            } catch (error) {
+                                console.error("Upload failed", error);
+                            }
+                        }
+
+                        // Save the data with either the uploaded image URL or the default one
                         onSave({
-                            name: name,
-                            price: price,
-                            image: "/src/assets/img.png",
-                        }); // Handle actual form data in real use
+                            name,
+                            price,
+                            image: imageUrl, // ✅ imageUrl is either the uploaded image URL or the default URL
+                        });
+                        onClose(); // optional: close after saving
                     }}
+
                     className="flex flex-col gap-6"
                 >
                     <h2 className="text-xl font-semibold mb-4">Add Menu Item</h2>
