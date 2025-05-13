@@ -7,7 +7,7 @@ import axios from "axios";
 export default function AddItemPopup({onClose, onSave}) {
     const [imagePreview, setImagePreview] = useState(null);
     const [imageFile, setImageFile] = useState(null);
-    const [imageUrl, setImageUrl] = useState(null);
+    // const [imageUrl, setImageUrl] = useState(null);
     const [name, setName] = useState("");
     const [price, setPrice] = useState(0);
     const [showError, setShowError] = useState(false);
@@ -41,17 +41,20 @@ export default function AddItemPopup({onClose, onSave}) {
                         e.preventDefault();
 
                         // Default image URL if no image is selected
-                        let imageUrl = "https://firebasestorage.googleapis.com/v0/b/v-menu-e9835.firebasestorage.app/o/grey_fork_and_knife.png?alt=media&token=0dab98b1-1fd9-4035-86d3-0e8f5755c9c1";
+                        let imageUrl = "src/assets/img.png"
+                        // TODO: uncomment this in production use default picture locally for now
 
-                        if (imageFile) {
-                            try {
-                                const imageRef = ref(storage, `menu-images/${imageFile.name}`);
-                                await uploadBytes(imageRef, imageFile);
-                                imageUrl = await getDownloadURL(imageRef); // get the uploaded image URL
-                            } catch (error) {
-                                console.error("Upload failed", error);
-                            }
-                        }
+                        // let imageUrl = "https://firebasestorage.googleapis.com/v0/b/v-menu-e9835.firebasestorage.app/o/grey_fork_and_knife.png?alt=media&token=0dab98b1-1fd9-4035-86d3-0e8f5755c9c1";
+                        //
+                        // if (imageFile) {
+                        //     try {
+                        //         const imageRef = ref(storage, `menu-images/${imageFile.name}`);
+                        //         await uploadBytes(imageRef, imageFile);
+                        //         imageUrl = await getDownloadURL(imageRef); // get the uploaded image URL
+                        //     } catch (error) {
+                        //         console.error("Upload failed", error);
+                        //     }
+                        // }
 
                         // Save the data with either the uploaded image URL or the default one
                         onSave({
@@ -59,7 +62,6 @@ export default function AddItemPopup({onClose, onSave}) {
                             price,
                             image: imageUrl, // ✅ imageUrl is either the uploaded image URL or the default URL
                         });
-                        onClose(); // optional: close after saving
                     }}
 
                     className="flex flex-col gap-6"

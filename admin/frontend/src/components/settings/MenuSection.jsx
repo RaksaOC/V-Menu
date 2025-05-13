@@ -18,7 +18,7 @@ function MenuSection() {
             }
         });
         console.log(response);
-        // location.reload();
+        location.reload();
     }
 
 
