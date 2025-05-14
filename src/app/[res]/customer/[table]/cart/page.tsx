@@ -1,14 +1,15 @@
 'use client'
 
 import {useEffect, useState} from "react";
-import {toast} from "react-toastify"; // ✅ fixed import
+import {toast, ToastContainer} from "react-toastify"; // ✅ fixed import
 import axios from "axios";
-import Link from "next/link"; // ✅ correct Next.js Link
 import CartItemCard from "@/app/[res]/customer/[table]/cart/CartItemCard";
 import {CartItem} from "@/app/shared/types/CartItem";
 import {OrderInput} from "@/app/shared/types/Order";
+import {useRouter} from "next/navigation";
 
 export default function CartPage() {
+    const router = useRouter();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
     useEffect(() => {
@@ -79,7 +80,9 @@ export default function CartPage() {
             setTimeout(() => {
                 setCartItems([]);
                 localStorage.removeItem("cartItems");
+                router.back();
             }, 1000);
+
         } catch (error) {
             console.error("Order failed:", error);
             toast.error("Failed to place order.", {
@@ -94,12 +97,12 @@ export default function CartPage() {
         <div className="relative min-h-screen p-4 pb-32 bg-gray-100 flex flex-col justify-start items-center">
             <div className="header-wrapper w-full">
                 <div className="header justify-between flex flex-row w-full items-center md:max-w-[50%]">
-                    <Link
-                        href={`/${localStorage.getItem("table")}`}
+                    <button
+                        onClick={() => router.back()}
                         className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl h-[40px]"
                     >
                         Go Back
-                    </Link>
+                    </button>
                     <h1 className="text-2xl font-bold text-center mb-0">Your Cart</h1>
                 </div>
             </div>
@@ -134,6 +137,7 @@ export default function CartPage() {
                     Place Order
                 </button>
             </div>
+            <ToastContainer></ToastContainer>
         </div>
     );
 }

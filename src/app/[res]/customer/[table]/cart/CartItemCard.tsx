@@ -1,6 +1,6 @@
 // components/CartItem.tsx
 import React, {useState} from "react";
-import {Delete} from "lucide-react";
+import {Trash} from "lucide-react";
 import {CartItem} from "@/app/shared/types/CartItem";
 import {ItemBase} from "@/app/shared/types/Item";
 
@@ -54,7 +54,7 @@ const CartItemCard = ({cartItem, index, increaseQuantity, decreaseQuantity, remo
                     onClick={() => removeItem(index)}
                     className="ml-2 w-6 h-6 flex items-center justify-center cursor-pointer"
                 >
-                    <Delete size={20} />
+                    <Trash size={20} color={"red"} />
                 </button>
             </div>
         </div>
