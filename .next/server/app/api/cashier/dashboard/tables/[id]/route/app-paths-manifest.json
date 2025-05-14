@@ -1,0 +1,3 @@
+{
+  "/api/cashier/dashboard/tables/[id]/route": "app/api/cashier/dashboard/tables/[id]/route.js"
+}

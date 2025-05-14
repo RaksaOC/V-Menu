@@ -1,0 +1,10 @@
+{
+  "/[res]/cashier/dashboard/page": "app/[res]/cashier/dashboard/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/cashier/dashboard/menu/route": "app/api/cashier/dashboard/menu/route.js",
+  "/api/cashier/dashboard/orders/[id]/route": "app/api/cashier/dashboard/orders/[id]/route.js",
+  "/api/cashier/dashboard/orders/route": "app/api/cashier/dashboard/orders/route.js",
+  "/api/cashier/dashboard/overview/route": "app/api/cashier/dashboard/overview/route.js",
+  "/api/cashier/dashboard/tables/route": "app/api/cashier/dashboard/tables/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js"
+}
