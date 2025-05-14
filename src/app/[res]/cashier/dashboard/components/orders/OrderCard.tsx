@@ -1,9 +1,10 @@
 import {useState} from "react";
 import Invoice from "./Invoice";
 import {Order} from "@/app/shared/types/Order";
+import {TableOrderOutput} from "@/app/shared/types/TableOrder";
 
 interface Props {
-    order: Order[],
+    order: TableOrderOutput,
     onMarkPaid: (id: string) => void,
 }
 
@@ -26,26 +27,26 @@ function OrderCard({order, onMarkPaid}: Props) {
                         <p className="font-semibold text-zinc-700 dark:text-zinc-200 mb-2">
                             Order {index + 1}
                         </p>
-                        {subOrder.orders.map((item) => (
+                        {subOrder.orderedItems.map((item) => (
                             <div
-                                key={item.id}
+                                key={item.item._id}
                                 className="flex items-center justify-between gap-2 border-b last:border-none border-zinc-200 dark:border-zinc-600 py-2"
                             >
                                 <div className="flex items-center gap-3">
                                     <img
-                                        src={item.image}
-                                        alt={item.name}
+                                        src={item.item.image}
+                                        alt={item.item.name}
                                         className="w-10 h-10 object-cover rounded"
                                     />
                                     <div>
-                                        <p className="text-zinc-800 dark:text-white font-semibold">{item.name}</p>
+                                        <p className="text-zinc-800 dark:text-white font-semibold">{item.item.name}</p>
                                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                            ${parseFloat(item.price).toFixed(2)} × {item.quantity}
+                                            ${(item.item.price).toFixed(2)} × {item.quantity}
                                         </p>
                                     </div>
                                 </div>
                                 <p className="font-bold text-zinc-700 dark:text-white">
-                                    ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                                    ${((item.item.price) * item.quantity).toFixed(2)}
                                 </p>
                             </div>
                         ))}
@@ -62,7 +63,7 @@ function OrderCard({order, onMarkPaid}: Props) {
                     phone="(123) 456-7890"
                     invoiceId={`${order._id}`}
                     date={new Date().toLocaleDateString()}
-                    items={subOrders.flatMap(sub => sub.orders)}
+                    items={subOrders.flatMap(sub => sub.orderedItems)}
                     onClose={() => setShowInvoice(false)}
                 />
             )}

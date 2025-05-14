@@ -1,4 +1,5 @@
-import {Item} from "@/app/shared/types/Item";
+import {ItemOutput} from "@/app/shared/types/Item";
+import {CartItem} from "@/app/shared/types/CartItem";
 
 interface Props {
     businessName: string;
@@ -6,17 +7,17 @@ interface Props {
     phone: string;
     invoiceId: string;
     date: string;
-    items: Item[],
+    items: CartItem[];
     onClose: () => void;
 }
 
 
 function Invoice({ businessName, address, phone, invoiceId, date, items, onClose }:Props) {
     // Combine duplicate items by id
-    const mergedItems = [];
+    const mergedItems :CartItem[] = [];
 
     items.forEach((item) => {
-        const existing = mergedItems.find((i) => i.id === item.id);
+        const existing = mergedItems.find((i) => i.item._id === item.item._id);
         if (existing) {
             existing.quantity += item.quantity;
         } else {
@@ -25,7 +26,7 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, onClose
     });
 
     const total = mergedItems.reduce(
-        (sum, item) => sum + parseFloat(item.price) * item.quantity,
+        (sum, item) => sum + (item.item.price) * item.quantity,
         0
     );
 
@@ -55,11 +56,11 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, onClose
                     <tbody>
                     {mergedItems.map((item, index) => (
                         <tr key={index} className="border-b border-dashed">
-                            <td className="py-2 text-left">{item.name}</td>
+                            <td className="py-2 text-left">{item.item.name}</td>
                             <td className="py-2 text-left">{item.quantity}</td>
-                            <td className="py-2 text-left">${parseFloat(item.price).toFixed(2)}</td>
+                            <td className="py-2 text-left">${(item.item.price).toFixed(2)}</td>
                             <td className="py-2 text-right">
-                                ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                                ${((item.item.price) * item.quantity).toFixed(2)}
                             </td>
                         </tr>
                     ))}

@@ -8,15 +8,16 @@ import Overview from "./components/overview/Overview";
 import Header from "./components/Header";
 
 const Dashboard = () => {
-    const savedSection = localStorage.getItem("dashboardSection");
+    // const savedSection = localStorage.getItem("dashboardSection");
     const [section, setSection] = useState("");
 
     useEffect(() => {
-        if (!savedSection) {
-            setSection("overview");
-        } else {
-            setSection(savedSection);
-        }
+        // if (!savedSection) {
+        //     setSection("overview");
+        // } else {
+        //     setSection(savedSection);
+        // }
+        setSection("overview");
     }, [])
 
     useEffect(() => {

@@ -1,8 +1,8 @@
 import { QrCode } from "lucide-react";
-import {Table} from "@/app/shared/types/Table";
+import {TableOutput} from "@/app/shared/types/Table";
 
 interface TableCardProps {
-    table: Table;
+    table: TableOutput;
     onToggleStatus: (id: string) => void;
 }
 

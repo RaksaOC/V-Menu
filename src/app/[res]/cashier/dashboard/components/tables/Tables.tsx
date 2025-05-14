@@ -1,22 +1,22 @@
 import {useEffect, useState} from "react";
-import TableCard from "./TableCard.js";
+import TableCard from "./TableCard";
 import {toast} from "react-toastify";
 import axios from "axios";
-import SkeletonTableCard from "../../../../../../../../v-menu-old-backup/admin/frontend/src/components/common/skeleton/SkeletonTableCard.jsx";
+import SkeletonTableCard from "./SkeletonTableCard";
+import {TableOutput} from "@/app/shared/types/Table";
 
 async function getTables() {
-    const response = await axios.get("http://localhost:3002/api/tables",
-        {
-            headers: {
-                Authorization: localStorage.getItem("token")
-            }
-        });
-    return response.data;
+    try {
+        const response = await axios.get("/api/cashier/dashboard/tables");
+        return response.data;
+    } catch (err) {
+        console.log(err);
+    }
 }
 
 
 export default function Tables() {
-    const [tables, setTables] = useState([]);
+    const [tables, setTables] = useState<TableOutput[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -28,7 +28,7 @@ export default function Tables() {
         fetchTables();
     }, []);
 
-    async function toggleTableAvailability(id) {
+    async function toggleTableAvailability(id: string) {
         console.log("toggling table with id ", id);
         const updatedTables = tables.map((t) => {
             if (t._id === id) {

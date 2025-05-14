@@ -3,15 +3,17 @@ import {useEffect, useState} from "react";
 import axios from "axios";
 import SkeletonOverviewCard from "./SkeletonOverviewCard";
 
+import {Overview as OverviewData} from "@/app/shared/types/Overview";
+
 export default function Overview() {
     const [isLoading, setIsLoading] = useState(true);
-    const [overviewData, setOverviewData] = useState({});
+    const [overviewData, setOverviewData] = useState<OverviewData>();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get("http://localhost:3002/api/overview");
-                setOverviewData(response.data);
+                const response = await axios.get("/api/cashier/dashboard/overview");
+                setOverviewData(await response.data || {});
             } catch (error) {
                 console.error("Error fetching overview:", error);
             } finally {
@@ -21,38 +23,38 @@ export default function Overview() {
         fetchData();
     }, []);
 
-    const cards = [
+    const cards = overviewData ? [
         {
             label: "Active Tables",
             value: overviewData.numOfActiveTables,
-            icon: "src/assets/activeTable.svg"
+            icon: "/images/activeTable.svg"
         },
         {
             label: "Unpaid Orders",
-            value: overviewData.numOfPayments,
-            icon: "src/assets/unpaidOrder.svg"
+            value: overviewData.numOfUnpaidOrders,
+            icon: "/images/unpaidOrder.svg"
         },
         {
             label: "Tables",
             value: overviewData.numOfTables,
-            icon: "src/assets/table.svg"
+            icon: "/images/table.svg"
         },
         {
             label: "Menu Items",
             value: overviewData.numOfItems,
-            icon: "src/assets/item.svg"
+            icon: "/images/item.svg"
         },
         {
             label: "Orders Completed",
             value: overviewData.numOfOrders,
-            icon: "src/assets/ordersCompleted.svg"
+            icon: "/images/ordersCompleted.svg"
         },
         {
             label: "Payments Completed",
             value: overviewData.numOfPayments,
-            icon: "src/assets/payment.svg"
+            icon: "/images/payment.svg"
         }
-    ];
+    ] : [];
 
     return (
         <div className="overview py-12 flex justify-center items-center bg-transparent min-h-[50vh]">

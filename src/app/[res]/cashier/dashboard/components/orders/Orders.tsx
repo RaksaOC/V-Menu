@@ -2,10 +2,11 @@ import OrderCard from "./OrderCard";
 import axios from "axios";
 import {useEffect, useState} from "react";
 import SkeletonOrderCard from "./SkeletonOrderCard";
-import Link from "next/router";
+import Link from "next/link";
+import {TableOrderOutput} from "@/app/shared/types/TableOrder";
 
 async function getTableOrders() {
-    const response = await axios.get("http://localhost:3002/api/orders",
+    const response = await axios.get("/api/cashier/dashboard/orders",
         {
             headers: {
                 Authorization: localStorage.getItem("token")
@@ -15,13 +16,13 @@ async function getTableOrders() {
 }
 
 export default function Orders() {
-    const [orders, setOrders] = useState([]);
+    const [orders, setOrders] = useState<TableOrderOutput[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         async function fetchOrders() {
             const data = await getTableOrders();
             const filtered = data.filter(
-                (order) => order.isPayed === false && order.orders.length > 0
+                (order : TableOrderOutput) => !order.isPayed && order.orders.length > 0
             );
             setOrders(filtered);
             setIsLoading(false);
@@ -60,7 +61,7 @@ export default function Orders() {
                     )
                 }
                 <div className={"order-history w-full flex justify-end items-center"}>
-                    <Link to="/orderHistory">
+                    <Link href="/orderHistory">
                         <button className={"bg-blue-600 text-white py-2 px-4 rounded-xl cursor-pointer "}>View Order
                             History
                         </button>

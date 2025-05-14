@@ -1,9 +1,9 @@
 import {Menu as LucideMenu} from "lucide-react";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/react";
-import Link from "next/router"
+import Link from "next/link"
 
 export default function Header() {
-    // @ts-ignore
+
     return (
         <div
             className="header w-full flex bg-zinc-900  items-center justify-center mb-6 sticky top-0 right-0 left-0 p-2.5 z-50">
@@ -20,7 +20,7 @@ export default function Header() {
                         <div className="py-1 flex flex-col items-center justify-between">
                             <MenuItem>
                                 {({active}) => (
-                                    <Link to="/settings" state={{section: "menus"}}
+                                    <Link href="/settings?section=menus"
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
@@ -31,7 +31,7 @@ export default function Header() {
                             </MenuItem>
                             <MenuItem>
                                 {({active}) => (
-                                    <Link to="/settings" state={{section: "tables"}}
+                                    <Link href="/settings?section=tables"
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
@@ -42,7 +42,7 @@ export default function Header() {
                             </MenuItem>
                             <MenuItem>
                                 {({active}) => (
-                                    <Link to="/settings" state={{section: "preferences"}}
+                                    <Link href="/settings?section=preferences"
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
@@ -53,7 +53,7 @@ export default function Header() {
                             </MenuItem>
                             <MenuItem>
                                 {({active}) => (
-                                    <Link to="/settings" state={{section: "menu"}}
+                                    <Link href="../../auth"
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}

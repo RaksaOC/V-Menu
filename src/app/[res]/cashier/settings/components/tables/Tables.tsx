@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import TableCard from "./TableCard.jsx";
-import SkeletonTableCard from "../../../../../../../../v-menu-old-backup/admin/frontend/src/components/common/skeleton/SkeletonTableCard.jsx"; // Import skeleton
+import SkeletonTableCard from "../../../../../../../../v-menu-old-backup/admin/frontend/src/components/common/skeleton/SkeletonTableCard.tsx"; // Import skeleton
 import axios from "axios";
 
 async function getTables() {

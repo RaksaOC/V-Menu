@@ -2,31 +2,28 @@ import {useEffect, useState} from "react";
 import axios from "axios";
 import MenuCard from "./MenuCard";
 import SkeletonMenuCards from "./SkeletonMenuCard";
+import {ItemOutput} from "@/app/shared/types/Item";
 
 const Menu = () => {
-    const [menuItems, setMenuItems] = useState([]);
+    const [menuItems, setMenuItems] = useState<ItemOutput[]>([]);
     const [loading, setLoading] = useState(true); // <--- track loading state
 
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await axios.get("http://localhost:3002/api/items", {
-                    headers: {
-                        Authorization: `${localStorage.getItem("token")}`,
-                    }
-                });
+                const res = await axios.get("/api/cashier/dashboard/menu");
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);
             } finally {
-                setLoading(false); // <--- stop loading no matter what
+                setLoading(false);
             }
         }
 
         fetchMenu();
     }, []);
 
-    async function handleToggle(id) {
+    async function handleToggle(id: string) {
         const isEnabled = menuItems.find(item => item._id === id).isEnabled;
         const res = await axios.patch(`http://localhost:3002/api/items/${id}/availability`, {isEnabled: isEnabled}, {
             headers: {
@@ -39,7 +36,7 @@ const Menu = () => {
 
         setMenuItems((prev) =>
             prev.map((item) =>
-                item._id === id ? {...item, isAvailable: !item.isAvailable} : item
+                item._id === id ? {...item, isEnabled: !item.isEnabled} : item
             )
         );
     }
@@ -49,7 +46,7 @@ const Menu = () => {
             <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]">
                 {loading ? (
                     <div className={"flex flex-wrap items-center justify-center w-full"}>
-                        < SkeletonMenuCards> < /SkeletonMenuCards>
+                        <SkeletonMenuCards/>
                     </div>
                 ) : menuItems.length > 0 ? (
                     menuItems.map((item) => (
