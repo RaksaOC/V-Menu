@@ -1,7 +1,7 @@
 import React from "react";
 import {useEffect, useState} from "react";
 import axios from "axios";
-import SkeletonOverviewCard from "./SkeletonOverviewCard";
+import SkeletonOverviewCard from "../../../common/SkeletonOverviewCard";
 
 import {Overview as OverviewData} from "@/app/shared/types/Overview";
 

@@ -58,7 +58,7 @@ function OrderCard({order, onMarkPaid}: Props) {
 
             {showInvoice && (
                 <Invoice
-                    businessName="V-Menus"
+                    businessName="V-Menu"
                     address="123 Main Street, Foodville"
                     phone="(123) 456-7890"
                     invoiceId={`${order._id}`}

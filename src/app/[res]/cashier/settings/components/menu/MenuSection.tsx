@@ -1,8 +1,8 @@
-import AddItemPopup from "./AddItemPopup.jsx";
-import Menu from "../dashboard/Menu.jsx";
+import AddItemPopup from "./AddItemPopup";
+import Menu from "./Menu";
 import {useState} from "react";
-import Menus from "./Menus.jsx";
 import axios from "axios";
+import {ItemInput} from "@/app/shared/types/Item";
 
 function MenuSection() {
     const [showAddItem, setShowAddItem] = useState(false);
@@ -11,12 +11,8 @@ function MenuSection() {
         setShowAddItem(false);
     }
 
-    const handleOnSave = async (newItem) => {
-        const response = await axios.post("http://localhost:3002/api/items", newItem, {
-            headers: {
-                Authorization: localStorage.getItem("token")
-            }
-        });
+    const handleOnSave = async (newItem : ItemInput) => {
+        const response = await axios.post("/api/cashier/settings/menu", newItem);
         console.log(response);
         location.reload();
     }
@@ -36,7 +32,7 @@ function MenuSection() {
                         + Add Item
                     </button>
                 </div>
-                <Menus/>
+                <Menu/>
             </div>
             {
                 showAddItem && <AddItemPopup onClose={handleOnClose} onSave={handleOnSave}></AddItemPopup>

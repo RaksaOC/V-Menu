@@ -1,8 +1,10 @@
 import {Menu as LucideMenu} from "lucide-react";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/react";
 import Link from "next/link"
+import {useParams} from "next/navigation";
 
 export default function Header() {
+    const params = useParams();
 
     return (
         <div
@@ -20,7 +22,14 @@ export default function Header() {
                         <div className="py-1 flex flex-col items-center justify-between">
                             <MenuItem>
                                 {({active}) => (
-                                    <Link href="/settings?section=menus"
+                                    // <Link href="/settings?section=menus"
+                                    //       className={`${
+                                    //           active ? 'bg-gray-100' : ''
+                                    //       } w-full text-left px-4 py-2 text-sm text-gray-700`}
+                                    // >
+                                    //     Manage Menu
+                                    // </Link>
+                                    <Link href={`/${params.res}/cashier/settings`}
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
@@ -31,7 +40,14 @@ export default function Header() {
                             </MenuItem>
                             <MenuItem>
                                 {({active}) => (
-                                    <Link href="/settings?section=tables"
+                                    // <Link href="/settings?section=tables"
+                                    //       className={`${
+                                    //           active ? 'bg-gray-100' : ''
+                                    //       } w-full text-left px-4 py-2 text-sm text-gray-700`}
+                                    // >
+                                    //     Manage Table
+                                    // </Link>
+                                    <Link href="../../settings"
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
@@ -42,7 +58,14 @@ export default function Header() {
                             </MenuItem>
                             <MenuItem>
                                 {({active}) => (
-                                    <Link href="/settings?section=preferences"
+                                    // <Link href="/settings?section=preferences"
+                                    //       className={`${
+                                    //           active ? 'bg-gray-100' : ''
+                                    //       } w-full text-left px-4 py-2 text-sm text-gray-700`}
+                                    // >
+                                    //     Preferences
+                                    // </Link>
+                                    <Link href="../../settings"
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}

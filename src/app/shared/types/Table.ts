@@ -4,6 +4,7 @@ export interface Table {
 
 export interface TableInput extends Table {
     isEnabled: boolean;
+    type: string;
 }
 
 export interface TableOutput extends Table {

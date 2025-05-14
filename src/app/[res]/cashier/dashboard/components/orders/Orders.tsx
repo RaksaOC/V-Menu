@@ -1,7 +1,7 @@
 import OrderCard from "./OrderCard";
 import axios from "axios";
 import {useEffect, useState} from "react";
-import SkeletonOrderCard from "./SkeletonOrderCard";
+import SkeletonOrderCard from "../../../common/SkeletonOrderCard";
 import Link from "next/link";
 import {TableOrderOutput} from "@/app/shared/types/TableOrder";
 import {OrderOutput} from "@/app/shared/types/Order";

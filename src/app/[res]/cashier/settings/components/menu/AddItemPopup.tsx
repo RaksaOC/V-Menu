@@ -3,22 +3,26 @@ import {X} from "lucide-react";
 import {ref, uploadBytes, getDownloadURL} from "firebase/storage";
 import {storage} from "../../../../../../../../v-menu-old-backup/admin/frontend/src/firebase/config.js";
 import axios from "axios";
+import {ItemInput} from "@/app/shared/types/Item";
 
-export default function AddItemPopup({onClose, onSave}) {
-    const [imagePreview, setImagePreview] = useState(null);
-    const [imageFile, setImageFile] = useState(null);
+interface Props {
+    onClose: () => void;
+    onSave: (newItem: ItemInput) => void;
+}
+
+export default function AddItemPopup({onClose, onSave}: Props) {
+    const [imagePreview, setImagePreview] = useState("");
     // const [imageUrl, setImageUrl] = useState(null);
     const [name, setName] = useState("");
     const [price, setPrice] = useState(0);
     const [showError, setShowError] = useState(false);
 
-    const handleImageChange = (e) => {
+    const handleImageChange = (e: any) => {
         const file = e.target.files[0];
         if (file) {
-            setImageFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setImagePreview(reader.result);
+                setImagePreview(reader.result as string);
             };
             reader.readAsDataURL(file);
         }
@@ -41,7 +45,8 @@ export default function AddItemPopup({onClose, onSave}) {
                         e.preventDefault();
 
                         // Default image URL if no image is selected
-                        let imageUrl = "src/assets/img.png"
+                        let imageUrl = "/images/img.png"
+
                         // TODO: uncomment this in production use default picture locally for now
 
                         // let imageUrl = "https://firebasestorage.googleapis.com/v0/b/v-menu-e9835.firebasestorage.app/o/grey_fork_and_knife.png?alt=media&token=0dab98b1-1fd9-4035-86d3-0e8f5755c9c1";
@@ -60,7 +65,8 @@ export default function AddItemPopup({onClose, onSave}) {
                         onSave({
                             name,
                             price,
-                            image: imageUrl, // ✅ imageUrl is either the uploaded image URL or the default URL
+                            image: imageUrl,
+                            isEnabled: true,
                         });
                     }}
 

@@ -1,25 +1,35 @@
 import {useEffect, useState} from "react";
-import { X } from "lucide-react";
-import axios from "axios";
+import {X} from "lucide-react";
+import {ItemOutput} from "@/app/shared/types/Item";
 
-export default function EditItemPopup({id, image, name, price, onClose, onSave, onDelete }) {
+interface Props {
+    id: string;
+    name: string;
+    price: number;
+    image: string;
+    onClose: () => void;
+    onSave: (itemToEdit: ItemOutput) => void;
+    onDelete: (id: string) => void;
+}
+
+export default function EditItemPopup({id, image, name, price, onClose, onSave, onDelete}:Props) {
     const [imagePreview, setImagePreview] = useState(image);
     const [editedName, setEditedName] = useState(name);
     const [editedPrice, setEditedPrice] = useState(price);
     const [showError, setShowError] = useState(false);
 
-    const handleImageChange = (e) => {
+    const handleImageChange = (e : any) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setImagePreview(reader.result);
+                setImagePreview(reader.result as string);
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e:any) => {
         e.preventDefault();
         if (editedName.trim() === "") {
             setShowError(true);
@@ -27,10 +37,11 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
         }
 
         onSave({
-            id: id,
+            _id: id,
             image: imagePreview || image,
             name: editedName || name,
             price: editedPrice || price,
+            isEnabled: true
         });
     };
 
@@ -42,7 +53,7 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                     onClick={onClose}
                     className="absolute top-3 right-3 text-zinc-500 hover:text-zinc-800 dark:hover:text-white"
                 >
-                    <X size={20} />
+                    <X size={20}/>
                 </button>
 
                 {/* Form */}
@@ -52,7 +63,8 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                     {/* Image Upload */}
                     <div>
                         <div className="flex items-end gap-4 justify-between">
-                            <div className="w-36 h-36 bg-zinc-100 dark:bg-zinc-700 rounded-lg overflow-hidden border border-dashed border-zinc-300 dark:border-zinc-600 flex items-center justify-center">
+                            <div
+                                className="w-36 h-36 bg-zinc-100 dark:bg-zinc-700 rounded-lg overflow-hidden border border-dashed border-zinc-300 dark:border-zinc-600 flex items-center justify-center">
                                 {imagePreview || image ? (
                                     <img
                                         src={imagePreview}
@@ -75,7 +87,8 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                                     className="hidden"
                                 />
                                 <label htmlFor="fileInput">
-                                    <span className="inline-block px-4 py-2 bg-blue-600 text-white text-xs rounded-xl cursor-pointer hover:bg-blue-700 transition">
+                                    <span
+                                        className="inline-block px-4 py-2 bg-blue-600 text-white text-xs rounded-xl cursor-pointer hover:bg-blue-700 transition">
                                         Choose Image
                                     </span>
                                 </label>

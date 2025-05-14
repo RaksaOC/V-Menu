@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import MenuCard from "./MenuCard.jsx";
-import SkeletonMenuCard from "../common/skeleton/SkeletonMenuCard.jsx";
+import MenuCard from "./MenuCard";
+import SkeletonMenuCard from "../../../common/SkeletonMenuCard";
+import {ItemOutput} from "@/app/shared/types/Item";
 
-const Menus = () => {
-    const [menuItems, setMenuItems] = useState([]);
+const Menu = () => {
+    const [menuItems, setMenuItems] = useState<ItemOutput[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await axios.get("http://localhost:3002/api/items", {
-                    headers: {
-                        Authorization: localStorage.getItem("token")
-                    }});
+                const res = await axios.get("/api/cashier/settings/menu");
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);
@@ -55,4 +53,4 @@ const Menus = () => {
     );
 };
 
-export default Menus;
+export default Menu;

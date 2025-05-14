@@ -1,20 +1,25 @@
 import {AlertCircle, Pencil} from "lucide-react";
 import {useState} from "react";
-import EditItemPopup from "./EditItemPopup.jsx";
+import EditItemPopup from "./EditItemPopup";
 import axios from "axios";
+import {ItemOutput} from "@/app/shared/types/Item";
 
-const MenuCard = ({id, name, price, image}) => {
+interface Props {
+    id: string;
+    name: string;
+    image: string;
+    price: number;
+}
+
+const MenuCard = ({id, name, price, image}: Props) => {
     const [isEditing, setIsEditing] = useState(false);
 
     function handleOnClose() {
         setIsEditing(false);
     }
 
-    async function handleOnSave(editedItem) {
-        const response = await axios.put(`http://localhost:3002/api/items/${editedItem.id}`, editedItem, {
-            headers: {
-                Authorization: localStorage.getItem("token")
-            }});
+    async function handleOnSave(editedItem : ItemOutput) {
+        const response = await axios.put(`/api/cashier/settings/menu/${editedItem._id}`, editedItem);
         if (response.status === 200) {
             console.log(response);
         }
@@ -22,11 +27,8 @@ const MenuCard = ({id, name, price, image}) => {
         location.reload();
     }
 
-    async function handleOnDelete(id) {
-        const response = await axios.delete(`http://localhost:3002/api/items/${id}`, {
-            headers: {
-                Authorization: localStorage.getItem("token")
-            }});
+    async function handleOnDelete(id : string) {
+        const response = await axios.delete(`/api/cashier/settings/menu/${id}`);
         if (response.status === 200) {
             console.log(response);
         }

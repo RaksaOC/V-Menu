@@ -1,8 +1,8 @@
-import Tables from "../dashboard/Tables.jsx";
 import {useState} from "react";
-import AddTablePopup from "./AddTablePopup.jsx";
-import SettingsTables from "./Tables.jsx";
+import AddTablePopup from "./AddTablePopup";
+import Tables from "./Tables";
 import axios from "axios";
+import {TableInput} from "@/app/shared/types/Table";
 
 function TablesSection() {
     const [showAddTable, setShowAddTable] = useState(false);
@@ -11,13 +11,9 @@ function TablesSection() {
         setShowAddTable(false);
     }
 
-    const  handleOnSave = async (table) => {
+    const  handleOnSave = async (table: TableInput) => {
         try {
-            const response = await axios.post("http://localhost:3002/api/tables", table,
-                {
-                    headers: {
-                        Authorization: localStorage.getItem("token")
-                    }})
+            const response = await axios.post("/api/cashier/settings/tables", table)
             if (response.status === 200) {
                 console.log("response", response);
             }
@@ -43,7 +39,7 @@ function TablesSection() {
                         + Add Table
                     </button>
                 </div>
-                <SettingsTables/>
+                <Tables/>
                 {
                     showAddTable && <AddTablePopup onClose={handleOnClose} onSave={handleOnSave}></AddTablePopup>
                 }

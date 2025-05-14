@@ -1,29 +1,30 @@
 import {QrCode, Pencil} from "lucide-react";
 import {useState} from "react";
-import EditTablePopup from "./EditTablePopup.jsx";
+import EditTablePopup from "./EditTablePopup";
 import axios from "axios";
-import EditItemPopup from "./EditItemPopup.jsx";
+import {TableInput, TableOutput} from "@/app/shared/types/Table";
 
-function TableCard({table}) {
+interface Props {
+    table: TableOutput;
+}
+
+function TableCard({table}: Props) {
     const [isEditing, setIsEditing] = useState(false);
 
 
-    async function handleOnSave(id, name) {
+    async function handleOnSave(id : string, name : string) {
         const editedTable = {
             name: name,
         }
 
         try {
-            const response = await axios.put(`http://localhost:3002/api/tables/${id}`, editedTable, {
-                headers: {
-                    Authorization: localStorage.getItem("token")
-                }});
+            const response = await axios.put(`/api/cashier/settings/tables/${id}`, editedTable);
             if (response.status === 200) {
                 console.log("TableCard updated:", response.data);
                 setIsEditing(false);
                 location.reload();
             }
-        } catch (error) {
+        } catch (error : any) {
             if (error.response?.status === 409) {
                 console.log("TableCard name is taken");
                 setIsEditing(true);
@@ -39,12 +40,8 @@ function TableCard({table}) {
         setIsEditing(false);
     }
 
-    async function handleOnDelete(id) {
-        const response = await axios.delete(`http://localhost:3002/api/tables/${id}`, {
-            headers: {
-                Authorization: localStorage.getItem("token")
-            }
-        });
+    async function handleOnDelete(id:string) {
+        const response = await axios.delete(`/api/cashier/settings/tables/${id}`);
         if (response.status === 200) {
             console.log(response);
         }
@@ -79,7 +76,7 @@ function TableCard({table}) {
             </div>
             {
                 isEditing &&
-                <EditTablePopup id={table._id} name={table.id} onClose={handleOnCancel} onSave={handleOnSave}
+                <EditTablePopup id={table._id} name={table.name} onClose={handleOnCancel} onSave={handleOnSave}
                                 onDelete={handleOnDelete}/>
             }
         </div>

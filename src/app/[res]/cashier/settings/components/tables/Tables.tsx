@@ -1,24 +1,25 @@
 import {useEffect, useState} from "react";
-import TableCard from "./TableCard.jsx";
-import SkeletonTableCard from "../../../../../../../../v-menu-old-backup/admin/frontend/src/components/common/skeleton/SkeletonTableCard.tsx"; // Import skeleton
+import TableCard from "./TableCard";
+import SkeletonTableCard from "../../../common/SkeletonTableCard";
 import axios from "axios";
+import {TableOutput} from "@/app/shared/types/Table";
 
 async function getTables() {
-    const response = await axios.get("http://localhost:3002/api/tables", {
-        headers: {
-            Authorization: localStorage.getItem("token")
-        }
-    });
-    return response.data;
+    try {
+        const response = await axios.get("/api/cashier/settings/tables");
+        return response.data;
+    } catch (err) {
+        console.log(err);
+    }
 }
 
 export default function SettingsTables() {
-    const [tables, setTables] = useState([]);
+    const [tables, setTables] = useState<TableOutput[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         async function fetchTables() {
-            const data = await getTables();
+            const data: TableOutput[] = await getTables();
             setTables(data);
             setIsLoading(false);
         }
@@ -40,7 +41,7 @@ export default function SettingsTables() {
                     tables.length > 0 ?
                         tables.map((table) => (
                             <TableCard
-                                key={table.id}
+                                key={table._id}
                                 table={table}
                             />
                         )) : (<div className={"w-full h-96 flex justify-center items-center"}>

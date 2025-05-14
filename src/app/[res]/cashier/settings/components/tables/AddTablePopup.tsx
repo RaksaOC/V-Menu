@@ -1,7 +1,13 @@
 import {useState} from "react";
 import {X} from "lucide-react";
+import {TableInput} from "@/app/shared/types/Table";
 
-export default function AddTablePopup({onClose, onSave}) {
+interface Props {
+    onClose: () => void;
+    onSave: (tableAddType : TableInput) => void;
+}
+
+export default function AddTablePopup({onClose, onSave} : Props) {
     const [useAutoIncrement, setUseAutoIncrement] = useState(true);
     const [tableName, setTableName] = useState("");
 
@@ -25,7 +31,8 @@ export default function AddTablePopup({onClose, onSave}) {
                         if (!isSaveDisabled) {
                             onSave({
                                 name: useAutoIncrement ? "" : tableName,
-                                type: useAutoIncrement ? "auto" : "manual"
+                                type: useAutoIncrement ? "auto" : "manual",
+                                isEnabled: true
                             });
                         }
                     }}
