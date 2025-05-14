@@ -46,7 +46,7 @@ export default function Orders() {
 
 
     return (
-        <div className="orders flex justify-center items-center">
+        <div className="orders w-full flex justify-center items-center">
             <div className={"orders-wrapper max-w-[1024px] w-full text-center flex flex-col gap-6"}>
                 {
                     isLoading && (

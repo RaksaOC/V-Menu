@@ -57,9 +57,9 @@ export default function Overview() {
     ] : [];
 
     return (
-        <div className="overview py-12 flex justify-center items-center bg-transparent min-h-[50vh]">
+        <div className="overview py-12 w-full flex justify-center items-center bg-transparent min-h-[50vh]">
             <div
-                className="overview-wrapper grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-6xl w-full px-4">
+                className="overview-wrapper grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full">
                 {isLoading ? (
                     <>
                         <SkeletonOverviewCard/>
@@ -73,7 +73,7 @@ export default function Overview() {
                     cards.map((card, index) => (
                         <React.Fragment key={index}>
                             <div
-                                className="card bg-blue-900 shadow-md rounded-2xl p-6 gap-1 flex flex-row items-end hover:shadow-xl transition duration-300 text-white">
+                                className="card w-full bg-blue-900 shadow-md rounded-2xl p-6 gap-1 flex flex-row items-end hover:shadow-xl transition duration-300 text-white">
                                 <div
                                     className="icon w-20 h-20 rounded-full flex items-center justify-center text-2xl mr-4">
                                     <img src={card.icon} alt="icon"

@@ -54,7 +54,7 @@ export default function Tables() {
     }
 
     return (
-        <div className="tables flex gap-2.5 justify-center items-center">
+        <div className="tables flex w-full gap-2.5 justify-center items-center">
             <div
                 className={"tables-wrapper max-w-[1024px] w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 place-items-center"}>
                 {isLoading ? (

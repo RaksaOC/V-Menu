@@ -48,41 +48,45 @@ const Dashboard = () => {
                 <div className={"nav-wrapper max-w-[1024px] flex justify-between h-full w-full flex-wrap gap-1"}>
                     <button
                         onClick={() => setSection("overview")}
-                        className={`flex-1 py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-100px ${
+                        className={`basis-[45%] sm:basis-[22%] grow py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
                             section === "overview"
                                 ? "bg-blue-600 text-white"
                                 : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-700/50"
                         }`}
+
                     >
                         Overview
                     </button>
                     <button
                         onClick={() => setSection("tables")}
-                        className={`flex-1 py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
+                        className={`basis-[45%] sm:basis-[22%] grow py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
                             section === "tables"
                                 ? "bg-blue-600 text-white"
                                 : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-700/50"
                         }`}
+
                     >
                         Tables
                     </button>
                     <button
                         onClick={() => setSection("orders")}
-                        className={`flex-1 py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
+                        className={`basis-[45%] sm:basis-[22%] grow py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
                             section === "orders"
                                 ? "bg-blue-600 text-white"
                                 : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-700/50"
                         }`}
+
                     >
                         Orders
                     </button>
                     <button
                         onClick={() => setSection("menu")}
-                        className={`flex-1 py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
+                        className={`basis-[45%] sm:basis-[22%] grow py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
                             section === "menu"
                                 ? "bg-blue-600 text-white"
                                 : "text-zinc-700 dark:text-zinc-300 hover:bg-blue-700/50"
                         }`}
+
                     >
                         Menu
                     </button>
@@ -90,8 +94,10 @@ const Dashboard = () => {
             </div>
 
             {/* Content */}
-            <div className="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-md">
-                {renderContent()}
+            <div className="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-md flex justify-center items-center">
+                <div className={"content-wrapper w-full flex justify-center items-center max-w-[1024px]"}>
+                    {renderContent()}
+                </div>
             </div>
         </div>
     );
