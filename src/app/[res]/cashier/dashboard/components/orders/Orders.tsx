@@ -4,6 +4,7 @@ import {useEffect, useState} from "react";
 import SkeletonOrderCard from "./SkeletonOrderCard";
 import Link from "next/link";
 import {TableOrderOutput} from "@/app/shared/types/TableOrder";
+import {OrderOutput} from "@/app/shared/types/Order";
 
 async function getTableOrders() {
     const response = await axios.get("/api/cashier/dashboard/orders",
@@ -32,14 +33,10 @@ export default function Orders() {
     }, []);
 
 
-    const handleMarkPaid = async (orderId) => {
-        const isPayed = orders.find((order) => order._id === orderId).isPayed;
+    const handleMarkPaid = async (orderId : string) => {
+        const orderToMark = orders.find((order : TableOrderOutput) => order._id === orderId)  || null;
 
-        const response = await axios.patch(`http://localhost:3002/api/orders/${orderId}/pay`, {isPayed: isPayed}, {
-            headers: {
-                Authorization: localStorage.getItem("token")
-            }
-        });
+        const response = await axios.patch(`/api/cashier/dashboard/orders/${orderId}`, {isPayed: orderToMark.isPayed});
         if (response.status !== 200) {
             return;
         }

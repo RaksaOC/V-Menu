@@ -13,3 +13,7 @@ body {
   color: var(--foreground);
   font-family: var(--poppins);
 }
+
+button{
+  cursor: pointer;
+}

@@ -34,12 +34,7 @@ export default function Tables() {
             if (t._id === id) {
                 const updatedTable = {...t, isEnabled: !t.isEnabled};
                 // Send updated table to backend
-                axios.patch(`http://localhost:3002/api/tables/${id}/availability`, {isEnabled: !updatedTable.isEnabled},
-                    {
-                        headers: {
-                            Authorization: localStorage.getItem("token")
-                        }
-                    });
+                axios.patch(`/api/cashier/dashboard/tables/${id}`, {isEnabled: !updatedTable.isEnabled});
                 return updatedTable;
             }
             return t;
