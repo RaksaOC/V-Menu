@@ -1,4 +1,4 @@
-import {Item} from "@/app/[res]/types/Item";
+import {Item} from "@/app/shared/types/Item";
 
 interface Props {
     businessName: string;

@@ -1,5 +1,5 @@
 import { QrCode } from "lucide-react";
-import {Table} from "@/app/[res]/types/Table";
+import {Table} from "@/app/shared/types/Table";
 
 interface TableCardProps {
     table: Table;

@@ -1,6 +1,6 @@
 import {useState} from "react";
 import Invoice from "./Invoice";
-import {Order} from "@/app/[res]/types/Order";
+import {Order} from "@/app/shared/types/Order";
 
 interface Props {
     order: Order[],

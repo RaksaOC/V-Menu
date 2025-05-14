@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import {Item} from "@/app/[res]/types/Item";
+import {Item} from "@/app/shared/types/Item";
 
 interface CardProps {
     orderId: string;

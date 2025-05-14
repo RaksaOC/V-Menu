@@ -1,9 +1,9 @@
-import {MoreHorizontal, MoreVertical, Settings} from "lucide-react";
 import {Menu as LucideMenu} from "lucide-react";
-import {Menu, MenuButton} from "@headlessui/react";
-import {Link} from "react-router"
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/react";
+import Link from "next/router"
 
 export default function Header() {
+    // @ts-ignore
     return (
         <div
             className="header w-full flex bg-zinc-900  items-center justify-center mb-6 sticky top-0 right-0 left-0 p-2.5 z-50">
@@ -11,14 +11,14 @@ export default function Header() {
                 <h1 className="text-2xl font-bold">V-Menu Admin</h1>
 
                 <Menu as="div" className="relative">
-                    <Menu.Button className="flex gap-2.5 cursor-pointer focus:outline-none">
+                    <MenuButton className="flex gap-2.5 cursor-pointer focus:outline-none">
                         <LucideMenu size={30} className="text-white"/>
-                    </Menu.Button>
+                    </MenuButton>
 
-                    <Menu.Items
+                    <MenuItems
                         className="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg focus:outline-none z-50">
                         <div className="py-1 flex flex-col items-center justify-between">
-                            <Menu.Item>
+                            <MenuItem>
                                 {({active}) => (
                                     <Link to="/settings" state={{section: "menus"}}
                                           className={`${
@@ -28,8 +28,8 @@ export default function Header() {
                                         Manage Menu
                                     </Link>
                                 )}
-                            </Menu.Item>
-                            <Menu.Item>
+                            </MenuItem>
+                            <MenuItem>
                                 {({active}) => (
                                     <Link to="/settings" state={{section: "tables"}}
                                           className={`${
@@ -39,8 +39,8 @@ export default function Header() {
                                         Manage Table
                                     </Link>
                                 )}
-                            </Menu.Item>
-                            <Menu.Item>
+                            </MenuItem>
+                            <MenuItem>
                                 {({active}) => (
                                     <Link to="/settings" state={{section: "preferences"}}
                                           className={`${
@@ -50,8 +50,8 @@ export default function Header() {
                                         Preferences
                                     </Link>
                                 )}
-                            </Menu.Item>
-                            <Menu.Item>
+                            </MenuItem>
+                            <MenuItem>
                                 {({active}) => (
                                     <Link to="/settings" state={{section: "menu"}}
                                           className={`${
@@ -61,9 +61,9 @@ export default function Header() {
                                         Log Out
                                     </Link>
                                 )}
-                            </Menu.Item>
+                            </MenuItem>
                         </div>
-                    </Menu.Items>
+                    </MenuItems>
                 </Menu>
             </div>
         </div>

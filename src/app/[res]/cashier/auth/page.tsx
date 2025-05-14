@@ -2,12 +2,12 @@
 
 import {useState, FormEvent} from "react";
 import {signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential} from "firebase/auth";
-import {auth} from "../../firebase/config";
+import {auth} from "@/app/shared/firebase/config";
 import {Eye, EyeOff} from "lucide-react";
 import {useRouter} from "next/router";
 
 const Auth = () => {
-    const router = useRouter();
+    // const router = useRouter();
 
     const [isLogin, setIsLogin] = useState<boolean>(true);
     const [email, setEmail] = useState<string>("");
@@ -32,7 +32,9 @@ const Auth = () => {
             const token = await userCred.user.getIdToken();
             localStorage.setItem("token", "Bearer " + token);
 
-            router.push("/dashboard");
+            console.log("Successfully logged in");
+
+            // await router.push("/dashboard");
         } catch (err: any) {
             console.error(err);
             alert(err.message);
