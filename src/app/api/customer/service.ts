@@ -10,7 +10,7 @@ export async function fetchItems(){
 }
 
 export async function placeOrder(order: OrderInput){
-    console.log("recieved order in service", order);
+    console.log("recieved order in service.ts", order);
     await connectToDB();
     const savedOrder = new OrderModel(order);
     console.log("new model is", savedOrder);

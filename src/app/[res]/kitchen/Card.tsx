@@ -1,7 +1,6 @@
 'use client';
 
 import React from "react";
-import {Item} from "@/app/shared/types/Item";
 import {CartItem} from "@/app/shared/types/CartItem";
 
 interface CardProps {

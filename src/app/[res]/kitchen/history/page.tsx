@@ -1,42 +1,60 @@
-import Card from "@/app/[res]/kitchen/history/Card";
-import {Item} from "@/app/shared/types/Item";
+'use client'
 
-export default function History(){
+import Card from "@/app/[res]/kitchen/Card";
+import {useEffect, useState} from "react";
+import {OrderOutput} from "@/app/shared/types/Order";
+import axios from "axios";
+import {useRouter} from "next/navigation";
 
-    const orderItems : Item[] = [
-        {
-            id: "1",
-            name: "Pizza",
-            image: "",
-            quantity: 1,
-            price: 0
-        },
-        {
-            id: "2",
-            name: "Pizza",
-            image: "",
-            quantity: 1,
-            price: 0
-        },
-        {
-            id: "3",
-            name: "Pizza",
-            image: "",
-            quantity: 1,
-            price: 0
+export default function History() {
+    const router = useRouter();
+    const [orders, setOrders] = useState<OrderOutput[]>([]);
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const response = await axios.get("/api/kitchen");
+                setOrders(response.data.filter((order: OrderOutput) => order.isDone));
+            } catch (err) {
+                console.log(err);
+            }
         }
-    ]
+        fetchOrders();
+    }, []);
 
     return (
-        <Card
-            key={orderItems[0].id}
-            orderId={"01010101"}
-            table={"1"}
-            orders={orderItems}
-            isDone={true}
-            onDone={function (orderId: string): void {
-                console.log(orderId);
-            }}
-        ></Card>
+        <div className="w-full min-h-screen flex flex-col justify-start items-center bg-white">
+            <div className={"back-button flex justify-start w-full p-4"}>
+                <button
+                    onClick={() => {
+                        router.back()
+                    }}
+                    className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl cursor-pointer"
+                >
+                    Back to orders
+                </button>
+            </div>
+            <h1>Orders Completed</h1>
+            <div className={"container p-4 flex flex-col"}>
+                {
+                    orders.length > 0 ? (
+                        orders.map((order) => (
+                            <Card
+                                key={order._id}
+                                orderId={order._id}
+                                table={order.table}
+                                orderedItems={order.orderedItems}
+                                onDone={() => {
+                                }}
+                                isDone={order.isDone}
+                            />
+                        ))
+                    ) : (
+                        <h1 className="mt-[50vh] text-4xl text-center">No Orders To Display</h1>
+                    )
+                }
+            </div>
+
+        </div>
+
     )
 }

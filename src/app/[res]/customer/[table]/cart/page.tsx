@@ -61,7 +61,9 @@ export default function CartPage() {
         }
 
         try {
+            const table : string = JSON.parse(localStorage.getItem("table") || "") || "";
             const orderToAdd: OrderInput = {
+                table: table,
                 isDone: false,
                 orderedItems: cartItems,
             }

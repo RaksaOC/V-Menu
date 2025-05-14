@@ -7,8 +7,10 @@ export interface Order {
 export interface OrderOutput extends Order {
     _id: string;
     isDone: boolean;
+    table: string;
 }
 
 export interface OrderInput extends Order {
     isDone: boolean;
+    table: string;
 }
