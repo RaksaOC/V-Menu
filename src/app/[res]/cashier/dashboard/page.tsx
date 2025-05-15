@@ -8,16 +8,15 @@ import Overview from "./components/overview/Overview";
 import Header from "./components/Header";
 
 const Dashboard = () => {
-    // const savedSection = localStorage.getItem("dashboardSection");
+    const savedSection = localStorage.getItem("dashboardSection");
     const [section, setSection] = useState("");
 
     useEffect(() => {
-        // if (!savedSection) {
-        //     setSection("overview");
-        // } else {
-        //     setSection(savedSection);
-        // }
-        setSection("overview");
+        if (!savedSection) {
+            setSection("overview");
+        } else {
+            setSection(savedSection);
+        }
     }, [])
 
     useEffect(() => {
@@ -47,7 +46,10 @@ const Dashboard = () => {
                 className="nav flex justify-center bg-zinc-100 dark:bg-zinc-800 p-2 rounded-xl mb-4 text-sm font-medium flex-wrap sm:justify-center items-center">
                 <div className={"nav-wrapper max-w-[1024px] flex justify-between h-full w-full flex-wrap gap-1"}>
                     <button
-                        onClick={() => setSection("overview")}
+                        onClick={() => {
+                            setSection("overview")
+                            localStorage.setItem("dashboardSection", "overview");
+                        }}
                         className={`basis-[45%] sm:basis-[22%] grow py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
                             section === "overview"
                                 ? "bg-blue-600 text-white"
@@ -58,7 +60,10 @@ const Dashboard = () => {
                         Overview
                     </button>
                     <button
-                        onClick={() => setSection("tables")}
+                        onClick={() => {
+                            setSection("tables")
+                            localStorage.setItem("dashboardSection", "tables");
+                        }}
                         className={`basis-[45%] sm:basis-[22%] grow py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
                             section === "tables"
                                 ? "bg-blue-600 text-white"
@@ -69,7 +74,10 @@ const Dashboard = () => {
                         Tables
                     </button>
                     <button
-                        onClick={() => setSection("orders")}
+                        onClick={() => {
+                            setSection("orders")
+                            localStorage.setItem("dashboardSection", "orders");
+                        }}
                         className={`basis-[45%] sm:basis-[22%] grow py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
                             section === "orders"
                                 ? "bg-blue-600 text-white"
@@ -80,7 +88,10 @@ const Dashboard = () => {
                         Orders
                     </button>
                     <button
-                        onClick={() => setSection("menu")}
+                        onClick={() => {
+                            setSection("menu")
+                            localStorage.setItem("dashboardSection", "menu");
+                        }}
                         className={`basis-[45%] sm:basis-[22%] grow py-2 rounded-xl cursor-pointer transition-colors duration-200 min-w-[100px] m-1 ${
                             section === "menu"
                                 ? "bg-blue-600 text-white"

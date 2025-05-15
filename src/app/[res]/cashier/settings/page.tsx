@@ -8,21 +8,20 @@ import {ArrowLeft} from "lucide-react";
 import {useRouter} from "next/navigation";
 
 const Dashboard = () => {
-    // const savedSection = localStorage.getItem("dashboardSection");
+    const savedSection = localStorage.getItem("settingsSection");
     const [section, setSection] = useState("");
     const router = useRouter();
 
     useEffect(() => {
-        // if (!savedSection) {
-        //     setSection("overview");
-        // } else {
-        //     setSection(savedSection);
-        // }
-        setSection("overview");
+        if (!savedSection) {
+            setSection("menu");
+        } else {
+            setSection(savedSection);
+        }
     }, [])
 
     useEffect(() => {
-        localStorage.setItem("dashboardSection", section);
+        localStorage.setItem("settingsSection", section);
     }, [section])
 
     const renderContent = () => {
@@ -87,7 +86,7 @@ const Dashboard = () => {
 
             {/* Content */}
             <div className="bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-md flex justify-center items-center">
-                <div className={"content-wrapper flex justify-center items-center max-w-[1024px]"}>
+                <div className={"content-wrapper flex justify-center items-center w-full max-w-[1024px]"}>
                     {renderContent()}
                 </div>
             </div>
