@@ -33,6 +33,7 @@ export default function Header() {
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
+                                          onClick={() => {localStorage.setItem("settingsSection", "menu")}}
                                     >
                                         Manage Menu
                                     </Link>
@@ -47,12 +48,13 @@ export default function Header() {
                                     // >
                                     //     Manage Table
                                     // </Link>
-                                    <Link href="../../settings"
+                                    <Link href={`/${params.res}/cashier/settings`}
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
+                                          onClick={() => {localStorage.setItem("settingsSection", "tables")}}
                                     >
-                                        Manage Table
+                                        Manage Tables
                                     </Link>
                                 )}
                             </MenuItem>
@@ -65,10 +67,11 @@ export default function Header() {
                                     // >
                                     //     Preferences
                                     // </Link>
-                                    <Link href="../../settings"
+                                    <Link href={`/${params.res}/cashier/settings`}
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
+                                          onClick={() => {localStorage.setItem("settingsSection", "preferences")}}
                                     >
                                         Preferences
                                     </Link>

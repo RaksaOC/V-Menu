@@ -8,21 +8,20 @@ import {ArrowLeft} from "lucide-react";
 import {useRouter} from "next/navigation";
 
 const Dashboard = () => {
-    // const savedSection = localStorage.getItem("dashboardSection");
-    const [section, setSection] = useState("");
+    const savedSection = localStorage.getItem("settingsSection");
+    const [section, setSection] = useState("menu");
     const router = useRouter();
 
     useEffect(() => {
-        // if (!savedSection) {
-        //     setSection("overview");
-        // } else {
-        //     setSection(savedSection);
-        // }
-        setSection("overview");
+        if (!savedSection) {
+            setSection("menu");
+        } else {
+            setSection(savedSection);
+        }
     }, [])
 
     useEffect(() => {
-        localStorage.setItem("dashboardSection", section);
+        localStorage.setItem("settingsSection", section);
     }, [section])
 
     const renderContent = () => {
