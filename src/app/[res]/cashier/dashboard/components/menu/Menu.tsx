@@ -6,6 +6,7 @@ import MenuCard from "./MenuCard";
 import SkeletonMenuCards from "../../../common/SkeletonMenuCard";
 import {ItemOutput} from "@/app/shared/types/Item";
 import {jwtDecode} from "jwt-decode";
+import api from "@/app/shared/lib/axios";
 
 const Menu = () => {
     const [menuItems, setMenuItems] = useState<ItemOutput[]>([]);
@@ -15,11 +16,7 @@ const Menu = () => {
         async function fetchMenu() {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get("/api/cashier/dashboard/menu", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                const res = await api.get("/api/cashier/dashboard/menu");
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);

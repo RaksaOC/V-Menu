@@ -4,10 +4,11 @@ import {toast} from "react-toastify";
 import axios from "axios";
 import SkeletonTableCard from "../../../common/SkeletonTableCard";
 import {TableOutput} from "@/app/shared/types/Table";
+import api from "@/app/shared/lib/axios";
 
 async function getTables() {
     try {
-        const response = await axios.get("/api/cashier/dashboard/tables");
+        const response = await api.get("/api/cashier/dashboard/tables");
         return response.data;
     } catch (err) {
         console.log(err);

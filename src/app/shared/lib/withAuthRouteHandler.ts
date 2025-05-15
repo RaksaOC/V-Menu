@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import admin from "@/app/shared/firebase/admin";
 
 // -------------------------------------------
@@ -28,8 +28,8 @@ async function verifyToken(token: string) {
 
 // -------------------------------------------
 // 3. Main wrapper: adds auth check before calling your real handler
-export function withAuthRouteHandler(handler: (req: Request, context?: any, user?: any) => Promise<NextResponse>) {
-    return async (req: Request, context?: any): Promise<NextResponse> => {
+export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, user?: any) => Promise<NextResponse>) {
+    return async (req: NextRequest, context?: any): Promise<NextResponse> => {
         // Extract token from header
         const token = extractToken(req);
         if (!token) {

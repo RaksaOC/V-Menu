@@ -3,10 +3,11 @@ import TableCard from "./TableCard";
 import SkeletonTableCard from "../../../common/SkeletonTableCard";
 import axios from "axios";
 import {TableOutput} from "@/app/shared/types/Table";
+import api from "@/app/shared/lib/axios";
 
 async function getTables() {
     try {
-        const response = await axios.get("/api/cashier/settings/tables");
+        const response = await api.get("/api/cashier/settings/tables");
         return response.data;
     } catch (err) {
         console.log(err);

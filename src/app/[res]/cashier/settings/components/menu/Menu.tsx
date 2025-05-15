@@ -3,35 +3,27 @@ import axios from "axios";
 import MenuCard from "./MenuCard";
 import SkeletonMenuCard from "../../../common/SkeletonMenuCard";
 import {ItemOutput} from "@/app/shared/types/Item";
+import api from "@/app/shared/lib/axios"
 
 const Menu = () => {
     const [menuItems, setMenuItems] = useState<ItemOutput[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-            async function fetchMenu() {
-                try {
-                    const res = await axios.get("/api/cashier/settings/menu", {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem("token")}`,
-                        }
-                    });
-                    setMenuItems(res.data);
-                } catch
-                    (err) {
-                    console.error("Error fetching menu:", err);
-                } finally {
-                    setLoading(false);
-                }
+        async function fetchMenu() {
+            try {
+                const res = await api.get("/api/cashier/settings/menu");
+                setMenuItems(res.data);
+            } catch
+                (err) {
+                console.error("Error fetching menu:", err);
+            } finally {
+                setLoading(false);
             }
-
-            fetchMenu();
         }
 
-        ,
-        []
-    )
-    ;
+        fetchMenu();
+    }, []);
 
     return (
         <div className="menu w-full flex justify-center items-center">
