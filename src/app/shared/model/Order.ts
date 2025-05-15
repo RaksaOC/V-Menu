@@ -1,0 +1,10 @@
+import mongoose from 'mongoose';
+
+const OrderSchema = new mongoose.Schema({
+    table: {type: String,},
+    orderedItems: [],
+    orderedAt: { type: Date, default: Date.now() },
+    isDone: { type: Boolean, default: false }
+})
+
+export const Order = mongoose.model('Order', OrderSchema, "orders") || mongoose.models.Order;
