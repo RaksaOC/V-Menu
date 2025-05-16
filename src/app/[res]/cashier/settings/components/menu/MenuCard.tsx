@@ -1,8 +1,8 @@
-import {AlertCircle, Pencil} from "lucide-react";
+import {Pencil} from "lucide-react";
 import {useState} from "react";
 import EditItemPopup from "./EditItemPopup";
-import axios from "axios";
 import {ItemOutput} from "@/app/shared/types/Item";
+import api from "@/app/shared/lib/axios";
 
 interface Props {
     id: string;
@@ -19,7 +19,7 @@ const MenuCard = ({id, name, price, image}: Props) => {
     }
 
     async function handleOnSave(editedItem : ItemOutput) {
-        const response = await axios.put(`/api/cashier/settings/menu/${editedItem._id}`, editedItem);
+        const response = await api.put(`/api/cashier/settings/menu/${editedItem._id}`, editedItem);
         if (response.status === 200) {
             console.log(response);
         }
@@ -28,7 +28,7 @@ const MenuCard = ({id, name, price, image}: Props) => {
     }
 
     async function handleOnDelete(id : string) {
-        const response = await axios.delete(`/api/cashier/settings/menu/${id}`);
+        const response = await api.delete(`/api/cashier/settings/menu/${id}`);
         if (response.status === 200) {
             console.log(response);
         }

@@ -32,7 +32,7 @@ export default function Orders() {
     const handleMarkPaid = async (orderId : string) => {
         const orderToMark = orders.find((order : TableOrderOutput) => order._id === orderId)  || null;
 
-        const response = await axios.patch(`/api/cashier/dashboard/orders/${orderId}`, {isPayed: orderToMark.isPayed});
+        const response = await api.patch(`/api/cashier/dashboard/orders/${orderId}`, {isPayed: orderToMark.isPayed});
         if (response.status !== 200) {
             return;
         }

@@ -1,11 +1,11 @@
 import {NextRequest, NextResponse} from "next/server";
 import {connectToDB} from "@/app/shared/lib/db";
 import {TableOrder} from "@/app/shared/model/TableOrder";
+import {withAuthRouteHandler} from "@/app/shared/lib/withAuthRouteHandler";
 
 // Don't destructure `params` in the function signature
-export async function PATCH(req: NextRequest, context: any) {
+export const PATCH = withAuthRouteHandler (async (req: NextRequest, context: any) => {
     try {
-
         await connectToDB();
 
         // Access `params` here safely
@@ -33,4 +33,4 @@ export async function PATCH(req: NextRequest, context: any) {
         console.error("PATCH error:", error);
         return NextResponse.json({message: "Failed to update item", status: 500});
     }
-}
+});

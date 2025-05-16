@@ -30,7 +30,7 @@ const Menu = () => {
 
     async function handleToggle(id: string) {
         const isEnabled = menuItems.find(item => item._id === id).isEnabled;
-        const res = await axios.patch(`/api/cashier/dashboard/menu/${id}`, {isEnabled: isEnabled});
+        const res = await api.patch(`/api/cashier/dashboard/menu/${id}`, {isEnabled: isEnabled});
         console.log("response from update: ", res.data);
 
         // TODO: fix where server error it wont update UI (the button)

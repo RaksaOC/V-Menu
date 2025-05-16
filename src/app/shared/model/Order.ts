@@ -4,7 +4,8 @@ const OrderSchema = new mongoose.Schema({
     table: {type: String,},
     orderedItems: [],
     orderedAt: { type: Date, default: Date.now() },
-    isDone: { type: Boolean, default: false }
+    isDone: { type: Boolean, default: false },
+    tenantId: { type: String, required: true },
 })
 
 export const Order = mongoose.model('Order', OrderSchema, "orders") || mongoose.models.Order;

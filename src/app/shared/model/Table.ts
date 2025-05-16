@@ -9,7 +9,8 @@ const tableSchema = new mongoose.Schema({
     isEnabled: {
         type: Boolean,
         default: true
-    }
+    },
+    tenantId: { type: String, required: true },
 });
 
 export const Table = mongoose.models.Table || mongoose.model("Table", tableSchema);

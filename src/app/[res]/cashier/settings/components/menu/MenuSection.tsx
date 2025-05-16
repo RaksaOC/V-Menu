@@ -3,6 +3,7 @@ import Menu from "./Menu";
 import {useState} from "react";
 import axios from "axios";
 import {ItemInput} from "@/app/shared/types/Item";
+import api from "@/app/shared/lib/axios";
 
 function MenuSection() {
     const [showAddItem, setShowAddItem] = useState(false);
@@ -12,7 +13,7 @@ function MenuSection() {
     }
 
     const handleOnSave = async (newItem : ItemInput) => {
-        const response = await axios.post("/api/cashier/settings/menu", newItem);
+        const response = await api.post("/api/cashier/settings/menu", newItem);
         console.log(response);
         location.reload();
     }

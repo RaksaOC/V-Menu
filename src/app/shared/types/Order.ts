@@ -13,4 +13,5 @@ export interface OrderOutput extends Order {
 export interface OrderInput extends Order {
     isDone: boolean;
     table: string;
+    tenantId?: string;
 }

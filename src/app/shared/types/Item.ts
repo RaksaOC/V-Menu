@@ -11,4 +11,5 @@ export interface ItemOutput extends ItemBase {
 
 export interface ItemInput extends ItemBase {
     isEnabled: boolean;
+    tenantId?: string;
 }

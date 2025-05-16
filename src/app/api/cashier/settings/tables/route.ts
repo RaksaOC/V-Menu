@@ -25,7 +25,7 @@ export const POST = withAuthRouteHandler(async (req: NextRequest, context: any, 
             const isTaken = await Table.exists({ name: body.name });
             if (isTaken) return NextResponse.json({ message: "Name is taken" }, { status: 400 });
 
-            const newTable = new Table({ name: body.name, isEnabled: false });
+            const newTable = new Table({ name: body.name, isEnabled: false, tenantId: user.uid });
             return NextResponse.json(await newTable.save());
         } else {
             const allTables = await Table.find();
@@ -38,7 +38,7 @@ export const POST = withAuthRouteHandler(async (req: NextRequest, context: any, 
                 nextId = numericIds.length > 0 ? Math.max(...numericIds) + 1 : 1;
             }
 
-            const newTable = new Table({ name: nextId.toString(), isEnabled: false });
+            const newTable = new Table({ name: nextId.toString(), isEnabled: false , tenantId: user.uid });
             return NextResponse.json(await newTable.save());
         }
     } catch (err: any) {

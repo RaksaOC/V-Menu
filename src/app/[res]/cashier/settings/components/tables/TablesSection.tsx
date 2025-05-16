@@ -1,8 +1,8 @@
 import {useState} from "react";
 import AddTablePopup from "./AddTablePopup";
 import Tables from "./Tables";
-import axios from "axios";
 import {TableInput} from "@/app/shared/types/Table";
+import api from "@/app/shared/lib/axios";
 
 function TablesSection() {
     const [showAddTable, setShowAddTable] = useState(false);
@@ -13,7 +13,7 @@ function TablesSection() {
 
     const  handleOnSave = async (table: TableInput) => {
         try {
-            const response = await axios.post("/api/cashier/settings/tables", table)
+            const response = await api.post("/api/cashier/settings/tables", table)
             if (response.status === 200) {
                 console.log("response", response);
             }

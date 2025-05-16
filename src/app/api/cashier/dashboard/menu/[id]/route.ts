@@ -2,24 +2,18 @@ import {NextRequest, NextResponse} from "next/server";
 import {connectToDB} from "@/app/shared/lib/db";
 import {Item} from "@/app/shared/model/Item";
 import mongoose from "mongoose";
+import {withAuthRouteHandler} from "@/app/shared/lib/withAuthRouteHandler";
 
 // Don't destructure `params` in the function signature
-export async function PATCH(req: NextRequest, context: any) {
+export const PATCH = withAuthRouteHandler(async (req: NextRequest, context: any, user: any) => {
     try {
 
         await connectToDB();
-        console.log(mongoose.connection.name);
-        // Access `params` here safely
         const params = await context.params;
         const id = params.id;
 
-        console.log(id);
-
-        console.log("Updating:", id);
         const allItems = await Item.find();
-        console.log("All Items:", allItems);
         const existing = await Item.findById(id);
-        console.log("Found?", existing);
 
         const body = await req.json();
         const isEnabled = body.isEnabled;
@@ -42,4 +36,4 @@ export async function PATCH(req: NextRequest, context: any) {
         console.error("PATCH error:", error);
         return NextResponse.json({message: "Failed to update item", status: 500});
     }
-}
+})
