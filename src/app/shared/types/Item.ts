@@ -11,5 +11,5 @@ export interface ItemOutput extends ItemBase {
 
 export interface ItemInput extends ItemBase {
     isEnabled: boolean;
-    tenantId?: string;
+    resId?: string; // optional because at client we dont have the resId but will be added at server
 }

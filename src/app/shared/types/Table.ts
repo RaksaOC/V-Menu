@@ -5,7 +5,7 @@ export interface Table {
 export interface TableInput extends Table {
     isEnabled: boolean;
     type: string;
-    tenantId?: string;
+    resId?: string; // optional because at client we dont have the resId but will be added at server
 }
 
 export interface TableOutput extends Table {

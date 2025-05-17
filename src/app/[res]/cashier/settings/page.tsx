@@ -8,7 +8,8 @@ import {ArrowLeft} from "lucide-react";
 import {useRouter} from "next/navigation";
 
 const Dashboard = () => {
-    const savedSection = localStorage.getItem("settingsSection");
+    // const savedSection = localStorage.getItem("settingsSection");
+    const savedSection= null
     const [section, setSection] = useState("");
     const router = useRouter();
 

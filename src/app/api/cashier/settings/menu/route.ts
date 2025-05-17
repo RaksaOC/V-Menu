@@ -25,7 +25,7 @@ export const POST = withAuthRouteHandler(async (req: NextRequest, context: any, 
             return NextResponse.json({ message: "Did not receive body" }, { status: 400 });
         }
 
-        const newItem = new Item({ ...body, tenantId: user.uid });
+        const newItem = new Item({ ...body, resId: user.resId });
         await newItem.save();
 
         return NextResponse.json(newItem);
