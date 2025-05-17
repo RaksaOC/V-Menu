@@ -8,4 +8,4 @@ const OrderSchema = new mongoose.Schema({
     resId: { type: String, required: true },
 })
 
-export const Order = mongoose.model('Order', OrderSchema, "orders") || mongoose.models.Order;
+export const Order = mongoose.model('Order', OrderSchema) || mongoose.models.Order;

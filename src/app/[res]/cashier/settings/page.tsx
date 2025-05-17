@@ -7,7 +7,7 @@ import Preferences from "./components/preferences/Preferences";
 import {ArrowLeft} from "lucide-react";
 import {useRouter} from "next/navigation";
 
-const Dashboard = () => {
+const Settings = () => {
     const savedSection = localStorage.getItem("settingsSection");
     const [section, setSection] = useState("");
     const router = useRouter();
@@ -94,4 +94,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default Settings;
