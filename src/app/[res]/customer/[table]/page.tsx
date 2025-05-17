@@ -11,12 +11,19 @@ import {ToastContainer} from "react-toastify";
 
 export default function CustomerPage() {
     const [items, setItems] = useState<ItemOutput[]>([]);
+    const params = useParams()
+    const table = params.table;
+    const resSlug = params.res;
+    localStorage.setItem("table", JSON.stringify(table));
+
+    console.log("I'm at ", table);
+
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const res = await axios.get("/api/customer");
+                const res = await axios.get(`/api/customer/${resSlug}`);
                 const data = await res.data;
-                setItems(data.filter((item: ItemOutput) => item.isEnabled));
+                setItems(data);
             } catch (err) {
                 console.log(err);
             }
@@ -24,11 +31,8 @@ export default function CustomerPage() {
         fetchItems();
     }, []);
 
-    const params = useParams()
-    const table = params.table;
-    localStorage.setItem("table", JSON.stringify(table));
 
-    console.log("I'm at ", table);
+
 
     return (
         <div className={" customer w-full h-full bg-white relative pb-24"}>

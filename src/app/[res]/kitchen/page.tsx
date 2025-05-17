@@ -10,14 +10,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 export default function KitchenPage() {
+    const params = useParams();
     const [orders, setOrders] = useState<OrderOutput[]>([]);
     const previousOrderIdsRef = useRef<string[]>([]);
-    const params = useParams();
 
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await axios.get("/api/kitchen");
+                const response = await axios.get(`/api/kitchen/${params.res}`);
                 const activeOrders = response.data.filter((order: OrderOutput) => !order.isDone);
                 setOrders(activeOrders);
                 previousOrderIdsRef.current = activeOrders.map((order:OrderOutput) => order._id);
@@ -30,7 +30,7 @@ export default function KitchenPage() {
 
         const intervalId = setInterval(async () => {
             try {
-                const response = await axios.get("/api/kitchen");
+                const response = await axios.get(`/api/kitchen/${params.res}`);
                 const activeOrders = response.data.filter((order: OrderOutput) => !order.isDone);
 
                 const newOrders = activeOrders.filter((order:OrderOutput) => !previousOrderIdsRef.current.includes(order._id));
@@ -58,7 +58,7 @@ export default function KitchenPage() {
 
     const handleOnDone = async (id: string) => {
         try {
-            await axios.patch(`/api/kitchen/${id}`);
+            await axios.patch(`/api/kitchen/${params.res}/${id}`);
             setOrders(prev => prev.filter(order => order._id !== id));
             toast.success("Order marked as done!", {
                 position: "top-center",

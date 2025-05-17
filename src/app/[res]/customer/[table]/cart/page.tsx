@@ -6,11 +6,12 @@ import axios from "axios";
 import CartItemCard from "@/app/[res]/customer/[table]/cart/CartItemCard";
 import {CartItem} from "@/app/shared/types/CartItem";
 import {OrderInput} from "@/app/shared/types/Order";
-import {useRouter} from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 
 export default function CartPage() {
     const router = useRouter();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const params = useParams();
 
     useEffect(() => {
         const savedCart = localStorage.getItem("cartItems");
@@ -67,7 +68,7 @@ export default function CartPage() {
                 isDone: false,
                 orderedItems: cartItems,
             }
-            await axios.post("/api/customer", orderToAdd);
+            await axios.post(`/api/customer/${params.res}`, orderToAdd);
 
             toast.success("Order has been placed!", {
                 position: "top-center",

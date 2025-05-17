@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
-import {markAsDone} from "@/app/api/kitchen/[id]/service";
+import {markAsDone} from "@/app/api/kitchen/[slug]/[id]/service";
 
 export async function PATCH(req: NextRequest, {params}: { params: { id: string } }) {
     try {

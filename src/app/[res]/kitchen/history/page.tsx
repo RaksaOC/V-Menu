@@ -4,15 +4,16 @@ import Card from "@/app/[res]/kitchen/Card";
 import {useEffect, useState} from "react";
 import {OrderOutput} from "@/app/shared/types/Order";
 import axios from "axios";
-import {useRouter} from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 
 export default function History() {
     const router = useRouter();
     const [orders, setOrders] = useState<OrderOutput[]>([]);
+    const params = useParams();
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await axios.get("/api/kitchen");
+                const response = await axios.get(`/api/kitchen/${params.res}`);
                 setOrders(response.data.filter((order: OrderOutput) => order.isDone));
             } catch (err) {
                 console.log(err);
