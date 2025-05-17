@@ -10,12 +10,12 @@ import {withAuthRouteHandler} from "@/app/shared/lib/withAuthRouteHandler";
 export const GET = withAuthRouteHandler(async (req: NextRequest, context: any, user: any) => {
     try {
         await connectToDB();
-        const numOfActiveTables = await Table.countDocuments({isEnabled: true, tenantId: user.uid});
-        const numOfUnpaidOrders = await TableOrder.countDocuments({isPaid: false, tenantId: user.uid});
-        const numOfTables = await Table.countDocuments({tenantId: user.uid});
-        const numOfItems = await Item.countDocuments({tenantId: user.uid});
-        const numOfOrders = await Order.countDocuments({tenantId: user.uid});
-        const numOfPayments = await TableOrder.countDocuments({isPaid: true, tenantId: user.uid});
+        const numOfActiveTables = await Table.countDocuments({isEnabled: true, resId: user.resId});
+        const numOfUnpaidOrders = await TableOrder.countDocuments({isPaid: false, resId: user.resId});
+        const numOfTables = await Table.countDocuments({resId: user.resId});
+        const numOfItems = await Item.countDocuments({resId: user.resId});
+        const numOfOrders = await Order.countDocuments({resId: user.resId});
+        const numOfPayments = await TableOrder.countDocuments({isPaid: true, resId: user.resId});
 
         const overviewData: Overview = {
             numOfActiveTables,

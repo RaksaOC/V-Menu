@@ -1,10 +1,11 @@
 import {NextRequest, NextResponse} from "next/server";
 import admin from "@/app/shared/firebase/admin";
+import {Tenant} from "@/app/shared/model/Tenant";
 
 // -------------------------------------------
 // 1. Extract the token from the Authorization header
 function extractToken(req: Request): string | null {
-    console.log("request is",  req);
+    console.log("request is", req);
     const authHeader = req.headers.get("authorization"); // e.g., "Bearer <token>"
     console.log("authHeader", authHeader);
     if (!authHeader) return null;
@@ -33,16 +34,22 @@ export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, 
         // Extract token from header
         const token = extractToken(req);
         if (!token) {
-            return NextResponse.json({ message: "No token provided" }, { status: 401 });
+            return NextResponse.json({message: "No token provided"}, {status: 401});
         }
 
         // Verify token and get user
         const user = await verifyToken(token);
         if (!user) {
-            return NextResponse.json({ message: "Invalid or expired token" }, { status: 401 });
+            return NextResponse.json({message: "Invalid or expired token"}, {status: 401});
         }
 
         console.log("User is verfied", user);
+
+        // get resId and attach to user
+        const tenant = await Tenant.findOne({tenantId: user.uid});
+        if (tenant) {
+            user.resId = tenant.resId;
+        }
 
         // All good — call your original function with the user included
         return handler(req, context, user);

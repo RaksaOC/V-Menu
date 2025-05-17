@@ -5,7 +5,7 @@ const ItemSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     image: { type: String, required: true },
     isEnabled: { type: Boolean, default: true },
-    tenantId: { type: String, required: true },
+    resId: { type: String, required: true },
 })
 
 export const Item = mongoose.models.Item || mongoose.model("Item", ItemSchema);

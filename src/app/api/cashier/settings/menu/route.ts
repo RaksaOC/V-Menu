@@ -8,7 +8,7 @@ export const GET = withAuthRouteHandler(async (req: NextRequest, context: any, u
     try {
         await connectToDB();
         console.log("tenant id to find", user.uid);
-        const result = await Item.find({ tenantId: user.uid });
+        const result = await Item.find({ resId: user.resId});
         return NextResponse.json(result);
     } catch (err: any) {
         return NextResponse.json({ message: err.message }, { status: 500 });

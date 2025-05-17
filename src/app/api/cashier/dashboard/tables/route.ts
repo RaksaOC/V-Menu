@@ -7,7 +7,7 @@ import {req} from "agent-base";
 export const GET = withAuthRouteHandler(async (req: NextRequest, context: any,  user: any) =>{
     try{
         await connectToDB();
-        const result = await Table.find({tenantId: user.uid});
+        const result = await Table.find({resId: user.resId});
         return NextResponse.json(result);
     }catch(err:any){
         return NextResponse.json({message: err.message}, {status: 500});

@@ -16,7 +16,7 @@ const TableOrderSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    tenantId: { type: String, required: true },
+    resId: { type: String, required: true },
 });
 
 export const TableOrder = mongoose.models.TableOrder || mongoose.model("TableOrder", TableOrderSchema, "table_orders");
