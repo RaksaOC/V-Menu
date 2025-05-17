@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import admin from "@/app/shared/firebase/admin";
 import {Tenant} from "@/app/shared/model/Tenant";
+import {connectToDB} from "@/app/shared/lib/db";
 
 // -------------------------------------------
 // 1. Extract the token from the Authorization header
@@ -46,6 +47,7 @@ export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, 
         console.log("User is verfied", user);
 
         // get resId and attach to user
+        await connectToDB();
         const tenant = await Tenant.findOne({tenantId: user.uid});
         if (tenant) {
             user.resId = tenant.resId;
