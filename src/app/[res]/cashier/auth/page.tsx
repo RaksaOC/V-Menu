@@ -1,43 +1,34 @@
 'use client';
 
-import {useState, FormEvent} from "react";
-import {signInWithEmailAndPassword, createUserWithEmailAndPassword, UserCredential} from "firebase/auth";
-import {auth} from "@/app/shared/firebase/config";
-import {Eye, EyeOff} from "lucide-react";
-import {useRouter} from "next/router";
+import { useState, FormEvent } from "react";
+import {useParams, useRouter} from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/app/shared/firebase/config";
+import { Eye, EyeOff } from "lucide-react";
 
 const Auth = () => {
-    // const router = useRouter();
+    const router = useRouter();
+    const params = useParams();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const [isLogin, setIsLogin] = useState<boolean>(true);
-    const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [showPassword, setShowPassword] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(false);
-
-    const handleAuth = async (e: FormEvent<HTMLFormElement>) => {
+    const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            let userCred: UserCredential;
-
-            if (isLogin) {
-                userCred = await signInWithEmailAndPassword(auth, email, password);
-            } else {
-                await createUserWithEmailAndPassword(auth, email, password);
-                userCred = await signInWithEmailAndPassword(auth, email, password);
-            }
-
+            const userCred = await signInWithEmailAndPassword(auth, email, password);
             const token = await userCred.user.getIdToken();
-            localStorage.setItem("token", "Bearer " + token);
+            localStorage.setItem("token", token);
+            console.log("Login successful");
 
-            console.log("Successfully logged in");
-
-            // await router.push("/dashboard");
+            // TODO: Optionally fetch resId in middleware/route handler
+            // router.push("/dashboard");
         } catch (err: any) {
-            console.error(err);
-            alert(err.message);
+            console.error("Login error:", err.message);
+            alert("Error: " + err.message);
         } finally {
             setLoading(false);
         }
@@ -45,17 +36,18 @@ const Auth = () => {
 
     return (
         <form
-            onSubmit={handleAuth}
+            onSubmit={handleLogin}
             className="max-w-sm mx-auto mt-32 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-xl flex flex-col gap-5"
         >
             <h2 className="text-2xl font-bold text-center text-zinc-800 dark:text-white">
-                {isLogin ? "Admin Login" : "Create Account"}
+                Admin Login
             </h2>
 
             <div className="flex flex-col gap-1">
                 <label className="text-sm text-zinc-700 dark:text-zinc-300">Email</label>
                 <input
                     type="email"
+                    value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
@@ -66,6 +58,7 @@ const Auth = () => {
                 <label className="text-sm text-zinc-700 dark:text-zinc-300">Password</label>
                 <input
                     type={showPassword ? "text" : "password"}
+                    value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="px-4 py-2 pr-10 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
@@ -76,7 +69,7 @@ const Auth = () => {
                     className="absolute right-3 top-9 text-zinc-500 dark:text-zinc-400 cursor-pointer"
                     tabIndex={-1}
                 >
-                    {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
             </div>
 
@@ -87,15 +80,15 @@ const Auth = () => {
                     loading ? "opacity-70 cursor-not-allowed" : ""
                 }`}
             >
-                {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
+                {loading ? "Logging in..." : "Login"}
             </button>
 
             <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => router.push(`/${params.res}/cashier/auth/signup`)}
                 className="text-sm text-center text-blue-600 hover:underline mt-2 cursor-pointer"
             >
-                {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+                Don't have an account? Sign up
             </button>
         </form>
     );

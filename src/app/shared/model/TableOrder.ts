@@ -15,7 +15,8 @@ const TableOrderSchema = new mongoose.Schema({
     isPayed: {
         type: Boolean,
         default: false
-    }
+    },
+    resId: { type: String, required: true },
 });
 
 export const TableOrder = mongoose.models.TableOrder || mongoose.model("TableOrder", TableOrderSchema, "table_orders");

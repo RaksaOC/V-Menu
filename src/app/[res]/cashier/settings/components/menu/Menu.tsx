@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import axios from "axios";
 import MenuCard from "./MenuCard";
 import SkeletonMenuCard from "../../../common/SkeletonMenuCard";
 import {ItemOutput} from "@/app/shared/types/Item";
+import api from "@/app/shared/lib/axios"
 
 const Menu = () => {
     const [menuItems, setMenuItems] = useState<ItemOutput[]>([]);
@@ -11,9 +12,10 @@ const Menu = () => {
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await axios.get("/api/cashier/settings/menu");
+                const res = await api.get("/api/cashier/settings/menu");
                 setMenuItems(res.data);
-            } catch (err) {
+            } catch
+                (err) {
                 console.error("Error fetching menu:", err);
             } finally {
                 setLoading(false);

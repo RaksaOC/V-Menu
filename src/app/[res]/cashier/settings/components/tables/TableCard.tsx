@@ -3,6 +3,7 @@ import {useState} from "react";
 import EditTablePopup from "./EditTablePopup";
 import axios from "axios";
 import {TableInput, TableOutput} from "@/app/shared/types/Table";
+import api from "@/app/shared/lib/axios";
 
 interface Props {
     table: TableOutput;
@@ -18,7 +19,7 @@ function TableCard({table}: Props) {
         }
 
         try {
-            const response = await axios.put(`/api/cashier/settings/tables/${id}`, editedTable);
+            const response = await api.put(`/api/cashier/settings/tables/${id}`, editedTable);
             if (response.status === 200) {
                 console.log("TableCard updated:", response.data);
                 setIsEditing(false);
@@ -41,7 +42,7 @@ function TableCard({table}: Props) {
     }
 
     async function handleOnDelete(id:string) {
-        const response = await axios.delete(`/api/cashier/settings/tables/${id}`);
+        const response = await api.delete(`/api/cashier/settings/tables/${id}`);
         if (response.status === 200) {
             console.log(response);
         }

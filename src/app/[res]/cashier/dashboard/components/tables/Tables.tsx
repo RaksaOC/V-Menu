@@ -4,10 +4,11 @@ import {toast} from "react-toastify";
 import axios from "axios";
 import SkeletonTableCard from "../../../common/SkeletonTableCard";
 import {TableOutput} from "@/app/shared/types/Table";
+import api from "@/app/shared/lib/axios";
 
 async function getTables() {
     try {
-        const response = await axios.get("/api/cashier/dashboard/tables");
+        const response = await api.get("/api/cashier/dashboard/tables");
         return response.data;
     } catch (err) {
         console.log(err);
@@ -34,7 +35,7 @@ export default function Tables() {
             if (t._id === id) {
                 const updatedTable = {...t, isEnabled: !t.isEnabled};
                 // Send updated table to backend
-                axios.patch(`/api/cashier/dashboard/tables/${id}`, {isEnabled: !updatedTable.isEnabled});
+                api.patch(`/api/cashier/dashboard/tables/${id}`, {isEnabled: !updatedTable.isEnabled});
                 return updatedTable;
             }
             return t;

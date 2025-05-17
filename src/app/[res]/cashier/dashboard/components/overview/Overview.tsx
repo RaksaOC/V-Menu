@@ -4,6 +4,7 @@ import axios from "axios";
 import SkeletonOverviewCard from "../../../common/SkeletonOverviewCard";
 
 import {Overview as OverviewData} from "@/app/shared/types/Overview";
+import api from "@/app/shared/lib/axios";
 
 export default function Overview() {
     const [isLoading, setIsLoading] = useState(true);
@@ -12,7 +13,7 @@ export default function Overview() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get("/api/cashier/dashboard/overview");
+                const response = await api.get("/api/cashier/dashboard/overview");
                 setOverviewData(await response.data || {});
             } catch (error) {
                 console.error("Error fetching overview:", error);

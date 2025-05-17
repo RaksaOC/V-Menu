@@ -1,9 +1,11 @@
 import {Table} from "@/app/shared/model/Table";
 import {NextResponse} from "next/server";
 import {TableInput} from "@/app/shared/types/Table";
+import {withAuthRouteHandler} from "@/app/shared/lib/withAuthRouteHandler";
 
-export async function PUT(req: Request, context: any) {
+export const PUT = withAuthRouteHandler(async (req: Request, context: any, user: any) => {
     const body: TableInput = await req.json();
+    body.tenantId = user.uid;
     const params = context.params;
     const id = params.id;
     const updatedItem = await Table.findByIdAndUpdate(
@@ -15,15 +17,17 @@ export async function PUT(req: Request, context: any) {
     }
 
     return NextResponse.json(updatedItem);
-}
+});
 
-export async function DELETE(req: Request, context: any){
-    const params = context.params;
-    const id = params.id;
-    const deletedItem = await Table.findByIdAndDelete(id)
-    if (!deletedItem) {
-        return NextResponse.json({message: "Could not delete item", status: 500});
+export const DELETE = withAuthRouteHandler(async (req: Request, context: any, user: any) => {
+        const params = context.params;
+        const id = params.id;
+        const deletedItem = await Table.findByIdAndDelete(id)
+        if (!deletedItem) {
+            return NextResponse.json({message: "Could not delete item", status: 500});
+        }
+
+        return NextResponse.json(deletedItem);
     }
+);
 
-    return NextResponse.json(deletedItem);
-}

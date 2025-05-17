@@ -1,8 +1,12 @@
+'use client'
+
 import {useEffect, useState} from "react";
 import axios from "axios";
 import MenuCard from "./MenuCard";
 import SkeletonMenuCards from "../../../common/SkeletonMenuCard";
 import {ItemOutput} from "@/app/shared/types/Item";
+import {jwtDecode} from "jwt-decode";
+import api from "@/app/shared/lib/axios";
 
 const Menu = () => {
     const [menuItems, setMenuItems] = useState<ItemOutput[]>([]);
@@ -11,7 +15,8 @@ const Menu = () => {
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await axios.get("/api/cashier/dashboard/menu");
+                const token = localStorage.getItem("token");
+                const res = await api.get("/api/cashier/dashboard/menu");
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);
@@ -25,10 +30,7 @@ const Menu = () => {
 
     async function handleToggle(id: string) {
         const isEnabled = menuItems.find(item => item._id === id).isEnabled;
-        const res = await axios.patch(`/api/cashier/dashboard/menu/${id}`, {isEnabled: isEnabled});
-        console.log("response from update: ", res.data);
-
-        // TODO: fix where server error it wont update UI (the button)
+        const res = await api.patch(`/api/cashier/dashboard/menu/${id}`, {isEnabled: isEnabled});
 
         setMenuItems((prev) =>
             prev.map((item) =>
@@ -42,6 +44,8 @@ const Menu = () => {
             <div className="menu-card-wrapper w-full flex flex-wrap justify-center items-center max-w-[1024px]">
                 {loading ? (
                     <div className={"flex flex-wrap items-center justify-center w-full"}>
+                        <SkeletonMenuCards/>
+                        <SkeletonMenuCards/>
                         <SkeletonMenuCards/>
                         <SkeletonMenuCards/>
                         <SkeletonMenuCards/>
