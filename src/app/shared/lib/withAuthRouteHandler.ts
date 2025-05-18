@@ -29,7 +29,7 @@ async function verifyToken(token: string) {
 }
 
 // -------------------------------------------
-// 3. Main wrapper: adds auth check before calling your real handler
+// 3. Main wrapper: adds login check before calling your real handler
 export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, user?: any) => Promise<NextResponse>) {
     return async (req: NextRequest, context?: any): Promise<NextResponse> => {
         // Extract token from header
