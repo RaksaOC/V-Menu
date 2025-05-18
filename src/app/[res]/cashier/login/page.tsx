@@ -22,10 +22,11 @@ const Auth = () => {
             const userCred = await signInWithEmailAndPassword(auth, email, password);
             const token = await userCred.user.getIdToken();
             localStorage.setItem("token", token);
+            document.cookie = `token=${token}; path=/; max-age=3600; SameSite=Lax`;
+
             console.log("Login successful");
 
-            // TODO: Optionally fetch resId in middleware/route handler
-            // router.push("/dashboard");
+            router.replace(`./dashboard`);
         } catch (err: any) {
             console.error("Login error:", err.message);
             alert("Error: " + err.message);
