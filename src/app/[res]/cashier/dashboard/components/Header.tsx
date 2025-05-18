@@ -79,7 +79,7 @@ export default function Header() {
                             </MenuItem>
                             <MenuItem>
                                 {({active}) => (
-                                    <Link href="../../auth"
+                                    <Link href="../../login"
                                           className={`${
                                               active ? 'bg-gray-100' : ''
                                           } w-full text-left px-4 py-2 text-sm text-gray-700`}
