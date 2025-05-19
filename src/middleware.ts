@@ -1,31 +1,59 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+    role?: string;
+    exp?: number;
+    [key: string]: any;
+}
 
 export function middleware(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
     const token = req.cookies.get('token')?.value;
 
-    // ✅ 1. Public paths should always be allowed
-    const publicPaths = ['/', '/signup', '/login'];
-    if (publicPaths.some(path => pathname === path || pathname.startsWith(path + '/'))) {
-        return NextResponse.next();
-    }
-
-    // ✅ 2. Check if it's a dynamic tenant login page, e.g., /res/cashier/login
-    const loginMatch = pathname.match(/^\/[^\/]+\/(cashier|kitchen)\/login\/?$/);
-    if (loginMatch) {
-        return NextResponse.next(); // Allow tenant login pages
-    }
-
-    // ✅ 3. Match protected tenant routes like /res/cashier/...
+    // Matches paths like /resSlug/cashier, /resSlug/kitchen, /resSlug/cashier/something
     const match = pathname.match(/^\/([^\/]+)\/(cashier|kitchen)(\/.*)?$/);
-    if (match) {
-        if (!token) {
-            const res = match[1];       // The restaurant slug
-            const section = match[2];   // "cashier" or "kitchen"
 
-            // Redirect to tenant login
-            return NextResponse.redirect(new URL(`/${res}/${section}/login`, req.url));
+    if (match) {
+        console.log("token", token);
+        console.log("match", match);
+        const resSlugInUrl = match[1];
+        const roleInUrl = match[2]; // "cashier" or "kitchen"
+
+        console.log("role in url",resSlugInUrl);
+
+        const isLoginPage = pathname === `/${resSlugInUrl}/${roleInUrl}/login`;
+
+        if (!token) {
+            if (!isLoginPage) {
+                // Only redirect if not already on the login page
+                return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
+            }
+            return NextResponse.next();
+        }
+
+        try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            console.log("decoded", decoded);
+
+            const expectedRole = roleInUrl === 'cashier' ? 'cashier' :
+                roleInUrl === 'kitchen' ? 'chef' : null;
+
+            console.log("expected role", expectedRole);
+
+            const roleMatches = decoded.role === expectedRole;
+
+            if (!roleMatches) {
+                if (!isLoginPage) {
+                    return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
+                }
+            }
+        } catch (err) {
+            // If token is invalid and not already on login page
+            if (!isLoginPage) {
+                return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
+            }
         }
     }
 
@@ -33,5 +61,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/:res/:section/:path*'], // triggers on dynamic routes
+    matcher: ['/:res/:section/:path*'],
 };
