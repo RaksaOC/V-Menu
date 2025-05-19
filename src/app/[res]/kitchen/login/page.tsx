@@ -20,16 +20,22 @@ const Auth = () => {
         setLoading(true);
 
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const userCred = await signInWithEmailAndPassword(auth, email, password);
+            const token = await userCred.user.getIdToken();
 
-            const response = await api.post("/api/cashier/login", {
+            localStorage.setItem("token", token);
+            document.cookie = `token=${token}; path=/; max-age=3600; SameSite=Lax`;
+            console.log({
+                token: token,
                 email: email,
-                resSlug: params.res,
-                uid: userCredential.user.uid,
+                resSlug: params.res
             });
-
-            localStorage.setItem("token", response.data.appToken);
-            console.log("After response we have the token", localStorage.getItem("token"));
+            const response = await api.get("/api/cashier/login", {
+                params: {
+                    email: email,
+                    resSlug: params.res,
+                },
+            });
 
             console.log("Login successful");
 
@@ -48,7 +54,7 @@ const Auth = () => {
             className="max-w-sm mx-auto mt-32 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-xl flex flex-col gap-5"
         >
             <h2 className="text-2xl font-bold text-center text-zinc-800 dark:text-white">
-                Cashier Login
+                Kitchen Login
             </h2>
 
             <div className="flex flex-col gap-1">

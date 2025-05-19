@@ -1,60 +1,68 @@
-import {NextRequest, NextResponse} from "next/server";
-import admin from "@/app/shared/firebase/admin";
-import {Tenant} from "@/app/shared/model/Tenant";
-import {connectToDB} from "@/app/shared/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+import { connectToDB } from "@/app/shared/lib/db";
+import { Tenant } from "@/app/shared/model/Tenant";
+
+// Define your secret key (should be from an env var in production)
+const JWT_SECRET = "superSecretKey123!@#_change_this_in_production";
+
+interface DecodedToken {
+    email: string;
+    role: string;
+    res: string;
+    exp: number;
+    [key: string]: any;
+}
 
 // -------------------------------------------
-// 1. Extract the token from the Authorization header
+// 1. Extract token from Authorization header
 function extractToken(req: Request): string | null {
-    console.log("request is", req);
     const authHeader = req.headers.get("authorization"); // e.g., "Bearer <token>"
-    console.log("authHeader", authHeader);
     if (!authHeader) return null;
 
     const parts = authHeader.split(" ");
     if (parts.length !== 2 || parts[0] !== "Bearer") return null;
 
-    return parts[1]; // the actual token
+    return parts[1];
 }
 
 // -------------------------------------------
-// 2. Verify the token using Firebase Admin SDK
-async function verifyToken(token: string) {
+// 2. Verify token using JWT
+function verifyToken(token: string): DecodedToken | null {
     try {
-        return await admin.auth().verifyIdToken(token); // decoded user info
+        const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
+        return decoded;
     } catch (err) {
-        console.error("Token verification failed:", err);
+        console.error("JWT verification failed:", err);
         return null;
     }
 }
 
 // -------------------------------------------
-// 3. Main wrapper: adds login check before calling your real handler
+// 3. Wrap handler with auth check
 export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, user?: any) => Promise<NextResponse>) {
     return async (req: NextRequest, context?: any): Promise<NextResponse> => {
-        // Extract token from header
         const token = extractToken(req);
         if (!token) {
-            return NextResponse.json({message: "No token provided"}, {status: 401});
+            return NextResponse.json({ message: "No token provided" }, { status: 401 });
         }
 
-        // Verify token and get user
-        const user = await verifyToken(token);
+        const user = verifyToken(token);
         if (!user) {
-            return NextResponse.json({message: "Invalid or expired token"}, {status: 401});
+            return NextResponse.json({ message: "Invalid or expired token" }, { status: 401 });
         }
 
-        console.log("User is verfied", user);
+        console.log("User is verified", user);
 
-        // get resId and attach to user
+        // Attach resId from DB if needed
         await connectToDB();
-        const tenant = await Tenant.findOne({tenantId: user.uid});
+        const tenant = await Tenant.findOne({ tenantId: user.uid }); // or use user.res if that's what you store
         if (tenant) {
             user.resId = tenant.resId;
         }
 
-        // All good — call your original function with the user included
+        console.log("After attaching resId", user);
+
         return handler(req, context, user);
     };
 }
-
