@@ -14,9 +14,9 @@ export const POST = async (req: NextRequest, context: any, user: any) => {
         await connectToDB();
 
         const body = await req.json();
-        const {email, resSlug} = body;
+        const {email, resSlug, uid} = body;
 
-        if (!email || !resSlug) {
+        if (!email || !resSlug || !uid) {
             return NextResponse.json({message: "Missing fields"}, {status: 400});
         }
 
@@ -33,8 +33,9 @@ export const POST = async (req: NextRequest, context: any, user: any) => {
         // create a jwt token
         const token = jwt.sign(
             {
-                email,
+                email: email,
                 role: "cashier",
+                uid: uid,
             },
             "superSecretKey123!@#_change_this_in_production",
             {expiresIn: '1h'}

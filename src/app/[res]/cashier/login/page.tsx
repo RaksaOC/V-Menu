@@ -20,11 +20,12 @@ const Auth = () => {
         setLoading(true);
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
             const response = await api.post("/api/cashier/login", {
                 email: email,
                 resSlug: params.res,
+                uid: userCredential.user.uid,
             });
 
             localStorage.setItem("token", response.data.appToken);
