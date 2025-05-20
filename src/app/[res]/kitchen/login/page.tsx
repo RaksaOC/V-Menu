@@ -20,26 +20,20 @@ const Auth = () => {
         setLoading(true);
 
         try {
-            const userCred = await signInWithEmailAndPassword(auth, email, password);
-            const token = await userCred.user.getIdToken();
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-            localStorage.setItem("token", token);
-            document.cookie = `token=${token}; path=/; max-age=3600; SameSite=Lax`;
-            console.log({
-                token: token,
+            const response = await api.post(`/api/kitchen/login`, {
                 email: email,
-                resSlug: params.res
+                resSlug: params.res,
+                uid: userCredential.user.uid,
             });
-            const response = await api.get("/api/cashier/login", {
-                params: {
-                    email: email,
-                    resSlug: params.res,
-                },
-            });
+
+            localStorage.setItem("token", response.data.appToken);
+            console.log("After response we have the token", localStorage.getItem("token"));
 
             console.log("Login successful");
 
-            router.replace(`./dashboard`);
+            router.replace(`./`);
         } catch (err: any) {
             console.error("Login error:", err.message);
             alert("Error: " + err.message);
