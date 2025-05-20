@@ -29,7 +29,11 @@ const Menu = () => {
     }, []);
 
     async function handleToggle(id: string) {
-        const isEnabled = menuItems.find(item => item._id === id).isEnabled;
+        const item = menuItems.find(item => item._id === id);
+        let isEnabled = false;
+        if (item) {
+            isEnabled = true;
+        }
         const res = await api.patch(`/api/cashier/dashboard/menu/${id}`, {isEnabled: isEnabled});
 
         setMenuItems((prev) =>
