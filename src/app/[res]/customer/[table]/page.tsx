@@ -8,17 +8,17 @@ import {useParams} from "next/navigation";
 import {useEffect, useState} from "react";
 import axios from "axios";
 import {ToastContainer} from "react-toastify";
+import SkeletonMenuCard from "@/app/[res]/common/SkeletonMenuCard";
 
 export default function CustomerPage() {
     const [items, setItems] = useState<ItemOutput[]>([]);
-    const params = useParams()
+    const [isLoading, setIsLoading] = useState(true);
+    const params = useParams();
     const table = params.table;
     const resSlug = params.res;
-    localStorage.setItem("table", JSON.stringify(table));
-
-    console.log("I'm at ", table);
 
     useEffect(() => {
+        localStorage.setItem("table", JSON.stringify(table));
         const fetchItems = async () => {
             try {
                 const res = await axios.get(`/api/customer/${resSlug}`);
@@ -26,39 +26,54 @@ export default function CustomerPage() {
                 setItems(data);
             } catch (err) {
                 console.log(err);
+            } finally {
+                setIsLoading(false);
             }
-        }
+        };
         fetchItems();
     }, []);
 
-
-
-
     return (
-        <div className={" customer w-full h-full bg-white relative pb-24"}>
-            <header className="header p-2.5">
-                <p className="text-center text-black text-3xl">V-Menu Customer</p>
+        <div className="customer min-h-[90vh] bg-white flex flex-col">
+            {/* Header */}
+            <header className="w-full py-4 shadow-sm border-b border-gray-200">
+                <h1 className="text-center text-2xl font-semibold text-gray-800">V-Menu Customer</h1>
             </header>
-            <div
-                className="container max-w-[1024px] mx-auto p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 ">
-                {
-                    items.map((item, index) => (
-                        <ItemCard key={index} _id={item._id} name={item.name} image={item.image} price={item.price}/>
-                    ))
-                }
-            </div>
 
-            {/* Bottom fixed cart bar */}
-            <div
-                className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-300 flex items-center justify-between p-4">
-                <ShoppingCart size={20} color={"#000000"}/>
-                <Link href={`/${params.res}/customer/${params.table}/cart`}>
-                    <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl">
+            {/* Item Grid */}
+            <main className="flex-1 w-full max-w-[1024px] mx-auto px-4 sm:px-6 py-6 mb-20">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {isLoading ? (
+                        Array.from({ length: 6 }).map((_, index) => (
+                            <SkeletonMenuCard key={index} />
+                        ))
+                    ) : items.length > 0 ? (
+                        items.map((item, index) => (
+                            <ItemCard
+                                key={index}
+                                _id={item._id}
+                                name={item.name}
+                                image={item.image}
+                                price={item.price}
+                            />
+                        ))
+                    ) : (
+                        <p className="text-gray-500 col-span-full text-center">No data available.</p>
+                    )}
+                </div>
+            </main>
+
+            {/* Fixed Cart Bar */}
+            <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 flex justify-between items-center z-50">
+                <ShoppingCart size={20} className="text-black"/>
+                <Link href={`/${resSlug}/customer/${table}/cart`}>
+                    <button className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-xl transition-colors">
                         View Cart
                     </button>
                 </Link>
             </div>
-            <ToastContainer></ToastContainer>
+
+            <ToastContainer/>
         </div>
-    )
+    );
 }

@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react";
 import axios from "axios";
 import MenuCard from "./MenuCard";
-import SkeletonMenuCards from "../../../common/SkeletonMenuCard";
+import SkeletonMenuCards from "@/app/[res]/common/SkeletonMenuCard";
 import {ItemOutput} from "@/app/shared/types/Item";
 import {jwtDecode} from "jwt-decode";
 import api from "@/app/shared/lib/axios";

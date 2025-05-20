@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import TableCard from "./TableCard";
 import {toast} from "react-toastify";
 import axios from "axios";
-import SkeletonTableCard from "../../../common/SkeletonTableCard";
+import SkeletonTableCard from "@/app/[res]/common/SkeletonTableCard";
 import {TableOutput} from "@/app/shared/types/Table";
 import api from "@/app/shared/lib/axios";
 

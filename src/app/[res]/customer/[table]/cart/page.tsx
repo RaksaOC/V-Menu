@@ -62,7 +62,7 @@ export default function CartPage() {
         }
 
         try {
-            const table : string = JSON.parse(localStorage.getItem("table") || "") || "";
+            const table: string = JSON.parse(localStorage.getItem("table") || "") || "";
             const orderToAdd: OrderInput = {
                 table: table,
                 isDone: false,
@@ -98,19 +98,19 @@ export default function CartPage() {
 
     return (
         <div className="relative min-h-screen p-4 pb-32 bg-gray-100 flex flex-col justify-start items-center">
-            <div className="header-wrapper w-full">
-                <div className="header justify-between flex flex-row w-full items-center md:max-w-[50%]">
+            <div className="header-wrapper w-full max-w-[1024px]">
+                <div className="header justify-between flex flex-row w-full items-center">
                     <button
-                        onClick={() => router.back()}
+                        onClick={() => router.replace("./")}
                         className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl h-[40px]"
                     >
                         Go Back
                     </button>
-                    <h1 className="text-2xl font-bold text-center mb-0">Your Cart</h1>
+                    <h1 className="text-2xl font-bold text-center mb-0 text-black">Your Cart</h1>
                 </div>
             </div>
 
-            <div className="flex flex-col gap-4 w-[98%] mt-14">
+            <div className="flex flex-col gap-4 w-full max-w-[1024px] mt-14">
                 {cartItems.length > 0 ? (
                     cartItems.map((cartItem, index) => (
                         <CartItemCard
@@ -129,16 +129,18 @@ export default function CartPage() {
 
             {/* Fixed bottom bar */}
             <div
-                className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-300 flex items-center justify-between p-4">
-                <div className="text-lg font-bold">
-                    Total: ${total.toFixed(2)}
+                className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-300 flex items-center justify-center p-4">
+                <div className={"bottom-wrapper w-full max-w-[1024px] flex items-center justify-between"}>
+                    <div className="text-lg font-bold">
+                        Total: ${total.toFixed(2)}
+                    </div>
+                    <button
+                        onClick={placeOrder}
+                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl"
+                    >
+                        Place Order
+                    </button>
                 </div>
-                <button
-                    onClick={placeOrder}
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl"
-                >
-                    Place Order
-                </button>
             </div>
             <ToastContainer></ToastContainer>
         </div>
