@@ -1,99 +1,115 @@
 'use client';
 
-import { useState, FormEvent } from "react";
-import {useParams, useRouter} from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/app/shared/firebase/config";
-import { Eye, EyeOff } from "lucide-react";
+import { useState } from 'react';
+import { ResSelect } from './modals/ResSelect';
+// import axios from 'axios'; // Uncomment when backend is ready
+import { toast } from 'react-toastify';
 
-// TODO: logic to log and see all restaurants
+const dummyRestaurants = [
+    {
+        id: '1',
+        name: 'Joe\'s Diner',
+        roles: [
+            { label: 'Chef', route: '/vmenu/joes-diner/kitchen' },
+            { label: 'Cashier', route: '/vmenu/joes-diner/cashier' },
+        ],
+    },
+    {
+        id: '2',
+        name: 'Bella Pizza',
+        roles: [
+            { label: 'Chef', route: '/vmenu/bella-pizza/kitchen' },
+        ],
+    },
+];
 
-const Auth = () => {
-    const router = useRouter();
-    const params = useParams();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
+export default function LoginPage() {
+    const [form, setForm] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
 
-    const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const userCred = await signInWithEmailAndPassword(auth, email, password);
-            const token = await userCred.user.getIdToken();
-            localStorage.setItem("token", token);
-            console.log("Login successful");
+            // Uncomment for real login:
+            // const res = await axios.post('/api/login', form);
+            // if (res.status === 200) {
+            //   toast.success('Login successful!');
+            //   setShowModal(true);
+            // }
 
-            // TODO: Optionally fetch resId in middleware/route handler
-            // router.push("/dashboard");
-        } catch (err: any) {
-            console.error("Login error:", err.message);
-            alert("Error: " + err.message);
-        } finally {
+            // Mock behavior for now:
+            setTimeout(() => {
+                toast.success('Login successful!');
+                setShowModal(true);
+                setLoading(false);
+            }, 1000);
+        } catch (err) {
+            toast.error('Login failed. Please check credentials.');
             setLoading(false);
         }
     };
 
     return (
-        <form
-            onSubmit={handleLogin}
-            className="max-w-sm mx-auto mt-32 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-xl flex flex-col gap-5"
-        >
-            <h2 className="text-2xl font-bold text-center text-zinc-800 dark:text-white">
-                Admin Login
-            </h2>
+        <>
+            <ResSelect
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                restaurants={dummyRestaurants}
+            />
 
-            <div className="flex flex-col gap-1">
-                <label className="text-sm text-zinc-700 dark:text-zinc-300">Email</label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                />
-            </div>
-
-            <div className="flex flex-col gap-1 relative">
-                <label className="text-sm text-zinc-700 dark:text-zinc-300">Password</label>
-                <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="px-4 py-2 pr-10 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                />
-                <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-9 text-zinc-500 dark:text-zinc-400 cursor-pointer"
-                    tabIndex={-1}
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-950 to-slate-900 text-white px-4">
+                <form
+                    onSubmit={handleSubmit}
+                    className="bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full space-y-6"
                 >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                    <h2 className="text-3xl font-bold text-center mb-4">Login</h2>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label htmlFor="email" className="block text-sm mb-1">Email</label>
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                value={form.email}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-lg bg-white text-black"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="password" className="block text-sm mb-1">Password</label>
+                            <input
+                                type="password"
+                                name="password"
+                                required
+                                value={form.password}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-lg bg-white text-black"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full py-2 rounded-xl font-semibold transition duration-300 ${
+                            loading
+                                ? 'bg-blue-400 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                    >
+                        {loading ? 'Logging in...' : 'Login'}
+                    </button>
+                </form>
             </div>
-
-            <button
-                type="submit"
-                disabled={loading}
-                className={`mt-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-xl transition duration-200 cursor-pointer ${
-                    loading ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-            >
-                {loading ? "Logging in..." : "Login"}
-            </button>
-
-            <button
-                type="button"
-                onClick={() => router.push(`/${params.res}/cashier/auth/signup`)}
-                className="text-sm text-center text-blue-600 hover:underline mt-2 cursor-pointer"
-            >
-                Don't have an account? Sign up
-            </button>
-        </form>
+        </>
     );
-};
-
-export default Auth;
+}

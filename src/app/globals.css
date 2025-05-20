@@ -10,7 +10,8 @@
 }
 
 *{
-  scroll-behavior: smooth;
+  /*uncomment this if use lenis*/
+  scroll-behavior: smooth !important;
 }
 
 body {
