@@ -5,6 +5,8 @@ import {useEffect, useState} from "react";
 import {OrderOutput} from "@/app/shared/types/Order";
 import axios from "axios";
 import {useParams, useRouter} from "next/navigation";
+import Link from "next/link";
+import {ArrowLeft} from "lucide-react";
 
 export default function History() {
     const router = useRouter();
@@ -24,18 +26,20 @@ export default function History() {
 
     return (
         <div className="w-full min-h-screen flex flex-col justify-start items-center bg-white">
-            <div className={"back-button flex justify-start w-full p-4"}>
-                <button
-                    onClick={() => {
-                        router.back()
-                    }}
-                    className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl cursor-pointer"
-                >
-                    Back to orders
-                </button>
+            <div className={"back-button-wrapper flex w-full justify-center"}>
+                <div className="back-button flex justify-start w-full p-4 max-w-[1024px]">
+                    <button
+                        className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl cursor-pointer"
+                        onClick={() => router.replace("./")}>
+                        <div className={"content flex justify-between items-center gap-1"}>
+                            <ArrowLeft/>
+                            <p>View Orders</p>
+                        </div>
+                    </button>
+                </div>
             </div>
-            <h1>Orders Completed</h1>
-            <div className={"container p-4 flex flex-col"}>
+            <h1 className={"text-3xl font-semibold"}>Orders Completed</h1>
+            <div className={"container flex flex-col justify-center items-center w-full max-w-[1024px]"}>
                 {
                     orders.length > 0 ? (
                         orders.map((order) => (

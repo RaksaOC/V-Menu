@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import TableCard from "./TableCard";
-import SkeletonTableCard from "../../../common/SkeletonTableCard";
+import SkeletonTableCard from "@/app/[res]/common/SkeletonTableCard";
 import axios from "axios";
 import {TableOutput} from "@/app/shared/types/Table";
 import api from "@/app/shared/lib/axios";

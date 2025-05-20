@@ -50,37 +50,43 @@ interface CardProps {
     image: string;
 }
 
-function Card({_id, name, price, image}: CardProps) {
+export default function Card({ _id, name, price, image }: CardProps) {
     return (
-        <div
-            className="max-w-[100%] rounded-2xl overflow-hidden shadow-lg bg-white hover:scale-105 transition-transform duration-300">
-            <img className="w-full h-48 object-cover" src={image} alt={name}/>
-            <div className="p-4">
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{name}</h3>
-                <p className="text-gray-600 mb-4">${price.toFixed(2)}</p>
+        <div className="w-full md:w-[100%] lg:w-[100%] bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+            <img
+                src={image}
+                alt={name}
+                className="w-full h-44 object-cover"
+            />
+
+            <div className="p-4 flex flex-col justify-between h-[160px]">
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-800 truncate">{name}</h3>
+                    <p className="text-sm text-gray-500 mt-1">${price.toFixed(2)}</p>
+                </div>
+
                 <button
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl cursor-pointer"
                     onClick={() => {
                         const item: ItemOutput = {
-                            _id: _id,
-                            image: image,
-                            name: name,
+                            _id,
+                            image,
+                            name,
                             price: parseInt(price.toFixed(2)),
                             isEnabled: true,
-                        }
+                        };
 
                         const cartItem = {
-                            item: item,
+                            item,
                             quantity: 1,
-                        }
+                        };
 
                         addToCart(cartItem);
-                    }}>
+                    }}
+                    className="mt-4 bg-green-500 hover:bg-green-600 text-white font-medium py-2 rounded-lg transition-colors"
+                >
                     Add to Cart
                 </button>
             </div>
         </div>
     );
 }
-
-export default Card;

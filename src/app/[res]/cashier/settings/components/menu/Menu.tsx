@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import axios from "axios";
 import MenuCard from "./MenuCard";
-import SkeletonMenuCard from "../../../common/SkeletonMenuCard";
+import SkeletonMenuCard from "@/app/[res]/common/SkeletonMenuCard";
 import {ItemOutput} from "@/app/shared/types/Item";
 import api from "@/app/shared/lib/axios"
 
