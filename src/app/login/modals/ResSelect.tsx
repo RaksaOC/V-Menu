@@ -1,89 +1,88 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
-import { useState } from 'react';
-
-interface RoleOption {
-    label: string;
-    route: string; // e.g. `/vmenu/joes-diner/kitchen`
-}
-
-interface Restaurant {
-    id: string;
-    name: string;
-    roles: RoleOption[];
-}
+import { Utensils, Store } from 'lucide-react';
 
 interface ResSelectProps {
-    isOpen: boolean;
-    onClose: () => void;
-    restaurants: Restaurant[];
+    restaurantNames: string[];
+    onSelected: (slug: string) => void;
 }
 
-export function ResSelect({ isOpen, onClose, restaurants }: ResSelectProps) {
+export function ResSelect({ restaurantNames, onSelected }: ResSelectProps) {
+    // Card animation variants
+    const cardVariants = {
+        initial: { opacity: 0, y: 20 },
+        animate: (i: number) => ({
+            opacity: 1,
+            y: 0,
+            transition: {
+                delay: i * 0.1,
+                duration: 0.3,
+            }
+        }),
+        hover: {
+            scale: 1.05,
+            boxShadow: "0 10px 20px rgba(0, 0, 0, 0.2)",
+            transition: { duration: 0.2 }
+        }
+    };
+
     return (
         <AnimatePresence>
-            {isOpen && (
-                <>
-                    {/* Backdrop */}
-                    <motion.div
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                    />
-
-                    {/* Modal */}
-                    <motion.div
-                        className="fixed inset-0 flex items-center justify-center z-50 p-4"
-                        initial={{ opacity: 0, y: 60 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 60 }}
+            <>
+                {/* Modal */}
+                <motion.div
+                    className="flex items-center justify-center z-50 p-4 w-full"
+                    initial={{ opacity: 0, y: 60 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 60 }}
+                >
+                    <div
+                        className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 w-full relative"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <div
-                            className="bg-white dark:bg-[#121212] rounded-2xl shadow-2xl p-6 w-full max-w-3xl relative"
-                            onClick={(e) => e.stopPropagation()} // prevent backdrop click
-                        >
-                            <button
-                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white transition"
-                                onClick={onClose}
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
+                        <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">
+                            Select your Restaurant
+                        </h2>
 
-                            <h2 className="text-2xl font-semibold text-center text-gray-800 dark:text-white mb-6">
-                                Select a Restaurant & Role
-                            </h2>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                {restaurants.map((res) => (
-                                    <div
-                                        key={res.id}
-                                        className="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-xl p-4 shadow-md hover:shadow-lg transition"
-                                    >
-                                        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-                                            {res.name}
-                                        </h3>
-                                        <div className="flex flex-wrap gap-3">
-                                            {res.roles.map((role) => (
-                                                <a
-                                                    key={role.label}
-                                                    href={role.route}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition"
-                                                >
-                                                    {role.label}
-                                                </a>
-                                            ))}
-                                        </div>
+                        <div className="flex justify-center items-center gap-4 flex-wrap">
+                            {restaurantNames.map((name, index) => (
+                                <motion.div
+                                    key={index}
+                                    className="relative min-w-[200px] overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-800 text-white rounded-xl shadow-md cursor-pointer flex flex-col items-center justify-center h-52"
+                                    onClick={() => onSelected(name)}
+                                    variants={cardVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    custom={index}
+                                    whileHover="hover"
+                                >
+                                    {/* Decorative floating elements */}
+                                    <div className="absolute top-4 right-4 opacity-30">
+                                        <Store size={24} />
                                     </div>
-                                ))}
-                            </div>
+
+                                    {/* Background pattern */}
+                                    <div className="absolute inset-0 opacity-10">
+                                        <div className="absolute right-0 bottom-0 w-24 h-24 rounded-tl-full bg-white"></div>
+                                        <div className="absolute left-6 top-6 w-12 h-12 rounded-full border border-white/30"></div>
+                                    </div>
+
+                                    {/* Main icon */}
+                                    <div className="mb-3 bg-white/20 p-4 rounded-full">
+                                        <Utensils className="w-10 h-10" />
+                                    </div>
+
+                                    {/* Restaurant name */}
+                                    <h3 className="text-xl font-bold tracking-wide text-center px-4">
+                                        {name.split(" - ")[0]}
+                                    </h3>
+                                </motion.div>
+                            ))}
                         </div>
-                    </motion.div>
-                </>
-            )}
+                    </div>
+                </motion.div>
+            </>
         </AnimatePresence>
     );
 }

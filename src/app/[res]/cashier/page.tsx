@@ -3,5 +3,5 @@ import { redirect } from 'next/navigation';
 
 export default function CashierPage({ params }: { params: { res: string } }) {
     const res = params.res;
-    redirect(`/${res}/cashier/login`);
+    redirect(`/${res}/cashier/dashboard`);
 }
