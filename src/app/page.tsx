@@ -5,8 +5,10 @@ import './globals.css'
 import { Sun, Moon, ChevronRight, Menu, X, Users, Clock, BarChart2, ShieldCheck, Settings, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Lenis from '@studio-freight/lenis';
+import {useRouter} from "next/navigation";
 
 export default function Home() {
+    const router = useRouter();
     const [darkMode, setDarkMode] = useState(() => {
         if (typeof window !== "undefined") {
             return localStorage.getItem("theme") === "dark";
@@ -30,23 +32,23 @@ export default function Home() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // default easing
-        });
-
-        function raf(time: number) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
-        }
-
-        requestAnimationFrame(raf);
-
-        return () => {
-            lenis.destroy(); // cleanup on unmount
-        };
-    }, []);
+    // useEffect(() => {
+    //     const lenis = new Lenis({
+    //         duration: 1.2,
+    //         lerp: 0.05,
+    //     });
+    //
+    //     function raf(time: number) {
+    //         lenis.raf(time);
+    //         requestAnimationFrame(raf);
+    //     }
+    //
+    //     requestAnimationFrame(raf);
+    //
+    //     return () => {
+    //         lenis.destroy(); // cleanup on unmount
+    //     };
+    // }, []);
 
 
     const navItems = [
@@ -113,12 +115,12 @@ export default function Home() {
                                 {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                             </button>
 
-                            <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2">
+                            <button onClick={() => router.replace('./login')} className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2">
                                 Log In
-                            </a>
+                            </button>
 
                             <a
-                                href="#"
+                                onClick={() => router.replace('./signup')}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
                             >
                                 Sign Up Free

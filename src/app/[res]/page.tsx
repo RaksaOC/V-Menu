@@ -26,7 +26,6 @@ export default function Res() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white relative overflow-x-hidden">
-            {/* Gradient Background Effects */}
             <div className="absolute w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-3xl top-[-8rem] left-[-10rem] z-0" />
             <div className="absolute w-[300px] h-[300px] bg-indigo-400/20 rounded-full blur-2xl bottom-[-5rem] right-[-5rem] z-0" />
 
