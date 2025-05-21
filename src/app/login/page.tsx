@@ -52,7 +52,7 @@ export default function LoginPage() {
                     resSlug: selectedRes.split(' - ')[1], // get the slug
                 });
                 localStorage.setItem("token", response.data.appToken);
-                router.replace(`/${selectedRes.split(' - ')[1]}/${role}`);
+                router.replace(`/${selectedRes.split(' - ')[1]}/${realRole}`);
             }
         } catch (error: any) {
             console.error(error);
