@@ -38,7 +38,7 @@ const SignupPage = () => {
 
             console.log("Signup complete", { uid });
 
-            router.replace("./login");
+            router.push("/login");
         } catch (err: any) {
             console.error("Signup error:", err.message);
             alert("Error: " + err.message);
@@ -179,7 +179,7 @@ const SignupPage = () => {
                 </motion.button>
 
                 <p className="text-center text-zinc-500 dark:text-zinc-400 text-sm mt-2 relative z-10">
-                    Already have an account? <a onClick={() => {router.replace("./login")}} className="text-blue-600 dark:text-blue-400 hover:underline">Sign in</a>
+                    Already have an account? <a onClick={() => {router.push("/login")}} className="text-blue-600 dark:text-blue-400 hover:underline">Sign in</a>
                 </p>
             </motion.form>
         </div>

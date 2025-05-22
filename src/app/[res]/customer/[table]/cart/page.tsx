@@ -101,7 +101,7 @@ export default function CartPage() {
             <div className="header-wrapper w-full max-w-[1024px]">
                 <div className="header justify-between flex flex-row w-full items-center">
                     <button
-                        onClick={() => router.replace("./")}
+                        onClick={() => router.push(`${params.res}/customer/${params.table}`)}
                         className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-xl h-[40px]"
                     >
                         Go Back

@@ -33,7 +33,7 @@ const Auth = () => {
 
             console.log("Login successful");
 
-            router.replace(`./`);
+            router.push(`${params.res}/kitchen`);
         } catch (err: any) {
             console.error("Login error:", err.message);
             alert("Error: " + err.message);
