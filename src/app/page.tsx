@@ -163,13 +163,13 @@ export default function Home() {
                             ))}
                             <div className="border-t border-gray-200 dark:border-gray-700 my-2 pt-2 flex flex-col space-y-2">
                                 <a
-                                    href="#"
+                                    onClick={() => router.replace('./login')}
                                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                 >
                                     Log In
                                 </a>
                                 <a
-                                    href="#"
+                                    onClick={() => router.replace('./signup')}
                                     className="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 text-center"
                                 >
                                     Sign Up Free
@@ -202,7 +202,7 @@ export default function Home() {
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <a
-                                href="#"
+                                onClick={() => router.replace('./signup')}
                                 className="w-full sm:w-auto py-3 px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/20 focus:ring-4 focus:ring-blue-500/30 flex items-center justify-center gap-2 text-lg"
                             >
                                 Create a Restaurant
