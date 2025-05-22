@@ -52,7 +52,7 @@ export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, 
             return NextResponse.json({ message: "Invalid or expired token" }, { status: 401 });
         }
 
-        console.log("User is verified", user);
+        console.log("User is verified");
 
         // Attach resId from DB if needed
         await connectToDB();
@@ -60,8 +60,6 @@ export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, 
         if (tenant) {
             user.resId = tenant.resId;
         }
-
-        console.log("After attaching resId", user);
 
         return handler(req, context, user);
     };

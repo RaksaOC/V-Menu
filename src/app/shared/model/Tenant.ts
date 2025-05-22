@@ -20,4 +20,4 @@ const TenantSchema = new mongoose.Schema({
     resId: { type: String, required: true },
 })
 
-export const Tenant = mongoose.model("Tenant", TenantSchema, "tenants");
+export const Tenant = mongoose.models.Tenant || mongoose.model("Tenant", TenantSchema, "tenants");

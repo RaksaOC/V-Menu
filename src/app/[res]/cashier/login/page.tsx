@@ -16,6 +16,7 @@ const Auth = () => {
     const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+        const params = useParams();
         e.preventDefault();
         setLoading(true);
 
@@ -33,7 +34,7 @@ const Auth = () => {
 
             console.log("Login successful");
 
-            router.replace(`./dashboard`);
+            router.push(`${params.res}/cashier/dashboard`);
         } catch (err: any) {
             console.error("Login error:", err.message);
             alert("Error: " + err.message);

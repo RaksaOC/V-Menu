@@ -30,7 +30,7 @@ export default function History() {
                 <div className="back-button flex justify-start w-full p-4 max-w-[1024px]">
                     <button
                         className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl cursor-pointer"
-                        onClick={() => router.replace("./")}>
+                        onClick={() => router.push(`${params.res}/kitchen`)}>
                         <div className={"content flex justify-between items-center gap-1"}>
                             <ArrowLeft/>
                             <p>View Orders</p>

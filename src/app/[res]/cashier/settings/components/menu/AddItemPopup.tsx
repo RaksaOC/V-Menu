@@ -45,9 +45,10 @@ export default function AddItemPopup({onClose, onSave}: Props) {
                         e.preventDefault();
 
                         // Default image URL if no image is selected
+                        // TODO: remove this if use mongodb storage
                         let imageUrl = "/images/img.png"
 
-                        // TODO: uncomment this in production use default picture locally for now
+                        // TODO: uncomment this in production use default picture locally for now (firebase)
 
                         // let imageUrl = "https://firebasestorage.googleapis.com/v0/b/v-menu-e9835.firebasestorage.app/o/grey_fork_and_knife.png?alt=media&token=0dab98b1-1fd9-4035-86d3-0e8f5755c9c1";
                         //

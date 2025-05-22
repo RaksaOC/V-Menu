@@ -12,20 +12,14 @@ export const PATCH = withAuthRouteHandler(async (req: NextRequest, context: any,
         const params = await context.params;
         const id = params.id;
 
-        const allItems = await Item.find();
-        const existing = await Item.findById(id);
-
         const body = await req.json();
         const isEnabled = body.isEnabled;
-        console.log(isEnabled);
 
         const updatedItem = await Item.findByIdAndUpdate(
             id,
             {isEnabled: !isEnabled},
             {new: true}
         );
-
-        console.log(updatedItem);
 
         if (!updatedItem) {
             return NextResponse.json({message: "Failed to update item", status: 500});

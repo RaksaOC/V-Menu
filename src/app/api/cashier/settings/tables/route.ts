@@ -22,13 +22,13 @@ export const POST = withAuthRouteHandler(async (req: NextRequest, context: any, 
         }
 
         if (body.type === "manual") {
-            const isTaken = await Table.exists({ name: body.name });
+            const isTaken = await Table.exists({ name: body.name , resId: user.resId});
             if (isTaken) return NextResponse.json({ message: "Name is taken" }, { status: 400 });
 
             const newTable = new Table({ name: body.name, isEnabled: false, resId: user.resId });
             return NextResponse.json(await newTable.save());
         } else {
-            const allTables = await Table.find();
+            const allTables = await Table.find({resId: user.resId});
             let nextId;
 
             if (allTables.length === 0) {
