@@ -47,12 +47,12 @@ export default function LoginPage() {
             const {email, uid} = logInDetail;
             if (selectedRes) {
                 const response = await api.post(`/api/${realRole}/login`, {
-                    email: email,
+                    email: email.toLowerCase(),
                     uid: uid,
                     resSlug: selectedRes.split(' - ')[1], // get the slug
                 });
                 localStorage.setItem("token", response.data.appToken);
-                router.replace(`/${selectedRes.split(' - ')[1]}/${realRole}`);
+                router.push(`/${selectedRes.split(' - ')[1]}/${realRole}`);
             }
         } catch (error: any) {
             console.error(error);

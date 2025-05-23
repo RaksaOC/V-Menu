@@ -46,7 +46,7 @@ export default function SettingsTables() {
                                 table={table}
                             />
                         )) : (<div className={"w-full h-96 flex justify-center items-center"}>
-                            <h1 className={"text-3xl text-center"}>No Menu to Display</h1>
+                            <h1 className={"text-3xl text-center"}>No Tables to Display</h1>
                         </div>)
                 )}
             </div>
