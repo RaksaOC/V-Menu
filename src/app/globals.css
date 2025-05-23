@@ -20,6 +20,6 @@ body {
   font-family: "Inter", sans-serif;
 }
 
-button{
+a, button{
   cursor: pointer;
 }

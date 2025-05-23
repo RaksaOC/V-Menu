@@ -6,6 +6,8 @@ export const getResIdFromSlug = async (slug: string) => {
     return res._id;
 }
 
+
+
 export const getResNameFromId = async (id: string) => {
     const res =  await Restaurant.findOne({_id: id});
     return res.name;
@@ -15,3 +17,4 @@ export const getResSlugFromId = async (id: string) => {
     const res =  await Restaurant.findOne({_id: id});
     return res.slug;
 }
+

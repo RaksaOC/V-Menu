@@ -7,6 +7,7 @@ export interface TableOrderBase {
 }
 
 export interface TableOrderOutput extends TableOrderBase {
+    createdAt: string;
     _id: string;
     isPayed: boolean;
 }

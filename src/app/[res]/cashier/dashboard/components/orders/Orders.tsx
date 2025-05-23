@@ -6,6 +6,7 @@ import Link from "next/link";
 import {TableOrderOutput} from "@/app/shared/types/TableOrder";
 import {OrderOutput} from "@/app/shared/types/Order";
 import api from "@/app/shared/lib/axios";
+import {useParams, useRouter} from "next/navigation";
 
 async function getTableOrders() {
     const response = await api.get("/api/cashier/dashboard/orders");
@@ -14,12 +15,15 @@ async function getTableOrders() {
 
 export default function Orders() {
     const [orders, setOrders] = useState<TableOrderOutput[]>([]);
+    const router = useRouter();
+    const params = useParams();
+
     const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         async function fetchOrders() {
             const data = await getTableOrders();
             const filtered = data.filter(
-                (order : TableOrderOutput) => !order.isPayed && order.orders.length > 0
+                (order: TableOrderOutput) => !order.isPayed && order.orders.length > 0
             );
             setOrders(filtered);
             setIsLoading(false);
@@ -29,8 +33,8 @@ export default function Orders() {
     }, []);
 
 
-    const handleMarkPaid = async (orderId : string) => {
-        const orderToMark = orders.find((order : TableOrderOutput) => order._id === orderId)  || null;
+    const handleMarkPaid = async (orderId: string) => {
+        const orderToMark = orders.find((order: TableOrderOutput) => order._id === orderId) || null;
         if (!orderToMark) {
             return;
         }
@@ -41,7 +45,6 @@ export default function Orders() {
 
         location.reload();
     };
-
 
     return (
         <div className="orders w-full flex justify-center items-center">
@@ -55,12 +58,10 @@ export default function Orders() {
                         </>
                     )
                 }
-                <div className={"order-history w-full flex justify-end items-center"}>
-                    <Link href="/orderHistory">
-                        <button className={"bg-blue-600 text-white py-2 px-4 rounded-xl cursor-pointer "}>View Order
-                            History
-                        </button>
-                    </Link>
+                <div className={"order-orderHistory w-full flex justify-end items-center"}>
+                    <button className={"bg-blue-600 text-white py-2 px-4 rounded-xl cursor-pointer "} onClick={() => router.push(`/${params.res}/cashier/dashboard/orderHistory`)} >
+                        View Order History
+                    </button>
                 </div>
                 {
                     orders.length > 0 ?

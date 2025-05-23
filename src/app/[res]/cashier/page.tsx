@@ -1,4 +1,4 @@
-// app/[res]/cashier/page.tsx
+// app/[res]/cashier/page.tsx.tsx
 import { redirect } from 'next/navigation';
 
 export default function CashierPage({ params }: { params: { res: string } }) {
