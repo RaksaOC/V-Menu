@@ -1,10 +1,12 @@
 import {CartItem} from "@/app/shared/types/CartItem";
 
 export interface Order {
+    createdAt: any;
     orderedItems: CartItem[];
 }
 
 export interface OrderOutput extends Order {
+    createdAt: string;
     _id: string;
     isDone: boolean;
     table: string;

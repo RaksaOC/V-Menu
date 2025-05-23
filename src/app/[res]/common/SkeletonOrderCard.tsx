@@ -1,6 +1,6 @@
 function SkeletonOrderCard() {
     return (
-        <div className="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-zinc-800 animate-pulse p-4 space-y-4">
+        <div className="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-zinc-800 animate-pulse p-4 space-y-4 w-full">
             {/* Header */}
             <div className="flex justify-between items-center mb-2">
                 <div className="h-6 bg-gray-300 dark:bg-zinc-600 rounded w-1/3" />

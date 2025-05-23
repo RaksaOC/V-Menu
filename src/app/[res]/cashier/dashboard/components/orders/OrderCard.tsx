@@ -1,7 +1,11 @@
-import {useState} from "react";
+'use client'
+import {useEffect, useState} from "react";
 import Invoice from "./Invoice";
 import {Order} from "@/app/shared/types/Order";
 import {TableOrderOutput} from "@/app/shared/types/TableOrder";
+import {prettyDate} from "@/app/shared/util/formatter";
+import {useParams} from "next/navigation";
+import { getResFromSlug } from "@/app/shared/util/getResFromSlug";
 
 interface Props {
     order: TableOrderOutput,
@@ -11,11 +15,20 @@ interface Props {
 function OrderCard({order, onMarkPaid}: Props) {
     const [showInvoice, setShowInvoice] = useState(false);
     console.log(order);
+    const params = useParams();
     // Access nested structure: order.orders = array of sub-orders, each with its own items
     const subOrders = order.orders;
 
+    // useEffect(() => {
+    //     const getResDetails = async () => {
+    //         const res = await getResFromSlug(params.slug as string);
+    //         setRes(res);
+    //     }
+    //     getResDetails();
+    // }, [])
+
     return (
-        <div className="rounded-2xl overflow-hidden shadow-lg bg-none">
+        <div className="rounded-2xl overflow-hidden shadow-lg bg-none w-full p-4">
             <div className="flex justify-between items-center mb-2">
                 <h3 className="text-xl font-bold text-zinc-800 dark:text-white mb-2.5">Table {order.table}</h3>
                 {/*<span className="text-sm text-zinc-500 dark:text-zinc-400">Order ID: {order._id}</span>*/}
@@ -24,9 +37,13 @@ function OrderCard({order, onMarkPaid}: Props) {
             <div className="bg-gray-50 dark:bg-zinc-700 rounded-xl p-3 mb-4">
                 {subOrders.length > 0 ? subOrders.map((subOrder, index) => (
                     <div key={index} className="m-4 border-b border-zinc-300 dark:border-zinc-600 last:border-b-0">
-                        <p className="font-semibold text-zinc-700 dark:text-zinc-200 mb-2">
-                            Order {index + 1}
-                        </p>
+                        <div className={"flex justify-between w-full items-center"}>
+                            <p className="font-semibold text-zinc-700 dark:text-zinc-200 mb-2">
+                                Order {index + 1}
+                            </p>
+                            <p className={"text-gray-400"}>{prettyDate(subOrder.createdAt)}</p>
+                        </div>
+
                         {subOrder.orderedItems.map((item) => (
                             <div
                                 key={item.item._id}
@@ -58,11 +75,11 @@ function OrderCard({order, onMarkPaid}: Props) {
 
             {showInvoice && (
                 <Invoice
-                    businessName="V-Menu"
-                    address="123 Main Street, Foodville"
-                    phone="(123) 456-7890"
+                    businessName={params.res as string}
+                    address={"Address will be supported soon"}
+                    phone={ "(123) 456-7890"}
                     invoiceId={`${order._id}`}
-                    date={new Date().toLocaleDateString()}
+                    date={prettyDate(new Date().toLocaleString())}
                     items={subOrders.flatMap(sub => sub.orderedItems)}
                     onClose={() => setShowInvoice(false)}
                 />

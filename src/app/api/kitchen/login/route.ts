@@ -1,4 +1,4 @@
-// get email, resSlug frpm log in page
+// get email, resSlug frpm log in page.tsx
 // go to tennants collection and find the tenant with that email
 // find if one of there resIds are of this restuarant
 

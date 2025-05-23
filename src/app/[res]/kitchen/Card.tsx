@@ -2,6 +2,7 @@
 
 import React from "react";
 import {CartItem} from "@/app/shared/types/CartItem";
+import {prettyDate} from "@/app/shared/util/formatter";
 
 interface CardProps {
     orderId: string;
@@ -9,13 +10,15 @@ interface CardProps {
     orderedItems: CartItem[];
     isDone: boolean;
     onDone: (orderId: string) => void;
+    orderedAt: string;
 }
 
-const Card = ({ orderId, table, orderedItems, isDone, onDone }: CardProps) => {
+const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardProps) => {
     return (
         <div className="max-w-[1024px] w-[98%] rounded-2xl overflow-hidden shadow-lg bg-white p-4 my-6">
             <div className="flex justify-between items-center mb-2">
                 <h3 className="text-xl font-bold text-gray-800">Table {table}</h3>
+                <p>{prettyDate(orderedAt)}</p>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-3 mb-4">

@@ -101,6 +101,7 @@ export default function KitchenPage() {
                             orderId={order._id}
                             table={order.table}
                             orderedItems={order.orderedItems}
+                            orderedAt={order.createdAt}
                             onDone={handleOnDone}
                             isDone={order.isDone}
                         />

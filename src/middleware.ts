@@ -27,7 +27,7 @@ export function middleware(req: NextRequest) {
 
         if (!token) {
             if (!isLoginPage) {
-                // Only redirect if not already on the login page
+                // Only redirect if not already on the login page.tsx
                 return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
             }
             return NextResponse.next();
@@ -50,7 +50,7 @@ export function middleware(req: NextRequest) {
                 }
             }
         } catch (err) {
-            // If token is invalid and not already on login page
+            // If token is invalid and not already on login page.tsx
             if (!isLoginPage) {
                 return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
             }
