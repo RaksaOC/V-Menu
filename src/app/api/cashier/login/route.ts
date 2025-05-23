@@ -20,6 +20,8 @@ export const POST = async (req: NextRequest, context: any, user: any) => {
             return NextResponse.json({message: "Missing fields"}, {status: 400});
         }
 
+        console.log("recieved resSlug", resSlug);
+
         const resId = await getResIdFromSlug(resSlug);
         const result = await Tenant.findOne({email, resId, role: "cashier"});
 

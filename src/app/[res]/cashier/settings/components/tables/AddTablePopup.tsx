@@ -38,7 +38,7 @@ export default function AddTablePopup({onClose, onSave} : Props) {
                     }}
                     className="flex flex-col gap-6"
                 >
-                    <h2 className="text-xl font-semibold mb-2">Add TableCard</h2>
+                    <h2 className="text-xl font-semibold mb-2">Add Table</h2>
 
                     {/* Radio Options */}
                     <div className="flex gap-4">
@@ -64,12 +64,12 @@ export default function AddTablePopup({onClose, onSave} : Props) {
 
                     {/* Name Input */}
                     <div>
-                        <label className="block text-sm font-medium mb-1">TableCard Name</label>
+                        <label className="block text-sm font-medium mb-1">Table Name</label>
                         <input
                             type="text"
                             placeholder="e.g. TableCard 7"
                             value={tableName}
-                            onChange={(e) => setTableName(e.target.value)}
+                            onChange={(e) => setTableName(e.target.value.toLowerCase())}
                             disabled={useAutoIncrement}
                             className="w-full p-2 bg-zinc-100 dark:bg-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white disabled:opacity-50"
                         />

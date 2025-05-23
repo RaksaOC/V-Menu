@@ -57,9 +57,10 @@ export function Login({onSuccess, onRegisterClick}: Props) {
 
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
-            const response = await api.post("/api/login", {email: form.email});
+            console.log("email to send to api with lowercase", form.email.toLowerCase());
+            const response = await api.post("/api/login", {email: form.email.toLowerCase()});
             const logInDetail = {
-                email: form.email,
+                email: form.email.toLowerCase(),
                 uid: userCredential.user.uid
             }
             onSuccess(logInDetail, response.data);
