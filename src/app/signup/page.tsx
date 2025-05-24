@@ -63,17 +63,15 @@ const SignupPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-zinc-900 dark:to-indigo-950 px-4 py-12">
+        <div
+            className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-950 to-slate-900 text-white px-4 relative">
             <motion.form
                 initial="hidden"
                 animate="visible"
                 variants={formVariants}
                 onSubmit={handleSignup}
-                className="w-full max-w-md bg-white dark:bg-zinc-800 p-8 rounded-3xl shadow-xl flex flex-col gap-6 relative overflow-hidden"
+                className="bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full flex flex-col gap-2.5"
             >
-                {/* Decorative background elements */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 dark:bg-blue-900/20 rounded-full -mr-16 -mt-16 z-0"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-100 dark:bg-indigo-900/20 rounded-full -ml-12 -mb-12 z-0"></div>
 
                 <div className="relative z-10">
                     <div className="bg-blue-600 dark:bg-blue-700 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -179,7 +177,7 @@ const SignupPage = () => {
                 </motion.button>
 
                 <p className="text-center text-zinc-500 dark:text-zinc-400 text-sm mt-2 relative z-10">
-                    Already have an account? <a onClick={() => {router.push("/login")}} className="text-blue-600 dark:text-blue-400 hover:underline">Sign in</a>
+                    Already have an account? <a onClick={() => {router.push("/login")}} className="text-blue-600 dark:text-blue-400 hover:underline">Log in</a>
                 </p>
             </motion.form>
         </div>

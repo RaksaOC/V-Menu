@@ -1,15 +1,17 @@
-function SkeletonMenuCard() {
+function SkeletonMenuCard({ isLight = false }: { isLight?: boolean }) {
+    const baseCardClasses = `max-w-xs w-full rounded-2xl overflow-hidden shadow-lg animate-pulse m-2`;
+    const cardBg = isLight ? 'bg-white' : 'bg-zinc-900';
+    const barBg = isLight ? 'bg-gray-200' : 'bg-zinc-700';
+
     return (
-        <>
-            <div className="max-w-xs w-full rounded-2xl overflow-hidden shadow-lg dark:bg-zinc-900 animate-pulse m-2">
-                <div className="w-full h-48 bg-gray-300"/>
-                <div className="p-4 space-y-4">
-                    <div className="h-6 bg-gray-300 rounded w-3/4"/>
-                    <div className="h-4 bg-gray-300 rounded w-1/2"/>
-                    <div className="h-10 bg-gray-300 rounded w-full"/>
-                </div>
+        <div className={`${baseCardClasses} ${cardBg}`}>
+            <div className={`w-full h-48 ${barBg}`} />
+            <div className="p-4 space-y-4">
+                <div className={`h-6 rounded w-3/4 ${barBg}`} />
+                <div className={`h-4 rounded w-1/2 ${barBg}`} />
+                <div className={`h-10 rounded w-full ${barBg}`} />
             </div>
-        </>
+        </div>
     );
 }
 

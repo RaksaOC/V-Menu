@@ -1,7 +1,7 @@
 import {CartItem} from "@/app/shared/types/CartItem";
 
 export interface Order {
-    createdAt: any;
+    createdAt?: any;
     orderedItems: CartItem[];
 }
 
