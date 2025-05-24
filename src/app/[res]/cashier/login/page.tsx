@@ -60,7 +60,7 @@ const Auth = () => {
 
             console.log("Login successful");
 
-            router.push(`${params.res}/cashier/dashboard`);
+            router.push(`/${params.res}/cashier/dashboard`);
         } catch (err: any) {
             console.error("Login error:", err.message);
             alert("Error: " + err.message);
