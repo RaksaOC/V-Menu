@@ -66,22 +66,14 @@ export default function LoginPage() {
                 className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-950 to-slate-900 text-white px-4 relative">
                 <ToastContainer/>
                 <div className={"models flex flex-col justify-center items-center max-w-[1024px] w-full py-4"}>
-                    {step !== "login" && (
-                        <button
-                            onClick={handleBack}
-                            className="flex items-center self-start gap-2 text-white hover:text-blue-400 transition-colors pl-4 "
-                        >
-                            <ArrowLeft className="w-5 h-5"/> Back
-                        </button>
-                    )}
                     <AnimatePresence mode="wait">
                         {step === "login" && (
                             <motion.div
                                 key="login"
-                                initial={{opacity: 0, x: 100}}
-                                animate={{opacity: 1, x: 0}}
-                                exit={{opacity: 0, x: -100}}
-                                transition={{duration: 0.3}}
+                                initial={{opacity: 0, x: 100, y: 0}}
+                                animate={{opacity: 1, x: 0, y: 0}}
+                                exit={{opacity: 0, x: -100, y: 0}}
+                                transition={{duration: 0.2}}
                                 className="flex justify-center items-center w-full"
                             >
                                 <Login onSuccess={handleLoginSuccess}/>
@@ -91,15 +83,16 @@ export default function LoginPage() {
                         {step === "restaurant" && (
                             <motion.div
                                 key="restaurant"
-                                initial={{opacity: 0, x: 100}}
-                                animate={{opacity: 1, x: 0}}
-                                exit={{opacity: 0, x: -100}}
-                                transition={{duration: 0.3}}
+                                initial={{opacity: 0, x: 100, y: 0}}
+                                animate={{opacity: 1, x: 0, y: 0}}
+                                exit={{opacity: 0, x: -100, y: 0}}
+                                transition={{duration: 0.2}}
                                 className=" flex justify-center items-center w-full"
                             >
                                 <ResSelect
                                     restaurantNames={Object.keys(restaurants)}
                                     onSelected={handleRestaurantSelect}
+                                    onBack={handleBack}
                                 />
                             </motion.div>
                         )}
@@ -107,13 +100,14 @@ export default function LoginPage() {
                         {step === "role" && selectedRes && (
                             <motion.div
                                 key="role"
-                                initial={{opacity: 0, x: 100}}
-                                animate={{opacity: 1, x: 0}}
-                                exit={{opacity: 0, x: -100}}
-                                transition={{duration: 0.3}}
+                                initial={{opacity: 0, x: 100, y: 0}}
+                                animate={{opacity: 1, x: 0, y: 0}}
+                                exit={{opacity: 0, x: -100, y: 0}}
+                                transition={{duration: 0.2}}
                                 className="flex justify-center items-center w-full"
                             >
-                                <RoleSelect roles={restaurants[selectedRes]} onRoleSelect={handleRoleSelect}/>
+                                <RoleSelect roles={restaurants[selectedRes]} onRoleSelect={handleRoleSelect}
+                                            onBack={handleBack}/>
                             </motion.div>
                         )}
 
