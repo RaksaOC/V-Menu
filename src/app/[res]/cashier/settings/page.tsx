@@ -39,7 +39,7 @@ const Settings = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white p-4">
+        <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white">
             <div className={"back w-full flex justify-center items-center pb-3.5"}>
                 <div className={"back-wrapper max-w-[1024px] w-full flex"}>
                     <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition" onClick={() => router.back()}>
