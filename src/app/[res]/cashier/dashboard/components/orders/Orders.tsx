@@ -7,6 +7,7 @@ import {TableOrderOutput} from "@/app/shared/types/TableOrder";
 import {OrderOutput} from "@/app/shared/types/Order";
 import api from "@/app/shared/lib/axios";
 import {useParams, useRouter} from "next/navigation";
+import {Clock, ShoppingCart} from "lucide-react";
 
 async function getTableOrders() {
     const response = await api.get("/api/cashier/dashboard/orders");
@@ -17,6 +18,7 @@ export default function Orders() {
     const [orders, setOrders] = useState<TableOrderOutput[]>([]);
     const router = useRouter();
     const params = useParams();
+    const [showHistory, setShowHistory] = useState(false);
 
     const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
@@ -48,7 +50,7 @@ export default function Orders() {
 
     return (
         <div className="orders w-full flex justify-center items-center">
-            <div className={"orders-wrapper max-w-[1024px] w-full text-center flex flex-col gap-6"}>
+            <div className={"orders-wrapper w-full text-center flex flex-col gap-6"}>
                 {
                     isLoading && (
                         <>
@@ -58,8 +60,16 @@ export default function Orders() {
                         </>
                     )
                 }
-                <div className={"order-orderHistory w-full flex justify-end items-center"}>
-                    <button className={"bg-blue-600 text-white py-2 px-4 rounded-xl cursor-pointer "} onClick={() => router.push(`/${params.res}/cashier/dashboard/orderHistory`)} >
+                <div className={"order-orderHistory w-full flex justify-between items-center p-4"}>
+                    <div className="flex items-center space-x-2 text-lg font-semibold ">
+                        {showHistory ? <Clock size={20}/> : <ShoppingCart size={20}/>}
+                        <p>{showHistory ? "Order History" : "Active Orders"}</p>
+                    </div>
+                    <button className={"bg-blue-600 text-white py-2 px-4 rounded-xl cursor-pointer "}
+                            onClick={() => {
+                                router.push(`/${params.res}/cashier/dashboard/orderHistory`)
+                                setShowHistory(!showHistory);
+                            }}>
                         View Order History
                     </button>
                 </div>
