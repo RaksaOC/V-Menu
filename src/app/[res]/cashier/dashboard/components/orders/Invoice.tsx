@@ -1,6 +1,8 @@
 import {ItemOutput} from "@/app/shared/types/Item";
 import {CartItem} from "@/app/shared/types/CartItem";
 import {Printer, X} from "lucide-react";
+import {useRef} from "react";
+import {useReactToPrint} from "react-to-print";
 
 interface Props {
     businessName: string;
@@ -16,6 +18,51 @@ interface Props {
 function Invoice({businessName, address, phone, invoiceId, date, items, onClose}: Props) {
     // Combine duplicate items by id
     const mergedItems: CartItem[] = [];
+    const invoiceRef = useRef<HTMLDivElement>(null);
+    const printInvoice = () => {
+        if (!invoiceRef.current) return;
+
+        // const printContent = invoiceRef.current.innerHTML;
+        // const printWindow = window.open("", "", "width=800,height=600");
+        //
+        // if (printWindow) {
+        //     printWindow.document.write(`
+        //     <html>
+        //         <head>
+        //             <title>Invoice</title>
+        //             <style>
+        //                 body {
+        //                     font-family: monospace;
+        //                     padding: 20px;
+        //                     color: black;
+        //                     background: white;
+        //                 }
+        //                 table {
+        //                     width: 100%;
+        //                     border-collapse: collapse;
+        //                 }
+        //                 th, td {
+        //                     padding: 8px;
+        //                     text-align: left;
+        //                     border-bottom: 1px dashed #000;
+        //                 }
+        //                 th {
+        //                     border-bottom: 1px solid #000;
+        //                 }
+        //             </style>
+        //         </head>
+        //         <body>
+        //             ${printContent}
+        //         </body>
+        //     </html>
+        // `);
+        //     printWindow.document.close();
+        //     printWindow.focus();
+        //     printWindow.print();
+        //     printWindow.close();
+        // }
+        window.print();
+    };
 
     items.forEach((item) => {
         const existing = mergedItems.find((i) => i.item._id === item.item._id);
@@ -32,9 +79,11 @@ function Invoice({businessName, address, phone, invoiceId, date, items, onClose}
     );
 
     return (
-        <div className="fixed inset-0 bg-black/85  z-50 overflow-y-auto px-4 py-6 flex justify-center items-center">
+        <div
+            className="fixed inset-0 bg-black/85  z-50 overflow-y-auto px-4 py-6 flex justify-center items-center">
             <div className={"flex flex-col justify-center items-center"}>
                 <div
+                    ref={invoiceRef}
                     className="relative bg-white text-black p-8 font-mono border border-black max-w-lg w-full mx-auto shadow-xl rounded-xl mb-8">
                     <header className="text-center mb-8">
                         <h1 className="text-3xl font-bold uppercase tracking-wide">{businessName}</h1>
@@ -81,7 +130,7 @@ function Invoice({businessName, address, phone, invoiceId, date, items, onClose}
 
                     <div className="mt-8 flex justify-center">
                         <img
-                            src=""
+                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
                             alt="QR Code"
                             className="w-24 h-24 border border-black"
                         />
@@ -95,13 +144,14 @@ function Invoice({businessName, address, phone, invoiceId, date, items, onClose}
 
                 <div className="flex justify-center items-center gap-2.5">
                     <button
-                        className="bg-blue-500 hover:bg-red-700 text-white font-bold py-2 px-6 rounded flex items-center gap-2"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded flex items-center transition-all duration-75 gap-2"
+                        onClick={printInvoice}
                     >
                         <span><Printer size={16}/></span> Print
                     </button>
                     <button
                         onClick={onClose}
-                        className=" bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded flex items-center gap-2"
+                        className=" bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded flex items-center transition-all duration-75 gap-2"
                     >
                         <span><X size={16}/></span> Close
                     </button>

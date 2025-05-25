@@ -19,6 +19,7 @@ export default function Orders() {
     const router = useRouter();
     const params = useParams();
     const [showHistory, setShowHistory] = useState(false);
+    const [history, setHistory] = useState<TableOrderOutput[]>([]);
 
     const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
@@ -32,6 +33,20 @@ export default function Orders() {
         }
 
         fetchOrders();
+    }, []);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const response = await api.get("/api/cashier/dashboard/orders");
+                setHistory(response.data.filter((d: TableOrderOutput) => d.isPayed));
+            } catch (err) {
+                console.error("Failed to fetch order history:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchHistory();
     }, []);
 
 
@@ -67,24 +82,45 @@ export default function Orders() {
                     </div>
                     <button className={"bg-blue-600 text-white py-2 px-4 rounded-xl cursor-pointer "}
                             onClick={() => {
-                                router.push(`/${params.res}/cashier/dashboard/orderHistory`)
                                 setShowHistory(!showHistory);
                             }}>
-                        View Order History
+                        {showHistory ? "View Active Orders": "View Order History"}
                     </button>
                 </div>
                 {
-                    orders.length > 0 ?
-                        orders.map((order) => (
-                            <OrderCard key={order._id} order={order} onMarkPaid={handleMarkPaid}/>
-                        )) :
-                        <div className={"w-full h-96 flex justify-center items-center"}>
-                            <h1 className={"text-3xl text-center"}>No orders to display</h1>
-                        </div>
+                    !showHistory ? (
+                        <>
+                            {
+                                orders.length > 0 ?
+                                    orders.map((order) => (
+                                        <OrderCard key={order._id} order={order} onMarkPaid={handleMarkPaid}/>
+                                    )) :
+                                    <div className={"w-full h-96 flex justify-center items-center"}>
+                                        <h1 className={"text-3xl text-center"}>No orders to display</h1>
+                                    </div>
+                            }
+                        </>
+                    ) : (
+                        <>
+                            {
+                                history.length > 0 ? (
+                                    orders.map((order) => (
+                                        <OrderCard key={order._id} order={order} onMarkPaid={handleMarkPaid}/>
+                                    ))
+                                ) : (
+                                    <div className={"w-full h-96 flex justify-center items-center"}>
+                                        <h1 className={"text-3xl text-center"}>No orders history to display</h1>
+                                    </div>
+                                )
+                            }
+                        </>
+                    )
                 }
+
             </div>
 
         </div>
-    );
+    )
+        ;
 }
 
