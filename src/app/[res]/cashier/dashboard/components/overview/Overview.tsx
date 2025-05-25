@@ -131,7 +131,7 @@ export default function Overview() {
                         return (
                             <div
                                 key={index}
-                                className={`relative bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 ${
+                                className={`relative bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-500  hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 ${
                                     isUrgent ? "ring-2 ring-amber-200 dark:ring-amber-800" : ""
                                 } ${
                                     isHigh ? "ring-2 ring-emerald-200 dark:ring-emerald-800" : ""
