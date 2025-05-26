@@ -424,7 +424,7 @@ export default function Home() {
                         {[
                             {
                                 step: '01',
-                                title: 'Setup Your Restaurant',
+                                title: 'Setup Your Restaurant.ts',
                                 desc: 'Create your account, customize your menu, create tables and configure your restaurant in minutes.'
                             },
                             {
@@ -487,7 +487,7 @@ export default function Home() {
             {/*                {*/}
             {/*                    quote: "V-Menu has transformed how we operate. Order errors are down 90% and our kitchen runs smoother than ever.",*/}
             {/*                    name: "Sarah Johnson",*/}
-            {/*                    role: "Restaurant Owner, The Hungry Fork",*/}
+            {/*                    role: "Restaurant.ts Owner, The Hungry Fork",*/}
             {/*                    rating: 5*/}
             {/*                },*/}
             {/*                {*/}
@@ -766,7 +766,7 @@ export default function Home() {
             {/*                        </div>*/}
             {/*                        <div className="ml-4">*/}
             {/*                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Location</h3>*/}
-            {/*                            <p className="text-gray-600 dark:text-gray-400">123 Restaurant Row, Suite 400<br />San Francisco, CA 94107</p>*/}
+            {/*                            <p className="text-gray-600 dark:text-gray-400">123 Restaurant.ts Row, Suite 400<br />San Francisco, CA 94107</p>*/}
             {/*                        </div>*/}
             {/*                    </div>*/}
             {/*                </div>*/}
@@ -863,7 +863,7 @@ export default function Home() {
             {/*            {[*/}
             {/*                {*/}
             {/*                    question: "How long does it take to set up V-Menu?",*/}
-            {/*                    answer: "Most restaurants are up and running within a day. Our onboarding specialists help you configure your menu, staff roles, and settings to match your specific needs."*/}
+            {/*                    answer: "Most restaurants are up and running within a day. Our onboarding specialists help you configure your menu, staff roles, and owner to match your specific needs."*/}
             {/*                },*/}
             {/*                {*/}
             {/*                    question: "Can I use V-Menu on tablets and mobile devices?",*/}

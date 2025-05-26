@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 import {
     Box,
     Home,
@@ -9,14 +9,26 @@ import {
     Users,
     Settings,
     BarChart3,
-    Plus, LayoutDashboard, UtensilsCrossed, Table2
+    Plus, LayoutDashboard, UtensilsCrossed, Table2, ChevronDown, Check
 } from "lucide-react";
 import Header from "@/app/owner/components/Header";
+import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from '@headlessui/react';
+import api from "@/app/shared/lib/axios";
+import {RestaurantOutput} from "@/app/shared/types/Restaurant";
 
 const OwnerDashboard = () => {
     const [activeItem, setActiveItem] = useState('overview');
     const [selectedRestaurant, setSelectedRestaurant] = useState('pasta-place');
     const [showManagement, setShowManagement] = useState(false);
+    const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
+
+    useEffect(() => {
+        const fetchRestaurants = async () => {
+            const response = await api.get("/api/owner");
+            setRestaurants(response.data);
+        }
+        fetchRestaurants();
+    }, [])
 
     const navItems = [
         {name: "Dashboard Overview", icon: BarChart3, id: "overview"},
@@ -26,34 +38,34 @@ const OwnerDashboard = () => {
         {name: "Platform Settings", icon: Settings, id: "settings"}
     ];
 
-    const restaurants = [
-        {
-            id: 'pasta-place',
-            name: '🍝 Pasta Place Downtown',
-            revenue: '$2,450',
-            orders: '12',
-            occupancy: '85%',
-            staff: '8/10'
-        },
-        {
-            id: 'burger-barn',
-            name: '🍔 Burger Barn Uptown',
-            revenue: '$1,850',
-            orders: '8',
-            occupancy: '72%',
-            staff: '6/8'
-        },
-        {
-            id: 'sushi-spot',
-            name: '🍣 Sushi Spot Mall',
-            revenue: '$3,200',
-            orders: '15',
-            occupancy: '90%',
-            staff: '10/12'
-        }
-    ];
+    // const restaurants = [
+    //     {
+    //         id: 'pasta-place',
+    //         name: '🍝 Pasta Place Downtown',
+    //         revenue: '$2,450',
+    //         orders: '12',
+    //         occupancy: '85%',
+    //         staff: '8/10'
+    //     },
+    //     {
+    //         id: 'burger-barn',
+    //         name: '🍔 Burger Barn Uptown',
+    //         revenue: '$1,850',
+    //         orders: '8',
+    //         occupancy: '72%',
+    //         staff: '6/8'
+    //     },
+    //     {
+    //         id: 'sushi-spot',
+    //         name: '🍣 Sushi Spot Mall',
+    //         revenue: '$3,200',
+    //         orders: '15',
+    //         occupancy: '90%',
+    //         staff: '10/12'
+    //     }
+    // ];
 
-    const selectedData = restaurants.find(r => r.id === selectedRestaurant);
+    const selectedData = restaurants.find(r => r._id === selectedRestaurant);
 
     const renderContent = () => {
         if (showManagement) {
@@ -72,19 +84,54 @@ const OwnerDashboard = () => {
                         </div>
 
 
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">Select Restaurant</label>
-                            <select
-                                value={selectedRestaurant}
-                                onChange={(e) => setSelectedRestaurant(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                {restaurants.map(restaurant => (
-                                    <option key={restaurant.id} value={restaurant.id}>
-                                        {restaurant.name}
-                                    </option>
-                                ))}
-                            </select>
+                        <div className="space-y-2 w-full">
+                            <Listbox value={selectedRestaurant} onChange={setSelectedRestaurant}>
+                                <div className="relative">
+                                    <ListboxButton
+                                        className="relative w-full cursor-pointer rounded-lg border border-gray-300 bg-white py-3 pl-4 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <span className="block truncate">
+                                          {restaurants.find(r => r._id === selectedRestaurant)?.name || 'Select a restaurant'}
+                                        </span>
+                                        <span
+                                            className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                            <ChevronDown className="w-5 h-5 text-gray-400"/>
+                                        </span>
+                                    </ListboxButton>
+
+                                    <ListboxOptions
+                                        className="absolute mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
+                                        {restaurants.map((restaurant) => (
+                                            <ListboxOption
+                                                key={restaurant._id}
+                                                value={restaurant._id}
+                                                as={Fragment}
+                                            >
+                                                {({selected, active}) => (
+                                                    <li
+                                                        className={`cursor-pointer select-none relative py-4 pl-10 pr-4 list-none ${
+                                                            active ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                                                        }`}
+                                                    >
+                                                        <div className={"flex gap-2.5 items-center"}>
+                                                            <Home size={16}></Home>
+                                                            <span
+                                                                className={`block truncate ${selected ? 'font-semibold' : ''}`}>
+                                                            {restaurant.name}
+                                                        </span>
+                                                        </div>
+                                                        {selected && (
+                                                            <span
+                                                                className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                                                    <Check className="w-4 h-4"/>
+                                                                </span>
+                                                        )}
+                                                    </li>
+                                                )}
+                                            </ListboxOption>
+                                        ))}
+                                    </ListboxOptions>
+                                </div>
+                            </Listbox>
                         </div>
 
                         <div className={"w-full mt-4 h-0.5 bg-slate-200"}></div>

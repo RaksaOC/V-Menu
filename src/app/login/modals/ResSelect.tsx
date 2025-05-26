@@ -77,7 +77,7 @@ export function ResSelect({restaurantNames, onSelected, onBack}: ResSelectProps)
                                     <Utensils className="w-10 h-10"/>
                                 </div>
 
-                                {/* Restaurant name */}
+                                {/* Restaurant.ts name */}
                                 <h3 className="text-xl font-bold tracking-wide text-center px-4">
                                     {name.split(" - ")[0]}
                                 </h3>

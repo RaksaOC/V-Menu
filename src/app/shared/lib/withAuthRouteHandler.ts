@@ -56,7 +56,7 @@ export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, 
 
         // Attach resId from DB if needed
         await connectToDB();
-        const tenant = await Tenant.findOne({ tenantId: user.uid }); // or use user.res if that's what you store
+        const tenant = await Tenant.findOne({ tenantId: user.uid });
         if (tenant) {
             user.resId = tenant.resId;
         }
