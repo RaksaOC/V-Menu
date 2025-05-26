@@ -11,6 +11,7 @@
 
 *{
   /*uncomment this if use lenis*/
+  box-sizing: border-box;
   scroll-behavior: smooth !important;
 }
 
