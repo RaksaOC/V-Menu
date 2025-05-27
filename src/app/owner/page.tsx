@@ -1,6 +1,6 @@
 'use client';
 
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {createContext, Fragment, useEffect, useState} from 'react';
 import {
     Box,
     Home,
@@ -15,12 +15,16 @@ import Header from "@/app/owner/components/Header";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from '@headlessui/react';
 import api from "@/app/shared/lib/axios";
 import {RestaurantOutput} from "@/app/shared/types/Restaurant";
+import Overview from "@/app/owner/components/overview/Overview";
+import {ResContext} from "@/app/owner/ResContext";
+
 
 const OwnerDashboard = () => {
     const [activeItem, setActiveItem] = useState('overview');
-    const [selectedRestaurant, setSelectedRestaurant] = useState('pasta-place');
+    const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOutput | null>();
     const [showManagement, setShowManagement] = useState(false);
     const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
+    const [selectedTab, setSelectedTab] = useState('overview');
 
     useEffect(() => {
         const fetchRestaurants = async () => {
@@ -65,7 +69,18 @@ const OwnerDashboard = () => {
     //     }
     // ];
 
-    const selectedData = restaurants.find(r => r._id === selectedRestaurant);
+    const renderMainContent = () => {
+        switch (selectedTab) {
+            case "overview":
+                if (selectedRestaurant) {
+                    return (
+                        <ResContext.Provider value={selectedRestaurant.slug}>
+                            <Overview></Overview>
+                        </ResContext.Provider>
+                    )
+                }
+        }
+    }
 
     const renderContent = () => {
         if (showManagement) {
@@ -89,41 +104,37 @@ const OwnerDashboard = () => {
                                 <div className="relative">
                                     <ListboxButton
                                         className="relative w-full cursor-pointer rounded-lg border border-gray-300 bg-white py-3 pl-4 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                        <span className="block truncate">
-                                          {restaurants.find(r => r._id === selectedRestaurant)?.name || 'Select a restaurant'}
-                                        </span>
+      <span className="block truncate">
+        {selectedRestaurant?.name || 'Select a restaurant'}
+      </span>
                                         <span
                                             className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                            <ChevronDown className="w-5 h-5 text-gray-400"/>
-                                        </span>
+        <ChevronDown className="w-5 h-5 text-gray-400"/>
+      </span>
                                     </ListboxButton>
 
                                     <ListboxOptions
                                         className="absolute mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
                                         {restaurants.map((restaurant) => (
-                                            <ListboxOption
-                                                key={restaurant._id}
-                                                value={restaurant._id}
-                                                as={Fragment}
-                                            >
+                                            <ListboxOption key={restaurant._id} value={restaurant} as={Fragment}>
                                                 {({selected, active}) => (
                                                     <li
                                                         className={`cursor-pointer select-none relative py-4 pl-10 pr-4 list-none ${
                                                             active ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
                                                         }`}
                                                     >
-                                                        <div className={"flex gap-2.5 items-center"}>
-                                                            <Home size={16}></Home>
+                                                        <div className="flex gap-2.5 items-center">
+                                                            <Home size={16}/>
                                                             <span
                                                                 className={`block truncate ${selected ? 'font-semibold' : ''}`}>
-                                                            {restaurant.name}
-                                                        </span>
+                  {restaurant.name}
+                </span>
                                                         </div>
                                                         {selected && (
                                                             <span
                                                                 className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                                                                    <Check className="w-4 h-4"/>
-                                                                </span>
+                  <Check className="w-4 h-4"/>
+                </span>
                                                         )}
                                                     </li>
                                                 )}
@@ -136,34 +147,41 @@ const OwnerDashboard = () => {
 
                         <div className={"w-full mt-4 h-0.5 bg-slate-200"}></div>
 
-                        <div className="flex mt-4 space-x-2">
+                        <div className="flex mt-4">
                             <button
-                                className="p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75">
+                                onClick={() => setSelectedTab('overview')}
+                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'overview' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
                                 <LayoutDashboard/>
                                 <p>Overview</p>
                             </button>
                             <button
-                                className="p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75">
+                                onClick={() => setSelectedTab('menu')}
+                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'menu' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
                                 <UtensilsCrossed/>
                                 <p>Menu</p>
                             </button>
                             <button
-                                className="p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75">
+                                onClick={() => setSelectedTab('tables')}
+                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'tables' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
                                 <Table2/>
                                 <p>Tables</p>
                             </button>
                             <button
-                                className="p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75">
+                                onClick={() => setSelectedTab('staff')}
+                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'staff' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
                                 <Users/>
                                 <p>Staff</p>
                             </button>
                             <button
-                                className="p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75">
+                                onClick={() => setSelectedTab('preferences')}
+                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'preferences' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
                                 <Settings/>
                                 <p>Preferences</p>
                             </button>
                         </div>
-
+                        <div className={"bg-gray-50 rounded-lg p-4 mt-4"}>
+                            {renderMainContent()}
+                        </div>
                     </div>
                 </div>
             );
@@ -184,7 +202,7 @@ const OwnerDashboard = () => {
 
             <div className="flex">
                 {/* Sidebar */}
-                <div className="fixed mt-20 inset-y-0 w-80 bg-white border-r border-gray-200 h-full p-6 space-y-8">
+                <div className="fixed mt-20 inset-y-0 w-72 bg-white border-r border-gray-200 h-full p-6 space-y-8">
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
                             <Home size={16}/> Restaurant Management
@@ -226,7 +244,7 @@ const OwnerDashboard = () => {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 ml-80 mt-22 p-6">
+                <div className="flex-1 ml-72 mt-22 p-6">
                     {renderContent()}
                 </div>
             </div>
