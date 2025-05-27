@@ -17,6 +17,8 @@ import api from "@/app/shared/lib/axios";
 import {RestaurantOutput} from "@/app/shared/types/Restaurant";
 import Overview from "@/app/owner/components/overview/Overview";
 import {ResContext} from "@/app/owner/ResContext";
+import Menu from "@/app/owner/components/menu/Menu";
+import Tables from "@/app/owner/components/tables/Tables";
 
 
 const OwnerDashboard = () => {
@@ -30,6 +32,7 @@ const OwnerDashboard = () => {
         const fetchRestaurants = async () => {
             const response = await api.get("/api/owner");
             setRestaurants(response.data);
+            setSelectedRestaurant(response.data[0]);
         }
         fetchRestaurants();
     }, [])
@@ -70,16 +73,31 @@ const OwnerDashboard = () => {
     // ];
 
     const renderMainContent = () => {
-        switch (selectedTab) {
-            case "overview":
-                if (selectedRestaurant) {
+        if (selectedRestaurant) {
+            switch (selectedTab) {
+                case "overview":
                     return (
                         <ResContext.Provider value={selectedRestaurant.slug}>
                             <Overview></Overview>
                         </ResContext.Provider>
                     )
-                }
+                case "menu":
+                    return (
+                        <ResContext.Provider value={selectedRestaurant.slug}>
+                            <Menu></Menu>
+                        </ResContext.Provider>
+                    )
+                case "tables":
+                    return (
+                        <ResContext.Provider value={selectedRestaurant.slug}>
+                            <Tables></Tables>
+                        </ResContext.Provider>
+                    )
+                default:
+                    return null;
+            }
         }
+
     }
 
     const renderContent = () => {
@@ -104,13 +122,13 @@ const OwnerDashboard = () => {
                                 <div className="relative">
                                     <ListboxButton
                                         className="relative w-full cursor-pointer rounded-lg border border-gray-300 bg-white py-3 pl-4 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-      <span className="block truncate">
-        {selectedRestaurant?.name || 'Select a restaurant'}
-      </span>
+                                        <span className="block truncate text-md">
+                                          {selectedRestaurant?.name || 'Select a restaurant'}
+                                        </span>
                                         <span
                                             className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-        <ChevronDown className="w-5 h-5 text-gray-400"/>
-      </span>
+                                          <ChevronDown className="w-5 h-5 text-gray-400"/>
+                                        </span>
                                     </ListboxButton>
 
                                     <ListboxOptions
@@ -127,14 +145,14 @@ const OwnerDashboard = () => {
                                                             <Home size={16}/>
                                                             <span
                                                                 className={`block truncate ${selected ? 'font-semibold' : ''}`}>
-                  {restaurant.name}
-                </span>
+                                                                {restaurant.name}
+                                                            </span>
                                                         </div>
                                                         {selected && (
                                                             <span
                                                                 className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                  <Check className="w-4 h-4"/>
-                </span>
+                                                                <Check className="w-4 h-4"/>
+                                                            </span>
                                                         )}
                                                     </li>
                                                 )}
@@ -150,31 +168,31 @@ const OwnerDashboard = () => {
                         <div className="flex mt-4">
                             <button
                                 onClick={() => setSelectedTab('overview')}
-                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'overview' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
+                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'overview' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
                                 <LayoutDashboard/>
                                 <p>Overview</p>
                             </button>
                             <button
                                 onClick={() => setSelectedTab('menu')}
-                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'menu' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
+                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'menu' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
                                 <UtensilsCrossed/>
                                 <p>Menu</p>
                             </button>
                             <button
                                 onClick={() => setSelectedTab('tables')}
-                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'tables' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
+                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'tables' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
                                 <Table2/>
                                 <p>Tables</p>
                             </button>
                             <button
                                 onClick={() => setSelectedTab('staff')}
-                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'staff' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
+                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'staff' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
                                 <Users/>
                                 <p>Staff</p>
                             </button>
                             <button
                                 onClick={() => setSelectedTab('preferences')}
-                                className={`p-4 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'preferences' ? 'underline underline-offset-12 decoration-blue-600' : 'decoration-0'}` }>
+                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'preferences' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
                                 <Settings/>
                                 <p>Preferences</p>
                             </button>
