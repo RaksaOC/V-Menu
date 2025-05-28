@@ -11,9 +11,10 @@ interface Props {
     image: string;
     price: number;
     isEnabled: boolean;
+    onModified: () => void;
 }
 
-const MenuCard = ({id, name, price, image, isEnabled}: Props) => {
+const MenuCard = ({id, name, price, image, isEnabled, onModified}: Props) => {
     const [isEditing, setIsEditing] = useState(false);
     const resSlug = useContext(ResContext)
 
@@ -27,7 +28,7 @@ const MenuCard = ({id, name, price, image, isEnabled}: Props) => {
             console.log(response);
         }
         setIsEditing(false);
-        location.reload();
+        onModified();
     }
 
     async function handleOnDelete(id: string) {
@@ -36,13 +37,13 @@ const MenuCard = ({id, name, price, image, isEnabled}: Props) => {
             console.log(response);
         }
         setIsEditing(false);
-        location.reload();
+        onModified();
     }
 
     return (
         <>
             <div
-                className="relative w-full max-w-xs rounded-3xl border-2 border-gray-200 overflow-hidden bg-white shadow-md  hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                className="relative w-full rounded-3xl border-2 border-gray-200 overflow-hidden bg-white shadow-md  hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 {/* Image */}
                 <img
                     src={image}

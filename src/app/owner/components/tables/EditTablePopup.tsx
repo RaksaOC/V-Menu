@@ -3,7 +3,6 @@ import {Trash2, X} from "lucide-react";
 
 interface editedItem {
     name: string;
-
 }
 
 interface Props {
@@ -18,6 +17,7 @@ export default function EditTablePopup({id, name, onClose, onSave, onDelete}: Pr
     const [tableName, setTableName] = useState(name || "");
     const [touched, setTouched] = useState(false);
     const [isTaken, setIsTaken] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const isSaveDisabled = tableName.trim() === "";
 
@@ -29,6 +29,11 @@ export default function EditTablePopup({id, name, onClose, onSave, onDelete}: Pr
                 setIsTaken(result === "taken");
             });
         }
+    };
+
+    const handleDelete = () => {
+        onDelete(id);
+        setShowDeleteConfirm(false);
     };
 
     return (
@@ -72,10 +77,43 @@ export default function EditTablePopup({id, name, onClose, onSave, onDelete}: Pr
                         )}
                     </div>
 
+                    {/* Delete Confirmation */}
+                    {showDeleteConfirm && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0">
+                                    <Trash2 size={20} className="text-red-600" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-medium text-red-800">Delete Table</h3>
+                                    <p className="text-sm text-red-700 mt-1">
+                                        Are you sure you want to delete "{tableName || name}"? This action cannot be undone.
+                                    </p>
+                                    <div className="flex gap-2 mt-3">
+                                        <button
+                                            type="button"
+                                            onClick={handleDelete}
+                                            className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowDeleteConfirm(false)}
+                                            className="px-3 py-1.5 text-sm bg-white text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Action Buttons */}
                     <div className="flex justify-between items-center pt-2">
                         <button
-                            onClick={() => onDelete(id)}
+                            onClick={() => setShowDeleteConfirm(true)}
                             type="button"
                             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200"
                         >

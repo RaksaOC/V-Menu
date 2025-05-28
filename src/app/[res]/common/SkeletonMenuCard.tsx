@@ -1,10 +1,10 @@
-function SkeletonMenuCard({ isLight = false }: { isLight?: boolean }) {
+function SkeletonMenuCard({isLight = false}: { isLight?: boolean }) {
     const baseCardBg = isLight ? 'bg-slate-100' : 'bg-slate-700';
     const placeholderBg = isLight ? 'bg-slate-200' : 'bg-slate-600';
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
-            {Array.from({ length: 8 }).map((_, index) => (
+            {Array.from({length: 8}).map((_, index) => (
                 <div key={index} className={`${baseCardBg} rounded-2xl p-4 animate-pulse`}>
                     <div className={`w-full h-44 rounded-xl mb-4`}></div>
                     <div className="space-y-3">
