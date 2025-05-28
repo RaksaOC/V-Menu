@@ -1,7 +1,10 @@
 import {QrCode, CheckCircle, XCircle, TableIcon, Pencil} from "lucide-react";
 import {TableOutput} from "@/app/shared/types/Table";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import EditTablePopup from "@/app/owner/components/tables/EditTablePopup";
+import {ItemInput, ItemOutput} from "@/app/shared/types/Item";
+import api from "@/app/shared/lib/axios";
+import {ResContext} from "@/app/owner/ResContext";
 
 interface TableCardProps {
     table: TableOutput;
@@ -9,11 +12,39 @@ interface TableCardProps {
 
 function TableCard({table}: TableCardProps) {
     const [showEdit, setShowEdit] = useState(false);
-    function handleSave(id: string,  newName: string ) {
+    const resSlug = useContext(ResContext);
 
+    async function handleSave(id : string, name : string): Promise<"taken"|"ok"|"error"|undefined> {
+        const editedTable = {
+            name: name,
+        }
+
+        try {
+            const response = await api.put(`/api/owner/${resSlug}/tables/${id}`, editedTable);
+            if (response.status === 200) {
+                console.log("TableCard updated:", response.data);
+                setShowEdit(false);
+                location.reload();
+            }
+        } catch (error : any) {
+            if (error.response?.status === 409) {
+                console.log("TableCard name is taken");
+                setShowEdit(true);
+                return "taken"
+            } else {
+                console.error("Unexpected error:", error);
+                return "error"
+            }
+        }
     }
-    function handleDelete(){
 
+    async function handleDelete(id : string) {
+        const response = await api.delete(`/api/owner/${resSlug}/tables/${id}`);
+        if (response.status === 200) {
+            console.log(response);
+        }
+        setShowEdit(false);
+        location.reload();
     }
     return (
         <>

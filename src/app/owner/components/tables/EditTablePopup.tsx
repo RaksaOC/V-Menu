@@ -1,11 +1,16 @@
 import {useState} from "react";
 import {Trash2, X} from "lucide-react";
 
+interface editedItem {
+    name: string;
+
+}
+
 interface Props {
     id: string;
     name: string;
     onClose: () => void;
-    onSave: (id: string, newName: string) => Promise<"ok" | "taken">;
+    onSave: (id: string, newName: string) => Promise<"ok" | "taken" | "error" | undefined>;
     onDelete: (id: string) => void;
 }
 
@@ -70,6 +75,7 @@ export default function EditTablePopup({id, name, onClose, onSave, onDelete}: Pr
                     {/* Action Buttons */}
                     <div className="flex justify-between items-center pt-2">
                         <button
+                            onClick={() => onDelete(id)}
                             type="button"
                             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200"
                         >

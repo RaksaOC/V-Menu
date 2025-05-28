@@ -2,11 +2,12 @@ import React, {useContext, useEffect, useState} from "react";
 import TableCard from "./TableCard";
 import SkeletonTableCard from "@/app/[res]/common/SkeletonTableCard";
 import axios from "axios";
-import {TableOutput} from "@/app/shared/types/Table";
+import {TableInput, TableOutput} from "@/app/shared/types/Table";
 import api from "@/app/shared/lib/axios";
 import {ResContext} from "@/app/owner/ResContext";
 import {Plus} from "lucide-react";
 import AddTablePopup from "@/app/owner/components/tables/AddTablePopup";
+import {ItemInput} from "@/app/shared/types/Item";
 
 export default function SettingsTables() {
     const [tables, setTables] = useState<TableOutput[]>([]);
@@ -24,7 +25,18 @@ export default function SettingsTables() {
         fetchTables();
     }, []);
 
-    function handleSave() {
+    const  handleSave = async (table: TableInput) => {
+        try {
+            const response = await api.post(`/api/owner/${resSlug}/tables`, table)
+            if (response.status === 200) {
+                console.log("response", response);
+            }
+            setShowAddTable(false);
+            location.reload();
+        } catch (err) {
+            console.log(err);
+        }
+        setShowAddTable(false);
     }
 
     return (
