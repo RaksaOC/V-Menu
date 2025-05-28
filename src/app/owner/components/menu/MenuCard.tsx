@@ -1,8 +1,9 @@
 import {CheckCircle, Pencil, XCircle} from "lucide-react";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import EditItemPopup from "./EditItemPopup";
 import {ItemOutput} from "@/app/shared/types/Item";
 import api from "@/app/shared/lib/axios";
+import {ResContext} from "@/app/owner/ResContext";
 
 interface Props {
     id: string;
@@ -14,13 +15,14 @@ interface Props {
 
 const MenuCard = ({id, name, price, image, isEnabled}: Props) => {
     const [isEditing, setIsEditing] = useState(false);
+    const resSlug = useContext(ResContext)
 
     function handleOnClose() {
         setIsEditing(false);
     }
 
     async function handleOnSave(editedItem: ItemOutput) {
-        const response = await api.put(`/api/cashier/settings/menu/${editedItem._id}`, editedItem);
+        const response = await api.put(`/api/owner/${resSlug}/menu/${editedItem._id}`, editedItem);
         if (response.status === 200) {
             console.log(response);
         }
@@ -29,7 +31,7 @@ const MenuCard = ({id, name, price, image, isEnabled}: Props) => {
     }
 
     async function handleOnDelete(id: string) {
-        const response = await api.delete(`/api/cashier/settings/menu/${id}`);
+        const response = await api.delete(`/api/owner/${resSlug}/menu/${id}`);
         if (response.status === 200) {
             console.log(response);
         }

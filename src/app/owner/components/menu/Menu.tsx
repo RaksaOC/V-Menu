@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useState} from "react";
 import MenuCard from "./MenuCard";
 import SkeletonMenuCard from "@/app/[res]/common/SkeletonMenuCard";
-import {ItemOutput} from "@/app/shared/types/Item";
+import {ItemInput, ItemOutput} from "@/app/shared/types/Item";
 import api from "@/app/shared/lib/axios";
 import {ResContext} from "@/app/owner/ResContext";
 import {Plus, TrendingUp} from "lucide-react";
@@ -28,8 +28,13 @@ const Menu = () => {
         fetchMenu();
     }, []);
 
-    function handleAddItem() {
-
+    const handleOnSave = async (newItem: ItemInput) => {
+        try {
+            const response = await api.post(`/api/owner/${resSlug}/menu`, newItem);
+            location.reload();
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     return (
@@ -96,7 +101,7 @@ const Menu = () => {
                     )}
                 </div>
             </div>
-            {showAddItems && (<AddItemPopup onClose={() => setShowAddItems(false)} onSave={() => handleAddItem}/>)}
+            {showAddItems && (<AddItemPopup onClose={() => setShowAddItems(false)} onSave={handleOnSave} />)}
         </>
     );
 };
