@@ -8,9 +8,10 @@ import {ResContext} from "@/app/owner/ResContext";
 
 interface TableCardProps {
     table: TableOutput;
+    onModified: () => void;
 }
 
-function TableCard({table}: TableCardProps) {
+function TableCard({table, onModified}: TableCardProps) {
     const [showEdit, setShowEdit] = useState(false);
     const resSlug = useContext(ResContext);
 
@@ -24,7 +25,7 @@ function TableCard({table}: TableCardProps) {
             if (response.status === 200) {
                 console.log("TableCard updated:", response.data);
                 setShowEdit(false);
-                location.reload();
+                onModified();
             }
         } catch (error : any) {
             if (error.response?.status === 409) {
@@ -44,7 +45,7 @@ function TableCard({table}: TableCardProps) {
             console.log(response);
         }
         setShowEdit(false);
-        location.reload();
+        onModified();
     }
     return (
         <>

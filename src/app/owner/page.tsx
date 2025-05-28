@@ -9,7 +9,12 @@ import {
     Users,
     Settings,
     BarChart3,
-    Plus, LayoutDashboard, UtensilsCrossed, Table2, ChevronDown, Check
+    Plus,
+    LayoutDashboard,
+    UtensilsCrossed,
+    Table2,
+    ChevronDown,
+    Check
 } from "lucide-react";
 import Header from "@/app/owner/components/Header";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from '@headlessui/react';
@@ -27,6 +32,7 @@ const OwnerDashboard = () => {
     const [showManagement, setShowManagement] = useState(false);
     const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
     const [selectedTab, setSelectedTab] = useState('overview');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         const fetchRestaurants = async () => {
@@ -44,33 +50,6 @@ const OwnerDashboard = () => {
         {name: "Analytics & Reports", icon: TrendingUp, id: "analytics"},
         {name: "Platform Settings", icon: Settings, id: "settings"}
     ];
-
-    // const restaurants = [
-    //     {
-    //         id: 'pasta-place',
-    //         name: '🍝 Pasta Place Downtown',
-    //         revenue: '$2,450',
-    //         orders: '12',
-    //         occupancy: '85%',
-    //         staff: '8/10'
-    //     },
-    //     {
-    //         id: 'burger-barn',
-    //         name: '🍔 Burger Barn Uptown',
-    //         revenue: '$1,850',
-    //         orders: '8',
-    //         occupancy: '72%',
-    //         staff: '6/8'
-    //     },
-    //     {
-    //         id: 'sushi-spot',
-    //         name: '🍣 Sushi Spot Mall',
-    //         revenue: '$3,200',
-    //         orders: '15',
-    //         occupancy: '90%',
-    //         staff: '10/12'
-    //     }
-    // ];
 
     const renderMainContent = () => {
         if (selectedRestaurant) {
@@ -97,32 +76,41 @@ const OwnerDashboard = () => {
                     return null;
             }
         }
-
     }
+
+    const handleQuickAction = (itemId: string) => {
+        setShowManagement(false);
+        setActiveItem(itemId);
+        setSidebarOpen(false); // Close sidebar on mobile after selection
+    };
+
+    const handleManageRestaurants = () => {
+        setShowManagement(true);
+        setSidebarOpen(false); // Close sidebar on mobile after selection
+    };
 
     const renderContent = () => {
         if (showManagement) {
             return (
                 <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 border border-gray-200">
-                        <div className="flex justify-between items-center mb-6">
+                    <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900">Restaurant Management</h2>
-                                <p className="text-gray-500">Select and manage your restaurant locations</p>
+                                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Restaurant Management</h2>
+                                <p className="text-gray-500 text-sm md:text-base">Select and manage your restaurant locations</p>
                             </div>
                             <button
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base w-full sm:w-auto justify-center">
                                 <Plus size={16}/> Add Restaurant
                             </button>
                         </div>
-
 
                         <div className="space-y-2 w-full">
                             <Listbox value={selectedRestaurant} onChange={setSelectedRestaurant}>
                                 <div className="relative">
                                     <ListboxButton
-                                        className="relative w-full cursor-pointer rounded-lg border border-gray-300 bg-white py-3 pl-4 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                        <span className="block truncate text-md">
+                                        className="relative w-full cursor-pointer rounded-lg border border-gray-300 bg-white py-3 pl-4 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base">
+                                        <span className="block truncate">
                                           {selectedRestaurant?.name || 'Select a restaurant'}
                                         </span>
                                         <span
@@ -165,35 +153,36 @@ const OwnerDashboard = () => {
 
                         <div className={"w-full mt-4 h-0.5 bg-slate-200"}></div>
 
-                        <div className="flex mt-4">
+                        {/* Tab Navigation - Made responsive */}
+                        <div className="flex flex-wrap mt-4 gap-1">
                             <button
                                 onClick={() => setSelectedTab('overview')}
-                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'overview' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
-                                <LayoutDashboard/>
+                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'overview' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
+                                <LayoutDashboard size={16} className="md:w-5 md:h-5"/>
                                 <p>Overview</p>
                             </button>
                             <button
                                 onClick={() => setSelectedTab('menu')}
-                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'menu' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
-                                <UtensilsCrossed/>
+                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'menu' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
+                                <UtensilsCrossed size={16} className="md:w-5 md:h-5"/>
                                 <p>Menu</p>
                             </button>
                             <button
                                 onClick={() => setSelectedTab('tables')}
-                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'tables' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
-                                <Table2/>
+                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'tables' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
+                                <Table2 size={16} className="md:w-5 md:h-5"/>
                                 <p>Tables</p>
                             </button>
                             <button
                                 onClick={() => setSelectedTab('staff')}
-                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'staff' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
-                                <Users/>
+                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'staff' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
+                                <Users size={16} className="md:w-5 md:h-5"/>
                                 <p>Staff</p>
                             </button>
                             <button
                                 onClick={() => setSelectedTab('preferences')}
-                                className={`px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 ${selectedTab === 'preferences' ? 'underline underline-offset-12 decoration-blue-600 decoration-3' : 'decoration-0'}`}>
-                                <Settings/>
+                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'preferences' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
+                                <Settings size={16} className="md:w-5 md:h-5"/>
                                 <p>Preferences</p>
                             </button>
                         </div>
@@ -206,63 +195,70 @@ const OwnerDashboard = () => {
         }
 
         return (
-            <div className="text-gray-600 text-lg">
-                {/* Placeholder for Overview or other sections */}
+            <div className="text-gray-600 text-base md:text-lg p-4">
                 Select a quick action or use "Manage Restaurants".
             </div>
         );
     };
 
+    // Sidebar content to pass to Header
+    const sidebarContent = (
+        <>
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                    <Home size={16}/> Restaurant Management
+                </h3>
+
+                <button
+                    onClick={handleManageRestaurants}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                >
+                    <Home size={18}/> Manage Restaurants
+                </button>
+            </div>
+
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">⚡
+                    Quick Actions</h3>
+
+                <div className="space-y-1">
+                    {navItems.map((item, index) => {
+                        const Icon = item.icon;
+
+                        return (
+                            <button
+                                key={index}
+                                onClick={() => handleQuickAction(item.id)}
+                                className={`w-full flex items-center gap-3 p-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                    activeItem === item.id ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <Icon size={18}/> {item.name}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        </>
+    );
+
     return (
         <div className="w-full min-h-screen bg-gray-50">
-            {/* Header */}
-            <Header/>
+            {/* Header with integrated mobile sidebar */}
+            <Header
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                sidebarContent={sidebarContent}
+                userInfo={{ name: "John Doe", role: "Owner" }}
+            />
 
             <div className="flex">
-                {/* Sidebar */}
-                <div className="fixed mt-20 inset-y-0 w-72 bg-white border-r border-gray-200 h-full p-6 space-y-8">
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                            <Home size={16}/> Restaurant Management
-                        </h3>
-
-                        <button
-                            onClick={() => setShowManagement(true)}
-                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                        >
-                            <Home size={18}/> Manage Restaurants
-                        </button>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">⚡
-                            Quick Actions</h3>
-
-                        <div className="space-y-1">
-                            {navItems.map((item, index) => {
-                                const Icon = item.icon;
-
-                                return (
-                                    <button
-                                        key={index}
-                                        onClick={() => {
-                                            setShowManagement(false);
-                                            setActiveItem(item.id);
-                                        }}
-                                        className={`w-full flex items-center gap-3 p-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                            activeItem === item.id ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-                                        }`}
-                                    >
-                                        <Icon size={18}/> {item.name}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
+                {/* Desktop Sidebar */}
+                <div className="hidden lg:block fixed mt-20 inset-y-0 w-72 bg-white border-r border-gray-200 h-full p-6 space-y-8">
+                    {sidebarContent}
                 </div>
 
-                {/* Main Content */}
-                <div className="flex-1 ml-72 mt-22 p-6">
+                <div className="flex-1 pt-24 lg:pt-26 pr-2 lg:pr-4 pl-2 lg:pl-76">
                     {renderContent()}
                 </div>
             </div>
