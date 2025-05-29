@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X, Upload, Image, Trash2 } from "lucide-react";
+import {useState} from "react";
+import {X, Upload, Image, Trash2, Pencil, Tag, DollarSign} from "lucide-react";
 
 // Simplified types for demo
 interface ItemOutput {
@@ -20,16 +20,16 @@ interface Props {
     onDelete: (id: string) => void;
 }
 
-export default function EditItemPopup({ id, image, name, price, onClose, onSave, onDelete }: Props) {
+export default function EditItemPopup({id, image, name, price, onClose, onSave, onDelete}: Props) {
     const [imagePreview, setImagePreview] = useState(image);
     const [imageFile, setImageFile] = useState(null);
     const [editedName, setEditedName] = useState(name);
     const [editedPrice, setEditedPrice] = useState(price.toString());
-    const [errors, setErrors] = useState({ name: "", price: "" });
+    const [errors, setErrors] = useState({name: "", price: ""});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    const handleImageChange = (e : any) => {
+    const handleImageChange = (e: any) => {
         const file = e.target.files[0];
         if (file) {
             // Validate file size (max 5MB)
@@ -54,7 +54,7 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
     };
 
     const validateForm = () => {
-        const newErrors = { name: "", price: "" };
+        const newErrors = {name: "", price: ""};
         let isValid = true;
 
         if (!editedName.trim()) {
@@ -77,7 +77,7 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
         return isValid;
     };
 
-    const handleSubmit = async (e:any) => {
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
 
         if (!validateForm()) return;
@@ -118,7 +118,7 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
         setImagePreview("");
         setImageFile(null);
         // Reset file input
-        const fileInput : HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
+        const fileInput: HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
     };
 
@@ -126,7 +126,7 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
         setImagePreview(image);
         setImageFile(null);
         // Reset file input
-        const fileInput : HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
+        const fileInput: HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
     };
 
@@ -135,13 +135,16 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto relative transform transition-all">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-900">Edit Menu Item</h2>
+                    <h2 className="flex gap-2.5 items-center text-xl font-semibold text-gray-900">
+                        <Pencil size={20} className="text-blue-500 "/>
+                        Edit Menu Item
+                    </h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                         type="button"
                     >
-                        <X size={20} className="text-gray-500" />
+                        <X size={20} className="text-gray-500"/>
                     </button>
                 </div>
 
@@ -149,13 +152,15 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
                 <div className="p-6 space-y-6">
                     {/* Image Upload Section */}
                     <div className="space-y-3">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="flex items-center gap-2.5 text-sm font-bold text-gray-700">
+                            <Image size={20} className={"text-blue-500"}/>
                             Item Image
                         </label>
 
                         <div className="flex items-start gap-4">
                             {/* Image Preview */}
-                            <div className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl overflow-hidden flex items-center justify-center relative group">
+                            <div
+                                className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl overflow-hidden flex items-center justify-center relative group">
                                 {imagePreview ? (
                                     <>
                                         <img
@@ -168,12 +173,12 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
                                             onClick={clearImage}
                                             className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
-                                            <X size={12} />
+                                            <X size={12}/>
                                         </button>
                                     </>
                                 ) : (
                                     <div className="text-center">
-                                        <Image size={24} className="text-gray-400 mx-auto mb-1" />
+                                        <Image size={24} className="text-gray-400 mx-auto mb-1"/>
                                         <span className="text-xs text-gray-500">No image</span>
                                     </div>
                                 )}
@@ -189,8 +194,9 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
                                     className="hidden"
                                 />
                                 <label htmlFor="fileInput">
-                                    <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors border border-blue-200">
-                                        <Upload size={16} />
+                                    <div
+                                        className="flex items-center gap-2 px-4 py-3 bg-blue-50 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors border border-blue-200">
+                                        <Upload size={16}/>
                                         <span className="text-sm font-medium">Change Image</span>
                                     </div>
                                 </label>
@@ -205,7 +211,7 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
                                     </button>
                                 )}
 
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-gray-500 mt-2.5">
                                     PNG, JPG up to 5MB
                                 </p>
                             </div>
@@ -214,15 +220,16 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
 
                     {/* Item Name */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Item Name *
+                        <label className="flex gap-2.5 items-center text-sm font-medium text-gray-700">
+                            <Tag size={16} className="text-blue-500"/>
+                            Item Name
                         </label>
                         <input
                             type="text"
                             value={editedName}
                             onChange={(e) => {
                                 setEditedName(e.target.value);
-                                if (errors.name) setErrors({ ...errors, name: "" });
+                                if (errors.name) setErrors({...errors, name: ""});
                             }}
                             className={`w-full px-4 py-3 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                                 errors.name
@@ -240,8 +247,8 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
 
                     {/* Price */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Price ($) *
+                        <label className="flex gap-2.5 items-center text-sm font-medium text-gray-700">
+                            <DollarSign size={16} className="text-blue-500"/> Price ($) *
                         </label>
                         <input
                             type="number"
@@ -250,7 +257,7 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
                             value={editedPrice}
                             onChange={(e) => {
                                 setEditedPrice(e.target.value);
-                                if (errors.price) setErrors({ ...errors, price: "" });
+                                if (errors.price) setErrors({...errors, price: ""});
                             }}
                             className={`w-full px-4 py-3 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                                 errors.price
@@ -271,7 +278,7 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
                         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0">
-                                    <Trash2 size={20} className="text-red-600" />
+                                    <Trash2 size={20} className="text-red-600"/>
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="text-sm font-medium text-red-800">Delete Item</h3>
@@ -308,7 +315,7 @@ export default function EditItemPopup({ id, image, name, price, onClose, onSave,
                             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200"
                             disabled={isSubmitting}
                         >
-                            <Trash2 size={16} />
+                            <Trash2 size={16}/>
                             Delete
                         </button>
 

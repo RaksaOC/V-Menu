@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { X, Upload, ImageIcon } from "lucide-react";
+import { X, Upload, ImageIcon, Tag, DollarSign, PlusCircle } from "lucide-react";
 
-// Simplified types for demo
 interface ItemInput {
     name: string;
     price: number;
@@ -22,16 +21,13 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
     const [errors, setErrors] = useState({ name: "", price: "" });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleImageChange = (e : any) => {
+    const handleImageChange = (e: any) => {
         const file = e.target.files[0];
         if (file) {
-            // Validate file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 alert("Image size should be less than 5MB");
                 return;
             }
-
-            // Validate file type
             if (!file.type.startsWith("image/")) {
                 alert("Please select a valid image file");
                 return;
@@ -70,21 +66,16 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
         return isValid;
     };
 
-    const handleSubmit = async (e : any) => {
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
 
         if (!validateForm()) return;
-
         setIsSubmitting(true);
 
         try {
-            // Default image URL if no image is selected
             let imageUrl = "/images/img.png";
-
-            // In production, upload to your storage service here
-            // For now, using preview URL or default
             if (imagePreview) {
-                imageUrl = imagePreview; // This would be replaced with actual upload logic
+                imageUrl = imagePreview;
             }
 
             onSave({
@@ -103,8 +94,7 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
     const clearImage = () => {
         setImagePreview("");
         setImageFile(null);
-        // Reset file input
-        const fileInput : HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
+        const fileInput: HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
     };
 
@@ -113,7 +103,9 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto relative transform transition-all">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-900">Add Menu Item</h2>
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                        <PlusCircle size={20} className="text-blue-500" /> Add Menu Item
+                    </h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -127,12 +119,11 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {/* Image Upload Section */}
                     <div className="space-y-3">
-                        <label className="block text-sm font-bold text-gray-700">
-                            Item Image
+                        <label className="block text-sm font-bold text-gray-800 flex items-center gap-1">
+                            <ImageIcon size={16} className="text-blue-500" /> Item Image
                         </label>
 
                         <div className="flex items-start gap-4">
-                            {/* Image Preview */}
                             <div className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl overflow-hidden flex items-center justify-center relative group">
                                 {imagePreview ? (
                                     <>
@@ -157,7 +148,6 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
                                 )}
                             </div>
 
-                            {/* Upload Button */}
                             <div className="flex-1">
                                 <input
                                     type="file"
@@ -172,17 +162,15 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
                                         <span className="text-sm font-medium">Choose Image</span>
                                     </div>
                                 </label>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    PNG, JPG up to 5MB
-                                </p>
+                                <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Item Name */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-bold text-gray-700">
-                            Item Name *
+                        <label className=" text-sm font-bold text-gray-800 flex items-center gap-1">
+                            <Tag size={16} className="text-blue-500" /> Item Name *
                         </label>
                         <input
                             type="text"
@@ -207,8 +195,8 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
 
                     {/* Price */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-bold text-gray-700">
-                            Price ($) *
+                        <label className="text-sm font-bold text-gray-800 flex items-center gap-1">
+                            <DollarSign size={16} className="text-blue-500" /> Price ($) *
                         </label>
                         <input
                             type="number"

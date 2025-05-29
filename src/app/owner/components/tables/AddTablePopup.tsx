@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { X } from "lucide-react";
-import { TableInput } from "@/app/shared/types/Table";
+import {useState} from "react";
+import {X, Table, ListCheck, Type, PlusCircle} from "lucide-react";
+import {TableInput} from "@/app/shared/types/Table";
 
 interface Props {
     onClose: () => void;
     onSave: (tableAddType: TableInput) => void;
 }
 
-export default function AddTablePopup({ onClose, onSave }: Props) {
+export default function AddTablePopup({onClose, onSave}: Props) {
     const [useAutoIncrement, setUseAutoIncrement] = useState(true);
     const [tableName, setTableName] = useState("");
 
@@ -30,14 +30,17 @@ export default function AddTablePopup({ onClose, onSave }: Props) {
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <h2 className="text-2xl font-semibold text-gray-900">Add a New Table</h2>
+                    <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900">
+                        <PlusCircle size={20} className="text-blue-600"/>
+                        Add a New Table
+                    </h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                         type="button"
                         aria-label="Close popup"
                     >
-                        <X size={20} className="text-gray-500" />
+                        <X size={20} className="text-gray-500"/>
                     </button>
                 </div>
 
@@ -46,7 +49,8 @@ export default function AddTablePopup({ onClose, onSave }: Props) {
 
                     {/* Table Type Selection */}
                     <div className="space-y-3">
-                        <label className="block text-sm font-bold text-gray-800">
+                        <label className="flex items-center gap-2 text-sm font-bold text-gray-800">
+                            <ListCheck size={16} className="text-blue-500"/>
                             Select Table Type
                         </label>
                         <div className="flex items-center gap-6">
@@ -73,7 +77,8 @@ export default function AddTablePopup({ onClose, onSave }: Props) {
 
                     {/* Table Name Input */}
                     <div className="space-y-2">
-                        <label htmlFor="tableName" className="block text-sm font-bold text-gray-800">
+                        <label htmlFor="tableName" className="flex items-center gap-2 text-sm font-bold text-gray-800">
+                            <Type size={16} className="text-blue-500"/>
                             Table Name
                         </label>
                         <input

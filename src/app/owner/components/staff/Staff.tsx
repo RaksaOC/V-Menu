@@ -5,8 +5,11 @@ import {Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, Chevro
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/react";
 import AddStaffPopup from "@/app/owner/components/staff/AddStaffPopUp";
 import EditStaffPopUp from "@/app/owner/components/staff/EditStaffPopUp";
-import {TenantOutput} from "@/app/shared/types/Tenant";
+import {TenantInput, TenantOutput} from "@/app/shared/types/Tenant";
 import {prettyDate} from "@/app/shared/util/formatter";
+import {createUserWithEmailAndPassword, UserCredential} from "firebase/auth";
+import {auth} from "@/app/shared/firebase/config";
+import axios from "axios";
 
 export default function Staff() {
     const resSlug = useContext(ResContext);
@@ -17,6 +20,7 @@ export default function Staff() {
     const [showAddStaff, setShowAddStaff] = useState(false);
     const [showEditStaff, setShowEditStaff] = useState(false);
     const [staffToEdit, setStaffToEdit] = useState<TenantOutput>();
+    const [refresh, setRefresh] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -34,15 +38,45 @@ export default function Staff() {
         if (resSlug) {
             fetchData();
         }
-    }, [resSlug]);
+    }, [refresh]);
 
-    function handleAddStaff() {
+    async function handleAddStaff(newTenant: TenantInput) {
+        try {
+            const userCred: UserCredential = await createUserWithEmailAndPassword(auth, newTenant.email, newTenant.password);
+            const uid = userCred.user.uid;
+
+            const response = await api.post(`/api/owner/${resSlug}/staff`, {
+                ...newTenant,
+                tenantId: uid,
+            });
+            console.log(response);
+            setShowAddStaff(false);
+            setRefresh(prevState => !prevState);
+        } catch (error) {
+            console.error("Error adding staff:", error);
+        }
     }
 
-    function handleEditStaff() {
+    async function handleEditStaff(tenant: TenantOutput) {
+        try {
+            const response = await api.put(`/api/owner/${resSlug}/staff/${tenant._id}`, tenant);
+            console.log(response);
+            setShowEditStaff(false);
+            setRefresh(prevState => !prevState);
+        } catch (error) {
+            console.error("Error editing staff:", error);
+        }
     }
 
-    function handleDeleteStaff() {
+    async function handleDeleteStaff(id: string) {
+        try {
+            const response = await api.delete(`/api/owner/${resSlug}/staff/${id}`);
+            console.log(response);
+            setShowEditStaff(false);
+            setRefresh(prevState => !prevState);
+        } catch (err) {
+            console.error("Error deleting staff:", err);
+        }
     }
 
     const getRoleIcon = (role: string) => {
@@ -91,14 +125,59 @@ export default function Staff() {
 
     if (loading) {
         return (
-            <div className="p-4 sm:p-6">
-                <div className="animate-pulse space-y-4">
-                    <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-                    <div className="h-32 bg-gray-200 rounded"></div>
-                    <div className="space-y-3">
-                        {[...Array(3)].map((_, i) => (
-                            <div key={i} className="h-16 bg-gray-200 rounded"></div>
-                        ))}
+            <div className="p-4 sm:p-6 space-y-6 animate-pulse">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="space-y-2">
+                        <div className="h-6 sm:h-8 w-40 bg-gray-200 rounded"></div>
+                        <div className="h-4 w-60 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="h-10 w-32 bg-gray-200 rounded-lg"></div>
+                </div>
+
+                {/* Stat Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 space-y-2">
+                            <div className="h-4 w-10 bg-gray-200 rounded"></div>
+                            <div className="h-6 w-16 bg-gray-200 rounded"></div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Filter/Search Bar */}
+                <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                        <div className="h-10 bg-gray-200 rounded w-full"></div>
+                        <div className="h-10 bg-gray-200 rounded w-full sm:w-40"></div>
+                    </div>
+                </div>
+
+                {/* Table Skeleton */}
+                <div className="hidden lg:block bg-white rounded-xl border border-gray-200">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                {[...Array(5)].map((_, i) => (
+                                    <th key={i} className="py-4 px-2">
+                                        <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
+                                    </th>
+                                ))}
+                            </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                            {[...Array(4)].map((_, i) => (
+                                <tr key={i} className="hover:bg-gray-50 transition-colors">
+                                    {[...Array(5)].map((_, j) => (
+                                        <td key={j} className="py-4 px-2 text-center">
+                                            <div className="h-4 w-24 bg-gray-200 rounded mx-auto"></div>
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
