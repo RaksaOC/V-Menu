@@ -1,4 +1,8 @@
-export const prettyDate = (date: string) => {
+export const prettyDate = (date: string, hasTime: boolean = true) => {
     const toDate = new Date(date);
-    return toDate.toLocaleString();
+    if (hasTime) {
+        return toDate.toLocaleString();
+    }
+    return toDate.toLocaleDateString();
+
 }
