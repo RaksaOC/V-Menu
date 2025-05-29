@@ -24,15 +24,29 @@ import Overview from "@/app/owner/components/overview/Overview";
 import {ResContext} from "@/app/owner/ResContext";
 import Menu from "@/app/owner/components/menu/Menu";
 import Tables from "@/app/owner/components/tables/Tables";
+import Staff from './components/staff/Staff';
 
 
 const OwnerDashboard = () => {
-    const [activeItem, setActiveItem] = useState('overview');
+    const [activeItem, setActiveItem] = useState('management');
     const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOutput | null>();
-    const [showManagement, setShowManagement] = useState(false);
+    const [showManagement, setShowManagement] = useState(true);
     const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
     const [selectedTab, setSelectedTab] = useState('overview');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        const savedTab = localStorage.getItem("activeTab");
+        if (savedTab) {
+            setActiveItem(savedTab);
+        } else if (savedTab === "") {
+            setActiveItem('management');
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem("activeTab", activeItem);
+    }, [activeItem]);
 
     useEffect(() => {
         const fetchRestaurants = async () => {
@@ -72,6 +86,12 @@ const OwnerDashboard = () => {
                             <Tables></Tables>
                         </ResContext.Provider>
                     )
+                case "staff":
+                    return (
+                        <ResContext.Provider value={selectedRestaurant.slug}>
+                            <Staff></Staff>
+                        </ResContext.Provider>
+                    )
                 default:
                     return null;
             }
@@ -86,18 +106,21 @@ const OwnerDashboard = () => {
 
     const handleManageRestaurants = () => {
         setShowManagement(true);
+        setActiveItem('management');
         setSidebarOpen(false); // Close sidebar on mobile after selection
     };
 
     const renderContent = () => {
-        if (showManagement) {
+        if (showManagement && activeItem === "management") {
             return (
                 <div className="space-y-6">
                     <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div
+                            className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                             <div>
                                 <h2 className="text-xl md:text-2xl font-bold text-gray-900">Restaurant Management</h2>
-                                <p className="text-gray-500 text-sm md:text-base">Select and manage your restaurant locations</p>
+                                <p className="text-gray-500 text-sm md:text-base">Select and manage your restaurant
+                                    locations</p>
                             </div>
                             <button
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base w-full sm:w-auto justify-center">
@@ -249,12 +272,13 @@ const OwnerDashboard = () => {
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 sidebarContent={sidebarContent}
-                userInfo={{ name: "John Doe", role: "Owner" }}
+                userInfo={{name: "John Doe", role: "Owner"}}
             />
 
             <div className="flex">
                 {/* Desktop Sidebar */}
-                <div className="hidden lg:block fixed mt-20 inset-y-0 w-72 bg-white border-r border-gray-200 h-full p-6 space-y-8">
+                <div
+                    className="hidden lg:block fixed mt-20 inset-y-0 w-72 bg-white border-r border-gray-200 h-full p-6 space-y-8">
                     {sidebarContent}
                 </div>
 
