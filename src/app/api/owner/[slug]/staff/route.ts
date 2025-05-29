@@ -18,13 +18,11 @@ export const GET = withAuthRouteHandler(async (req: NextRequest, context: any, u
 export const POST = withAuthRouteHandler(async (req: NextRequest, context: any, user: any) => {
     try {
         await connectToDB();
-        const {slug} = context.params.id;
         const body = await req.json();
-        const resId = await getResIdFromSlug(slug);
         const {email, name, password, role, tenantId} = body;
         const newStaff = new Tenant({
             tenantId: tenantId,
-            resId: resId,
+            resId: user.resId,
             email: email,
             name: name,
             role: role,

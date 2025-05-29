@@ -50,7 +50,7 @@ export default function EditStaffPopUp({tenant, onSave, onDelete, onClose}: Prop
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
                     <div className="flex items-center justify-between gap-2.5">
-                        <Pencil size={20}/>
+                        <Pencil size={20} className={"text-blue-500"}/>
                         <h2 className="text-xl font-semibold text-gray-900">Edit Staff</h2>
                     </div>
                     <button
@@ -67,7 +67,7 @@ export default function EditStaffPopUp({tenant, onSave, onDelete, onClose}: Prop
                     {/* Name */}
                     <div className="space-y-2">
                         <div className="flex items-center  gap-2.5">
-                            <User size={16}/>
+                            <User size={16} className="text-blue-500"/>
                             <label className="block text-sm font-bold text-gray-700">Name</label>
                         </div>
                         <input
@@ -84,7 +84,7 @@ export default function EditStaffPopUp({tenant, onSave, onDelete, onClose}: Prop
                     {/* Email */}
                     <div className="space-y-2">
                         <div className="flex items-center  gap-2.5">
-                            <Mail size={16}/>
+                            <Mail size={16} className="text-blue-500"/>
                             <label className="block text-sm font-bold text-gray-700">Email</label>
                         </div>
                         <input
@@ -101,7 +101,7 @@ export default function EditStaffPopUp({tenant, onSave, onDelete, onClose}: Prop
                     {/* Role */}
                     <div className="space-y-2">
                         <div className="flex items-center  gap-2.5">
-                            <Crown size={16}/>
+                            <Crown size={16} className="text-yellow-500"/>
                             <label className="block text-sm font-bold text-gray-700">Role</label>
                         </div>
                         <Listbox
@@ -130,7 +130,7 @@ export default function EditStaffPopUp({tenant, onSave, onDelete, onClose}: Prop
                           </div>
                       )}
                   </span>
-                                    <ChevronsUpDown className="w-4 h-4 text-gray-400"/>
+                                    <ChevronsUpDown className="w-4 h-4 text-blue-500"/>
                                 </ListboxButton>
 
                                 <ListboxOptions

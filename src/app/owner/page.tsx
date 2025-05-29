@@ -25,6 +25,7 @@ import {ResContext} from "@/app/owner/ResContext";
 import Menu from "@/app/owner/components/menu/Menu";
 import Tables from "@/app/owner/components/tables/Tables";
 import Staff from './components/staff/Staff';
+import Preferences from './components/preferences/Preferences';
 
 
 const OwnerDashboard = () => {
@@ -90,6 +91,12 @@ const OwnerDashboard = () => {
                     return (
                         <ResContext.Provider value={selectedRestaurant.slug}>
                             <Staff></Staff>
+                        </ResContext.Provider>
+                    )
+                case "preferences":
+                    return (
+                        <ResContext.Provider value={selectedRestaurant.slug}>
+                            <Preferences></Preferences>
                         </ResContext.Provider>
                     )
                 default:

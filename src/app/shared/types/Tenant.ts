@@ -14,4 +14,5 @@ export interface TenantInput {
     tenantId: string;
     name: string;
     role: "cashier" | "chef" | "",
+    password: string;
 }
