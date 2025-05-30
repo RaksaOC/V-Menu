@@ -216,7 +216,7 @@ const OwnerDashboard = () => {
                                 <p>Preferences</p>
                             </button>
                         </div>
-                        <div className={"bg-gray-50 rounded-lg p-4 mt-4"}>
+                        <div className={"bg-gray-50 rounded-lg p-6 mt-4"}>
                             {renderMainContent()}
                         </div>
                     </div>

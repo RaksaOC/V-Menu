@@ -4,7 +4,9 @@ import {connectToDB} from "@/app/shared/lib/db";
 import {Tenant} from "@/app/shared/model/Tenant";
 
 export const PUT = withAuthRouteHandler(async (req: NextRequest, context: any, user: any) => {
+
     // TODO: consider logic of changing email (and password)
+
     const body = await req.json();
     const params = context.params;
     const id = params.id;

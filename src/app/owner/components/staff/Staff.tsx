@@ -7,9 +7,8 @@ import AddStaffPopup from "@/app/owner/components/staff/AddStaffPopUp";
 import EditStaffPopUp from "@/app/owner/components/staff/EditStaffPopUp";
 import {TenantInput, TenantOutput} from "@/app/shared/types/Tenant";
 import {prettyDate} from "@/app/shared/util/formatter";
-import {createUserWithEmailAndPassword, UserCredential} from "firebase/auth";
+import {createUserWithEmailAndPassword, fetchSignInMethodsForEmail, UserCredential} from "firebase/auth";
 import {auth} from "@/app/shared/firebase/config";
-import axios from "axios";
 
 export default function Staff() {
     const resSlug = useContext(ResContext);
@@ -21,6 +20,7 @@ export default function Staff() {
     const [showEditStaff, setShowEditStaff] = useState(false);
     const [staffToEdit, setStaffToEdit] = useState<TenantOutput>();
     const [refresh, setRefresh] = useState(false);
+    const [emailTaken, setEmailTaken] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -41,7 +41,17 @@ export default function Staff() {
     }, [refresh]);
 
     async function handleAddStaff(newTenant: TenantInput) {
+        setEmailTaken(false);
         try {
+            const signInMethods = await fetchSignInMethodsForEmail(auth, newTenant.email);
+            console.log("checked for sign in methods", newTenant.email, signInMethods);
+
+            if (signInMethods.length > 0) {
+                console.log("email is taken");
+                setEmailTaken(true);
+                return;
+            }
+
             const userCred: UserCredential = await createUserWithEmailAndPassword(auth, newTenant.email, newTenant.password);
             const uid = userCred.user.uid;
 
@@ -52,7 +62,13 @@ export default function Staff() {
             console.log(response);
             setShowAddStaff(false);
             setRefresh(prevState => !prevState);
-        } catch (error) {
+        } catch (error: any) {
+            console.error("Firebase Error:", error);
+            if (error.code === 'auth/email-already-in-use') {
+                console.log("Caught: email already in use");
+                setEmailTaken(true);
+                return;
+            }
             console.error("Error adding staff:", error);
         }
     }
@@ -427,7 +443,7 @@ export default function Staff() {
                         </div>
                     ) : (
                         filteredStaff.map((member) => (
-                            <div key={member.tenantId} className="bg-white rounded-xl border border-gray-200 p-4">
+                            <div key={member._id} className="bg-white rounded-xl border border-gray-200 p-4">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div
                                         className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -479,12 +495,18 @@ export default function Staff() {
             </div>
             {
                 showAddStaff && (
-                    <AddStaffPopup onClose={() => setShowAddStaff(!showAddStaff)} onSave={handleAddStaff}/>
+                    <AddStaffPopup onClose={() => {
+                        setShowAddStaff(!showAddStaff)
+                        setEmailTaken(false)
+                    }}
+                                   emailIsTaken={emailTaken}
+                                   onSave={handleAddStaff}/>
                 )
             }
             {
                 showEditStaff && staffToEdit && (
-                    <EditStaffPopUp tenant={staffToEdit} onSave={handleEditStaff} onClose={() => setShowEditStaff(false)}
+                    <EditStaffPopUp tenant={staffToEdit} onSave={handleEditStaff}
+                                    onClose={() => setShowEditStaff(false)}
                                     onDelete={handleDeleteStaff}/>
                 )
             }

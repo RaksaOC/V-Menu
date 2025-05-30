@@ -14,26 +14,21 @@ export default function EditStaffPopUp({tenant, onSave, onDelete, onClose}: Prop
     const [form, setForm] = useState({
         name: tenant.name || "",
         email: tenant.email || "",
-        role: tenant.role || "cashier",
+        role: tenant.role || "",
     });
 
-    const [touched, setTouched] = useState({
-        name: false,
-        email: false,
-    });
+    const [touched, setTouched] = useState({name: false});
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const isNameInvalid = touched.name && form.name.trim() === "";
-    const isEmailInvalid = touched.email && form.email.trim() === "";
     const isSaveDisabled = form.name.trim() === "" || form.email.trim() === "";
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setTouched({name: true, email: true});
+        setTouched({name: true});
         if (!isSaveDisabled) {
             tenant.name = form.name;
-            tenant.email = form.email;
             tenant.role = form.role;
             onSave(tenant);
         }
@@ -79,23 +74,6 @@ export default function EditStaffPopUp({tenant, onSave, onDelete, onClose}: Prop
                             className="w-full px-4 py-3 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 bg-zinc-100 text-gray-900 border-gray-200"
                         />
                         {isNameInvalid && <p className="text-red-500 text-xs">Name cannot be empty.</p>}
-                    </div>
-
-                    {/* Email */}
-                    <div className="space-y-2">
-                        <div className="flex items-center  gap-2.5">
-                            <Mail size={16} className="text-blue-500"/>
-                            <label className="block text-sm font-bold text-gray-700">Email</label>
-                        </div>
-                        <input
-                            type="email"
-                            value={form.email}
-                            onChange={(e) => setForm({...form, email: e.target.value})}
-                            onBlur={() => setTouched((prev) => ({...prev, email: true}))}
-                            placeholder="Enter email"
-                            className="w-full px-4 py-3 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 bg-zinc-100 text-gray-900 border-gray-200"
-                        />
-                        {isEmailInvalid && <p className="text-red-500 text-xs">Email cannot be empty.</p>}
                     </div>
 
                     {/* Role */}
