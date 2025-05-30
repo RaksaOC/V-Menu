@@ -240,7 +240,7 @@ export default function AddStaffPopup({onClose, onSave, emailIsTaken}: Props) {
                                     : "bg-blue-600 hover:bg-blue-700"
                             }`}
                         >
-                            Save Staff
+                            Save
                         </button>
                     </div>
                 </form>

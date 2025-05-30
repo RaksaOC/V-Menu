@@ -26,15 +26,21 @@ import Menu from "@/app/owner/components/menu/Menu";
 import Tables from "@/app/owner/components/tables/Tables";
 import Staff from './components/staff/Staff';
 import Preferences from './components/preferences/Preferences';
+import {AddRestaurantPopup} from "@/app/owner/AddRestaurantPopup";
 
 
 const OwnerDashboard = () => {
+    // temp fix for reloading res content when selected res changes
+    const tabs = ["overview", "menu", "tables", "staff", "preferences"];
+
     const [activeItem, setActiveItem] = useState('management');
     const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOutput | null>();
     const [showManagement, setShowManagement] = useState(true);
     const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
     const [selectedTab, setSelectedTab] = useState('overview');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showAddRes, setShowAddRes] = useState(false);
+    const [refresh, setRefresh] = useState(false);
 
     useEffect(() => {
         const savedTab = localStorage.getItem("activeTab");
@@ -56,7 +62,19 @@ const OwnerDashboard = () => {
             setSelectedRestaurant(response.data[0]);
         }
         fetchRestaurants();
-    }, [])
+    }, [refresh]);
+
+    const handleAddRestaurant = async (name: string) => {
+        try {
+            const response = await api.post(`/api/owner/restaurant`, {name: name});
+            console.log(response.data);
+            setShowAddRes(false);
+            setRefresh(prevState => !prevState);
+            setSelectedRestaurant(response.data[response.data.length - 1]);
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     const navItems = [
         {name: "Dashboard Overview", icon: BarChart3, id: "overview"},
@@ -65,6 +83,10 @@ const OwnerDashboard = () => {
         {name: "Analytics & Reports", icon: TrendingUp, id: "analytics"},
         {name: "Platform Settings", icon: Settings, id: "settings"}
     ];
+
+    useEffect(() => {
+        console.log("selected Restaurant changed", selectedRestaurant);
+    }, [selectedRestaurant]);
 
     const renderMainContent = () => {
         if (selectedRestaurant) {
@@ -130,13 +152,17 @@ const OwnerDashboard = () => {
                                     locations</p>
                             </div>
                             <button
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base w-full sm:w-auto justify-center">
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base w-full sm:w-auto justify-center"
+                                onClick={() => setShowAddRes(true)}>
                                 <Plus size={16}/> Add Restaurant
                             </button>
                         </div>
 
                         <div className="space-y-2 w-full">
-                            <Listbox value={selectedRestaurant} onChange={setSelectedRestaurant}>
+                            <Listbox value={selectedRestaurant} onChange={(restaurant) => {
+                                setSelectedRestaurant(restaurant);
+                                setSelectedTab(tabs.find(t => t !== selectedTab) || "overview");
+                            }}>
                                 <div className="relative">
                                     <ListboxButton
                                         className="relative w-full cursor-pointer rounded-lg border border-gray-300 bg-white py-3 pl-4 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base">
@@ -293,8 +319,12 @@ const OwnerDashboard = () => {
                     {renderContent()}
                 </div>
             </div>
+            {
+                showAddRes && <AddRestaurantPopup onClose={() => setShowAddRes(false)} onSave={handleAddRestaurant}/>
+            }
         </div>
     );
+
 };
 
 export default OwnerDashboard;

@@ -1,26 +1,18 @@
 import {useState} from "react";
-import {X, Table, ListCheck, Type, PlusCircle} from "lucide-react";
-import {TableInput} from "@/app/shared/types/Table";
+import {House, PlusCircle, Type, X} from "lucide-react";
 
 interface Props {
     onClose: () => void;
-    onSave: (tableAddType: TableInput) => void;
+    onSave: (name: string) => void;
 }
 
-export default function AddTablePopup({onClose, onSave}: Props) {
-    const [useAutoIncrement, setUseAutoIncrement] = useState(true);
-    const [tableName, setTableName] = useState("");
-
-    const isSaveDisabled = !useAutoIncrement && tableName.trim() === "";
-
+export function AddRestaurantPopup({onClose, onSave}: Props) {
+    const [resName, setResName] = useState('');
+    const isSaveDisabled = resName.trim() === "";
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!isSaveDisabled) {
-            onSave({
-                name: useAutoIncrement ? "" : tableName,
-                type: useAutoIncrement ? "auto" : "manual",
-                isEnabled: true,
-            });
+            onSave(resName);
         }
     };
 
@@ -32,7 +24,7 @@ export default function AddTablePopup({onClose, onSave}: Props) {
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
                     <h2 className="flex items-center gap-2 text-2xl font-semibold text-gray-900">
                         <PlusCircle size={20} className="text-blue-600"/>
-                        Add a New Table
+                        Add a New Restaurant
                     </h2>
                     <button
                         onClick={onClose}
@@ -47,51 +39,22 @@ export default function AddTablePopup({onClose, onSave}: Props) {
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
 
-                    {/* Table Type Selection */}
-                    <div className="space-y-3">
-                        <label className="flex items-center gap-2 text-sm font-bold text-gray-800">
-                            <ListCheck size={16} className="text-blue-500"/>
-                            Select Table Type
-                        </label>
-                        <div className="flex items-center gap-6">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="tableMode"
-                                    checked={useAutoIncrement}
-                                    onChange={() => setUseAutoIncrement(true)}
-                                />
-                                <span>Auto</span>
-                            </label>
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="tableMode"
-                                    checked={!useAutoIncrement}
-                                    onChange={() => setUseAutoIncrement(false)}
-                                />
-                                <span>Manual</span>
-                            </label>
-                        </div>
-                    </div>
-
                     {/* Table Name Input */}
                     <div className="space-y-2">
                         <label htmlFor="tableName" className="flex items-center gap-2 text-sm font-bold text-gray-800">
-                            <Type size={16} className="text-blue-500"/>
-                            Table Name
+                            <House size={16} className="text-blue-500"/>
+                            Restaurant Name
                         </label>
                         <input
                             id="tableName"
                             type="text"
-                            value={tableName}
-                            onChange={(e) => setTableName(e.target.value.toLowerCase())}
-                            placeholder="e.g. tablecard-7"
-                            disabled={useAutoIncrement}
+                            value={resName}
+                            onChange={(e) => setResName(e.target.value)}
+                            placeholder="e.g. Burger House"
                             className="w-full px-4 py-3 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed bg-white border-gray-200 hover:border-gray-300"
                         />
-                        {!useAutoIncrement && tableName.trim() === "" && (
-                            <p className="text-xs text-red-500">Please enter a table name.</p>
+                        {resName.trim() === "" && (
+                            <p className="text-xs text-red-500">Please enter a restaurant name.</p>
                         )}
                     </div>
 
@@ -121,3 +84,5 @@ export default function AddTablePopup({onClose, onSave}: Props) {
         </div>
     );
 }
+
+
