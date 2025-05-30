@@ -5,7 +5,6 @@ import {withAuthRouteHandler} from "@/app/shared/lib/withAuthRouteHandler";
 
 export const PUT = withAuthRouteHandler(async (req: Request, context: any, user: any) => {
     const body: TableInput = await req.json();
-    body.tenantId = user.uid;
     const params = context.params;
     const id = params.id;
     const updatedItem = await Table.findByIdAndUpdate(

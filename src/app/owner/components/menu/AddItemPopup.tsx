@@ -236,7 +236,7 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
                             disabled={isSubmitting}
                             className="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition-colors"
                         >
-                            {isSubmitting ? "Saving..." : "Save Item"}
+                            {isSubmitting ? "Saving..." : "Save"}
                         </button>
                     </div>
                 </form>

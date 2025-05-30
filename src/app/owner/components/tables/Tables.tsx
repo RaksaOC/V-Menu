@@ -53,8 +53,8 @@ export default function SettingsTables() {
                     {isLoading ? (
                         <div className="w-full flex justify-between items-center animate-pulse">
                             <div>
-                                <div className="h-6 bg-slate-200 rounded w-40 mb-2"/>
-                                <div className="h-4 bg-slate-200 rounded w-60"/>
+                                <div className="h-6 bg-slate-200 rounded w-20 mb-2"/>
+                                <div className="h-4 bg-slate-200 rounded w-30"/>
                             </div>
                             <div className="h-10 w-28 bg-slate-200 rounded-lg"/>
                         </div>

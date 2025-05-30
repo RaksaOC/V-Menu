@@ -2,7 +2,7 @@ import { Settings, Bell, Shield, Palette, Globe, Database, Mail, Smartphone, Clo
 
 export default function Preferences() {
     return (
-        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 relative">
+        <div className="space-y-4 relative">
             {/* Background Content - Slightly Blurred */}
             <div className=" pointer-events-none select-none opacity-70">
                 {/* Header */}

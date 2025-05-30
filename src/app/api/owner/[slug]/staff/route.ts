@@ -7,7 +7,8 @@ import {connectToDB} from "@/app/shared/lib/db";
 export const GET = withAuthRouteHandler(async (req: NextRequest, context: any, user: any) => {
     try {
         await connectToDB();
-        const allStaff = await Tenant.find({resId: user.resId});
+        const id = await getResIdFromSlug(context.params.slug);
+        const allStaff = await Tenant.find({resId: id});
         return NextResponse.json(allStaff);
     } catch (err: any) {
         console.log(err);
@@ -20,9 +21,10 @@ export const POST = withAuthRouteHandler(async (req: NextRequest, context: any, 
         await connectToDB();
         const body = await req.json();
         const {email, name, password, role, tenantId} = body;
+        const id = await getResIdFromSlug(context.params.slug);
         const newStaff = new Tenant({
             tenantId: tenantId,
-            resId: user.resId,
+            resId: id,
             email: email,
             name: name,
             role: role,

@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {
     ChevronsUpDown,
     CreditCard,
@@ -20,9 +20,10 @@ import {
 interface Props {
     onClose: () => void;
     onSave: (staff: TenantInput) => void;
+    emailIsTaken: boolean;
 }
 
-export default function AddStaffPopup({onClose, onSave}: Props) {
+export default function AddStaffPopup({onClose, onSave, emailIsTaken}: Props) {
     const [form, setForm] = useState<{
         name: string;
         email: string;
@@ -47,6 +48,7 @@ export default function AddStaffPopup({onClose, onSave}: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (emailIsTaken) return;
         if (!isSaveDisabled) {
             onSave({
                 ...form,
@@ -55,13 +57,24 @@ export default function AddStaffPopup({onClose, onSave}: Props) {
         }
     };
 
+    useEffect(() => {
+        if (emailIsTaken) {
+            setForm({
+                name: "",
+                email: "",
+                role: "",
+                password: ""
+            });
+        }
+    }, [emailIsTaken]);
+
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto relative transition-all">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
                     <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-                        <PlusCircle  className="w-6 h-6 text-blue-500"/>
+                        <PlusCircle className="w-6 h-6 text-blue-500"/>
                         Add a New Staff Member
                     </h2>
                     <button
@@ -100,7 +113,7 @@ export default function AddStaffPopup({onClose, onSave}: Props) {
                     <div className="space-y-2">
                         <label
                             htmlFor="email"
-                            className=" text-sm font-bold text-gray-800 flex items-center gap-2"
+                            className={` text-sm font-bold text-gray-800 flex items-center gap-2`}
                         >
                             <Mail className="w-4 h-4 text-blue-500"/>
                             Email
@@ -112,8 +125,11 @@ export default function AddStaffPopup({onClose, onSave}: Props) {
                             value={form.email}
                             onChange={handleChange}
                             placeholder="e.g. staff@example.com"
-                            className="w-full px-4 py-3 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white border-gray-200 hover:border-gray-300"
+                            className={`w-full px-4 py-3 border rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white border-gray-200 hover:border-gray-300  ${emailIsTaken ? "outline outline-red-500" : ""}`}
                         />
+                        {
+                            emailIsTaken && (<label className={"text-red-500 text-sm"}>* Email is taken</label>)
+                        }
                     </div>
 
                     {/* Password Input */}
@@ -224,7 +240,7 @@ export default function AddStaffPopup({onClose, onSave}: Props) {
                                     : "bg-blue-600 hover:bg-blue-700"
                             }`}
                         >
-                            Save Staff
+                            Save
                         </button>
                     </div>
                 </form>
