@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {ChefHat, Clock, History, Bell} from "lucide-react";
+import api from "@/app/shared/lib/axios";
 
 export default function KitchenPage() {
     const params = useParams();
@@ -19,7 +20,7 @@ export default function KitchenPage() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await axios.get(`/api/kitchen/${params.res}`);
+                const response = await api.get(`/api/kitchen/${params.res}`);
                 const activeOrders = response.data.filter((order: OrderOutput) => !order.isDone);
                 setOrders(activeOrders);
                 setTotalOrders(activeOrders.length);
@@ -33,7 +34,7 @@ export default function KitchenPage() {
 
         const intervalId = setInterval(async () => {
             try {
-                const response = await axios.get(`/api/kitchen/${params.res}`);
+                const response = await api.get(`/api/kitchen/${params.res}`);
                 const activeOrders = response.data.filter((order: OrderOutput) => !order.isDone);
 
                 const newOrders = activeOrders.filter((order: OrderOutput) => !previousOrderIdsRef.current.includes(order._id));

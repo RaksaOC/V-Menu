@@ -37,7 +37,6 @@ export function middleware(req: NextRequest) {
         }
 
         try {
-            // TODO: add expiration check logic
             const decoded = jwtDecode<DecodedToken>(token)
             console.log("decoded", decoded);
             if (decoded.exp && Date.now() / 1000 > decoded.exp) {

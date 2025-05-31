@@ -8,15 +8,17 @@ import {ItemOutput} from "@/app/shared/types/Item";
 import {jwtDecode} from "jwt-decode";
 import api from "@/app/shared/lib/axios";
 import {UtensilsCrossed, TrendingUp} from "lucide-react";
+import {useParams} from "next/navigation";
 
 const Menu = () => {
     const [menuItems, setMenuItems] = useState<ItemOutput[]>([]);
     const [loading, setLoading] = useState(true);
+    const params = useParams();
 
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await api.get("/api/cashier/dashboard/menu");
+                const res = await api.get(`/api/cashier/${params.res}/dashboard/menu`);
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);
@@ -34,7 +36,7 @@ const Menu = () => {
         if (item) {
             isEnabled = item.isEnabled;
         }
-        const res = await api.patch(`/api/cashier/dashboard/menu/${id}`, {isEnabled: isEnabled});
+        const res = await api.patch(`/api/cashier/${params.res}/dashboard/menu/${id}`, {isEnabled: isEnabled});
 
         setMenuItems((prev) =>
             prev.map((item) =>

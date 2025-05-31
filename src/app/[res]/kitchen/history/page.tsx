@@ -7,6 +7,7 @@ import axios from "axios";
 import {useParams, useRouter} from "next/navigation";
 import {ArrowLeft, Bell, ChefHat, Clock, History as His} from "lucide-react";
 import Link from "next/link";
+import api from "@/app/shared/lib/axios";
 
 export default function History() {
     const router = useRouter();
@@ -15,7 +16,7 @@ export default function History() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await axios.get(`/api/kitchen/${params.res}`);
+                const response = await api.get(`/api/kitchen/${params.res}`);
                 setOrders(response.data.filter((order: OrderOutput) => order.isDone));
             } catch (err) {
                 console.log(err);

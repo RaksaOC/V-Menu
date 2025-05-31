@@ -30,9 +30,10 @@ const MenuCard = ({id, name, price, image, isEnabled, onToggle}: Props) => {
     };
 
     return (
-        <div className={`relative bg-none rounded-2xl border  border-slate-500 overflow-hidden hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 ${
-            !enabled ? "opacity-75" : ""
-        }`}>
+        <div
+            className={`relative bg-none rounded-2xl border  border-slate-500 overflow-hidden hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 ${
+                !enabled ? "opacity-75" : ""
+            }`}>
             {/* Status Indicator */}
             <div className={`absolute top-4 right-4 z-10 w-3 h-3 rounded-full ${
                 enabled ? "bg-green-400" : "bg-red-400"
@@ -67,7 +68,7 @@ const MenuCard = ({id, name, price, image, isEnabled, onToggle}: Props) => {
                 {/* Price */}
                 <div className="flex items-center space-x-2 mb-4">
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg">
-                        <DollarSign size={16} className="text-blue-600 dark:text-blue-400" />
+                        <DollarSign size={16} className="text-blue-600 dark:text-blue-400"/>
                     </div>
                     <span className="text-xl font-bold text-slate-800 dark:text-white">
                         ${price.toFixed(2)}
@@ -88,12 +89,12 @@ const MenuCard = ({id, name, price, image, isEnabled, onToggle}: Props) => {
                 >
                     {enabled ? (
                         <>
-                            <Eye size={16} />
+                            <Eye size={16}/>
                             <span>Enabled</span>
                         </>
                     ) : (
                         <>
-                            <EyeOff size={16} />
+                            <EyeOff size={16}/>
                             <span>Disabled</span>
                         </>
                     )}
@@ -101,7 +102,8 @@ const MenuCard = ({id, name, price, image, isEnabled, onToggle}: Props) => {
             </div>
 
             {/* Hover Effect Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            <div
+                className="absolute inset-0 bg-gradient-to-t from-transparent to-white/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
         </div>
     );
 };

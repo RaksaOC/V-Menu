@@ -6,16 +6,18 @@ import {Item} from "@/app/shared/model/Item";
 import {connectToDB} from "@/app/shared/lib/db";
 import {Overview} from "@/app/shared/types/Overview";
 import {withAuthRouteHandler} from "@/app/shared/lib/withAuthRouteHandler";
+import {getResIdFromSlug} from "@/app/shared/util/util";
 
 export const GET = withAuthRouteHandler(async (req: NextRequest, context: any, user: any) => {
     try {
         await connectToDB();
-        const numOfActiveTables = await Table.countDocuments({isEnabled: true, resId: user.resId});
-        const numOfUnpaidOrders = await TableOrder.countDocuments({isPaid: false, resId: user.resId});
-        const numOfTables = await Table.countDocuments({resId: user.resId});
-        const numOfItems = await Item.countDocuments({resId: user.resId});
-        const numOfOrders = await Order.countDocuments({resId: user.resId});
-        const numOfPayments = await TableOrder.countDocuments({isPaid: true, resId: user.resId});
+        const id = await getResIdFromSlug(context.params.slug);
+        const numOfActiveTables = await Table.countDocuments({isEnabled: true, resId: id});
+        const numOfUnpaidOrders = await TableOrder.countDocuments({isPaid: false, resId: id});
+        const numOfTables = await Table.countDocuments({resId: id});
+        const numOfItems = await Item.countDocuments({resId: id});
+        const numOfOrders = await Order.countDocuments({resId: id});
+        const numOfPayments = await TableOrder.countDocuments({isPaid: true, resId: id});
 
         const overviewData: Overview = {
             numOfActiveTables,
