@@ -54,13 +54,6 @@ export function withAuthRouteHandler(handler: (req: NextRequest, context?: any, 
 
         console.log("User is verified");
 
-        // Attach resId from DB if needed
-        await connectToDB();
-        const tenant = await Tenant.findOne({ tenantId: user.uid });
-        if (tenant) {
-            user.resId = tenant.resId;
-        }
-
         return handler(req, context, user);
     };
 }

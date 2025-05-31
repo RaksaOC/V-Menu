@@ -14,7 +14,26 @@ interface CardProps {
     orderedAt: string;
 }
 
-const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardProps) => {
+function formatTimeAgo(orderTime: Date): string {
+    const diffMs = Date.now() - orderTime.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) {
+        return `${diffDays}d`;
+    } else if (diffHours > 0) {
+        const remainingMinutes = diffMinutes % 60;
+        return remainingMinutes > 0
+            ? `${diffHours}h ${remainingMinutes}m`
+            : `${diffHours}h`;
+    } else {
+        return `${diffMinutes}m`;
+    }
+}
+
+
+const Card = ({orderId, table, orderedItems, isDone, onDone, orderedAt}: CardProps) => {
     const [isCompleting, setIsCompleting] = useState(false);
 
     const handleComplete = async () => {
@@ -26,15 +45,17 @@ const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardP
     const totalItems = orderedItems.reduce((sum, item) => sum + item.quantity, 0);
     const orderTime = new Date(orderedAt);
     const timeAgo = Math.floor((Date.now() - orderTime.getTime()) / (1000 * 60));
+    const timeAgoDisplay = formatTimeAgo(orderTime); // e.g., "2h 15m" or "3d"
 
     return (
-        <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group w-full">
+        <div
+            className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group w-full">
             {/* Order Header */}
             <div className="bg-gradient-to-r from-slate-600 to-gray-600 text-white p-6">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
-                            <Users size={20} className="text-white" />
+                            <Users size={20} className="text-white"/>
                         </div>
                         <div>
                             <h3 className="text-2xl font-bold">Table {table}</h3>
@@ -44,27 +65,36 @@ const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardP
 
                     <div className="text-right">
                         <div className="flex items-center gap-2 mb-1">
-                            <Clock size={16} className="text-slate-300" />
+                            <Clock size={16} className="text-slate-300"/>
                             <span className="text-sm text-slate-200">{prettyDate(orderedAt)}</span>
                         </div>
-                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                            timeAgo < 5 ? 'bg-green-500/20 text-green-200' :
-                                timeAgo < 15 ? 'bg-yellow-500/20 text-yellow-200' :
-                                    'bg-red-500/20 text-red-200'
-                        }`}>
-                            <div className={`w-2 h-2 rounded-full ${
-                                timeAgo < 5 ? 'bg-green-400' :
-                                    timeAgo < 15 ? 'bg-yellow-400' :
-                                        'bg-red-400'
-                            } animate-pulse`}></div>
-                            {timeAgo < 1 ? 'Just now' : `${timeAgo}m ago`}
+                        <div
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                                timeAgo < 5
+                                    ? 'bg-green-500/20 text-green-200'
+                                    : timeAgo < 15
+                                        ? 'bg-yellow-500/20 text-yellow-200'
+                                        : 'bg-red-500/20 text-red-200'
+                            }`}
+                        >
+                            <div
+                                className={`w-2 h-2 rounded-full ${
+                                    timeAgo < 5
+                                        ? 'bg-green-400'
+                                        : timeAgo < 15
+                                            ? 'bg-yellow-400'
+                                            : 'bg-red-400'
+                                } animate-pulse`}
+                            ></div>
+                            {timeAgo < 1 ? 'Just now' : `${timeAgoDisplay} ago`}
                         </div>
                     </div>
+
                 </div>
 
                 <div className="flex items-center gap-4 text-slate-200">
                     <div className="flex items-center gap-2">
-                        <Hash size={16} />
+                        <Hash size={16}/>
                         <span className="text-sm font-medium">{totalItems} item{totalItems !== 1 ? 's' : ''}</span>
                     </div>
                 </div>
@@ -101,7 +131,8 @@ const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardP
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="bg-slate-600 text-white px-3 py-1.5 rounded-full font-bold text-sm min-w-[3rem] text-center">
+                                <div
+                                    className="bg-slate-600 text-white px-3 py-1.5 rounded-full font-bold text-sm min-w-[3rem] text-center">
                                     ×{orderedItem.quantity}
                                 </div>
                             </div>
@@ -120,12 +151,13 @@ const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardP
                     >
                         {isCompleting ? (
                             <>
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div
+                                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 Completing Order...
                             </>
                         ) : (
                             <>
-                                <CheckCircle2 size={22} />
+                                <CheckCircle2 size={22}/>
                                 Mark as Complete
                             </>
                         )}

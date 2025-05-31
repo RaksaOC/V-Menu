@@ -6,15 +6,17 @@ import {Users, Clock, Table, UtensilsCrossed, CheckCircle, CreditCard, TrendingU
 
 import {Overview as OverviewData} from "@/app/shared/types/Overview";
 import api from "@/app/shared/lib/axios";
+import {useParams} from "next/navigation";
 
 export default function Overview() {
+    const params = useParams();
     const [isLoading, setIsLoading] = useState(true);
     const [overviewData, setOverviewData] = useState<OverviewData>();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get("/api/cashier/dashboard/overview");
+                const response = await api.get(`/api/cashier/${params.res}/dashboard/overview`);
                 setOverviewData(await response.data || {});
             } catch (error) {
                 console.error("Error fetching overview:", error);

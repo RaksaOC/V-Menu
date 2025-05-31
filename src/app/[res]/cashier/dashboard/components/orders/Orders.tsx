@@ -10,13 +10,11 @@ import {useParams, useRouter} from "next/navigation";
 import {Clock, ShoppingCart} from "lucide-react";
 
 async function getTableOrders() {
-    const response = await api.get("/api/cashier/dashboard/orders");
-    return response.data;
+
 }
 
 export default function Orders() {
     const [orders, setOrders] = useState<TableOrderOutput[]>([]);
-    const router = useRouter();
     const params = useParams();
     const [showHistory, setShowHistory] = useState(false);
     const [history, setHistory] = useState<TableOrderOutput[]>([]);
@@ -24,12 +22,17 @@ export default function Orders() {
     const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         async function fetchOrders() {
-            const data = await getTableOrders();
-            const filtered = data.filter(
-                (order: TableOrderOutput) => !order.isPayed && order.orders.length > 0
-            );
-            setOrders(filtered);
-            setIsLoading(false);
+            try {
+                const response = await api.get(`/api/cashier/${params.res}/dashboard/orders`);
+                const filtered = response.data.filter(
+                    (order: TableOrderOutput) => !order.isPayed && order.orders.length > 0
+                );
+                setOrders(filtered);
+            } catch (err) {
+                console.log(err);
+            } finally {
+                setIsLoading(false);
+            }
         }
 
         fetchOrders();
@@ -38,7 +41,7 @@ export default function Orders() {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const response = await api.get("/api/cashier/dashboard/orders");
+                const response = await api.get(`/api/cashier/${params.res}/dashboard/orders`);
                 setHistory(response.data.filter((d: TableOrderOutput) => d.isPayed));
             } catch (err) {
                 console.error("Failed to fetch order history:", err);
@@ -55,7 +58,7 @@ export default function Orders() {
         if (!orderToMark) {
             return;
         }
-        const response = await api.patch(`/api/cashier/dashboard/orders/${orderId}`, {isPayed: orderToMark.isPayed});
+        const response = await api.patch(`/api/cashier/${params.res}/dashboard/orders/${orderId}`, {isPayed: orderToMark.isPayed});
         if (response.status !== 200) {
             return;
         }
@@ -84,7 +87,7 @@ export default function Orders() {
                             onClick={() => {
                                 setShowHistory(!showHistory);
                             }}>
-                        {showHistory ? "View Active Orders": "View Order History"}
+                        {showHistory ? "View Active Orders" : "View Order History"}
                     </button>
                 </div>
                 {

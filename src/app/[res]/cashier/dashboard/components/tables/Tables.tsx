@@ -6,24 +6,24 @@ import SkeletonTableCard from "@/app/[res]/common/SkeletonTableCard";
 import {TableOutput} from "@/app/shared/types/Table";
 import api from "@/app/shared/lib/axios";
 import {Table, TrendingUp, Users, AlertCircle} from "lucide-react";
+import {useParams} from "next/navigation";
 
-async function getTables() {
-    try {
-        const response = await api.get("/api/cashier/dashboard/tables");
-        return response.data;
-    } catch (err) {
-        console.log(err);
-    }
-}
 
 export default function Tables() {
     const [tables, setTables] = useState<TableOutput[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const params = useParams();
 
     useEffect(() => {
         async function fetchTables() {
-            setTables(await getTables());
-            setIsLoading(false);
+            try {
+                const response = await api.get(`/api/cashier/${params.res}/dashboard/tables`);
+                setTables(response.data);
+            } catch (err) {
+                console.log(err);
+            } finally {
+                setIsLoading(false);
+            }
         }
 
         fetchTables();
@@ -35,7 +35,7 @@ export default function Tables() {
             if (t._id === id) {
                 const updatedTable = {...t, isEnabled: !t.isEnabled};
                 // Send updated table to backend
-                api.patch(`/api/cashier/dashboard/tables/${id}`, {isEnabled: !updatedTable.isEnabled});
+                api.patch(`/api/cashier/${params.res}/dashboard/tables/${id}`, {isEnabled: !updatedTable.isEnabled});
                 return updatedTable;
             }
             return t;

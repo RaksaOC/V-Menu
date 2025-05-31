@@ -49,7 +49,11 @@ const Auth = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
 
-            const response = await api.post("/api/cashier/login", {
+            console.log("before lggin in we have the res as", params.res);
+            console.log("Making API call to:", `api/cashier/${params.res}/login`);
+            console.log("Resolved params.res:", params.res);
+
+            const response = await api.post(`/api/cashier/login`, {
                 email: form.email.toLowerCase(),
                 resSlug: params.res,
                 uid: userCredential.user.uid,
@@ -70,7 +74,8 @@ const Auth = () => {
     };
 
     return (
-        <div className={"w-full min-h-screen flex justify-center items-center bg-gradient-to-tr from-blue-950 to-slate-900 text-white px-4 relative"}>
+        <div
+            className={"w-full min-h-screen flex justify-center items-center bg-gradient-to-tr from-blue-950 to-slate-900 text-white px-4 relative"}>
             <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full">
                 <h2 className="text-3xl font-bold text-center text-zinc-800 dark:text-white mb-6">
                     Cashier Login

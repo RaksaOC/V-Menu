@@ -1,9 +1,10 @@
 import {fetchOrders} from "@/app/api/kitchen/[slug]/service";
 import {NextRequest, NextResponse} from "next/server";
+import {withAuthRouteHandler} from "@/app/shared/lib/withAuthRouteHandler";
 
 
-export async function GET(req: NextRequest, {params}: { params: { slug: string } }) {
-    const slug = params.slug;
+export const GET = withAuthRouteHandler(async (req: NextRequest, context: any, user: any) => {
+    const slug = context.params.slug;
     console.log("slug is", slug);
     try {
         const result = await fetchOrders(slug);
@@ -11,5 +12,5 @@ export async function GET(req: NextRequest, {params}: { params: { slug: string }
     } catch (err) {
         return NextResponse.json({error: 'Something went wrong'}, {status: 500})
     }
-}
+});
 
