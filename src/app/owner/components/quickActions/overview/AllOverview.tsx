@@ -43,36 +43,17 @@ interface Data {
     topSellingItems: TopItems[];
 }
 
-// Mock API function for demo
-const mockApi = {
-    get: async (url: string) => {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        return {
-            data: {
-                numOfUnpaidOrders: 4,
-                numOfItems: 15,
-                numOfOrders: 25,
-                numOfPayments: 21,
-                numOfMoneyEarned: 3425,
-                totalItemsSold: 87,
-                avgItemsPerOrder: 3.48,
-                topSellingItems: [
-                    {name: "Burger", quantity: 25},
-                    {name: "Fries", quantity: 20},
-                    {name: "Cola", quantity: 15},
-                    {name: "Pizza", quantity: 12},
-                    {name: "Salad", quantity: 8}
-                ]
-            }
-        };
-    }
-};
-
-// interface StatCardProps {
-//     title: string;
-//     value: number;
-//     icon: Icon;
-// }
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    color: string;
+    bgColor: string;
+    textColor: string;
+    subtitle?: string;
+    isUrgent?: boolean;
+    delay?: number;
+}
 
 const StatCard = ({
                       title,
@@ -81,9 +62,10 @@ const StatCard = ({
                       color,
                       bgColor,
                       textColor,
+                      subtitle,
                       isUrgent = false,
                       delay = 0
-                  }) => {
+                  }: StatCardProps) => {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -97,10 +79,9 @@ const StatCard = ({
         relative bg-white rounded-3xl p-6 shadow-md border border-slate-200
         transition-all duration-700 ease-out transform
         ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
-        hover:shadow-2xl hover:-translate-y-2 hover:scale-105
+        hover:shadow-xl hover:-translate-y-2
         ${isUrgent ? 'ring-2 ring-amber-300 ring-opacity-50' : ''}
       `}
-            style={{transitionDelay: `${delay}ms`}}
         >
             {isUrgent && (
                 <div className="absolute -top-2 -right-2 w-4 h-4 bg-amber-400 rounded-full animate-pulse"></div>
@@ -127,13 +108,21 @@ const StatCard = ({
           <span className="text-3xl font-bold text-gray-800">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </span>
+                    {subtitle && (
+                        <span className="text-sm text-gray-500">{subtitle}</span>
+                    )}
                 </div>
             </div>
         </div>
     );
 };
 
-const TopSellingChart = ({data, isVisible}) => {
+interface TopSellingChartProps {
+    data: TopItems[];
+    isVisible: boolean;
+}
+
+const TopSellingChart: React.FC<TopSellingChartProps> = ({data, isVisible}) => {
     const COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'];
 
     return (
@@ -152,21 +141,16 @@ const TopSellingChart = ({data, isVisible}) => {
                 </div>
             </div>
 
-            <div className="flex flex-col justify-center items-center gap-6">
-                <div className="space-y-4 w-full max-w-md">
+            <div className="flex flex-col justify-between">
+                <div className="space-y-4">
                     {data.map((item, index) => (
                         <div
                             key={item.name}
                             className={`
-                flex items-center justify-between p-4 rounded-2xl w-full
-                transition-all duration-500 ease-out transform
+                flex items-center justify-between p-4
+                transition-all duration-500 ease-out transform border-b border-b-gray-500 mb-2.5
                 ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'}
-                hover:bg-gray-50 hover:scale-105
               `}
-                            style={{
-                                transitionDelay: `${500 + index * 100}ms`,
-                                background: `linear-gradient(135deg, ${COLORS[index]}15, ${COLORS[index]}05)`
-                            }}
                         >
                             <div className="flex items-center space-x-3">
                                 <div
@@ -217,22 +201,26 @@ const TopSellingChart = ({data, isVisible}) => {
     );
 };
 
-const MetricsChart = ({data, isVisible}) => {
+interface MetricsChartProps {
+    data: Data;
+    isVisible: boolean;
+}
+
+const MetricsChart: React.FC<MetricsChartProps> = ({data, isVisible}) => {
     const chartData = [
         {name: 'Orders', value: data.numOfOrders, color: '#3B82F6'},
         {name: 'Payments', value: data.numOfPayments, color: '#10B981'},
-        {name: 'Sold', value: data.totalItemsSold, color: '#8B5CF6'},
+        {name: 'Items Sold', value: data.totalItemsSold, color: '#8B5CF6'},
         {name: 'Menu Items', value: data.numOfItems, color: '#F59E0B'}
     ];
 
     return (
         <div className={`
-        flex flex-col justify-between items-center gap-6
-      bg-white rounded-3xl p-6 shadow-lg border border-gray-100
-      transition-all duration-1000 ease-out transform
+      bg-white rounded-3xl p-6 shadow-md border border-slate-200
+      transition-all duration-1000 ease-out transform flex flex-col justify-between
       ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
     `}>
-            <div className="flex items-center space-x-3 mb-6 self-start">
+            <div className="flex items-center space-x-3 mb-6">
                 <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl">
                     <Activity size={24} className="text-white"/>
                 </div>
@@ -243,7 +231,7 @@ const MetricsChart = ({data, isVisible}) => {
             </div>
 
             <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData} margin={{top: 10, right: -5, left: -40, bottom: 5}}>
+                <BarChart data={chartData} margin={{top: 0, right: -10, left: -40, bottom: 5}}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/>
                     <XAxis
                         dataKey="name"
@@ -285,7 +273,6 @@ export default function AllOverview() {
             try {
                 setIsLoading(true);
                 const response = await api.get("/api/owner/overview");
-                console.log(response.data);
                 setData(response.data);
 
                 // Trigger card animations after data loads
@@ -302,8 +289,8 @@ export default function AllOverview() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+                <div className="w-full mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         {Array.from({length: 8}).map((_, i) => (
                             <div key={i} className="bg-white rounded-3xl p-6 shadow-lg animate-pulse">
@@ -336,8 +323,8 @@ export default function AllOverview() {
     const paymentRate = data.numOfOrders > 0 ? (data.numOfPayments / data.numOfOrders) * 100 : 0;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 ">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen">
+            <div className="w-full mx-auto">
                 {/* Header */}
                 <div className={`
           mb-8 transition-all duration-1000 ease-out transform

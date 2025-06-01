@@ -80,6 +80,15 @@ const OwnerDashboard = () => {
         }
     }
 
+    const handleManageRestaurant = (id: string) => {
+        console.log("recieved click to manage wityh id ", id);
+        setActiveItem('management');
+        console.log(restaurants.find(restaurant => restaurant._id === id));
+        setSelectedRestaurant(restaurants.find(restaurant => restaurant._id === id));
+        setShowManagement(true);
+        setSelectedTab('overview');
+    }
+
     const navItems = [
         {name: "Dashboard Overview", icon: BarChart3, id: "overview"},
         {name: "All Restaurants", icon: Box, id: "restaurants"},
@@ -95,7 +104,7 @@ const OwnerDashboard = () => {
     const renderMainContent = () => {
         if (selectedRestaurant) {
             switch (selectedTab) {
-                case "allRestaurants":
+                case "overview":
                     return (
                         <ResContext.Provider value={selectedRestaurant.slug}>
                             <Overview></Overview>
@@ -216,7 +225,7 @@ const OwnerDashboard = () => {
                         {/* Tab Navigation - Made responsive */}
                         <div className="flex flex-wrap mt-4 gap-1">
                             <button
-                                onClick={() => setSelectedTab('allRestaurants')}
+                                onClick={() => setSelectedTab('overview')}
                                 className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'allRestaurants' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
                                 <LayoutDashboard size={16} className="md:w-5 md:h-5"/>
                                 <p>Overview</p>
@@ -261,7 +270,7 @@ const OwnerDashboard = () => {
                         activeItem === "overview" && (<AllOverview/>)
                     }
                     {
-                        activeItem === "restaurants" && (<AllRestaurants/>)
+                        activeItem === "restaurants" && (<AllRestaurants onManage={handleManageRestaurant}/>)
                     }
                     {
                         activeItem === "staff" && (<AllStaff/>)

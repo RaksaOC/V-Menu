@@ -24,6 +24,7 @@ export const GET = withAuthRouteHandler(async (req: NextRequest, context: any, u
             const numOfOrders = await Order.countDocuments({resId: id});
             const numOfPayments = await TableOrder.countDocuments({isPaid: true, resId: id});
             const overviewData: any = {
+                resId: id,
                 resName,
                 numOfActiveTables,
                 numOfUnpaidOrders,

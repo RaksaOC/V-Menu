@@ -1,15 +1,30 @@
 import React from "react";
 import {useEffect, useState} from "react";
-import {Users, Table, UtensilsCrossed, CheckCircle, CreditCard, TrendingUp, AlertTriangle} from "lucide-react";
+import {
+    Users,
+    Table,
+    UtensilsCrossed,
+    CheckCircle,
+    CreditCard,
+    TrendingUp,
+    AlertTriangle,
+    Plus,
+    Settings
+} from "lucide-react";
 import api from "@/app/shared/lib/axios";
 import {response} from "express";
 import {Overview as OverviewData} from "@/app/shared/types/Overview";
 
 interface AllRestaurants extends OverviewData {
+    resId: string;
     resName: string;
 }
 
-export default function AllRestaurants() {
+interface Props {
+    onManage: (id: string) => void;
+}
+
+export default function AllRestaurants({onManage}: Props) {
     const [isLoading, setIsLoading] = useState(true);
     const [overviewData, setOverviewData] = useState<AllRestaurants[]>([]);
 
@@ -134,10 +149,18 @@ export default function AllRestaurants() {
                     return (
                         <div key={restaurantIndex} className="space-y-4">
                             {/* Restaurant Name Header */}
-                            <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+                            <div className="flex items-center justify-between gap-3 pb-2 border-b border-gray-200">
                                 <h3 className="text-lg font-semibold text-gray-800">
                                     {restaurant.resName}
                                 </h3>
+                                <button
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base justify-center"
+                                    onClick={() => {
+                                        onManage(restaurant.resId)
+                                        console.log("clicked to manage resId", restaurant.resId)
+                                    }}>
+                                    <UtensilsCrossed size={16}/> Manage {restaurant.resName}
+                                </button>
                             </div>
 
                             {/* Stats Grid for this restaurant */}
