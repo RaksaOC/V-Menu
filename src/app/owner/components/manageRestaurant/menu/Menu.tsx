@@ -4,8 +4,8 @@ import SkeletonMenuCard from "@/app/[res]/common/SkeletonMenuCard";
 import {ItemInput, ItemOutput} from "@/app/shared/types/Item";
 import api from "@/app/shared/lib/axios";
 import {ResContext} from "@/app/owner/ResContext";
-import {Plus, TrendingUp} from "lucide-react";
-import AddItemPopup from "@/app/owner/components/menu/AddItemPopup";
+import {Plus, TrendingUp, UtensilsCrossed} from "lucide-react";
+import AddItemPopup from "@/app/owner/components/manageRestaurant/menu/AddItemPopup";
 
 const Menu = () => {
     const [menuItems, setMenuItems] = useState<ItemOutput[]>([]);
@@ -100,16 +100,16 @@ const Menu = () => {
                                     ))}
                                 </div>
                             ) : (
-                                <div
-                                    className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-                                    <div className="bg-gray-100  rounded-full p-4 mb-4">
-                                        <TrendingUp size={32} className="text-gray-400"/>
+                                <div className="flex flex-col items-center justify-center py-16 text-center">
+                                    <div className="bg-slate-100  rounded-full p-6 mb-6">
+                                        <UtensilsCrossed size={48} className="text-black"/>
                                     </div>
-                                    <h3 className="text-xl font-semibold text-gray-600  mb-2">
-                                        No Data Available
+                                    <h3 className="text-2xl font-semibold text-slate-900 mb-3">
+                                        No Menu Items Available
                                     </h3>
-                                    <p className="text-gray-500 ">
-                                        Overview statistics will appear here once data is available.
+                                    <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">
+                                        Your menu is currently empty. Add some delicious items to get started with your
+                                        restaurant menu.
                                     </p>
                                 </div>
                             )}

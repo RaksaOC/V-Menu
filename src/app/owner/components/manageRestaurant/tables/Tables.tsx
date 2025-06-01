@@ -5,8 +5,8 @@ import axios from "axios";
 import {TableInput, TableOutput} from "@/app/shared/types/Table";
 import api from "@/app/shared/lib/axios";
 import {ResContext} from "@/app/owner/ResContext";
-import {Plus, TrendingUp} from "lucide-react";
-import AddTablePopup from "@/app/owner/components/tables/AddTablePopup";
+import {Plus, Table, TrendingUp} from "lucide-react";
+import AddTablePopup from "@/app/owner/components/manageRestaurant/tables/AddTablePopup";
 import {ItemInput} from "@/app/shared/types/Item";
 
 export default function SettingsTables() {
@@ -96,14 +96,14 @@ export default function SettingsTables() {
                                     )) : (
                                         <div
                                             className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-                                            <div className="bg-gray-100  rounded-full p-4 mb-4">
-                                                <TrendingUp size={32} className="text-gray-400"/>
+                                            <div className="bg-gray-100 rounded-full p-4 mb-4">
+                                                <Table size={48} className="text-gray-400"/>
                                             </div>
-                                            <h3 className="text-xl font-semibold text-gray-600  mb-2">
-                                                No Data Available
+                                            <h3 className="text-2xl font-semibold text-gray-600 mb-2">
+                                                No Tables Found
                                             </h3>
-                                            <p className="text-gray-500 ">
-                                                Overview statistics will appear here once data is available.
+                                            <p className="text-gray-500">
+                                                Once tables are added, they’ll appear here automatically.
                                             </p>
                                         </div>)
                             }

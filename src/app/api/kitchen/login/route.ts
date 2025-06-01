@@ -26,7 +26,7 @@ export const POST = async (req: NextRequest, context: any, user: any) => {
 
         if (!result) {
             return NextResponse.json(
-                {message: "User does not belong to this restaurant or incorrect role"},
+                {message: "User does not belong to this restaurants or incorrect role"},
                 {status: 401}
             );
         }

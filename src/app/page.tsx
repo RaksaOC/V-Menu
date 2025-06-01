@@ -360,7 +360,7 @@ export default function Home() {
                             {
                                 icon: <Users className="h-6 w-6"/>,
                                 title: 'Multi-Tenant Support',
-                                desc: 'Seamlessly manage multiple branches or restaurant locations from a single dashboard.'
+                                desc: 'Seamlessly manage multiple branches or restaurants locations from a single dashboard.'
                             },
                             {
                                 icon: <Clock className="h-6 w-6"/>,
@@ -425,7 +425,7 @@ export default function Home() {
                             {
                                 step: '01',
                                 title: 'Setup Your Restaurant.ts',
-                                desc: 'Create your account, customize your menu, create tables and configure your restaurant in minutes.'
+                                desc: 'Create your account, customize your menu, create tables and configure your restaurants in minutes.'
                             },
                             {
                                 step: '02',
@@ -497,7 +497,7 @@ export default function Home() {
             {/*                    rating: 5*/}
             {/*                },*/}
             {/*                {*/}
-            {/*                    quote: "Setup was quick and the customer support team was there every step of the way. Best decision we made for our new restaurant.",*/}
+            {/*                    quote: "Setup was quick and the customer support team was there every step of the way. Best decision we made for our new restaurants.",*/}
             {/*                    name: "Elena Rodriguez",*/}
             {/*                    role: "General Manager, Sunset Grill",*/}
             {/*                    rating: 5*/}
@@ -545,7 +545,7 @@ export default function Home() {
             {/*                Simple, Transparent Pricing*/}
             {/*            </h2>*/}
             {/*            <p className="text-lg text-gray-700 dark:text-gray-300">*/}
-            {/*                Choose the plan that fits your restaurant's needs*/}
+            {/*                Choose the plan that fits your restaurants's needs*/}
             {/*            </p>*/}
             {/*        </motion.div>*/}
 
@@ -556,7 +556,7 @@ export default function Home() {
             {/*                    price: "$49",*/}
             {/*                    description: "Perfect for small cafés and food trucks",*/}
             {/*                    features: [*/}
-            {/*                        "1 restaurant location",*/}
+            {/*                        "1 restaurants location",*/}
             {/*                        "Up to 5 staff members",*/}
             {/*                        "Basic menu management",*/}
             {/*                        "Standard support",*/}
@@ -570,7 +570,7 @@ export default function Home() {
             {/*                    price: "$99",*/}
             {/*                    description: "Ideal for growing restaurants",*/}
             {/*                    features: [*/}
-            {/*                        "Up to 3 restaurant locations",*/}
+            {/*                        "Up to 3 restaurants locations",*/}
             {/*                        "Unlimited staff members",*/}
             {/*                        "Advanced menu management",*/}
             {/*                        "Kitchen display system",*/}
@@ -583,9 +583,9 @@ export default function Home() {
             {/*                {*/}
             {/*                    name: "Enterprise",*/}
             {/*                    price: "$249",*/}
-            {/*                    description: "For restaurant chains and franchises",*/}
+            {/*                    description: "For restaurants chains and franchises",*/}
             {/*                    features: [*/}
-            {/*                        "Unlimited restaurant locations",*/}
+            {/*                        "Unlimited restaurants locations",*/}
             {/*                        "Custom integrations",*/}
             {/*                        "Advanced reporting",*/}
             {/*                        "Dedicated account manager",*/}
@@ -825,7 +825,7 @@ export default function Home() {
             {/*                            id="message"*/}
             {/*                            rows={4}*/}
             {/*                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white dark:bg-gray-700 text-gray-900 dark:text-white"*/}
-            {/*                            placeholder="Tell us about your restaurant and what you're looking for..."*/}
+            {/*                            placeholder="Tell us about your restaurants and what you're looking for..."*/}
             {/*                        ></textarea>*/}
             {/*                    </div>*/}
 

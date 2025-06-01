@@ -19,7 +19,7 @@ export default function Overview() {
                 const response = await api.get(`/api/cashier/${params.res}/dashboard/overview`);
                 setOverviewData(await response.data || {});
             } catch (error) {
-                console.error("Error fetching overview:", error);
+                console.error("Error fetching allRestaurants:", error);
             } finally {
                 setIsLoading(false);
             }

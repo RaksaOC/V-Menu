@@ -14,7 +14,7 @@ export default function Header() {
 
         // Get user email from localStorage or wherever you store it
         // TODO: REMOVE and use api fetching
-        const email = localStorage.getItem("userEmail") || "cashier@restaurant.com";
+        const email = localStorage.getItem("userEmail") || "cashier@restaurants.com";
         setUserEmail(email);
 
         return () => clearInterval(timer);

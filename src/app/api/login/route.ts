@@ -24,7 +24,7 @@ export const POST = (async (req: NextRequest, context: any, user: any) => {
                 resMap[resName] = [];
             }
 
-            // Avoid duplicate roles for same restaurant
+            // Avoid duplicate roles for same restaurants
             if (!resMap[resName].includes(doc.role)) {
                 resMap[resName].push(doc.role);
             }

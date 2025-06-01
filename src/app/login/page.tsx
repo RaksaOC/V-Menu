@@ -12,7 +12,7 @@ import {useRouter} from "next/navigation";
 
 export default function LoginPage() {
     const router = useRouter();
-    const [step, setStep] = useState<"login" | "restaurant" | "role">("login");
+    const [step, setStep] = useState<"login" | "restaurants" | "role">("login");
     const [restaurants, setRestaurants] = useState<Record<string, string[]>>({});
     const [selectedRes, setSelectedRes] = useState<string | null>(null);
     const [logInDetail, setLogInDetail] = useState<LoginDetails>({
@@ -22,7 +22,7 @@ export default function LoginPage() {
 
     const handleLoginSuccess = (logInDetail: LoginDetails, data: Record<string, string[]>) => {
         setRestaurants(data);
-        setStep("restaurant");
+        setStep("restaurants");
         setLogInDetail(logInDetail);
     };
 
@@ -32,10 +32,10 @@ export default function LoginPage() {
     };
 
     const handleBack = () => {
-        if (step === "restaurant") {
+        if (step === "restaurants") {
             setStep("login");
         } else if (step === "role") {
-            setStep("restaurant");
+            setStep("restaurants");
             setSelectedRes(null);
         }
     };
@@ -80,7 +80,7 @@ export default function LoginPage() {
                             </motion.div>
                         )}
 
-                        {step === "restaurant" && (
+                        {step === "restaurants" && (
                             <motion.div
                                 key="restaurant"
                                 initial={{opacity: 0, x: 100, y: 0}}

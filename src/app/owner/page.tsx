@@ -20,24 +20,28 @@ import Header from "@/app/owner/components/Header";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from '@headlessui/react';
 import api from "@/app/shared/lib/axios";
 import {RestaurantOutput} from "@/app/shared/types/Restaurant";
-import Overview from "@/app/owner/components/overview/Overview";
+import Overview from "@/app/owner/components/manageRestaurant/overview/Overview";
 import {ResContext} from "@/app/owner/ResContext";
-import Menu from "@/app/owner/components/menu/Menu";
-import Tables from "@/app/owner/components/tables/Tables";
-import Staff from './components/staff/Staff';
-import Preferences from './components/preferences/Preferences';
+import Menu from "@/app/owner/components/manageRestaurant/menu/Menu";
+import Tables from "@/app/owner/components/manageRestaurant/tables/Tables";
+import Staff from '@/app/owner/components/manageRestaurant/staff/Staff';
+import Preferences from '@/app/owner/components/manageRestaurant/preferences/Preferences';
 import {AddRestaurantPopup} from "@/app/owner/AddRestaurantPopup";
+import {Allan} from "next/dist/compiled/@next/font/dist/google";
+import AllStaff from "@/app/owner/components/quickActions/staff/AllStaff";
+import AllOverview from "@/app/owner/components/quickActions/allRestaurants/AllRestaurants";
+import AllRestaurants from "@/app/owner/components/quickActions/allRestaurants/AllRestaurants";
 
 
 const OwnerDashboard = () => {
     // temp fix for reloading res content when selected res changes
-    const tabs = ["overview", "menu", "tables", "staff", "preferences"];
+    const tabs = ["allRestaurants", "menu", "tables", "staff", "preferences"];
 
     const [activeItem, setActiveItem] = useState('management');
     const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOutput | null>();
     const [showManagement, setShowManagement] = useState(true);
     const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
-    const [selectedTab, setSelectedTab] = useState('overview');
+    const [selectedTab, setSelectedTab] = useState('allRestaurants');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showAddRes, setShowAddRes] = useState(false);
     const [refresh, setRefresh] = useState(false);
@@ -57,7 +61,7 @@ const OwnerDashboard = () => {
 
     useEffect(() => {
         const fetchRestaurants = async () => {
-            const response = await api.get("/api/owner");
+            const response = await api.get("/api/owner/restaurants");
             setRestaurants(response.data);
             setSelectedRestaurant(response.data[0]);
         }
@@ -66,7 +70,7 @@ const OwnerDashboard = () => {
 
     const handleAddRestaurant = async (name: string) => {
         try {
-            const response = await api.post(`/api/owner/restaurant`, {name: name});
+            const response = await api.post(`/api/owner/restaurants`, {name: name});
             console.log(response.data);
             setShowAddRes(false);
             setRefresh(prevState => !prevState);
@@ -77,11 +81,11 @@ const OwnerDashboard = () => {
     }
 
     const navItems = [
-        {name: "Dashboard Overview", icon: BarChart3, id: "overview"},
+        {name: "Dashboard Overview", icon: BarChart3, id: "allRestaurants"},
         {name: "All Restaurants", icon: Box, id: "restaurants"},
-        {name: "Staff Management", icon: Users, id: "staff"},
-        {name: "Analytics & Reports", icon: TrendingUp, id: "analytics"},
-        {name: "Platform Settings", icon: Settings, id: "settings"}
+        {name: "Staff Management", icon: Users, id: "staff"}
+        // {name: "Analytics & Reports", icon: TrendingUp, id: "analytics"},
+        // {name: "Platform Settings", icon: Settings, id: "settings"}
     ];
 
     useEffect(() => {
@@ -91,7 +95,7 @@ const OwnerDashboard = () => {
     const renderMainContent = () => {
         if (selectedRestaurant) {
             switch (selectedTab) {
-                case "overview":
+                case "allRestaurants":
                     return (
                         <ResContext.Provider value={selectedRestaurant.slug}>
                             <Overview></Overview>
@@ -161,13 +165,13 @@ const OwnerDashboard = () => {
                         <div className="space-y-2 w-full">
                             <Listbox value={selectedRestaurant} onChange={(restaurant) => {
                                 setSelectedRestaurant(restaurant);
-                                setSelectedTab(tabs.find(t => t !== selectedTab) || "overview");
+                                setSelectedTab(tabs.find(t => t !== selectedTab) || "allRestaurants");
                             }}>
                                 <div className="relative">
                                     <ListboxButton
                                         className="relative w-full cursor-pointer rounded-lg border border-gray-300 bg-white py-3 pl-4 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base">
                                         <span className="block truncate">
-                                          {selectedRestaurant?.name || 'Select a restaurant'}
+                                          {selectedRestaurant?.name || 'Select a restaurants'}
                                         </span>
                                         <span
                                             className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -212,8 +216,8 @@ const OwnerDashboard = () => {
                         {/* Tab Navigation - Made responsive */}
                         <div className="flex flex-wrap mt-4 gap-1">
                             <button
-                                onClick={() => setSelectedTab('overview')}
-                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'overview' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
+                                onClick={() => setSelectedTab('allRestaurants')}
+                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'allRestaurants' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
                                 <LayoutDashboard size={16} className="md:w-5 md:h-5"/>
                                 <p>Overview</p>
                             </button>
@@ -251,8 +255,15 @@ const OwnerDashboard = () => {
         }
 
         return (
-            <div className="text-gray-600 text-base md:text-lg p-4">
-                Select a quick action or use "Manage Restaurants".
+            <div className="space-y-6">
+                <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
+                    {
+                        activeItem === "restaurants" && (<AllRestaurants/>)
+                    }
+                    {
+                        activeItem === "staff" && (<AllStaff/>)
+                    }
+                </div>
             </div>
         );
     };
