@@ -4,6 +4,7 @@ import {NextResponse} from "next/server";
 import {TableOrder} from "@/app/shared/model/TableOrder";
 import {Item} from "@/app/shared/model/Item";
 import {Order} from "@/app/shared/model/Order";
+import {connectToDB} from "@/app/shared/lib/db";
 
 // export const GET = withAuthRouteHandler(async (req: Request, context: any, user: any) => {
 //     try {
@@ -79,8 +80,9 @@ import {Order} from "@/app/shared/model/Order";
 //     }
 // });
 
-export const GET = async (req: Request) => {
+export const GET = withAuthRouteHandler(async (req: Request) => {
     try {
+        await connectToDB();
         const ownedRes = await Restaurant.find({ownerId: "0SWp9q5BgfUZ9asZqBRX9cqvejC2"});
         const resIds = ownedRes.map(res => res._id.toString());
 
@@ -151,4 +153,4 @@ export const GET = async (req: Request) => {
     } catch (err: any) {
         return NextResponse.json({status: 500, message: err.message});
     }
-}
+});
