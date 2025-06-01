@@ -29,7 +29,7 @@ import Preferences from '@/app/owner/components/manageRestaurant/preferences/Pre
 import {AddRestaurantPopup} from "@/app/owner/AddRestaurantPopup";
 import {Allan} from "next/dist/compiled/@next/font/dist/google";
 import AllStaff from "@/app/owner/components/quickActions/staff/AllStaff";
-import AllOverview from "@/app/owner/components/quickActions/allRestaurants/AllRestaurants";
+import AllOverview from "@/app/owner/components/quickActions/overview/AllOverview";
 import AllRestaurants from "@/app/owner/components/quickActions/allRestaurants/AllRestaurants";
 
 
@@ -81,7 +81,7 @@ const OwnerDashboard = () => {
     }
 
     const navItems = [
-        {name: "Dashboard Overview", icon: BarChart3, id: "allRestaurants"},
+        {name: "Dashboard Overview", icon: BarChart3, id: "overview"},
         {name: "All Restaurants", icon: Box, id: "restaurants"},
         {name: "Staff Management", icon: Users, id: "staff"}
         // {name: "Analytics & Reports", icon: TrendingUp, id: "analytics"},
@@ -257,6 +257,9 @@ const OwnerDashboard = () => {
         return (
             <div className="space-y-6">
                 <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
+                    {
+                        activeItem === "overview" && (<AllOverview/>)
+                    }
                     {
                         activeItem === "restaurants" && (<AllRestaurants/>)
                     }
