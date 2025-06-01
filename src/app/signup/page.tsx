@@ -25,7 +25,7 @@ const SignupPage = () => {
             const uid = userCred.user.uid;
             const token = await userCred.user.getIdToken();
 
-            // Step 1: Create restaurant + user document in MongoDB
+            // Step 1: Create restaurants + user document in MongoDB
             const res = await axios.post("/api/signup", {
                 ownerName: ownerName,
                 resName: restaurantName,

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
             tenantId: tenantId,
             email: email,
             role: "owner",
-            resId: _id,// restaurant link
+            resId: _id,// restaurants link
         });
 
         const tenantAsCashier = new Tenant({
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
             tenantId: tenantId,
             email: email,
             role: "cashier",
-            resId: _id,// restaurant link
+            resId: _id,// restaurants link
         });
 
         const tenantAsChef = new Tenant({
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
             tenantId: tenantId,
             email: email,
             role: "chef",
-            resId: _id,// restaurant link
+            resId: _id,// restaurants link
         });
 
         await tenantAsOwner.save();

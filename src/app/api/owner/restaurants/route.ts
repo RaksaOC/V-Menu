@@ -19,10 +19,21 @@ function generateRestaurantSlug(name: string): string {
     return `${slugify(name)}-${shortId}`;
 }
 
+
+// getAllRestaurants
+export const GET = withAuthRouteHandler(async (req: Request, context: any, user: any) => {
+    try {
+        const result = await Restaurant.find({ownerId: user.uid});
+        return NextResponse.json(result);
+    } catch (err: any) {
+        return NextResponse.json({status: 500, message: err.message});
+    }
+});
+
 export const POST = withAuthRouteHandler(async (req: NextRequest, context: any, user: any) => {
     try {
 
-        // add a new restaurant
+        // add a new restaurants
 
         const body = await req.json();
         const {name} = body;

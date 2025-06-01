@@ -1,7 +1,7 @@
 import {QrCode, CheckCircle, XCircle, TableIcon, Pencil} from "lucide-react";
 import {TableOutput} from "@/app/shared/types/Table";
 import {useContext, useState} from "react";
-import EditTablePopup from "@/app/owner/components/tables/EditTablePopup";
+import EditTablePopup from "@/app/owner/components/manageRestaurant/tables/EditTablePopup";
 import {ItemInput, ItemOutput} from "@/app/shared/types/Item";
 import api from "@/app/shared/lib/axios";
 import {ResContext} from "@/app/owner/ResContext";

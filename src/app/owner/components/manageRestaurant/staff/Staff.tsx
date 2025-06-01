@@ -3,8 +3,8 @@ import api from "@/app/shared/lib/axios";
 import {ResContext} from "@/app/owner/ResContext";
 import {Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, ChevronsUpDown, Pencil} from "lucide-react";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/react";
-import AddStaffPopup from "@/app/owner/components/staff/AddStaffPopUp";
-import EditStaffPopUp from "@/app/owner/components/staff/EditStaffPopUp";
+import AddStaffPopup from "@/app/owner/components/manageRestaurant/staff/AddStaffPopUp";
+import EditStaffPopUp from "@/app/owner/components/manageRestaurant/staff/EditStaffPopUp";
 import {TenantInput, TenantOutput} from "@/app/shared/types/Tenant";
 import {prettyDate} from "@/app/shared/util/formatter";
 import {createUserWithEmailAndPassword, fetchSignInMethodsForEmail, UserCredential} from "firebase/auth";
@@ -337,7 +337,7 @@ export default function Staff() {
                     </div>
                 </div>
 
-                {/* Staff Table - Desktop */}
+                {/* AllStaff Table - Desktop */}
                 <div className="hidden lg:block bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
@@ -355,10 +355,12 @@ export default function Staff() {
                                 <tr>
                                     <td colSpan={5} className="text-center py-12">
                                         <div className="flex flex-col items-center gap-3">
-                                            <Users size={48} className="text-gray-300"/>
+                                            <div className={"rounded-full bg-gray-100 p-6 mb-6"}>
+                                                <Users size={48} className="text-gray-400"/>
+                                            </div>
                                             <div>
-                                                <p className="text-gray-500 font-medium">No staff members found</p>
-                                                <p className="text-gray-400 text-sm">
+                                                <p className="text-gray-600 text-2xl font-bold">No staff members found</p>
+                                                <p className="text-gray-500">
                                                     {searchTerm || roleFilter !== "all"
                                                         ? "Try adjusting your search or filters"
                                                         : "Add your first team member to get started"
@@ -424,7 +426,7 @@ export default function Staff() {
                     </div>
                 </div>
 
-                {/* Staff Cards - Mobile */}
+                {/* AllStaff Cards - Mobile */}
                 <div className="lg:hidden space-y-3">
                     {filteredStaff.length === 0 ? (
                         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
