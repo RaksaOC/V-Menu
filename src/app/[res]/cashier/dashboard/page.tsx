@@ -9,12 +9,12 @@ import Header from "./components/Header";
 import {BarChart3, UtensilsCrossed, Users, ShoppingBag, ChevronRight} from "lucide-react";
 
 const Dashboard = () => {
-    const savedSection = localStorage.getItem("dashboardSection") || "allRestaurants";
+    const savedSection = localStorage.getItem("dashboardSection") || "overview";
     const [section, setSection] = useState(savedSection);
 
     useEffect(() => {
         if (!savedSection) {
-            setSection("allRestaurants");
+            setSection("overview");
         } else {
             setSection(savedSection);
         }
@@ -26,7 +26,7 @@ const Dashboard = () => {
 
     const navigationItems = [
         {
-            id: "allRestaurants",
+            id: "overview",
             label: "Overview",
             icon: BarChart3,
             description: "Dashboard analytics"
@@ -58,7 +58,7 @@ const Dashboard = () => {
 
     const renderContent = () => {
         switch (section) {
-            case "allRestaurants":
+            case "overview":
                 return <Overview/>;
             case "orders":
                 return <Orders/>

@@ -45,7 +45,7 @@ export default function LoginPage() {
             let realRole = role;
             if (role === 'chef') realRole = 'kitchen';
             const {email, uid} = logInDetail;
-            if (selectedRes) {
+            if (selectedRes && realRole !== 'owner' && realRole !== null ) {
                 const response = await api.post(`/api/${realRole}/login`, {
                     email: email.toLowerCase(),
                     uid: uid,
@@ -53,6 +53,9 @@ export default function LoginPage() {
                 });
                 localStorage.setItem("token", response.data.appToken);
                 router.push(`/${selectedRes.split(' - ')[1]}/${realRole}`);
+            }
+            else{
+                router.push(`/${realRole}`);
             }
         } catch (error: any) {
             console.error(error);

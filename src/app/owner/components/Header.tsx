@@ -1,6 +1,8 @@
 import {AnimatePresence, motion} from "framer-motion";
-import {Bell, User, UtensilsCrossed, Menu as MenuIcon, X} from "lucide-react";
+import {Bell, User, UtensilsCrossed, Menu as MenuIcon, X, Menu as LucideMenu, LogOut} from "lucide-react";
 import React from "react";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/react";
+import Link from "next/link";
 
 interface Props {
     sidebarOpen: boolean;
@@ -24,40 +26,62 @@ export default function Header({sidebarOpen, setSidebarOpen, sidebarContent, use
                     </div>
                     <div className="flex flex-col">
                         <h1 className="text-xl font-bold text-blue-600">V-Menu Owner</h1>
-                        <p className="text-sm text-gray-500 hidden sm:block">Manage Owned Restaurants</p>
+                        <p className="text-sm text-gray-500 hidden sm:block">Manage your restaurants</p>
                     </div>
                 </div>
 
                 {/* Right section: Notifications, user, and hamburger */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-4">
                     {/* Notifications */}
-                    <div className="relative p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                        <Bell size={20} className="text-gray-600"/>
-                        <div
-                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                            3
-                        </div>
-                    </div>
+                    {/*<button className="relative p-2 rounded-xl bg-black/20 border border-white/10 hover:bg-black/30 transition-all duration-200">*/}
+                    {/*    <Bell size={18} className="text-gray-300" />*/}
+                    {/*    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>*/}
+                    {/*</button>*/}
 
-                    {/* User info */}
-                    <div
-                        className="hidden lg:flex items-center gap-3 p-2 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                        <div className="p-2 bg-blue-100 flex items-center justify-center rounded-lg">
-                            <User size={20} className="text-blue-600"/>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-900">{userInfo.name}</p>
-                            <p className="text-xs text-gray-500">{userInfo.role}</p>
-                        </div>
-                    </div>
+                    {/* User Profile & Menu */}
+                    <Menu as="div" className="relative">
+                        <MenuButton
+                            className="flex items-center space-x-3 bg-white rounded-xl px-4 py-2 border border-slate-200 transition-all duration-200">
+                            <div
+                                className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center">
+                                <User size={16} className="text-white"/>
+                            </div>
+                            <div className="hidden sm:block text-left">
+                                <div className="text-black text-sm font-medium">Owner</div>
+                                <div className="text-gray-400 text-xs truncate max-w-32">
+                                    owner@gmail.com
+                                </div>
+                            </div>
+                            <LucideMenu size={18} className="text-black"/>
+                        </MenuButton>
 
-                    {/* Hamburger Menu (moved here) */}
-                    <button
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="lg:hidden p-2 hover:bg-gray-50 rounded-lg transition-colors"
-                    >
-                        {sidebarOpen ? <X size={20}/> : <MenuIcon size={20}/>}
-                    </button>
+                        <MenuItems
+                            className="absolute right-0 mt-3 w-56 origin-top-right rounded-xl bg-white/95 backdrop-blur-md shadow-2xl border border-gray-200 focus:outline-none z-50 overflow-hidden">
+                            <div className="py-2">
+                                <div className="px-4 py-3">
+                                    <p className="text-sm font-medium text-gray-900">Signed in as</p>
+                                    <p className="text-sm text-gray-600 truncate">owner@gmail.com</p>
+                                </div>
+
+                                <div className="border-t border-gray-200 mt-2">
+                                    <MenuItem>
+                                        {({active}) => (
+                                            <Link href={`/owner/login`}
+                                                  onClick={() => {
+                                                  }}
+                                                  className={`${
+                                                      active ? 'bg-red-50 text-red-700' : 'text-red-600'
+                                                  } group flex items-center px-4 py-3 text-sm font-medium transition-colors duration-150`}
+                                            >
+                                                <LogOut size={16} className="mr-3"/>
+                                                Sign Out
+                                            </Link>
+                                        )}
+                                    </MenuItem>
+                                </div>
+                            </div>
+                        </MenuItems>
+                    </Menu>
                 </div>
             </header>
 

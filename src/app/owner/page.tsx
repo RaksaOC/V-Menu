@@ -35,13 +35,13 @@ import AllRestaurants from "@/app/owner/components/quickActions/allRestaurants/A
 
 const OwnerDashboard = () => {
     // temp fix for reloading res content when selected res changes
-    const tabs = ["allRestaurants", "menu", "tables", "staff", "preferences"];
+    const tabs = ["overview", "menu", "tables", "staff", "preferences"];
 
     const [activeItem, setActiveItem] = useState('management');
     const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOutput | null>();
     const [showManagement, setShowManagement] = useState(true);
     const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
-    const [selectedTab, setSelectedTab] = useState('allRestaurants');
+    const [selectedTab, setSelectedTab] = useState('overview');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showAddRes, setShowAddRes] = useState(false);
     const [refresh, setRefresh] = useState(false);
@@ -174,7 +174,7 @@ const OwnerDashboard = () => {
                         <div className="space-y-2 w-full">
                             <Listbox value={selectedRestaurant} onChange={(restaurant) => {
                                 setSelectedRestaurant(restaurant);
-                                setSelectedTab(tabs.find(t => t !== selectedTab) || "allRestaurants");
+                                setSelectedTab(tabs.find(t => t !== selectedTab) || "overview");
                             }}>
                                 <div className="relative">
                                     <ListboxButton
@@ -226,7 +226,7 @@ const OwnerDashboard = () => {
                         <div className="flex flex-wrap mt-4 gap-1">
                             <button
                                 onClick={() => setSelectedTab('overview')}
-                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'allRestaurants' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
+                                className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selectedTab === 'overview' ? 'underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3' : 'decoration-0'}`}>
                                 <LayoutDashboard size={16} className="md:w-5 md:h-5"/>
                                 <p>Overview</p>
                             </button>
