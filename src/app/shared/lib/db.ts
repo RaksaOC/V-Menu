@@ -5,8 +5,11 @@ let isConnected = false // track the connection status
 export const connectToDB = async () => {
     if (isConnected) return
 
+    const uri = process.env.MONGODB_URI
+    if (!uri) throw new Error("MONGODB_URI is not set (see .env.example)")
+
     try {
-        await mongoose.connect("mongodb+srv://ocraksa:MyMongo123@cluster0.xdar3x8.mongodb.net/v_menu?retryWrites=true&w=majority&appName=Cluster0", {
+        await mongoose.connect(uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         } as any) // casting to `any` if TS complains
