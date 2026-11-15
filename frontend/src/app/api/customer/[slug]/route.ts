@@ -2,8 +2,8 @@ import {NextRequest, NextResponse} from "next/server";
 import {fetchItems, placeOrder} from "@/app/api/customer/[slug]/service";
 import {Order, OrderInput} from "@/app/shared/types/Order";
 
-export async function GET(req: NextRequest, {params}: { params: { slug: string } }) {
-    const slug = params.slug;
+export async function GET(req: NextRequest, {params}: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
 
     try {
         const data = await fetchItems(slug);
@@ -13,8 +13,8 @@ export async function GET(req: NextRequest, {params}: { params: { slug: string }
     }
 }
 
-export async function POST(req: NextRequest, {params}: { params: { slug: string } }) {
-    const slug = params.slug;
+export async function POST(req: NextRequest, {params}: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
     console.log("slug is ", slug);
     try {
         const body: OrderInput = await req.json();

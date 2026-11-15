@@ -2,11 +2,11 @@ import {NextRequest, NextResponse} from "next/server";
 import {Table} from "@/app/shared/model/Table";
 import {getResIdFromSlug} from "@/app/shared/util/util";
 
-export const POST = async (req: NextRequest, {params}: { params: { slug: string } }) => {
+export const POST = async (req: NextRequest, {params}: { params: Promise<{ slug: string }> }) => {
     try {
         const body = await req.json();
         console.log("recieved", body);
-        const slug = params.slug;
+        const { slug } = await params;
         const {table} = body;
         const resId = await getResIdFromSlug(slug);
         console.log(table);
