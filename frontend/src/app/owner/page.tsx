@@ -38,7 +38,7 @@ const OwnerDashboard = () => {
     const tabs = ["overview", "menu", "tables", "staff", "preferences"];
 
     const [activeItem, setActiveItem] = useState('management');
-    const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOutput | null>();
+    const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOutput | null>(null);
     const [showManagement, setShowManagement] = useState(true);
     const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
     const [selectedTab, setSelectedTab] = useState('overview');
@@ -61,7 +61,7 @@ const OwnerDashboard = () => {
 
     useEffect(() => {
         const fetchRestaurants = async () => {
-            const response = await api.get("/api/owner/restaurants");
+            const response = await api.get("/api/restaurants");
             setRestaurants(response.data);
             setSelectedRestaurant(response.data[0]);
         }
@@ -70,7 +70,7 @@ const OwnerDashboard = () => {
 
     const handleAddRestaurant = async (name: string) => {
         try {
-            const response = await api.post(`/api/owner/restaurants`, {name: name});
+            const response = await api.post(`/api/restaurants`, {name: name});
             console.log(response.data);
             setShowAddRes(false);
             setRefresh(prevState => !prevState);
@@ -83,8 +83,7 @@ const OwnerDashboard = () => {
     const handleManageRestaurant = (id: string) => {
         console.log("recieved click to manage wityh id ", id);
         setActiveItem('management');
-        console.log(restaurants.find(restaurant => restaurant._id === id));
-        setSelectedRestaurant(restaurants.find(restaurant => restaurant._id === id));
+        setSelectedRestaurant(restaurants.find(restaurant => restaurant._id === id) ?? null);
         setShowManagement(true);
         setSelectedTab('overview');
     }

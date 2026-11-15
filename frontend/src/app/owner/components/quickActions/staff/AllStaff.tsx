@@ -60,7 +60,7 @@ export default function AllStaff() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get("/api/owner/staff");
+                const response = await api.get("/api/staff");
                 setStaffData(response.data);
                 setLoading(false);
             } catch (e) {

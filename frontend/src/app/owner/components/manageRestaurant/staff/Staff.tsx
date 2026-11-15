@@ -26,7 +26,7 @@ export default function Staff() {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await api.get(`/api/owner/${resSlug}/staff`);
+                const response = await api.get(`/api/restaurants/${resSlug}/staff`);
                 setStaff(response.data);
             } catch (error) {
                 console.error("Error fetching staff:", error);
@@ -44,7 +44,6 @@ export default function Staff() {
         setEmailTaken(false);
         try {
             const signInMethods = await fetchSignInMethodsForEmail(auth, newTenant.email);
-            console.log("checked for sign in methods", newTenant.email, signInMethods);
 
             if (signInMethods.length > 0) {
                 console.log("email is taken");
@@ -55,11 +54,13 @@ export default function Staff() {
             const userCred: UserCredential = await createUserWithEmailAndPassword(auth, newTenant.email, newTenant.password);
             const uid = userCred.user.uid;
 
-            const response = await api.post(`/api/owner/${resSlug}/staff`, {
-                ...newTenant,
+            // The password stays with Firebase; our API only gets the account id.
+            await api.post(`/api/restaurants/${resSlug}/staff`, {
+                name: newTenant.name,
+                email: newTenant.email,
+                role: newTenant.role,
                 tenantId: uid,
             });
-            console.log(response);
             setShowAddStaff(false);
             setRefresh(prevState => !prevState);
         } catch (error: any) {
@@ -75,7 +76,7 @@ export default function Staff() {
 
     async function handleEditStaff(tenant: TenantOutput) {
         try {
-            const response = await api.put(`/api/owner/${resSlug}/staff/${tenant._id}`, tenant);
+            const response = await api.put(`/api/restaurants/${resSlug}/staff/${tenant._id}`, tenant);
             console.log(response);
             setShowEditStaff(false);
             setRefresh(prevState => !prevState);
@@ -86,7 +87,7 @@ export default function Staff() {
 
     async function handleDeleteStaff(id: string) {
         try {
-            const response = await api.delete(`/api/owner/${resSlug}/staff/${id}`);
+            const response = await api.delete(`/api/restaurants/${resSlug}/staff/${id}`);
             console.log(response);
             setShowEditStaff(false);
             setRefresh(prevState => !prevState);

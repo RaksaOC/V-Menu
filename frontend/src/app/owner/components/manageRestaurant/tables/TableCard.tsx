@@ -21,7 +21,7 @@ function TableCard({table, onModified}: TableCardProps) {
         }
 
         try {
-            const response = await api.put(`/api/owner/${resSlug}/tables/${id}`, editedTable);
+            const response = await api.put(`/api/menu/${resSlug}/tables/${id}`, editedTable);
             if (response.status === 200) {
                 console.log("TableCard updated:", response.data);
                 setShowEdit(false);
@@ -40,7 +40,7 @@ function TableCard({table, onModified}: TableCardProps) {
     }
 
     async function handleDelete(id : string) {
-        const response = await api.delete(`/api/owner/${resSlug}/tables/${id}`);
+        const response = await api.delete(`/api/menu/${resSlug}/tables/${id}`);
         if (response.status === 200) {
             console.log(response);
         }

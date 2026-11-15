@@ -21,12 +21,10 @@ export default function CustomerPage() {
     useEffect(() => {
         const checkTable = async () => {
             try {
-                const response = await api.post(`/api/customer/${params.res}/availability`, {
-                    table: params.table?.toString(),
-                });
+                await api.get(`/api/menu/${params.res}/public/tables/${encodeURIComponent(params.table?.toString() ?? "")}`);
                 setChecked(true);
             } catch (error: any) {
-                if (error.response?.status === 401) {
+                if (error.response?.status === 404) {
                     router.push(`/${params.res}/customer`);
                 } else {
                     console.error("API error:", error);
@@ -45,7 +43,7 @@ export default function CustomerPage() {
         localStorage.setItem("table", JSON.stringify(table));
         const fetchItems = async () => {
             try {
-                const res = await axios.get(`/api/customer/${resSlug}`);
+                const res = await axios.get(`/api/menu/${resSlug}/public/items`);
                 const data = await res.data;
                 setItems(data);
             } catch (err) {

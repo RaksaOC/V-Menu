@@ -22,21 +22,14 @@ const SignupPage = () => {
 
         try {
             const userCred: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const uid = userCred.user.uid;
-            const token = await userCred.user.getIdToken();
 
-            // Step 1: Create restaurants + user document in MongoDB
-            const res = await axios.post("/api/signup", {
+            // restaurant-service checks the Firebase ID token, then creates the restaurant
+            // and gives this account the owner, cashier and chef roles.
+            await axios.post("/api/auth/signup", {
+                idToken: await userCred.user.getIdToken(),
                 ownerName: ownerName,
                 resName: restaurantName,
-                email: email,
-                tenantId: uid
             });
-
-            // Step 2: Store token + resId
-            localStorage.setItem("token", token);
-
-            console.log("Signup complete", { uid });
 
             router.push("/login");
         } catch (err: any) {

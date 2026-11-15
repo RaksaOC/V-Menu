@@ -23,7 +23,7 @@ export default function Orders() {
     useEffect(() => {
         async function fetchOrders() {
             try {
-                const response = await api.get(`/api/cashier/${params.res}/dashboard/orders`);
+                const response = await api.get(`/api/orders/${params.res}/bills`);
                 const filtered = response.data.filter(
                     (order: TableOrderOutput) => !order.isPayed && order.orders.length > 0
                 );
@@ -41,7 +41,7 @@ export default function Orders() {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const response = await api.get(`/api/cashier/${params.res}/dashboard/orders`);
+                const response = await api.get(`/api/orders/${params.res}/bills`);
                 setHistory(response.data.filter((d: TableOrderOutput) => d.isPayed));
             } catch (err) {
                 console.error("Failed to fetch order history:", err);
@@ -58,7 +58,7 @@ export default function Orders() {
         if (!orderToMark) {
             return;
         }
-        const response = await api.patch(`/api/cashier/${params.res}/dashboard/orders/${orderId}`, {isPayed: orderToMark.isPayed});
+        const response = await api.patch(`/api/orders/${params.res}/bills/${orderId}`, {isPayed: !orderToMark.isPayed});
         if (response.status !== 200) {
             return;
         }

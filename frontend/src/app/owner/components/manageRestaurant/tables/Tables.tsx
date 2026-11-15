@@ -19,7 +19,7 @@ export default function SettingsTables() {
     useEffect(() => {
         async function fetchTables() {
             try {
-                const response = await api.get(`/api/owner/${resSlug}/tables`);
+                const response = await api.get(`/api/menu/${resSlug}/tables`);
                 setTables(response.data);
             } catch (err: any) {
                 console.log(err);
@@ -33,7 +33,7 @@ export default function SettingsTables() {
 
     const handleSave = async (table: TableInput) => {
         try {
-            const response = await api.post(`/api/owner/${resSlug}/tables`, table)
+            const response = await api.post(`/api/menu/${resSlug}/tables`, table)
             if (response.status === 200) {
                 console.log("response", response);
             }

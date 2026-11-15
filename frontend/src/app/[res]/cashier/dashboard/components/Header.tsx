@@ -1,4 +1,5 @@
 import {Menu as LucideMenu, Settings, Users, UtensilsCrossed, LogOut, User, Bell, Clock} from "lucide-react";
+import {signOut} from "@/app/shared/lib/session";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/react";
 import Link from "next/link"
 import {useParams} from "next/navigation";
@@ -108,9 +109,7 @@ export default function Header() {
                                         {({active}) => (
                                             <Link href={`/${params.res}/cashier/login`}
                                                   onClick={() => {
-                                                      localStorage.removeItem("token");
-                                                      localStorage.removeItem("userEmail");
-                                                      // TODO: api call to remove cookie
+                                                      void signOut();
                                                   }}
                                                   className={`${
                                                       active ? 'bg-red-50 text-red-700' : 'text-red-600'

@@ -16,7 +16,7 @@ export default function History() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await api.get(`/api/kitchen/${params.res}`);
+                const response = await api.get(`/api/orders/${params.res}/kitchen`);
                 setOrders(response.data.filter((order: OrderOutput) => order.isDone));
             } catch (err) {
                 console.log(err);

@@ -272,7 +272,7 @@ export default function AllOverview() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const response = await api.get("/api/owner/overview");
+                const response = await api.get("/api/orders/owner/overview");
                 setData(response.data);
 
                 // Trigger card animations after data loads

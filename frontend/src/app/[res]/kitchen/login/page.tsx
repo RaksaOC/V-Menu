@@ -49,16 +49,13 @@ const Auth = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
 
-            const response = await api.post(`/api/kitchen/login`, {
-                email: form.email.toLowerCase() as string,
+            const response = await api.post(`/api/auth/login`, {
+                idToken: await userCredential.user.getIdToken(),
+                role: "chef",
                 resSlug: params.res,
-                uid: userCredential.user.uid,
             });
 
             localStorage.setItem("token", response.data.appToken);
-            console.log("After response we have the token", localStorage.getItem("token"));
-
-            console.log("Login successful");
 
             router.push(`/${params.res}/kitchen`);
         } catch (err: any) {

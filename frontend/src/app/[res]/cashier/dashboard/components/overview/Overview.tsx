@@ -16,7 +16,7 @@ export default function Overview() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get(`/api/cashier/${params.res}/dashboard/overview`);
+                const response = await api.get(`/api/orders/${params.res}/overview`);
                 setOverviewData(await response.data || {});
             } catch (error) {
                 console.error("Error fetching allRestaurants:", error);

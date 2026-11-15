@@ -3,7 +3,6 @@
 import {useEffect, useState, useRef} from "react";
 import Card from "./Card";
 import {OrderOutput} from "@/app/shared/types/Order";
-import axios from "axios";
 import {toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
@@ -20,7 +19,7 @@ export default function KitchenPage() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await api.get(`/api/kitchen/${params.res}`);
+                const response = await api.get(`/api/orders/${params.res}/kitchen`);
                 const activeOrders = response.data.filter((order: OrderOutput) => !order.isDone);
                 setOrders(activeOrders);
                 setTotalOrders(activeOrders.length);
@@ -34,7 +33,7 @@ export default function KitchenPage() {
 
         const intervalId = setInterval(async () => {
             try {
-                const response = await api.get(`/api/kitchen/${params.res}`);
+                const response = await api.get(`/api/orders/${params.res}/kitchen`);
                 const activeOrders = response.data.filter((order: OrderOutput) => !order.isDone);
 
                 const newOrders = activeOrders.filter((order: OrderOutput) => !previousOrderIdsRef.current.includes(order._id));
@@ -65,7 +64,7 @@ export default function KitchenPage() {
 
     const handleOnDone = async (id: string) => {
         try {
-            await axios.patch(`/api/kitchen/${params.res}/${id}`);
+            await api.patch(`/api/orders/${params.res}/kitchen/${id}/done`);
             setOrders(prev => prev.filter(order => order._id !== id));
             setTotalOrders(prev => prev - 1);
             toast.success("Order completed! ✅", {

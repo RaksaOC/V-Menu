@@ -19,7 +19,7 @@ export default function Overview() {
                 if (!resSlug) {
                     return;
                 }
-                const response = await api.get(`/api/owner/${resSlug}/overview`);
+                const response = await api.get(`/api/orders/${resSlug}/overview`);
                 setOverviewData(await response.data || {});
             } catch (error) {
                 console.error("Error fetching allRestaurants:", error);

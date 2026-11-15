@@ -49,20 +49,13 @@ const Auth = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
 
-            console.log("before lggin in we have the res as", params.res);
-            console.log("Making API call to:", `api/cashier/${params.res}/login`);
-            console.log("Resolved params.res:", params.res);
-
-            const response = await api.post(`/api/cashier/login`, {
-                email: form.email.toLowerCase(),
+            const response = await api.post(`/api/auth/login`, {
+                idToken: await userCredential.user.getIdToken(),
+                role: "cashier",
                 resSlug: params.res,
-                uid: userCredential.user.uid,
             });
 
             localStorage.setItem("token", response.data.appToken);
-            console.log("After response we have the token", localStorage.getItem("token"));
-
-            console.log("Login successful");
 
             router.push(`/${params.res}/cashier/dashboard`);
         } catch (err: any) {

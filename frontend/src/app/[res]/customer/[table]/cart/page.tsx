@@ -89,7 +89,7 @@ export default function CartPage() {
                 isDone: false,
                 orderedItems: cartItems,
             }
-            await axios.post(`/api/customer/${params.res}`, orderToAdd);
+            await axios.post(`/api/orders/${params.res}`, orderToAdd);
 
             toast.success("Order placed successfully!", {
                 position: "top-center",

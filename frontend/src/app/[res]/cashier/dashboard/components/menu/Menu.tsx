@@ -18,7 +18,7 @@ const Menu = () => {
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await api.get(`/api/cashier/${params.res}/dashboard/menu`);
+                const res = await api.get(`/api/menu/${params.res}/items`);
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);
@@ -36,7 +36,7 @@ const Menu = () => {
         if (item) {
             isEnabled = item.isEnabled;
         }
-        const res = await api.patch(`/api/cashier/${params.res}/dashboard/menu/${id}`, {isEnabled: isEnabled});
+        const res = await api.patch(`/api/menu/${params.res}/items/${id}/availability`, {isEnabled: !isEnabled});
 
         setMenuItems((prev) =>
             prev.map((item) =>

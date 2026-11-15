@@ -48,19 +48,16 @@ const Auth = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
 
-            const response = await api.post(`/api/owner/login`, {
-                email: form.email.toLowerCase() as string,
-                uid: userCredential.user.uid,
+            const response = await api.post(`/api/auth/login`, {
+                idToken: await userCredential.user.getIdToken(),
+                role: "owner",
             });
 
             localStorage.setItem("token", response.data.appToken);
-            console.log("After response we have the token", localStorage.getItem("token"));
-
-            console.log("Login successful");
 
             router.push(`/owner`);
         } catch (err: any) {
-            console.error("Login error:", err.message);
+            console.error("Login error:", err?.message);
             toast.error("Incorrect email or password");
         } finally {
             setLoading(false);

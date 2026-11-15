@@ -17,7 +17,7 @@ export default function Tables() {
     useEffect(() => {
         async function fetchTables() {
             try {
-                const response = await api.get(`/api/cashier/${params.res}/dashboard/tables`);
+                const response = await api.get(`/api/menu/${params.res}/tables`);
                 setTables(response.data);
             } catch (err) {
                 console.log(err);
@@ -30,12 +30,11 @@ export default function Tables() {
     }, []);
 
     async function toggleTableAvailability(id: string) {
-        console.log("toggling table with id ", id);
         const updatedTables = tables.map((t) => {
             if (t._id === id) {
                 const updatedTable = {...t, isEnabled: !t.isEnabled};
                 // Send updated table to backend
-                api.patch(`/api/cashier/${params.res}/dashboard/tables/${id}`, {isEnabled: !updatedTable.isEnabled});
+                api.patch(`/api/menu/${params.res}/tables/${id}/availability`, {isEnabled: updatedTable.isEnabled});
                 return updatedTable;
             }
             return t;

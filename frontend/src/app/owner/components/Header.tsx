@@ -1,4 +1,5 @@
 import {AnimatePresence, motion} from "framer-motion";
+import {signOut} from "@/app/shared/lib/session";
 import {Bell, User, UtensilsCrossed, Menu as MenuIcon, X, Menu as LucideMenu, LogOut} from "lucide-react";
 import React from "react";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/react";
@@ -68,6 +69,7 @@ export default function Header({sidebarOpen, setSidebarOpen, sidebarContent, use
                                         {({active}) => (
                                             <Link href={`/owner/login`}
                                                   onClick={() => {
+                                                      void signOut();
                                                   }}
                                                   className={`${
                                                       active ? 'bg-red-50 text-red-700' : 'text-red-600'

@@ -23,7 +23,7 @@ const MenuCard = ({id, name, price, image, isEnabled, onModified}: Props) => {
     }
 
     async function handleOnSave(editedItem: ItemOutput) {
-        const response = await api.put(`/api/owner/${resSlug}/menu/${editedItem._id}`, editedItem);
+        const response = await api.put(`/api/menu/${resSlug}/items/${editedItem._id}`, editedItem);
         if (response.status === 200) {
             console.log(response);
         }
@@ -32,7 +32,7 @@ const MenuCard = ({id, name, price, image, isEnabled, onModified}: Props) => {
     }
 
     async function handleOnDelete(id: string) {
-        const response = await api.delete(`/api/owner/${resSlug}/menu/${id}`);
+        const response = await api.delete(`/api/menu/${resSlug}/items/${id}`);
         if (response.status === 200) {
             console.log(response);
         }

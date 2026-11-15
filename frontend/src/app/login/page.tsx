@@ -17,7 +17,7 @@ export default function LoginPage() {
     const [selectedRes, setSelectedRes] = useState<string | null>(null);
     const [logInDetail, setLogInDetail] = useState<LoginDetails>({
         email: "",
-        uid: ""
+        idToken: ""
     });
 
     const handleLoginSuccess = (logInDetail: LoginDetails, data: Record<string, string[]>) => {
@@ -42,21 +42,16 @@ export default function LoginPage() {
 
     const handleRoleSelect = async (role: string) => {
         try {
-            let realRole = role;
-            if (role === 'chef') realRole = 'kitchen';
-            const {email, uid} = logInDetail;
-            if (selectedRes && realRole !== 'owner' && realRole !== null ) {
-                const response = await api.post(`/api/${realRole}/login`, {
-                    email: email.toLowerCase(),
-                    uid: uid,
-                    resSlug: selectedRes.split(' - ')[1], // get the slug
-                });
-                localStorage.setItem("token", response.data.appToken);
-                router.push(`/${selectedRes.split(' - ')[1]}/${realRole}`);
-            }
-            else{
-                router.push(`/${realRole}`);
-            }
+            // "chef" is called "kitchen" in page URLs
+            const realRole = role === 'chef' ? 'kitchen' : role;
+            const resSlug = selectedRes?.split(' - ')[1];
+            const response = await api.post(`/api/auth/login`, {
+                idToken: logInDetail.idToken,
+                role,
+                resSlug: role === 'owner' ? undefined : resSlug,
+            });
+            localStorage.setItem("token", response.data.appToken);
+            router.push(role === 'owner' ? `/owner` : `/${resSlug}/${realRole}`);
         } catch (error: any) {
             console.error(error);
         }

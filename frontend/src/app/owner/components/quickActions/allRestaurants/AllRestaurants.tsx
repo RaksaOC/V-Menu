@@ -12,7 +12,6 @@ import {
     Settings
 } from "lucide-react";
 import api from "@/app/shared/lib/axios";
-import {response} from "express";
 import {Overview as OverviewData} from "@/app/shared/types/Overview";
 
 interface AllRestaurants extends OverviewData {
@@ -31,8 +30,7 @@ export default function AllRestaurants({onManage}: Props) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Replace this with: const response = await api.get(`/api/owner/allRestaurants`);
-                const response = await api.get("/api/owner/allRestaurants");
+                const response = await api.get("/api/orders/owner/restaurants");
                 setOverviewData(response.data);
             } catch (error) {
                 console.error("Error fetching allRestaurants:", error);

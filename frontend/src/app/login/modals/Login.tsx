@@ -7,7 +7,7 @@ import { Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight } from "lucid
 
 export interface LoginDetails {
     email: string;
-    uid: string;
+    idToken: string; // Firebase ID token; restaurant-service verifies it
 }
 
 interface Props {
@@ -52,14 +52,15 @@ export function Login({ onSuccess }: Props) {
         setLoading(true);
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
-            const response = await api.post("/api/login", { email: form.email.toLowerCase() });
+            const idToken = await userCredential.user.getIdToken();
+            const response = await api.post("/api/auth/memberships", { idToken });
             const logInDetail = {
                 email: form.email.toLowerCase(),
-                uid: userCredential.user.uid,
+                idToken,
             };
             onSuccess(logInDetail, response.data);
         } catch (err: any) {
-            console.error("Login error:", err.message);
+            console.error("Login error:", err?.message);
             toast.error("Login failed");
         } finally {
             setLoading(false);

@@ -17,7 +17,7 @@ const Menu = () => {
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await api.get(`/api/owner/${resSlug}/menu`);
+                const res = await api.get(`/api/menu/${resSlug}/items`);
                 setMenuItems(res.data);
             } catch (err) {
                 console.error("Error fetching menu:", err);
@@ -31,7 +31,7 @@ const Menu = () => {
 
     const handleOnSave = async (newItem: ItemInput) => {
         try {
-            const response = await api.post(`/api/owner/${resSlug}/menu`, newItem);
+            const response = await api.post(`/api/menu/${resSlug}/items`, newItem);
             setRefresh(prev => !prev);
             setShowAddItems(false);
         } catch (err) {

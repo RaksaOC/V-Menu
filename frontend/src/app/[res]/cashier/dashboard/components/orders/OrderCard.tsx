@@ -5,7 +5,6 @@ import {Order} from "@/app/shared/types/Order";
 import {TableOrderOutput} from "@/app/shared/types/TableOrder";
 import {prettyDate} from "@/app/shared/util/formatter";
 import {useParams} from "next/navigation";
-import {getResFromSlug} from "@/app/shared/util/getResFromSlug";
 import {DollarSign, Eye, EyeOff} from "lucide-react";
 
 interface Props {
