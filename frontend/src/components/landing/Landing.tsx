@@ -16,6 +16,7 @@ import {
     Twitter, Facebook, Instagram, Linkedin, BarChart4
 } from 'lucide-react';
 import {motion} from 'framer-motion';
+import Image from "next/image";
 import {useRouter} from "next/navigation";
 
 // The original marketing landing page, shown behind (and after) the technical tour.
@@ -244,10 +245,9 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                         <div
                             className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl shadow-2xl shadow-blue-500/20 dark:shadow-blue-500/10">
                             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
-                                <div className="h-80 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">Dashboard
-                                        Preview Image</p>
-                                </div>
+                                {/* Real screenshot of the owner dashboard (local sample data) */}
+                                <Image src="/images/landing/dashboard.png" alt="V-Menu owner dashboard with live restaurant stats"
+                                       width={1440} height={830} priority className="w-full h-auto"/>
                             </div>
                         </div>
 
@@ -260,9 +260,9 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
             {/* Clients Section */}
             <section className="py-12 px-6 sm:px-16 bg-gray-100 dark:bg-gray-800/50">
                 <div className="max-w-7xl mx-auto">
-                    <p className="text-center text-gray-600 dark:text-gray-400 mb-8">Trusted by</p>
+                    <p className="text-center text-gray-600 dark:text-gray-400 mb-8">Built with</p>
                     <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-                        {['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5'].map((brand) => (
+                        {['Next.js', 'Express', 'TypeScript', 'MongoDB', 'Firebase Auth', 'Prometheus'].map((brand) => (
                             <div key={brand} className="flex items-center justify-center h-10">
                                 <span className="text-xl font-medium text-gray-400 dark:text-gray-500">{brand}</span>
                             </div>
@@ -309,9 +309,14 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                         >
                             <div
                                 className="aspect-square rounded-2xl overflow-hidden shadow-xl ring-1 ring-gray-200 dark:ring-gray-700">
-                                <div className="h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">Product Overview
-                                        Image</p>
+                                {/* Kitchen screen with the customer's phone menu on top: the two ends of one order */}
+                                <div className="relative h-full bg-gray-100 dark:bg-gray-800">
+                                    <Image src="/images/landing/kitchen.png" alt="Kitchen screen listing a table's pending order"
+                                           fill sizes="(min-width: 1024px) 600px, 100vw" className="object-cover object-left-top"/>
+                                    <div className="absolute bottom-4 right-4 w-[38%] overflow-hidden rounded-[1.4rem] border-[5px] border-gray-900 bg-white shadow-2xl">
+                                        <Image src="/images/landing/customer-phone.png" alt="Customer menu on a phone after scanning the table's QR code"
+                                               width={390} height={844} className="w-full h-auto"/>
+                                    </div>
                                 </div>
                             </div>
                             <div
