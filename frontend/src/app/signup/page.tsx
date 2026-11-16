@@ -57,13 +57,13 @@ const SignupPage = () => {
 
     return (
         <div
-            className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-950 to-slate-900 text-white px-4 relative">
+            className="min-h-screen flex items-center justify-center bg-[var(--stage)] text-[var(--ink)] px-4 relative">
             <motion.form
                 initial="hidden"
                 animate="visible"
                 variants={formVariants}
                 onSubmit={handleSignup}
-                className="bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full flex flex-col gap-2.5"
+                className="bg-[var(--bg)] border border-[var(--line)] rounded-2xl shadow-xl p-8 max-w-md w-full flex flex-col gap-2.5"
             >
 
                 <div className="relative z-10">

@@ -72,7 +72,7 @@ export function Login({ onSuccess }: Props) {
     };
 
     return (
-        <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full">
+        <div className="bg-[var(--bg)] border border-[var(--line)] rounded-2xl shadow-xl p-8 max-w-md w-full">
             <h2 className="text-3xl font-bold text-center mb-6">V-Menu Log In</h2>
 
             <form onSubmit={handleSubmit} className="space-y-5 mb-5">
@@ -141,7 +141,7 @@ export function Login({ onSuccess }: Props) {
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
                         >
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>

@@ -61,7 +61,7 @@ export default function LoginPage() {
     return (
         <>
             <div
-                className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-950 to-slate-900 text-white px-4 relative">
+                className="min-h-screen flex items-center justify-center bg-[var(--stage)] text-[var(--ink)] px-4 relative">
                 <ToastContainer/>
                 <div className={"models flex flex-col justify-center items-center max-w-[1024px] w-full py-4"}>
                     <AnimatePresence mode="wait">

@@ -1,0 +1,109 @@
+/* Deep Lab: austere research, forest bands, mono labels and one coral accent
+   (study hub "deep-lab" look). */
+
+:root[data-look="deep-lab"] {
+  --f-display: var(--font-space-grotesk), "Space Grotesk", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --f-body: var(--font-inter), "Inter", Arial, ui-sans-serif, system-ui, sans-serif;
+  --f-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --f-label: var(--f-mono);
+  --label-tt: uppercase;
+  --label-track: 0.04em;
+  --label-scale: 0.84;
+
+  --fs: 16px;
+  --lh: 1.55;
+  --track: 0;
+  --dw: 400;
+  --d-track: -0.02em;
+  --h1: clamp(2.6rem, 6vw, 4.4rem);
+  --h2: clamp(2rem, 4.4vw, 3rem);
+
+  --r-card: 16px;
+  --r-in: 4px;
+  --r-chip: 8px;
+  --r-pill: 32px;
+
+  --bg: #ffffff;
+  --stage: #eeece7;
+  --card: #f4f2ee;
+  --surface-2: #e8e6e0;
+  --faint: #e5e3dd;
+  --line: #d9d9dd;
+  --ctl: #93939f;
+  --ink: #000000;
+  --body: #212121;
+  --muted: #63637a;
+  --dim: #d9d9dd;
+  --accent: #ff7759;
+  --accent-text: #c4401f;
+  --accent-ink: #17171c;
+  --accent-soft: rgba(255, 119, 89, 0.15);
+  --accent-mid: rgba(255, 119, 89, 0.5);
+  --btn-bg: #17171c;
+  --btn-ink: #ffffff;
+  --code-bg: #071829;
+  --ok: #00695a;
+  --ok-soft: rgba(0, 105, 90, 0.1);
+  --bad: #b30000;
+  --bad-soft: rgba(179, 0, 0, 0.08);
+  --pop: 0 8px 24px rgba(0, 0, 0, 0.1);
+  color-scheme: light;
+}
+
+:root[data-look="deep-lab"][data-theme="dark"] {
+  --bg: #00211c;
+  --stage: #002c25;
+  --card: #003c33;
+  --surface-2: #0a4a40;
+  --faint: #0a4a40;
+  --line: #14554a;
+  --ctl: #5b9185;
+  --ink: #ffffff;
+  --body: #e6efec;
+  --muted: #a7bfb8;
+  --dim: #23685c;
+  --accent: #ff7759;
+  --accent-text: #ff8a70;
+  --accent-ink: #17171c;
+  --accent-soft: rgba(255, 119, 89, 0.16);
+  --accent-mid: rgba(255, 119, 89, 0.5);
+  --btn-bg: #ffffff;
+  --btn-ink: #17171c;
+  --code-bg: #071829;
+  --ok: #4fd1a5;
+  --ok-soft: rgba(79, 209, 165, 0.14);
+  --bad: #ff8a75;
+  --bad-soft: rgba(255, 138, 117, 0.14);
+  --pop: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-look="deep-lab"]:not([data-theme="light"]) {
+    --bg: #00211c;
+    --stage: #002c25;
+    --card: #003c33;
+    --surface-2: #0a4a40;
+    --faint: #0a4a40;
+    --line: #14554a;
+    --ctl: #5b9185;
+    --ink: #ffffff;
+    --body: #e6efec;
+    --muted: #a7bfb8;
+    --dim: #23685c;
+    --accent: #ff7759;
+    --accent-text: #ff8a70;
+    --accent-ink: #17171c;
+    --accent-soft: rgba(255, 119, 89, 0.16);
+    --accent-mid: rgba(255, 119, 89, 0.5);
+    --btn-bg: #ffffff;
+    --btn-ink: #17171c;
+    --code-bg: #071829;
+    --ok: #4fd1a5;
+    --ok-soft: rgba(79, 209, 165, 0.14);
+    --bad: #ff8a75;
+    --bad-soft: rgba(255, 138, 117, 0.14);
+    --pop: 0 8px 24px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}

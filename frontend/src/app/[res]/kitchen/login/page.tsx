@@ -67,9 +67,9 @@ const Auth = () => {
     };
 
     return (
-        <div className={"w-full min-h-screen flex justify-center items-center bg-gradient-to-tr from-blue-950 to-slate-900 text-white px-4 relative"}>
+        <div className={"w-full min-h-screen flex justify-center items-center bg-[var(--stage)] text-[var(--ink)] px-4 relative"}>
             <ToastContainer position="top-center"></ToastContainer>
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="bg-[var(--bg)] border border-[var(--line)] rounded-2xl shadow-xl p-8 max-w-md w-full">
                 <h2 className="text-3xl font-bold text-center text-zinc-800 dark:text-white mb-6">
                     Kitchen Login
                 </h2>

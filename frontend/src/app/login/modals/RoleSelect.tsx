@@ -57,7 +57,7 @@ export function RoleSelect({roles, onRoleSelect, onBack}: RoleSelectProps) {
         <>
 
             <div
-                className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 w-full relative"
+                className="bg-[var(--bg)] border border-[var(--line)] rounded-2xl shadow-xl p-8 w-full relative"
                 onClick={(e) => e.stopPropagation()}
             >
                 {(
