@@ -1,42 +1,17 @@
 {
   "name": "v-menu",
-  "version": "0.1.0",
   "private": true,
+  "description": "V-Menu: QR-code restaurant ordering as three microservices and a Next.js frontend",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@headlessui/react": "^2.2.3",
-    "@studio-freight/lenis": "^1.0.42",
-    "@tailwindcss/aspect-ratio": "^0.4.2",
-    "@tailwindcss/forms": "^0.5.10",
-    "@tailwindcss/typography": "^0.5.16",
-    "axios": "^1.9.0",
-    "firebase": "^11.7.1",
-    "firebase-admin": "^13.4.0",
-    "framer-motion": "^12.12.1",
-    "jwt-decode": "^4.0.0",
-    "lucide-react": "^0.510.0",
-    "mongoose": "^8.14.3",
-    "next": "15.3.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-to-print": "^3.1.0",
-    "react-toastify": "^11.0.5",
-    "recharts": "^2.15.3"
+    "setup": "node scripts/setup.mjs",
+    "dev:db": "node scripts/dev-db.mjs",
+    "dev": "concurrently -k -n db,restaurant,menu,order,web -c gray,magenta,yellow,cyan,green \"npm:dev:db\" \"npm --prefix services/restaurant-service run dev\" \"npm --prefix services/menu-service run dev\" \"npm --prefix services/order-service run dev\" \"npm --prefix frontend run dev\"",
+    "dev:services": "concurrently -k -n restaurant,menu,order -c magenta,yellow,cyan \"npm --prefix services/restaurant-service run dev\" \"npm --prefix services/menu-service run dev\" \"npm --prefix services/order-service run dev\"",
+    "test": "npm --prefix services/restaurant-service test && npm --prefix services/menu-service test && npm --prefix services/order-service test",
+    "typecheck": "npm --prefix services/restaurant-service run typecheck && npm --prefix services/menu-service run typecheck && npm --prefix services/order-service run typecheck && npm --prefix frontend run typecheck"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.3.2",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "concurrently": "^10.0.7",
+    "mongodb-memory-server": "^11.3.0"
   }
 }
