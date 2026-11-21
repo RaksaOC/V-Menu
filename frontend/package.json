@@ -16,7 +16,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "axios": "^1.9.0",
     "firebase": "^11.7.1",
-    "framer-motion": "^12.12.1",
+    "framer-motion": "^14.14.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.510.0",
     "next": "^15.5.29",
