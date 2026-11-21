@@ -70,8 +70,11 @@ jobs:
           docker tag "ghcr.io/raksaoc/vmenu-frontend:$V1" "ghcr.io/raksaoc/vmenu-frontend:$V2"
           docker images | grep vmenu
 
+      # --network host: mongod listens on the host itself, like a mongod installed on the server
+      # (MONGO_MODE=host). The services then reach it through host.docker.internal and the
+      # ufw rule that setup-server.sh adds for Docker networks.
       - name: Stand-in for the server's own MongoDB
-        run: docker run -d --name host-mongo -p 27017:27017 mongo:7
+        run: docker run -d --name host-mongo --network host mongo:7 --bind_ip_all
 
       - name: Start an SSH server and make the CI key pair
         run: |

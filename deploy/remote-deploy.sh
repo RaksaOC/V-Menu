@@ -110,11 +110,21 @@ run_tag() {
     fi
     log "starting containers"
     compose up -d --remove-orphans --wait --wait-timeout 180 || {
-        compose ps
+        show_failure
         return 1
     }
     log "smoke test"
-    smoke_test
+    smoke_test || {
+        show_failure
+        return 1
+    }
+}
+
+# So the reason shows up in the GitHub Actions log, without logging into the server.
+show_failure() {
+    compose ps -a || true
+    log "last log lines of each service:"
+    compose logs --no-color --tail 25 restaurant-service menu-service order-service frontend 2>&1 || true
 }
 
 prune_old_images() {
