@@ -33,8 +33,10 @@ trap 'rm -f "$cfg" "$out.part"' EXIT
 chmod 600 "$cfg"
 printf 'uri: "%s"\n' "$MONGO_BACKUP_URI" >"$cfg"
 
-docker run --rm --network "$network" -v "$cfg:/backup.yaml:ro" mongo:7 \
-    mongodump --config=/backup.yaml --archive --gzip --quiet >"$out.part"
+# Run mongodump directly as root: the config file is root-only (it holds the password), and
+# the image's entrypoint would otherwise run the tool as the mongodb user.
+docker run --rm --network "$network" --user 0:0 --entrypoint mongodump \
+    -v "$cfg:/backup.yaml:ro" mongo:7 --config=/backup.yaml --archive --gzip --quiet >"$out.part"
 mv "$out.part" "$out"
 chmod 600 "$out"
 
