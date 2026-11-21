@@ -22,9 +22,9 @@ const nextConfig: NextConfig = {
             { source: "/api/menu/:path*", destination: `${MENU}/api/menu/:path*` },
             { source: "/api/orders/:path*", destination: `${ORDER}/api/orders/:path*` },
             // health of each service, for the status pill on the landing page
-            { source: "/api/health/restaurant", destination: `${RESTAURANT}/health` },
-            { source: "/api/health/menu", destination: `${MENU}/health` },
-            { source: "/api/health/order", destination: `${ORDER}/health` },
+            { source: "/api/health/restaurant", destination: `${RESTAURANT}/ready` },
+            { source: "/api/health/menu", destination: `${MENU}/ready` },
+            { source: "/api/health/order", destination: `${ORDER}/ready` },
         ];
     },
 };

@@ -1,8 +1,9 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../src/app.js";
+import { handleShutdown, markShuttingDown } from "../src/lib/server.js";
 import { signAppToken } from "../src/lib/auth.js";
 import { notFound } from "../src/lib/errors.js";
 
@@ -91,5 +92,45 @@ describe("order check (internal)", () => {
         await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
         const ok = await check("A1");
         expect(ok.body.items[0]).toMatchObject({ item: { name: "Bai Sach Chrouk", price: 3 }, quantity: 2 });
+    });
+});
+
+// Kept last in the file: markShuttingDown() flips module state for the rest of the run.
+describe("liveness and readiness", () => {
+    it("/health says the process is up; /ready needs the database", async () => {
+        const health = await request(app).get("/health");
+        expect(health.status).toBe(200);
+        expect(health.body.db).toBe(true);
+        const ready = await request(app).get("/ready");
+        expect(ready.status).toBe(200);
+        expect(ready.body.status).toBe("ok");
+    });
+
+    it("/ready answers 503 once shutdown starts, /health stays 200", async () => {
+        markShuttingDown();
+        const ready = await request(app).get("/ready");
+        expect(ready.status).toBe(503);
+        expect(ready.body.shuttingDown).toBe(true);
+        expect((await request(app).get("/health")).status).toBe(200);
+    });
+
+    it("SIGTERM drains the server, closes MongoDB and exits 0", async () => {
+        const before = { SIGTERM: process.listeners("SIGTERM"), SIGINT: process.listeners("SIGINT") };
+        const exit = vi.spyOn(process, "exit").mockImplementation((() => undefined) as never);
+        const disconnect = vi.spyOn(mongoose, "disconnect").mockResolvedValue(undefined as never);
+        const server = app.listen(0);
+        await new Promise((resolve) => server.once("listening", resolve));
+
+        handleShutdown(server, 2000);
+        process.emit("SIGTERM");
+        await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
+        expect(server.listening).toBe(false);
+        expect(disconnect).toHaveBeenCalledOnce();
+
+        exit.mockRestore();
+        disconnect.mockRestore();
+        for (const sig of ["SIGTERM", "SIGINT"] as const) {
+            for (const l of process.listeners(sig)) if (!before[sig].includes(l)) process.off(sig, l);
+        }
     });
 });

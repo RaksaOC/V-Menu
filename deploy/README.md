@@ -184,8 +184,8 @@ Add both hostnames under Firebase → Authentication → Settings → Authorized
 ### What a deploy does (`remote-deploy.sh`)
 
 1. Writes `TAG=<tag>` to `.env` and pulls the images. If the tag doesn't exist, it stops here and nothing changes.
-2. Runs `docker compose up -d --wait`, which waits until every container's health check passes. `/health` returns 503 until MongoDB is connected.
-3. Smoke test: `/health` and `/version` of every service, plus the frontend. On a normal deploy, `/version` must equal the full commit SHA that was built.
+2. Runs `docker compose up -d --wait`, which waits until every container's health check passes. `/ready` returns 503 until MongoDB is connected (and while shutting down); `/health` only says the process is alive.
+3. Smoke test: `/ready` and `/version` of every service, plus the frontend. On a normal deploy, `/version` must equal the full commit SHA that was built.
 4. On success, records the tag in `.tag_stack`, `.current_tag` and `.previous_tag`, and prunes V-Menu images older than 14 days.
 5. On failure, puts the previous tag back automatically and fails the job.
 

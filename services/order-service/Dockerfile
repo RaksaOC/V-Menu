@@ -30,5 +30,5 @@ ENV GIT_SHA=$GIT_SHA
 USER node
 EXPOSE 4103
 HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
-    CMD wget -qO- http://localhost:$PORT/health || exit 1
+    CMD wget -qO- http://localhost:$PORT/ready || exit 1
 CMD ["node", "dist/index.js"]
