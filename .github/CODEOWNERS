@@ -1,0 +1,35 @@
+# Who reviews what. GitHub asks these people for a review when a PR touches their files,
+# and the "staging: PRs only" ruleset requires one code-owner approval before merging.
+# Raksa (lead) co-owns every area, so there is always a second reviewer besides the author.
+# Later lines win over earlier ones for the same file.
+
+*                                   @RaksaOC
+
+# App: services and frontend (lead)
+/services/                          @RaksaOC
+/frontend/                          @RaksaOC
+
+# Containers (M2): Dockerfiles and Compose, by Ra-Fat
+Dockerfile                          @RaksaOC @Ra-Fat
+.dockerignore                       @RaksaOC @Ra-Fat
+/docker-compose*.yml                @RaksaOC @Ra-Fat
+
+# CI/CD and registry (M3): by Ra-Fat
+/.github/workflows/ci.yml           @RaksaOC @Ra-Fat
+/.github/workflows/release.yml      @RaksaOC @Ra-Fat
+/.github/actions/                   @RaksaOC @Ra-Fat
+/.github/dependabot.yml             @RaksaOC @Ra-Fat
+/e2e/                               @RaksaOC @Ra-Fat
+/scripts/smoke.mjs                  @RaksaOC @Ra-Fat
+
+# Deployment and environments (M4): by Chey Rotana
+/deploy/                            @RaksaOC @cheyrotana
+/.github/workflows/deploy.yml       @RaksaOC @cheyrotana
+/.github/workflows/rollback.yml     @RaksaOC @cheyrotana
+/.github/workflows/deploy-test.yml  @RaksaOC @cheyrotana
+
+# Observability (M5): add the member who builds /monitoring/ here.
+/monitoring/                        @RaksaOC
+
+# Branch rules and ownership
+/.github/CODEOWNERS                 @RaksaOC

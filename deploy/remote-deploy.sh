@@ -74,8 +74,8 @@ smoke_test() {
     for svc in "${SERVICES[@]}"; do
         name=${svc%%:*}
         port=${svc##*:}
-        if ! body=$(compose exec -T "$name" wget -qO- "http://127.0.0.1:$port/health" 2>&1); then
-            log "  FAIL $name /health: $body"
+        if ! body=$(compose exec -T "$name" wget -qO- "http://127.0.0.1:$port/ready" 2>&1); then
+            log "  FAIL $name /ready: $body"
             failed=1
             continue
         fi
