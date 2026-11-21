@@ -45,7 +45,7 @@ jobs:
   deploy:
     name: deploy (${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25 # pull + start (up to 5 min) + auto-rollback (up to 5 min) on a slow server
     # Never two deploys to the same environment at once; a newer one waits, it does not cancel.
     concurrency:
       group: deploy-${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}

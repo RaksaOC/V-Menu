@@ -104,14 +104,22 @@ smoke_test() {
 }
 
 # Bring the whole stack up on one tag. Returns non-zero on any failure.
+#   run_tag <tag>        pull the tag from GHCR first (a normal deploy)
+#   run_tag <tag> local  going back to a tag that already ran here: use the images on the
+#                        server, and download only missing ones. Faster, and safe even if the
+#                        tag was pushed again in GHCR since (a re-run release rebuilds it).
 run_tag() {
     set_tag "$1"
-    if [[ ${VMENU_SKIP_PULL:-0} != 1 ]]; then
+    if [[ ${VMENU_SKIP_PULL:-0} == 1 ]]; then
+        :
+    elif [[ ${2:-} == local ]]; then
+        log "using the images already on the server for $1 (missing ones are downloaded)"
+    else
         log "pulling images for $1"
         compose pull --quiet || return 1
     fi
     log "starting containers"
-    compose up -d --remove-orphans --wait --wait-timeout 180 || {
+    compose up -d --remove-orphans --pull missing --wait --wait-timeout 300 || {
         show_failure
         return 1
     }
@@ -151,7 +159,7 @@ case $ACTION in
         [[ -n $target ]] || die "no previous version recorded for $ENV_NAME"
         log "rolling back $ENV_NAME: $from -> $target"
         EXPECTED_SHA="" # that tag already passed its checks when it was deployed
-        if run_tag "$target"; then
+        if run_tag "$target" local; then
             sed -i '$d' "$STACK"
             write_markers
             record rollback "$target" ok
@@ -181,7 +189,7 @@ case $ACTION in
             if [[ -n $from && $from != "$ACTION" ]]; then
                 log "deploy failed, putting $from back"
                 EXPECTED_SHA=""
-                if run_tag "$from"; then
+                if run_tag "$from" local; then
                     record auto-rollback "$from" ok
                     log "back on $from"
                 else
