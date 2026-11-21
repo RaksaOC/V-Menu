@@ -4,19 +4,18 @@ Two environments on one server, deployed only by GitHub Actions:
 
 | | Staging | Production |
 |---|---|---|
-| Trigger | every merge to `main` | a `v*` tag (e.g. `v1.2.0`) + approval |
-| Image tag | `sha-<7 chars>` | `1.2.0` |
-| Approval | none | required reviewer (Raksa) |
+| Trigger | every merge/push to `staging` | every merge/push to `main` |
+| Image tag | `sha-<7 chars>` | `sha-<7 chars>` |
+| Who | anyone, through a PR (no direct pushes) | Raksa only (repo ruleset) |
 | Folder on the server | `/srv/vmenu/staging` | `/srv/vmenu/prod` |
 | Frontend (local only) | `127.0.0.1:3401` | `127.0.0.1:3400` |
 | Public address | `https://$STAGING_HOST` | `https://$PROD_HOST` |
 | Databases | `vmenu_staging_*` | `vmenu_prod_*` |
 
 ```
-merge to main ─► M3 release.yml: build + push ghcr.io/raksaoc/vmenu-*:sha-xxxxxxx
-                   └─► deploy.yml (staging) ─► SSH as deploy ─► remote-deploy.sh staging sha-xxxxxxx
-tag v1.2.0    ─► M3 release.yml: push :1.2.0
-                   └─► deploy.yml (production) ─► waits for approval ─► remote-deploy.sh prod 1.2.0
+PR merged into staging ─► release.yml: build + scan + push ghcr.io/raksaoc/vmenu-*:sha-xxxxxxx
+                           └─► deploy.yml (staging) ─► SSH as deploy ─► remote-deploy.sh staging sha-xxxxxxx
+Raksa merges staging ─► main ─► release.yml ─► deploy.yml (production) ─► remote-deploy.sh prod sha-xxxxxxx
 
 internet ─► Caddy :443 (HTTPS) ─┬─ staging host ─► 127.0.0.1:3401 ─► vmenu-staging stack
                                 └─ prod host    ─► 127.0.0.1:3400 ─► vmenu-prod stack
@@ -146,11 +145,15 @@ Put the backup user's URI in `/etc/vmenu/backup.env` (`MONGO_BACKUP_URI=mongodb:
 ### 5. GitHub settings (Settings → Environments)
 
 Create **`staging`**:
-- Deployment branches and tags: `main` only.
+- Deployment branches and tags: `staging` only.
 
 Create **`production`**:
-- Required reviewers: Raksa.
-- Deployment branches and tags: tags matching `v*` only.
+- Deployment branches and tags: `main` only. No required reviewer: merging into `main` is the
+  approval, and `deploy.yml` refuses a production deploy started by anyone but the owner.
+
+Branch rulesets (Settings → Rules → Rulesets):
+- **main: owner only**: restrict updates, block deletion and force pushes; bypass: repository admin.
+- **staging: PRs only**: require a pull request, block deletion and force pushes; bypass: repository admin.
 
 Add these to **both** environments, with different values for each (see `staging.env.example` / `prod.env.example`):
 
@@ -171,8 +174,8 @@ Add both hostnames under Firebase → Authentication → Settings → Authorized
 
 | I want to… | Do this |
 |---|---|
-| Deploy to staging | Merge a PR into `main` |
-| Release to production | `git tag v1.2.0 && git push origin v1.2.0`, then approve in Actions |
+| Deploy to staging | Merge a PR into `staging` (direct pushes are blocked, except for Raksa) |
+| Release to production | Raksa opens a PR `staging` → `main` and merges it |
 | Roll back | Actions → **Rollback** → environment → Run (leave tag empty) |
 | Go to one specific version | Actions → **Rollback** → put the tag, e.g. `sha-1a2b3c4` |
 | Load demo data on staging | Actions → **Deploy** → staging, current tag, tick "Load demo data" |

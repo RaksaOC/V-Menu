@@ -1,13 +1,14 @@
 name: Release
 
-# Every push to main and every v* tag builds the four images, pushes them to GHCR, scans
-# them, then hands the immutable sha- tag to the deploy workflow.
-#   push to main   -> sha-<7 chars>, main
-#   tag v1.2.0     -> sha-<7 chars>, 1.2.0, latest
+# Every push to staging or main builds the four images, pushes them to GHCR, scans them,
+# then hands the immutable sha- tag to the deploy workflow.
+#   push to staging -> sha-<7 chars>, staging   -> deploys to the staging environment
+#   push to main    -> sha-<7 chars>, main      -> deploys to production
+# Only the repo owner can update main (ruleset "main: owner only"), so merging staging into
+# main is the production release.
 on:
   push:
-    branches: [main]
-    tags: ["v*"]
+    branches: [main, staging]
 
 concurrency:
   group: release-${{ github.ref }}
@@ -67,8 +68,7 @@ jobs:
           tags: |
             type=sha,prefix=sha-,format=short
             type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=staging,enable=${{ github.ref == 'refs/heads/staging' }}
 
       - uses: docker/build-push-action@v7
         with:
