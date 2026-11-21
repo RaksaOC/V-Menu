@@ -46,6 +46,11 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     NODE_OPTIONS=--max-old-space-size=192
     
+# Debian security fixes newer than the base image (Trivy fails the release on fixable HIGHs),
+# and no npm: server.js runs with plain node, and npm's bundled packages get flagged.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
