@@ -8,7 +8,13 @@
     "dev": "concurrently -k -n db,restaurant,menu,order,web -c gray,magenta,yellow,cyan,green \"npm:dev:db\" \"npm --prefix services/restaurant-service run dev\" \"npm --prefix services/menu-service run dev\" \"npm --prefix services/order-service run dev\" \"npm --prefix frontend run dev\"",
     "dev:services": "concurrently -k -n restaurant,menu,order -c magenta,yellow,cyan \"npm --prefix services/restaurant-service run dev\" \"npm --prefix services/menu-service run dev\" \"npm --prefix services/order-service run dev\"",
     "test": "npm --prefix services/restaurant-service test && npm --prefix services/menu-service test && npm --prefix services/order-service test",
-    "typecheck": "npm --prefix services/restaurant-service run typecheck && npm --prefix services/menu-service run typecheck && npm --prefix services/order-service run typecheck && npm --prefix frontend run typecheck"
+    "typecheck": "npm --prefix services/restaurant-service run typecheck && npm --prefix services/menu-service run typecheck && npm --prefix services/order-service run typecheck && npm --prefix frontend run typecheck",
+    "seed": "npm --prefix services/restaurant-service run seed && npm --prefix services/menu-service run seed",
+    "docker:up": "GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo local) docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:seed": "docker compose exec -T restaurant-service node dist/seed.js && docker compose exec -T menu-service node dist/seed.js",
+    "docker:order": "node scripts/place-order.mjs"
   },
   "devDependencies": {
     "concurrently": "^10.0.7",

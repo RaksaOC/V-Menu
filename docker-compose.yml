@@ -1,0 +1,104 @@
+# Local full stack: MongoDB, the three services and the frontend.
+#   docker compose up --build -d     build and start (http://localhost:3400)
+#   docker compose ps                status; all 5 should show (healthy)
+#   docker compose logs -f           follow every container's logs
+#   docker compose down              stop (the mongo-data volume keeps the data)
+#   docker compose exec restaurant-service node dist/seed.js   demo restaurant
+#   docker compose exec menu-service node dist/seed.js         demo tables and dishes
+# The npm scripts (npm run docker:up / docker:down / docker:logs / docker:seed) are shortcuts
+# for the same commands.
+
+
+x-service: &service
+  restart: unless-stopped
+  networks: [backend, frontend]
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  restaurant-service:
+    <<: *service
+    build:
+      context: ./services/restaurant-service
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    env_file: ./services/restaurant-service/.env
+    environment: # replaces the 127.0.0.1 addresses in .env
+      MONGODB_URI: mongodb://mongo:27017/vmenu_restaurants
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  menu-service:
+    <<: *service
+    build:
+      context: ./services/menu-service
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    env_file: ./services/menu-service/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/vmenu_menu
+      RESTAURANT_SERVICE_URL: http://restaurant-service:4101
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  order-service:
+    <<: *service
+    build:
+      context: ./services/order-service
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    env_file: ./services/order-service/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/vmenu_orders
+      RESTAURANT_SERVICE_URL: http://restaurant-service:4101
+      MENU_SERVICE_URL: http://menu-service:4102
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:-}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:-}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:-}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:-}
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:-}
+        # rewrites are fixed at build time, so these must be the Compose DNS names
+        RESTAURANT_SERVICE_URL: http://restaurant-service:4101
+        MENU_SERVICE_URL: http://menu-service:4102
+        ORDER_SERVICE_URL: http://order-service:4103
+    restart: unless-stopped
+    networks: [frontend]
+    ports:
+      - "3400:3400"
+    depends_on:
+      restaurant-service:
+        condition: service_healthy
+      menu-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+
+networks:
+  backend:
+  frontend:
+
+volumes:
+  mongo-data:

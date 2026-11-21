@@ -23,6 +23,10 @@ export function baseApp(): Express {
         const db = mongoose.connection.readyState === 1;
         res.status(db ? 200 : 503).json({ status: db ? "ok" : "degraded", service: process.env.SERVICE_NAME, db });
     });
+    // Which build is running: GIT_SHA is baked into the Docker image at build time.
+    app.get("/version", (_req, res) => {
+        res.json({ service: process.env.SERVICE_NAME, version: process.env.GIT_SHA ?? "dev" });
+    });
     app.get("/metrics", metricsHandler);
     return app;
 }

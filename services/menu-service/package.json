@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed": "tsx --env-file-if-exists=.env src/seed.ts"
   },
   "engines": {
     "node": ">=22"

@@ -48,18 +48,65 @@ Prices always come from menu-service, never from the browser.
 4. restaurant-service issues a 1-hour **app token** (HS256 JWT) holding `uid`, `role` and, for staff, `resId`. It goes in an httpOnly cookie and in the response body.
 5. Every service checks the role, and checks that the token's restaurant matches the one in the URL. Owners may only touch restaurants they own.
 
-## Run it locally
+## Run it
 
-Requires Node 20+.
+### With Docker (recommended)
+
+Needs Docker with Compose v2 and Node 22+ (only to run the npm scripts below; nothing is installed on the host).
+
+```bash
+# 1. env files (once)
+cp services/restaurant-service/.env.example services/restaurant-service/.env
+cp services/menu-service/.env.example       services/menu-service/.env
+cp services/order-service/.env.example      services/order-service/.env
+cp .env.example .env   # then fill in your Firebase web config (read by docker compose)
+# set FIREBASE_PROJECT_ID in services/restaurant-service/.env to the same project
+
+# 2. build and start
+docker compose up --build -d   # mongo + 3 services + frontend (or: npm run docker:up)
+
+# 3. demo data, then one order end to end
+npm run docker:seed    # restaurant "demo-bistro", tables T1-T4, four dishes
+npm run docker:order   # places an order at T1 through http://localhost:3400
+```
+
+Open http://localhost:3400. The customer page for the demo is http://localhost:3400/demo-bistro/customer/T1.
+
+| Script | Does |
+| --- | --- |
+| `npm run docker:up` | `docker compose up --build -d`, plus the commit hash as `GIT_SHA` for `/version` |
+| `npm run docker:down` | stops and removes the containers; the `mongo-data` volume keeps the data |
+| `npm run docker:logs` | follows the logs of every container |
+| `npm run docker:seed` | runs each service's own seed inside its container |
+| `npm run docker:order` | places a test order through the frontend |
+
+How the containers are wired (`docker-compose.yml`):
+
+- **One database per service on one MongoDB server** (`mongo:7`): `vmenu_restaurants`, `vmenu_menu`, `vmenu_orders`. Data lives in the `mongo-data` volume, so it survives restarts.
+- **Two networks.** `backend` joins MongoDB and the services; `frontend` joins the frontend and the services. The frontend is not on `backend`, so it cannot reach MongoDB.
+- **Only the frontend publishes a port** (`3400`). The services are reachable only inside Docker, by their Compose names (`http://restaurant-service:4101`).
+- **Images.** Each service is a multi-stage build on `node:22-alpine` with production deps and `dist/` only. It runs as `node` and has a `HEALTHCHECK` on `/health`; `/version` returns the `GIT_SHA` it was built from.
+- The root `.env` holds the Firebase web config for the frontend build. It has the same values as `frontend/.env.local`, which `npm run dev` uses, so update both if a key changes.
+- The `services/*/.env.example` secrets are placeholders that work locally. Run `npm run setup` (below) to generate real ones.
+- To sign in as the demo owner, set `SEED_OWNER_UID` and `SEED_OWNER_EMAIL` in `services/restaurant-service/.env` to your Firebase user, then run `npm run docker:seed` again.
+
+**Production** (`docker-compose.prod.yml`, for M4) runs the same services from `ghcr.io/raksaoc/vmenu-<service>:${TAG}` images, with `restart: unless-stopped` and memory and CPU limits. MongoDB is off by default (Atlas); add `--profile mongo` to run it as a container.
+
+```bash
+TAG=<image tag> docker compose -f docker-compose.prod.yml up -d
+```
+
+### Without Docker
+
+Requires Node 22+.
 
 ```bash
 npm install            # root tools (concurrently, local MongoDB)
 npm run setup          # installs every package, writes services/*/.env with fresh shared secrets
 cp frontend/.env.example frontend/.env.local   # then fill in your Firebase web config
 npm run dev            # MongoDB + 3 services + frontend
+npm run seed           # demo data (in another terminal)
 ```
-
-Open http://localhost:3400. The landing page opens a short technical tour of the system.
 
 - `npm run dev` starts a local MongoDB on `127.0.0.1:27017`, with data in `.data/mongo`. To use Atlas instead, set `MONGODB_URI` in each `services/*/.env`, using a separate database name per service, and run `npm run dev:services` plus `npm --prefix frontend run dev`.
 - `npm test` runs each service's tests (Vitest, Supertest and an in-memory MongoDB).
