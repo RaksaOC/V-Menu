@@ -70,6 +70,7 @@ jobs:
       FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
       MONGO_MODE: ${{ vars.MONGO_MODE }}
       MONGO_NETWORK: ${{ vars.MONGO_NETWORK }}
+      PROXY_NETWORK: ${{ vars.PROXY_NETWORK }}
     steps:
       - uses: actions/checkout@v7
 

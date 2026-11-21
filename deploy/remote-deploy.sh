@@ -50,6 +50,8 @@ case ${MONGO_MODE:-host} in
     none) ;;
     *) die "MONGO_MODE must be host, container or none" ;;
 esac
+# Behind a reverse proxy that runs in Docker (Traefik etc.): the frontend joins its network.
+if [[ -n $(env_value PROXY_NETWORK) ]]; then files+=(-f compose.proxy-network.yml); fi
 compose() { docker compose --project-name "vmenu-$ENV_NAME" "${files[@]}" "$@"; }
 
 current_tag() { if [[ -s $STACK ]]; then tail -n1 "$STACK"; fi; }

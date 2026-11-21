@@ -16,7 +16,7 @@
 #   SSH_HOST SSH_USER SSH_KEY        secrets; SSH_PORT (default 22)
 #   SSH_KNOWN_HOSTS   optional secret: the server's host key line(s). Recommended.
 #   MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY
-#   FIREBASE_PROJECT_ID LOG_LEVEL FRONTEND_PORT MONGO_MODE MONGO_NETWORK   (variables)
+#   FIREBASE_PROJECT_ID LOG_LEVEL FRONTEND_PORT MONGO_MODE MONGO_NETWORK PROXY_NETWORK   (variables)
 #   VMENU_SKIP_PULL   1 only in the CI test (images are built on the host)
 set -Eeuo pipefail
 
@@ -31,12 +31,14 @@ ACTION=${DEPLOY_ACTION:-}
 : "${LOG_LEVEL:=info}"
 : "${MONGO_MODE:=host}"
 : "${MONGO_NETWORK:=}"
+: "${PROXY_NETWORK:=}"
 : "${FIREBASE_PROJECT_ID:=}"
 if [[ -z ${FRONTEND_PORT:-} ]]; then
     if [[ $TARGET == prod ]]; then FRONTEND_PORT=3400; else FRONTEND_PORT=3401; fi
 fi
 [[ $FRONTEND_PORT =~ ^[0-9]{2,5}$ ]] || die "FRONTEND_PORT must be a port number"
 [[ $SSH_PORT =~ ^[0-9]{1,5}$ ]] || die "SSH_PORT must be a port number"
+[[ -z $PROXY_NETWORK || $PROXY_NETWORK =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || die "PROXY_NETWORK must be a Docker network name"
 
 # Not set up yet (no server secrets at all): skip, like M3's placeholder did, so releases on
 # main stay green until Raksa adds the secrets. Partly set up is a mistake and fails below.
@@ -74,7 +76,7 @@ mkdir -p "$bundle"/services/{restaurant-service,menu-service,order-service}
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 cp "$here/../docker-compose.prod.yml" "$here/compose.deploy.yml" "$here/compose.mongo-host.yml" \
-    "$here/compose.mongo-container.yml" "$here/remote-deploy.sh" "$bundle/"
+    "$here/compose.mongo-container.yml" "$here/compose.proxy-network.yml" "$here/remote-deploy.sh" "$bundle/"
 
 # TAG is added by remote-deploy.sh; it owns that line.
 cat >"$bundle/.env" <<EOF
@@ -82,6 +84,7 @@ cat >"$bundle/.env" <<EOF
 FRONTEND_PORT=$FRONTEND_PORT
 MONGO_MODE=$MONGO_MODE
 MONGO_NETWORK=$MONGO_NETWORK
+PROXY_NETWORK=$PROXY_NETWORK
 EOF
 
 common() {

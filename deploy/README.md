@@ -34,6 +34,7 @@ Nobody logs into the server to deploy. The workflow writes the env files from Gi
 | `Caddyfile` | HTTPS reverse proxy; hostnames come from `/etc/caddy/vmenu.env` |
 | `compose.deploy.yml` | Added on top of `docker-compose.prod.yml`: frontend on 127.0.0.1 only, log size limits |
 | `compose.mongo-host.yml` / `compose.mongo-container.yml` | How the services reach MongoDB (`MONGO_MODE`) |
+| `compose.proxy-network.yml` | Only with `PROXY_NETWORK`: the frontend joins an existing Docker reverse proxy's network |
 | `remote-deploy.sh` | Runs on the server: pull, start, wait for healthy, smoke test, auto-rollback on failure |
 | `ci-deploy.sh` | Runs in GitHub Actions: writes env files from secrets, copies them, calls `remote-deploy.sh` |
 | `backup-mongo.sh` | Daily `mongodump`, installed by `setup-server.sh` |
@@ -120,6 +121,24 @@ server {
 # same again for example.com -> 127.0.0.1:3400
 ```
 
+**Already running a reverse proxy in Docker (Traefik, e.g. Coolify's)?** Set the Environment variable `PROXY_NETWORK` to that proxy's Docker network. The frontend then also joins it, and the proxy routes by container name:
+`https://$STAGING_HOST -> http://vmenu-staging-frontend-1:3400`, `https://$PROD_HOST -> http://vmenu-prod-frontend-1:3400`.
+A Traefik file-provider example:
+
+```yaml
+http:
+  routers:
+    vmenu-staging:
+      rule: Host(`staging.example.com`)
+      entryPoints: [https]
+      service: vmenu-staging
+      tls: { certResolver: letsencrypt }
+  services:
+    vmenu-staging:
+      loadBalancer:
+        servers: [{ url: "http://vmenu-staging-frontend-1:3400" }]
+```
+
 ### 4. Turn on backups
 
 Put the backup user's URI in `/etc/vmenu/backup.env` (`MONGO_BACKUP_URI=mongodb://vmenu_backup:PASSWORD@127.0.0.1:27017/?authSource=admin`), then test it with `sudo /usr/local/bin/vmenu-backup`. Backups go to `/srv/vmenu/backups`, and 7 days are kept. Restore instructions are at the top of `backup-mongo.sh`.
@@ -139,7 +158,7 @@ Add these to **both** environments, with different values for each (see `staging
 |---|---|
 | `SSH_HOST`, `SSH_USER` (= `deploy`), `SSH_KEY` | `FRONTEND_PORT` (3401 staging, 3400 prod) |
 | `SSH_KNOWN_HOSTS` (printed at the end of `setup-server.sh`) | `PUBLIC_URL` |
-| `MONGODB_URI_RESTAURANT`, `MONGODB_URI_MENU`, `MONGODB_URI_ORDER` | `MONGO_MODE`, `MONGO_NETWORK` (container mode only) |
+| `MONGODB_URI_RESTAURANT`, `MONGODB_URI_MENU`, `MONGODB_URI_ORDER` | `MONGO_MODE`, `MONGO_NETWORK` (container mode only), `PROXY_NETWORK` (optional) |
 | `JWT_SECRET`, `INTERNAL_API_KEY` (`openssl rand -hex 32`) | `FIREBASE_PROJECT_ID`, `LOG_LEVEL` |
 
 Missing secrets make the deploy fail at once, with the missing names listed.
