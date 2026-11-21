@@ -102,7 +102,7 @@ jobs:
           export SSH_HOST=127.0.0.1 SSH_USER=deploy VMENU_SKIP_PULL=1
           SSH_KEY=$(cat "$RUNNER_TEMP/ci_key"); export SSH_KEY
           SSH_KNOWN_HOSTS=$(ssh-keyscan -T 10 127.0.0.1 2>/dev/null); export SSH_KNOWN_HOSTS
-          export JWT_SECRET=test-jwt-secret INTERNAL_API_KEY=test-internal-key FIREBASE_PROJECT_ID=v-menu-test
+          export JWT_SECRET=test-jwt-secret-test-jwt-secret-0001 INTERNAL_API_KEY=test-internal-key FIREBASE_PROJECT_ID=v-menu-test
           uris() {
             export MONGODB_URI_RESTAURANT="mongodb://host.docker.internal:27017/vmenu_$1_restaurants"
             export MONGODB_URI_MENU="mongodb://host.docker.internal:27017/vmenu_$1_menu"

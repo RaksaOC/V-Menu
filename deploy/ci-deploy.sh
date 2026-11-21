@@ -55,6 +55,9 @@ for name in SSH_HOST SSH_USER SSH_KEY MONGODB_URI_RESTAURANT MONGODB_URI_MENU MO
 done
 ((${#missing[@]} == 0)) || die "missing secrets in the '$TARGET' environment: ${missing[*]}"
 
+# The services refuse to start with a shorter one (services/*/src/lib/config.ts).
+((${#JWT_SECRET} >= 32)) || die "JWT_SECRET in the '$TARGET' environment is ${#JWT_SECRET} characters; it must be at least 32 (openssl rand -hex 32)"
+
 # Values are written single-quoted, so compose takes them literally ($ is not expanded).
 # That only breaks on a single quote or a newline, so refuse those.
 for name in MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY FIREBASE_PROJECT_ID LOG_LEVEL MONGO_NETWORK; do
