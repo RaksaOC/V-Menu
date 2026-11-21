@@ -1,0 +1,195 @@
+# Tests the deploy setup end to end on a throwaway VM (a fresh GitHub runner), so we know it
+# works before it is pointed at the real server. Nothing here touches the real server.
+#
+# The runner plays the server: setup-server.sh runs on it as root, a Mongo container stands in
+# for the server's mongod, and the real deploy script (ci-deploy.sh) SSHes into it as "deploy".
+# Images are built locally in two versions, so deploy, rollback and a failed deploy can be tested
+# without any image in GHCR yet.
+name: Deploy test
+
+on:
+  push:
+    branches: ["infra/**"]
+    paths:
+      - "deploy/**"
+      - ".github/workflows/deploy.yml"
+      - ".github/workflows/rollback.yml"
+      - ".github/workflows/deploy-test.yml"
+      - "docker-compose.prod.yml"
+  pull_request:
+    paths:
+      - "deploy/**"
+      - ".github/workflows/deploy.yml"
+      - ".github/workflows/rollback.yml"
+      - ".github/workflows/deploy-test.yml"
+      - "docker-compose.prod.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: shellcheck
+        run: shellcheck deploy/*.sh
+      - name: actionlint
+        # Only the deploy workflows: ci.yml and release.yml belong to M3.
+        run: >-
+          docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
+          .github/workflows/deploy.yml .github/workflows/rollback.yml .github/workflows/deploy-test.yml
+
+  vm-test:
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      V1: sha-1111111
+      V2: sha-2222222
+      SHA1: "1111111111111111111111111111111111111111"
+      SHA2: "2222222222222222222222222222222222222222"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build two versions of every image
+        run: |
+          set -euo pipefail
+          for svc in restaurant-service menu-service order-service; do
+            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V1" --build-arg "GIT_SHA=$SHA1" "services/$svc"
+            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V2" --build-arg "GIT_SHA=$SHA2" "services/$svc"
+          done
+          # A small stand-in frontend: the real one is built and tested by M3's CI. This test is
+          # about deploying, and only needs something healthy on port 3400.
+          docker build -q -t "ghcr.io/raksaoc/vmenu-frontend:$V1" - <<'EOF'
+          FROM node:22-alpine
+          HEALTHCHECK --interval=5s --timeout=3s --retries=5 CMD wget -qO- http://127.0.0.1:3400/ || exit 1
+          CMD ["node", "-e", "require('http').createServer((q, r) => r.end('V-Menu stand-in frontend')).listen(3400, '0.0.0.0')"]
+          EOF
+          docker tag "ghcr.io/raksaoc/vmenu-frontend:$V1" "ghcr.io/raksaoc/vmenu-frontend:$V2"
+          docker images | grep vmenu
+
+      # --network host: mongod listens on the host itself, like a mongod installed on the server
+      # (MONGO_MODE=host). The services then reach it through host.docker.internal and the
+      # ufw rule that setup-server.sh adds for Docker networks.
+      - name: Stand-in for the server's own MongoDB
+        run: docker run -d --name host-mongo --network host mongo:7 --bind_ip_all
+
+      - name: Start an SSH server and make the CI key pair
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y -qq openssh-server >/dev/null
+          sudo systemctl start ssh
+          ssh-keygen -q -t ed25519 -N "" -C vmenu-ci-test -f "$RUNNER_TEMP/ci_key"
+
+      - name: setup-server.sh (as root, like Raksa will)
+        run: |
+          sudo STAGING_HOST=staging.localhost PROD_HOST=prod.localhost \
+               DEPLOY_PUBKEY="$(cat "$RUNNER_TEMP/ci_key.pub")" \
+               MONGO_MODE=host FIREWALL_FORCE=yes \
+               bash deploy/setup-server.sh
+          # A second run must also work.
+          sudo STAGING_HOST=staging.localhost PROD_HOST=prod.localhost \
+               DEPLOY_PUBKEY="$(cat "$RUNNER_TEMP/ci_key.pub")" \
+               MONGO_MODE=host FIREWALL_FORCE=yes \
+               bash deploy/setup-server.sh > /dev/null
+          echo "setup-server.sh is re-runnable"
+
+      - name: Run the deploy scenarios
+        run: |
+          set -euo pipefail
+          export SSH_HOST=127.0.0.1 SSH_USER=deploy VMENU_SKIP_PULL=1
+          SSH_KEY=$(cat "$RUNNER_TEMP/ci_key"); export SSH_KEY
+          SSH_KNOWN_HOSTS=$(ssh-keyscan -T 10 127.0.0.1 2>/dev/null); export SSH_KNOWN_HOSTS
+          export JWT_SECRET=test-jwt-secret-test-jwt-secret-0001 INTERNAL_API_KEY=test-internal-key FIREBASE_PROJECT_ID=v-menu-test
+          uris() {
+            export MONGODB_URI_RESTAURANT="mongodb://host.docker.internal:27017/vmenu_$1_restaurants"
+            export MONGODB_URI_MENU="mongodb://host.docker.internal:27017/vmenu_$1_menu"
+            export MONGODB_URI_ORDER="mongodb://host.docker.internal:27017/vmenu_$1_orders"
+          }
+          deploy() { TARGET=$1 DEPLOY_ACTION=$2 EXPECTED_SHA=${3:-} bash deploy/ci-deploy.sh; }
+          running() { docker exec "vmenu-$1-menu-service-1" wget -qO- http://127.0.0.1:4102/version; echo; }
+          expect_tag() {
+            got=$(sudo cat "/srv/vmenu/$1/.current_tag")
+            [[ "$got" == "$2" ]] || { echo "::error::$1 runs $got, expected $2"; exit 1; }
+            echo "OK: $1 runs $2 -> $(running "$1")"
+          }
+          https() { curl -fsSk --resolve "$1:443:127.0.0.1" "https://$1/" -o /dev/null -w "%{http_code} https://$1\n"; }
+
+          echo "::group::1. first staging deploy ($V1)"
+          uris staging
+          deploy staging "$V1" "$SHA1"
+          expect_tag staging "$V1"
+          echo "::endgroup::"
+
+          echo "::group::2. demo data"
+          deploy staging --seed
+          echo "::endgroup::"
+
+          echo "::group::3. staging through Caddy (HTTPS)"
+          https staging.localhost
+          echo "::endgroup::"
+
+          echo "::group::4. new version on staging ($V2)"
+          deploy staging "$V2" "$SHA2"
+          expect_tag staging "$V2"
+          echo "::endgroup::"
+
+          echo "::group::5. rollback staging"
+          t0=$(date +%s)
+          deploy staging --rollback
+          echo "ROLLBACK_SECONDS=$(( $(date +%s) - t0 ))" | tee -a "$GITHUB_ENV"
+          expect_tag staging "$V1"
+          echo "::endgroup::"
+
+          echo "::group::6. production next to staging"
+          uris prod
+          deploy prod "$V2" "$SHA2"
+          expect_tag prod "$V2"
+          https prod.localhost
+          expect_tag staging "$V1"
+          echo "::endgroup::"
+
+          echo "::group::7. a broken deploy is refused and staging stays up"
+          uris staging
+          if deploy staging sha-9999999; then
+            echo "::error::deploying a tag with no image should fail"; exit 1
+          fi
+          expect_tag staging "$V1"
+          https staging.localhost
+          echo "::endgroup::"
+
+          echo "::group::8. wrong commit is caught by the /version check"
+          if deploy staging "$V2" "$SHA1"; then
+            echo "::error::a /version mismatch should fail the deploy"; exit 1
+          fi
+          expect_tag staging "$V1"
+          echo "::endgroup::"
+
+      - name: Backup
+        run: |
+          set -euo pipefail
+          sudo sed -i 's|^MONGO_BACKUP_URI=.*|MONGO_BACKUP_URI=mongodb://127.0.0.1:27017|' /etc/vmenu/backup.env
+          sudo /usr/local/bin/vmenu-backup
+          sudo ls -lh /srv/vmenu/backups
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "## Deploy test on a throwaway runner"
+            echo
+            echo "Rollback took **${ROLLBACK_SECONDS:-?} s**."
+            for env in staging prod; do
+              echo
+              echo "### $env history"
+              echo '```'
+              sudo cat "/srv/vmenu/$env/deploy-history.log" 2>/dev/null || echo "(none)"
+              echo '```'
+            done
+            echo '### Containers'
+            echo '```'
+            docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
