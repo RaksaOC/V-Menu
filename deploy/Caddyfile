@@ -1,0 +1,16 @@
+# V-Menu reverse proxy, installed as /etc/caddy/vmenu.caddy by setup-server.sh.
+# Hostnames and ports are variables from /etc/caddy/vmenu.env, so a new hostname
+# means editing that file and `systemctl restart caddy`, nothing here.
+# Caddy gets and renews the HTTPS certificates by itself.
+
+{$VMENU_STAGING_HOST} {
+	encode zstd gzip
+	# keep staging out of search engines
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy 127.0.0.1:{$VMENU_STAGING_PORT}
+}
+
+{$VMENU_PROD_HOST} {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:{$VMENU_PROD_PORT}
+}

@@ -1,0 +1,29 @@
+# One-click rollback: Actions tab -> Rollback -> Run workflow.
+# Leave "tag" empty to go back to the version that ran before the current one.
+# Production still waits for the required reviewer, like any production deploy.
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Which environment to roll back
+        type: choice
+        options: [staging, production]
+        required: true
+      tag:
+        description: "Optional: a specific image tag to go back to (e.g. sha-1a2b3c4). Empty = the previous one."
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: ${{ inputs.environment }}
+      tag: ${{ inputs.tag }}
+      rollback: ${{ inputs.tag == '' }}
+    secrets: inherit
