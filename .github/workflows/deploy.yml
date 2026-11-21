@@ -1,0 +1,30 @@
+name: Deploy
+
+# Called by release.yml after the images are in GHCR, with the immutable sha- tag.
+# Placeholder until M4 fills in the real deploy (e.g. SSH to the server and run
+#   TAG=<tag> docker compose -f docker-compose.prod.yml pull && ... up -d).
+# Can also be run by hand from the Actions tab to roll back to an older sha- tag.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Image tag to deploy (sha-<7 chars>)
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Image tag to deploy (sha-<7 chars>, or a version)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Would deploy images tagged: ${{ inputs.tag }}"
+          echo "Deploy target is not configured yet (M4)." >> "$GITHUB_STEP_SUMMARY"

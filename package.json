@@ -14,7 +14,9 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "docker:seed": "docker compose exec -T restaurant-service node dist/seed.js && docker compose exec -T menu-service node dist/seed.js",
-    "docker:order": "node scripts/place-order.mjs"
+    "docker:order": "node scripts/place-order.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "e2e": "npm --prefix e2e test"
   },
   "devDependencies": {
     "concurrently": "^10.0.7",

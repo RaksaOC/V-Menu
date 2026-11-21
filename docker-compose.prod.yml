@@ -1,5 +1,8 @@
 # Production (M4): pulls prebuilt images from GHCR instead of building.
-#   TAG=<git sha or version> docker compose -f docker-compose.prod.yml up -d
+#   TAG=<image tag> docker compose -f docker-compose.prod.yml up -d
+# Tags pushed by .github/workflows/release.yml: sha-<7-char sha> (every main commit), main
+# (latest main), and <version> plus latest on a v* git tag. Roll back by redeploying an
+# older sha- tag.
 #
 # Database: by default the services use whatever MONGODB_URI their services/<name>/.env
 # holds, for example MongoDB Atlas. To run MongoDB in a container on the same host instead,

@@ -238,7 +238,7 @@ export default function Preferences() {
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Coming Soon</h2>
                     <p className="text-gray-600 mb-6 leading-relaxed">
-                        We're working hard to bring you advanced preference settings.
+                        We&apos;re working hard to bring you advanced preference settings.
                         This feature will allow you to customize every aspect of your restaurant management experience.
                     </p>
                     <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">

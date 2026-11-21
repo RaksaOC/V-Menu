@@ -49,6 +49,11 @@ ENV NODE_ENV=production \
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+
+# Last, so a new commit does not invalidate the layers above. Which build is running.
+ARG GIT_SHA=unknown
+ENV GIT_SHA=$GIT_SHA
+
 USER node
 EXPOSE 3400
 # node:*-slim has no wget or curl, so the check uses Node's own fetch. 127.0.0.1, not

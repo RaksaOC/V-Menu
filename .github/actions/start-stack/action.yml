@@ -1,0 +1,51 @@
+name: Start the V-Menu stack
+description: >
+  Builds the four images from docker-compose.yml with Docker layer caching (GitHub Actions
+  cache), starts the stack with dummy-secret .env files, waits for every healthcheck and
+  seeds the demo restaurant. Used by the integration and e2e jobs.
+
+runs:
+  using: composite
+  steps:
+    - name: Write CI .env files from .env.example (dummy secrets)
+      shell: bash
+      run: |
+        bash scripts/ci-env.sh
+        # Same values for bake (build args) and compose; fixed project name = fixed image names.
+        grep '^NEXT_PUBLIC_' .env >> "$GITHUB_ENV"
+        echo "COMPOSE_PROJECT_NAME=vmenu" >> "$GITHUB_ENV"
+        echo "GIT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+    - uses: docker/setup-buildx-action@v4
+
+    # `docker compose build` cannot use the GitHub Actions cache, so bake builds the same
+    # compose targets with a gha cache per image, and compose then runs them with --no-build.
+    - name: Build images (cached)
+      uses: docker/bake-action@v7
+      with:
+        source: .
+        files: docker-compose.yml
+        load: true
+        set: |
+          restaurant-service.tags=vmenu-restaurant-service
+          restaurant-service.cache-from=type=gha,scope=restaurant-service
+          restaurant-service.cache-to=type=gha,mode=max,scope=restaurant-service
+          menu-service.tags=vmenu-menu-service
+          menu-service.cache-from=type=gha,scope=menu-service
+          menu-service.cache-to=type=gha,mode=max,scope=menu-service
+          order-service.tags=vmenu-order-service
+          order-service.cache-from=type=gha,scope=order-service
+          order-service.cache-to=type=gha,mode=max,scope=order-service
+          frontend.tags=vmenu-frontend
+          frontend.cache-from=type=gha,scope=frontend
+          frontend.cache-to=type=gha,mode=max,scope=frontend
+
+    - name: Start and wait for every healthcheck
+      shell: bash
+      run: docker compose up -d --no-build --wait --wait-timeout 180
+
+    - name: Seed the demo restaurant, tables and dishes
+      shell: bash
+      run: |
+        docker compose exec -T restaurant-service node dist/seed.js
+        docker compose exec -T menu-service node dist/seed.js
