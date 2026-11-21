@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, staging]
 
 # A newer push to the same PR/branch cancels the run still going.
 concurrency:

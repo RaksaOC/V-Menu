@@ -1,9 +1,9 @@
 # Deploy V-Menu to staging or production. The pipeline is the only thing that touches the server.
 #
-# Called by M3's release.yml once the images are in GHCR (it passes tag: sha-<7 chars>):
-#   push to main  -> staging, image sha-<7>
-#   tag v1.2.0    -> production, image 1.2.0 (same image as that commit's sha- tag),
-#                    after the required reviewer approves (GitHub Environment "production")
+# Called by release.yml once the images are in GHCR (it passes tag: sha-<7 chars>):
+#   push to staging -> staging environment, image sha-<7>
+#   push to main    -> production, image sha-<7>. Only the repo owner can update main, and
+#                      only the repo owner can start a production deploy (checked below).
 # Also called by rollback.yml, and can be run by hand from the Actions tab.
 name: Deploy
 
@@ -43,15 +43,15 @@ permissions:
 
 jobs:
   deploy:
-    name: deploy (${{ inputs.environment != '' && inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging') }})
+    name: deploy (${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # Never two deploys to the same environment at once; a newer one waits, it does not cancel.
     concurrency:
-      group: deploy-${{ inputs.environment != '' && inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging') }}
+      group: deploy-${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
       cancel-in-progress: false
     environment:
-      name: ${{ inputs.environment != '' && inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging') }}
+      name: ${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
       url: ${{ vars.PUBLIC_URL }}
     # Secrets and variables come from the GitHub Environment (staging or production).
     env:
@@ -72,12 +72,20 @@ jobs:
       MONGO_NETWORK: ${{ vars.MONGO_NETWORK }}
       PROXY_NETWORK: ${{ vars.PROXY_NETWORK }}
     steps:
+      # Production is the owner's call: main only takes the owner's pushes and merges (repo
+      # ruleset), and a hand-run Deploy/Rollback to production must come from the owner too.
+      - name: Production is owner-only
+        if: (inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging')) == 'production' && github.triggering_actor != github.repository_owner
+        run: |
+          echo "::error::Only ${{ github.repository_owner }} can deploy to production (started by ${{ github.triggering_actor }})."
+          exit 1
+
       - uses: actions/checkout@v7
 
       - name: Work out what to deploy
         id: plan
         env:
-          ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging') }}
+          ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
           INPUT_TAG: ${{ inputs.tag }}
           ROLLBACK: ${{ inputs.rollback }}
           REF_TYPE: ${{ github.ref_type }}
@@ -104,9 +112,6 @@ jobs:
           else
             action=sha-$short          # docker/metadata-action type=sha: sha-<7 chars>
             expected=$GITHUB_SHA
-          fi
-          if [[ "$target" == "prod" && "$action" == sha-* && "$ROLLBACK" != "true" ]]; then
-            echo "::warning::Production normally gets version tags (1.2.0), not $action."
           fi
           {
             echo "target=$target"
