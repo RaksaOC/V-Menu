@@ -37,7 +37,8 @@ flock -w 300 9 || die "another deploy to $ENV_NAME is still running"
 
 chmod 600 .env services/*/.env 2>/dev/null || true
 
-env_value() { grep -E "^$1=" .env | tail -n1 | cut -d= -f2- | tr -d "'\""; }
+# Value of a key in .env, or nothing (a missing key must not stop the script).
+env_value() { { grep -E "^$1=" .env || true; } | tail -n1 | cut -d= -f2- | tr -d "'\""; }
 FRONTEND_PORT=$(env_value FRONTEND_PORT)
 MONGO_MODE=$(env_value MONGO_MODE)
 [[ -n $FRONTEND_PORT ]] || die "FRONTEND_PORT is not set in .env"

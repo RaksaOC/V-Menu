@@ -129,7 +129,8 @@ fi
 
 # ---------------------------------------------------------------- 5. Caddy
 log "5/6 Caddy (HTTPS reverse proxy)"
-port_owner() { ss -Htlnp "sport = :$1" 2>/dev/null | grep -o 'users:(("[^"]*' | head -n1 | cut -d'"' -f2; }
+# Prints the process listening on a port, or nothing. Must not fail when the port is free.
+port_owner() { { ss -Htlnp "sport = :$1" 2>/dev/null | grep -o 'users:(("[^"]*' || true; } | head -n1 | cut -d'"' -f2; }
 owner80=$(port_owner 80)
 owner443=$(port_owner 443)
 if [[ (-n $owner80 && $owner80 != caddy) || (-n $owner443 && $owner443 != caddy) ]]; then
