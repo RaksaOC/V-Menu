@@ -17,7 +17,10 @@ ENV NODE_ENV=production \
     SERVICE_NAME=menu-service \
     PORT=4102
 COPY package*.json ./
-RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
+# npm is only needed to install; drop it (and its own bundled packages, which Trivy flags)
+# from the runtime image. The service runs with plain node.
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 COPY --from=build --chown=node:node /app/dist ./dist
 
 # Last, so a new commit does not invalidate the npm ci layer. Served at /version.
