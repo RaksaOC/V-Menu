@@ -83,7 +83,7 @@ export default function Tables() {
                         No Tables Available
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">
-                        Your restaurant doesn't have any tables configured yet. Set up your dining area to start
+                        Your restaurant doesn&apos;t have any tables configured yet. Set up your dining area to start
                         managing table availability.
                     </p>
                     <div

@@ -1,0 +1,130 @@
+# Deploy V-Menu to staging or production. The pipeline is the only thing that touches the server.
+#
+# Called by M3's release.yml once the images are in GHCR (it passes tag: sha-<7 chars>):
+#   push to main  -> staging, image sha-<7>
+#   tag v1.2.0    -> production, image 1.2.0 (same image as that commit's sha- tag),
+#                    after the required reviewer approves (GitHub Environment "production")
+# Also called by rollback.yml, and can be run by hand from the Actions tab.
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Image tag (sha-<7 chars> from release.yml). Empty with rollback.
+        type: string
+        default: ""
+      environment:
+        description: staging or production. Empty = from the git ref (main -> staging, v* tag -> production).
+        type: string
+        default: ""
+      rollback:
+        description: Go back to the previous tag instead of deploying.
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to deploy
+        type: choice
+        options: [staging, production]
+        required: true
+      tag:
+        description: "Image tag, e.g. sha-1a2b3c4 or 1.2.0"
+        type: string
+        required: true
+      seed:
+        description: Load the demo restaurant afterwards (staging only)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: deploy (${{ inputs.environment != '' && inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging') }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Never two deploys to the same environment at once; a newer one waits, it does not cancel.
+    concurrency:
+      group: deploy-${{ inputs.environment != '' && inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging') }}
+      cancel-in-progress: false
+    environment:
+      name: ${{ inputs.environment != '' && inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging') }}
+      url: ${{ vars.PUBLIC_URL }}
+    # Secrets and variables come from the GitHub Environment (staging or production).
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      SSH_PORT: ${{ vars.SSH_PORT }}
+      MONGODB_URI_RESTAURANT: ${{ secrets.MONGODB_URI_RESTAURANT }}
+      MONGODB_URI_MENU: ${{ secrets.MONGODB_URI_MENU }}
+      MONGODB_URI_ORDER: ${{ secrets.MONGODB_URI_ORDER }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+      FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+      LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+      FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
+      MONGO_MODE: ${{ vars.MONGO_MODE }}
+      MONGO_NETWORK: ${{ vars.MONGO_NETWORK }}
+      PROXY_NETWORK: ${{ vars.PROXY_NETWORK }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Work out what to deploy
+        id: plan
+        env:
+          ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging') }}
+          INPUT_TAG: ${{ inputs.tag }}
+          ROLLBACK: ${{ inputs.rollback }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          case "$ENVIRONMENT" in
+            staging) target=staging ;;
+            production) target=prod ;;
+            *) echo "::error::environment must be staging or production"; exit 1 ;;
+          esac
+          short=${GITHUB_SHA::7}
+          expected=""
+          if [[ "$ROLLBACK" == "true" ]]; then
+            action=--rollback
+          elif [[ "$target" == "prod" && "$REF_TYPE" == "tag" && "$REF_NAME" =~ ^v[0-9] && ( -z "$INPUT_TAG" || "$INPUT_TAG" == "sha-$short" ) ]]; then
+            # A release: run the version tag (v1.2.0 -> 1.2.0, as docker/metadata-action names it).
+            # It is the same image as sha-<short>, just easier to read on the server.
+            action=${REF_NAME#v}
+            expected=$GITHUB_SHA
+          elif [[ -n "$INPUT_TAG" ]]; then
+            action=$INPUT_TAG
+            # Only when the tag is this commit's own image can /version be checked.
+            if [[ "$INPUT_TAG" == "sha-$short" ]]; then expected=$GITHUB_SHA; fi
+          else
+            action=sha-$short          # docker/metadata-action type=sha: sha-<7 chars>
+            expected=$GITHUB_SHA
+          fi
+          if [[ "$target" == "prod" && "$action" == sha-* && "$ROLLBACK" != "true" ]]; then
+            echo "::warning::Production normally gets version tags (1.2.0), not $action."
+          fi
+          {
+            echo "target=$target"
+            echo "action=$action"
+            echo "expected=$expected"
+          } >> "$GITHUB_OUTPUT"
+          echo "Deploying '$action' to $target"
+
+      - name: Deploy
+        env:
+          TARGET: ${{ steps.plan.outputs.target }}
+          DEPLOY_ACTION: ${{ steps.plan.outputs.action }}
+          EXPECTED_SHA: ${{ steps.plan.outputs.expected }}
+        run: bash deploy/ci-deploy.sh
+
+      - name: Load demo data
+        if: inputs.seed && inputs.environment == 'staging'
+        env:
+          TARGET: staging
+          DEPLOY_ACTION: --seed
+        run: bash deploy/ci-deploy.sh

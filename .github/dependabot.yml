@@ -1,0 +1,38 @@
+# Weekly dependency PRs. Minor and patch updates are grouped into one PR per folder so
+# CI runs once per group instead of once per package.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /services/restaurant-service
+      - /services/menu-service
+      - /services/order-service
+      - /frontend
+      - /e2e
+      - /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/start-stack
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Base images in the Dockerfiles (node:22-alpine, node:26-slim)
+  - package-ecosystem: docker
+    directories:
+      - /services/restaurant-service
+      - /services/menu-service
+      - /services/order-service
+      - /frontend
+    schedule:
+      interval: weekly

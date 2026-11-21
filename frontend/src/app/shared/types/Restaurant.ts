@@ -1,7 +1,3 @@
-export interface Restaurant {
-
-}
-
 export interface RestaurantOutput {
     _id: string;
     name: string;

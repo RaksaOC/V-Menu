@@ -24,7 +24,7 @@ export default function History() {
         }
         fetchOrders();
     }, []);
-    let totalOrders = orders.length;
+    const totalOrders = orders.length;
 
     return (
         <>

@@ -290,7 +290,7 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                                 combine ordering, kitchen management, and billing in one seamless experience.
                             </p>
                             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
-                                Whether you're running a small café or managing multiple locations, our intuitive
+                                Whether you&apos;re running a small café or managing multiple locations, our intuitive
                                 platform streamlines operations, reduces errors, and enhances the dining experience.
                             </p>
                             <a

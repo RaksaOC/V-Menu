@@ -91,7 +91,7 @@ export default function EditTablePopup({id, name, onClose, onSave, onDelete}: Pr
                                 <div className="flex-1">
                                     <h3 className="text-sm font-medium text-red-800">Delete Table</h3>
                                     <p className="text-sm text-red-700 mt-1">
-                                        Are you sure you want to delete "{tableName || name}"? This action cannot be
+                                        Are you sure you want to delete &quot;{tableName || name}&quot;? This action cannot be
                                         undone.
                                     </p>
                                     <div className="flex gap-2 mt-3">

@@ -1,0 +1,27 @@
+# Server additions on top of M2's docker-compose.prod.yml (used by deploy/remote-deploy.sh).
+#
+# - The frontend listens on 127.0.0.1 only, on a different port per environment
+#   (FRONTEND_PORT in .env). Caddy is the only thing that faces the internet.
+#   Note: Docker-published ports skip the ufw firewall, so binding to 127.0.0.1 matters.
+# - Container logs are capped so they cannot fill the disk.
+#
+# Needs Docker Compose 2.24.4+ for the !override tag.
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  restaurant-service:
+    <<: *logging
+  menu-service:
+    <<: *logging
+  order-service:
+    <<: *logging
+  frontend:
+    <<: *logging
+    ports: !override
+      - "127.0.0.1:${FRONTEND_PORT:?set FRONTEND_PORT}:3400"

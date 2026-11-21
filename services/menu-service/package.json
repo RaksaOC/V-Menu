@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed": "tsx --env-file-if-exists=.env src/seed.ts"
   },
   "engines": {
     "node": ">=22"
@@ -29,6 +30,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
     "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "^5.1.1",
     "mongodb-memory-server": "^11.3.0",
     "supertest": "^7.3.2",
     "tsx": "^4.23.15",

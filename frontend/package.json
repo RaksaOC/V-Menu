@@ -19,7 +19,7 @@
     "framer-motion": "^12.12.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.510.0",
-    "next": "15.3.2",
+    "next": "^15.5.29",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-to-print": "^3.1.0",
@@ -33,8 +33,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.3.2",
+    "eslint-config-next": "^15.5.29",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.7",
+    "postcss": "^8.5.33",
+    "postcss-selector-parser": "^6.1.5",
+    "brace-expansion@1": "^1.1.21"
   }
 }

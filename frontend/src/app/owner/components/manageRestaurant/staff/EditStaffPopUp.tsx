@@ -146,7 +146,7 @@ export default function EditStaffPopUp({tenant, onSave, onDelete, onClose}: Prop
                                 <div className="flex-1">
                                     <h3 className="text-sm font-medium text-red-800">Delete Staff</h3>
                                     <p className="text-sm text-red-700 mt-1">
-                                        Are you sure you want to delete "{form.name}"? This action cannot be undone.
+                                        Are you sure you want to delete &quot;{form.name}&quot;? This action cannot be undone.
                                     </p>
                                     <div className="flex gap-2 mt-3">
                                         <button

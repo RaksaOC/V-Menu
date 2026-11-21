@@ -51,7 +51,7 @@ export default function Res() {
             >
                 <h2 className="text-3xl font-semibold mb-4">About Us</h2>
                 <p className="text-gray-400 text-md">
-                    Ocean Bites is more than a restaurant — it's a modern dining experience.
+                    Ocean Bites is more than a restaurant — it&apos;s a modern dining experience.
                     Located in the heart of the city, we serve gourmet meals crafted from fresh, local ingredients.
                     Join us for a casual lunch or a romantic dinner in our cozy, modern space.
                 </p>

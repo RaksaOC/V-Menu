@@ -8,6 +8,8 @@ const ORDER = process.env.ORDER_SERVICE_URL ?? "http://127.0.0.1:4103";
 
 const nextConfig: NextConfig = {
     poweredByHeader: false,
+    // small self-contained server for the Docker image (frontend/Dockerfile)
+    output: "standalone",
     devIndicators: false,
     // existing unused-import lint errors would otherwise fail production builds
     eslint: { ignoreDuringBuilds: true },

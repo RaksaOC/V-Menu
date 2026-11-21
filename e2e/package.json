@@ -1,0 +1,13 @@
+{
+  "name": "v-menu-e2e",
+  "private": true,
+  "description": "Browser test of the customer ordering flow against the running Docker stack",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}

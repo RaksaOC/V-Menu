@@ -1,0 +1,217 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same PR/branch cancels the run still going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Must match the default in scripts/ci-env.sh (dummy, CI only).
+  JWT_SECRET: ci-dummy-jwt-secret-ci-dummy-jwt-secret-0001
+
+jobs:
+  # ---------------------------------------------------------------- unit tests / build
+  test:
+    name: test (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: restaurant-service, dir: services/restaurant-service, kind: service }
+          - { name: menu-service, dir: services/menu-service, kind: service }
+          - { name: order-service, dir: services/order-service, kind: service }
+          - { name: frontend, dir: frontend, kind: web }
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    env:
+      # mongodb-memory-server would download into node_modules/.cache, which npm ci wipes.
+      MONGOMS_DOWNLOAD_DIR: /home/runner/.cache/mongodb-binaries
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+
+      - run: npm run typecheck
+
+      # ---- services: tests with a coverage threshold (vitest.config.ts) ----
+      # mongodb-memory-server downloads a MongoDB binary on first use; keep it between runs.
+      - name: Cache MongoDB binary
+        if: matrix.kind == 'service'
+        uses: actions/cache@v6
+        with:
+          path: /home/runner/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', matrix.dir)) }}
+          restore-keys: mongodb-binaries-${{ runner.os }}-
+
+      - name: Test with coverage
+        if: matrix.kind == 'service'
+        run: npm test -- --coverage
+
+      - name: Coverage summary
+        if: always() && matrix.kind == 'service'
+        run: |
+          node -e '
+            const fs = require("fs");
+            const f = "coverage/coverage-summary.json";
+            if (!fs.existsSync(f)) { console.log("no coverage report"); process.exit(0); }
+            const t = JSON.parse(fs.readFileSync(f, "utf8")).total;
+            const row = (k) => `| ${k} | ${t[k].pct}% | ${t[k].covered}/${t[k].total} |`;
+            const md = [
+              "### Coverage: ${{ matrix.name }}",
+              "| Metric | % | Covered |", "|---|---|---|",
+              ...["lines", "statements", "functions", "branches"].map(row),
+              "", "Threshold: 70% lines.", "",
+            ].join("\n");
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + "\n");
+          '
+
+      - name: Upload coverage report
+        if: always() && matrix.kind == 'service'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-${{ matrix.name }}
+          path: ${{ matrix.dir }}/coverage/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # ---- frontend: lint and production build instead of tests ----
+      - name: Lint
+        if: matrix.kind == 'web'
+        run: npm run lint
+
+      - name: Cache Next.js build
+        if: matrix.kind == 'web'
+        uses: actions/cache@v6
+        with:
+          path: frontend/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}-${{ hashFiles('frontend/src/**') }}
+          restore-keys: nextjs-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}-
+
+      - name: Build
+        if: matrix.kind == 'web'
+        run: npm run build
+        env:
+          # Firebase needs a non-empty config at build time; nothing signs in here.
+          NEXT_PUBLIC_FIREBASE_API_KEY: ci-dummy-api-key
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ci-dummy.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-dummy
+          NEXT_PUBLIC_FIREBASE_APP_ID: "1:000000000000:web:0000000000000000"
+          NEXT_TELEMETRY_DISABLED: 1
+
+  # One stable check name for branch protection, whatever the matrix contains.
+  test-ok:
+    name: test
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "matrix result: ${{ needs.test.result }}"
+          test "${{ needs.test.result }}" = "success"
+
+  # ---------------------------------------------------------------- dependency audit
+  audit:
+    name: audit (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [services/restaurant-service, services/menu-service, services/order-service, frontend]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      # Reads package-lock.json only; no install needed.
+      - run: npm audit --audit-level=high
+        working-directory: ${{ matrix.dir }}
+
+  # ---------------------------------------------------------------- real services
+  integration:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/start-stack
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Smoke test (order -> kitchen queue)
+        run: node scripts/smoke.mjs
+
+      - name: Container status and logs
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail 200
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v
+
+  # ---------------------------------------------------------------- browser
+  e2e:
+    needs: integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/start-stack
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+        working-directory: e2e
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: e2e
+
+      - name: Customer flow
+        run: npx playwright test
+        working-directory: e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 14
+
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --no-color --tail 200
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v
