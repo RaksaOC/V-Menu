@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
+import { markShuttingDown } from "../src/lib/server.js";
 import { signAppToken } from "../src/lib/auth.js";
 import { notFound } from "../src/lib/errors.js";
 
@@ -91,5 +92,25 @@ describe("order check (internal)", () => {
         await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
         const ok = await check("A1");
         expect(ok.body.items[0]).toMatchObject({ item: { name: "Bai Sach Chrouk", price: 3 }, quantity: 2 });
+    });
+});
+
+// Kept last in the file: markShuttingDown() flips module state for the rest of the run.
+describe("liveness and readiness", () => {
+    it("/health says the process is up; /ready needs the database", async () => {
+        const health = await request(app).get("/health");
+        expect(health.status).toBe(200);
+        expect(health.body.db).toBe(true);
+        const ready = await request(app).get("/ready");
+        expect(ready.status).toBe(200);
+        expect(ready.body.status).toBe("ok");
+    });
+
+    it("/ready answers 503 once shutdown starts, /health stays 200", async () => {
+        markShuttingDown();
+        const ready = await request(app).get("/ready");
+        expect(ready.status).toBe(503);
+        expect(ready.body.shuttingDown).toBe(true);
+        expect((await request(app).get("/health")).status).toBe(200);
     });
 });

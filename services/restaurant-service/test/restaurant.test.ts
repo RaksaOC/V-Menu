@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
+import { markShuttingDown } from "../src/lib/server.js";
 import { signAppToken } from "../src/lib/auth.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
@@ -99,5 +100,25 @@ describe("internal routes", () => {
         expect((await request(app).get(`/internal/restaurants/by-slug/${slug}`)).status).toBe(401);
         const ok = await request(app).get(`/internal/restaurants/by-slug/${slug}`).set("x-internal-key", "internal-test-key");
         expect(ok.body).toMatchObject({ slug, ownerId: "owner1" });
+    });
+});
+
+// Kept last in the file: markShuttingDown() flips module state for the rest of the run.
+describe("liveness and readiness", () => {
+    it("/health says the process is up; /ready needs the database", async () => {
+        const health = await request(app).get("/health");
+        expect(health.status).toBe(200);
+        expect(health.body.db).toBe(true);
+        const ready = await request(app).get("/ready");
+        expect(ready.status).toBe(200);
+        expect(ready.body.status).toBe("ok");
+    });
+
+    it("/ready answers 503 once shutdown starts, /health stays 200", async () => {
+        markShuttingDown();
+        const ready = await request(app).get("/ready");
+        expect(ready.status).toBe(503);
+        expect(ready.body.shuttingDown).toBe(true);
+        expect((await request(app).get("/health")).status).toBe(200);
     });
 });
