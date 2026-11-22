@@ -2,6 +2,7 @@
 //
 // Used instead of cAdvisor, which needs the containerd socket on current Docker versions.
 // That socket is root access to the host, and a filter cannot make it read-only.
+import { lookup } from "node:dns/promises";
 import { statfs } from "node:fs/promises";
 import http from "node:http";
 
@@ -17,10 +18,29 @@ const METRICS = [
     ["container_network_transmit_bytes_total", "counter", "Bytes sent"],
 ];
 
+// Docker's built-in DNS answers from inside dockerd, which can take seconds on a busy server.
+// Every new connection would look the name up again, so resolve it once and reuse the address
+// until a request fails.
+const apiUrl = new URL(DOCKER_API);
+let apiBase = null;
+
+async function base() {
+    if (!apiBase) {
+        const { address } = await lookup(apiUrl.hostname, { family: 4 });
+        apiBase = `${apiUrl.protocol}//${address}:${apiUrl.port || 80}`;
+    }
+    return apiBase;
+}
+
 async function docker(path) {
-    const res = await fetch(DOCKER_API + path, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
-    return res.json();
+    try {
+        const res = await fetch((await base()) + path, { signal: AbortSignal.timeout(20000) });
+        if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+        return await res.json();
+    } catch (err) {
+        apiBase = null; // the filter may have been recreated with a new address
+        throw err;
+    }
 }
 
 const label = (value) => String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
