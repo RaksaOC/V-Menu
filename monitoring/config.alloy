@@ -1,0 +1,308 @@
+// V-Menu monitoring agent (Grafana Alloy). Collects once a minute and sends to Grafana Cloud:
+//   1. each service's /metrics
+//   2. server metrics and container metrics
+//   3. container logs
+//   4. deploy-history.log, which feeds the DORA dashboard
+
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+// ---- Where the data goes ----
+
+prometheus.remote_write "grafana" {
+	external_labels = {
+		host = sys.env("MONITOR_HOST"),
+	}
+
+	endpoint {
+		url = sys.env("GRAFANA_PROM_URL")
+
+		basic_auth {
+			username = sys.env("GRAFANA_PROM_USER")
+			password = sys.env("GRAFANA_CLOUD_TOKEN")
+		}
+	}
+}
+
+loki.write "grafana" {
+	external_labels = {
+		host = sys.env("MONITOR_HOST"),
+	}
+
+	endpoint {
+		url = sys.env("GRAFANA_LOKI_URL")
+
+		basic_auth {
+			username = sys.env("GRAFANA_LOKI_USER")
+			password = sys.env("GRAFANA_CLOUD_TOKEN")
+		}
+	}
+}
+
+// ---- Find the V-Menu containers ----
+
+discovery.docker "containers" {
+	host                = "tcp://docker-api:2375"
+	refresh_interval    = "1m"
+	match_first_network = false
+}
+
+// Keeps V-Menu only, so other projects on the server are never collected. Each container
+// appears once per network, so keeping the frontend network also removes duplicates.
+discovery.relabel "vmenu" {
+	targets = discovery.docker.containers.targets
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+		regex         = "vmenu-(staging|prod|local)"
+		action        = "keep"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_network_name"]
+		regex         = "vmenu-(staging|prod|local)_frontend"
+		action        = "keep"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+		regex         = "vmenu-(.+)"
+		target_label  = "env"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "service"
+	}
+}
+
+// ---- 1. Service metrics ----
+
+discovery.relabel "service_metrics" {
+	targets = discovery.relabel.vmenu.output
+
+	rule {
+		source_labels = ["service"]
+		regex         = "(restaurant|menu|order)-service"
+		action        = "keep"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_port_private"]
+		regex         = "410[123]"
+		action        = "keep"
+	}
+
+	// A stable name, so a redeploy with a new container IP does not create new series.
+	rule {
+		source_labels = ["env", "service"]
+		separator     = "/"
+		target_label  = "instance"
+	}
+}
+
+prometheus.scrape "services" {
+	targets         = discovery.relabel.service_metrics.output
+	job_name        = "vmenu-services"
+	scrape_interval = "60s"
+	scrape_timeout  = "10s"
+	forward_to      = [prometheus.relabel.services.receiver]
+}
+
+prometheus.relabel "services" {
+	forward_to = [prometheus.remote_write.grafana.receiver]
+
+	// Docker health checks would otherwise count as user traffic.
+	rule {
+		source_labels = ["__name__", "route"]
+		separator     = ";"
+		regex         = "http_request_duration_seconds_.+;/(health|ready|version)"
+		action        = "drop"
+	}
+
+	rule {
+		source_labels = ["__name__"]
+		regex         = "up|http_request_duration_seconds_(bucket|sum|count)|process_cpu_seconds_total|process_resident_memory_bytes|process_start_time_seconds|nodejs_eventloop_lag_p99_seconds|nodejs_heap_size_used_bytes"
+		action        = "keep"
+	}
+}
+
+// ---- 2. Server and container metrics ----
+
+prometheus.exporter.unix "host" {
+	procfs_path    = "/host/proc"
+	sysfs_path     = "/host/sys"
+	set_collectors = ["cpu", "loadavg", "meminfo", "netdev"]
+
+	netdev {
+		device_exclude = "^(lo|veth.*|br-.*|docker.*)$"
+	}
+}
+
+prometheus.scrape "host" {
+	targets         = prometheus.exporter.unix.host.targets
+	job_name        = "vmenu-host"
+	scrape_interval = "60s"
+	scrape_timeout  = "10s"
+	forward_to      = [prometheus.relabel.host.receiver]
+}
+
+prometheus.relabel "host" {
+	forward_to = [prometheus.remote_write.grafana.receiver]
+
+	// The exporter sets its own job name, which would not match the dashboards.
+	rule {
+		target_label = "job"
+		replacement  = "vmenu-host"
+	}
+
+	rule {
+		source_labels = ["__name__"]
+		regex         = "up|node_cpu_seconds_total|node_load(1|5|15)|node_memory_(MemTotal|MemAvailable)_bytes|node_network_(receive|transmit)_bytes_total"
+		action        = "keep"
+	}
+
+	// Only the idle counter is needed to work out CPU use.
+	rule {
+		source_labels = ["__name__", "mode"]
+		separator     = ";"
+		regex         = "node_cpu_seconds_total;(user|system|nice|iowait|irq|softirq|steal|guest|guest_nice)"
+		action        = "drop"
+	}
+}
+
+// Container CPU, memory and network, plus free disk space (see container-stats.mjs).
+prometheus.scrape "containers" {
+	targets = [{
+		__address__ = "container-stats:9417",
+		instance    = "vmenu-" + sys.env("MONITOR_HOST"),
+	}]
+	job_name        = "vmenu-containers"
+	scrape_interval = "60s"
+	scrape_timeout  = "30s" // the Docker API can take several seconds on a busy server
+	forward_to      = [prometheus.relabel.containers.receiver]
+}
+
+prometheus.relabel "containers" {
+	forward_to = [prometheus.remote_write.grafana.receiver]
+
+	rule {
+		source_labels = ["__name__"]
+		regex         = "up|container_cpu_usage_seconds_total|container_memory_working_set_bytes|container_spec_memory_limit_bytes|container_network_(receive|transmit)_bytes_total|vmenu_docker_disk_(size|avail)_bytes"
+		action        = "keep"
+	}
+}
+
+// ---- 3. Container logs ----
+
+discovery.relabel "log_targets" {
+	targets = discovery.relabel.vmenu.output
+
+	rule {
+		source_labels = ["service"]
+		regex         = "(restaurant|menu|order)-service|frontend"
+		action        = "keep"
+	}
+}
+
+loki.source.docker "containers" {
+	host             = "tcp://docker-api:2375"
+	targets          = discovery.relabel.log_targets.output
+	refresh_interval = "1m"
+	forward_to       = [loki.process.containers.receiver]
+}
+
+loki.process "containers" {
+	forward_to = [loki.write.grafana.receiver]
+
+	// Customer IP addresses should not leave the server.
+	stage.replace {
+		expression = "\"(?:remoteAddress|x-forwarded-for|x-real-ip)\":\"([^\"]*)\""
+		replace    = "redacted"
+	}
+
+	stage.json {
+		expressions = {
+			level = "",
+		}
+	}
+
+	// pino writes levels as numbers.
+	stage.template {
+		source   = "level"
+		template = "{{ if eq .Value \"60\" }}fatal{{ else if eq .Value \"50\" }}error{{ else if eq .Value \"40\" }}warn{{ else if eq .Value \"30\" }}info{{ else if eq .Value \"20\" }}debug{{ else if eq .Value \"10\" }}trace{{ end }}"
+	}
+
+	stage.labels {
+		values = {
+			level = "",
+		}
+	}
+
+	stage.static_labels {
+		values = {
+			job = "vmenu-logs",
+		}
+	}
+}
+
+// ---- 4. Deploy history (DORA) ----
+// remote-deploy.sh writes: time, action, tag, result, seconds (tab separated).
+
+local.file_match "deploy_history" {
+	path_targets = [{
+		__path__ = "/vmenu/*/deploy-history.log",
+	}]
+	sync_period = "1m"
+}
+
+loki.source.file "deploy_history" {
+	targets    = local.file_match.deploy_history.targets
+	forward_to = [loki.process.deploy_history.receiver]
+}
+
+loki.process "deploy_history" {
+	forward_to = [loki.write.grafana.receiver]
+
+	stage.regex {
+		expression = "^(?P<time>\\S+)\\t(?P<action>\\S+)\\t(?P<tag>\\S*)\\t(?P<result>\\S+)\\t(?P<seconds>\\d+)s$"
+	}
+
+	stage.regex {
+		source     = "filename"
+		expression = "^/vmenu/(?P<env>[^/]+)/"
+	}
+
+	// The time of the deploy, not the time Alloy read the line.
+	stage.timestamp {
+		source = "time"
+		format = "RFC3339"
+	}
+
+	stage.labels {
+		values = {
+			env    = "",
+			action = "",
+			result = "",
+		}
+	}
+
+	stage.structured_metadata {
+		values = {
+			tag     = "",
+			seconds = "",
+		}
+	}
+
+	stage.static_labels {
+		values = {
+			job = "vmenu-deploys",
+		}
+	}
+
+	stage.label_drop {
+		values = ["filename"]
+	}
+}

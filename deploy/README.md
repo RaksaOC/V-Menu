@@ -168,7 +168,16 @@ Missing secrets make the deploy fail at once, with the missing names listed.
 
 ### 6. Firebase
 
-Add both hostnames under Firebase → Authentication → Settings → Authorized domains, or sign-in will fail there.
+Staging and production use separate Firebase projects, so a staging account never exists in production:
+
+| Environment | Firebase project | Where the config lives |
+|---|---|---|
+| staging | `v-menu-staging` | `NEXT_PUBLIC_FIREBASE_*` and `FIREBASE_PROJECT_ID` in the **staging** environment's Variables |
+| production | `v-menu-e9835` | `NEXT_PUBLIC_FIREBASE_*` in the repository Variables, `FIREBASE_PROJECT_ID` in the **production** environment |
+
+The image build (`release.yml`) runs in the branch's environment, so staging's Variables override the repository ones. Analytics is only built into production.
+
+Add each hostname under its project's Firebase → Authentication → Settings → Authorized domains, or sign-in will fail there. The console rejects some hyphenated names such as `staging-v-menu.chanraksa.com`; add those with the Identity Toolkit API (`PATCH .../admin/v2/projects/<id>/config?updateMask=authorizedDomains`).
 
 ## Everyday use
 
@@ -179,7 +188,7 @@ Add both hostnames under Firebase → Authentication → Settings → Authorized
 | Roll back | Actions → **Rollback** → environment → Run (leave tag empty) |
 | Go to one specific version | Actions → **Rollback** → put the tag, e.g. `sha-1a2b3c4` |
 | Load demo data on staging | Actions → **Deploy** → staging, current tag, tick "Load demo data" |
-| See what ran when | `/srv/vmenu/<env>/deploy-history.log` (time, action, tag, result, seconds) |
+| See what ran when | `/srv/vmenu/<env>/deploy-history.log` (time, action, tag, result, seconds). A `lead-time` line holds the seconds from commit to live. |
 
 ### What a deploy does (`remote-deploy.sh`)
 

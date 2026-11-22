@@ -10,12 +10,14 @@
 #
 # Environment:
 #   EXPECTED_SHA=<full git sha>  fail unless every service's /version reports this commit
+#   COMMIT_TIME=<unix time>      average commit time of this deploy, for the DORA lead time
 #   VMENU_SKIP_PULL=1            use images already on the host (the CI test only)
 set -Eeuo pipefail
 
 ENV_NAME=${1:-}
 ACTION=${2:-}
 EXPECTED_SHA=${EXPECTED_SHA:-}
+COMMIT_TIME=${COMMIT_TIME:-}
 ROOT=${VMENU_ROOT:-/srv/vmenu}
 DIR=$ROOT/$ENV_NAME
 STACK=$DIR/.tag_stack          # every successful tag, newest last
@@ -67,6 +69,13 @@ set_tag() {
     printf 'TAG=%s\n' "$1" >>.env
 }
 record() { printf '%s\t%s\t%s\t%s\t%ss\n' "$(date -u +%FT%TZ)" "$1" "$2" "$3" "$(($(date +%s) - START))" >>"$HISTORY"; }
+# DORA lead time: one more history line in the same format, with the seconds from commit to live.
+record_lead_time() {
+    [[ $COMMIT_TIME =~ ^[0-9]{9,11}$ ]] || return 0
+    local lead=$(($(date +%s) - COMMIT_TIME))
+    ((lead >= 0)) || return 0
+    printf '%s\tlead-time\t%s\tok\t%ss\n' "$(date -u +%FT%TZ)" "$1" "$lead" >>"$HISTORY"
+}
 result() { printf 'RESULT env=%s action=%s tag=%s previous=%s seconds=%s\n' "$ENV_NAME" "$1" "$2" "$(previous_tag)" "$(($(date +%s) - START))"; }
 
 smoke_test() {
@@ -173,6 +182,7 @@ case $ACTION in
             [[ $ACTION == "$from" ]] || echo "$ACTION" >>"$STACK"
             write_markers
             record deploy "$ACTION" ok
+            [[ $ACTION == "$from" ]] || record_lead_time "$ACTION"
             prune_old_images
             log "deployed $ACTION"
             result deploy "$ACTION"

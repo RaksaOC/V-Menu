@@ -1,0 +1,13 @@
+# Laptop test: watches a V-Menu stack started with `docker compose -p vmenu-local up`.
+# Its data is labelled env="local", so it stays apart from staging and production.
+
+services:
+  alloy:
+    networks: [vmenu-local]
+    volumes:
+      - ./.local/deploy-history.log:/vmenu/local/deploy-history.log:ro
+
+networks:
+  vmenu-local:
+    external: true
+    name: vmenu-local_frontend

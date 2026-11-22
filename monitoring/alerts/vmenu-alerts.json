@@ -1,0 +1,538 @@
+{
+  "folder": {
+    "uid": "vmenu",
+    "title": "V-Menu"
+  },
+  "group": "vmenu",
+  "intervalSeconds": 60,
+  "rules": [
+    {
+      "uid": "vmenu-service-down",
+      "title": "Service down",
+      "condition": "C",
+      "for": "5m",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "{{ $labels.env }}: fewer than 3 services are up",
+        "description": "A backend service stopped answering /metrics, or its container is gone. Check the Overview dashboard and the Actions deploy log."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "sum by (env) (up{job=\"vmenu-services\",env=~\"staging|prod\"}) or 0 * sum by (env) (max_over_time(up{job=\"vmenu-services\",env=~\"staging|prod\"}[1h]))",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "lt",
+                  "params": [
+                    3
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    },
+    {
+      "uid": "vmenu-high-error-rate",
+      "title": "High 5xx error rate",
+      "condition": "C",
+      "for": "5m",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "{{ $labels.env }}/{{ $labels.service }}: over 5% of requests are failing",
+        "description": "Ignored when a service gets under 3 requests a minute, so one failed request cannot page anyone."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "(sum by (env, service) (rate(http_request_duration_seconds_count{job=\"vmenu-services\",env=~\"staging|prod\",status=~\"5..\"}[5m])) / sum by (env, service) (rate(http_request_duration_seconds_count{job=\"vmenu-services\",env=~\"staging|prod\"}[5m]))) and on (env, service) (sum by (env, service) (rate(http_request_duration_seconds_count{job=\"vmenu-services\",env=~\"staging|prod\"}[5m])) > 0.05)",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0.05
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    },
+    {
+      "uid": "vmenu-slow-requests",
+      "title": "Slow requests (p95 over 1 s)",
+      "condition": "C",
+      "for": "10m",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "{{ $labels.env }}/{{ $labels.service }}: p95 latency is over 1 second",
+        "description": "Check the database and the service's CPU and memory on the Overview dashboard."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "histogram_quantile(0.95, sum by (env, service, le) (rate(http_request_duration_seconds_bucket{job=\"vmenu-services\",env=~\"staging|prod\"}[5m]))) and on (env, service) (sum by (env, service) (rate(http_request_duration_seconds_count{job=\"vmenu-services\",env=~\"staging|prod\"}[5m])) > 0.05)",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    1
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    },
+    {
+      "uid": "vmenu-container-memory",
+      "title": "Container near its memory limit",
+      "condition": "C",
+      "for": "10m",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "{{ $labels.env }}/{{ $labels.service }}: over 90% of its memory limit",
+        "description": "Docker will kill the container if it reaches the limit."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "max by (env, service) (container_memory_working_set_bytes{env=~\"staging|prod\"} / container_spec_memory_limit_bytes{env=~\"staging|prod\"})",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0.9
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    },
+    {
+      "uid": "vmenu-disk-low",
+      "title": "Server disk almost full",
+      "condition": "C",
+      "for": "10m",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "Under 15% of the Docker disk is free",
+        "description": "Deploys and databases fail when the disk is full. Remove old images or add space."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "vmenu_docker_disk_avail_bytes{host=\"server\"} / vmenu_docker_disk_size_bytes{host=\"server\"}",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "lt",
+                  "params": [
+                    0.15
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    },
+    {
+      "uid": "vmenu-host-memory",
+      "title": "Server memory high",
+      "condition": "C",
+      "for": "10m",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "Server memory is over 90% used",
+        "description": "Check which container is using it on the Overview dashboard."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "1 - node_memory_MemAvailable_bytes{host=\"server\"} / node_memory_MemTotal_bytes{host=\"server\"}",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0.9
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    },
+    {
+      "uid": "vmenu-agent-silent",
+      "title": "Monitoring agent stopped reporting",
+      "condition": "C",
+      "for": "5m",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "No data from the server's monitoring agent",
+        "description": "The agent or the whole server may be down, and every other alert is blind until it is back."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "max_over_time(up{job=\"vmenu-host\",host=\"server\"}[1d]) unless up{job=\"vmenu-host\",host=\"server\"}",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    },
+    {
+      "uid": "vmenu-deploy-failed",
+      "title": "Deploy failed",
+      "condition": "C",
+      "for": "0s",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "{{ $labels.env }}: {{ $labels.action }} failed",
+        "description": "See deploy-history.log and the failed run in GitHub Actions."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-logs",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "sum by (env, action) (count_over_time({job=\"vmenu-deploys\",env=~\"staging|prod\",result=\"failed\"}[15m]))",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    }
+  ]
+}

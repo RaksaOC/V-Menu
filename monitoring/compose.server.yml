@@ -1,0 +1,19 @@
+# Server: watches the staging and production stacks.
+#
+# Alloy joins each stack's "frontend" network, which holds the services but not MongoDB.
+# Only the history log file is mounted, because /srv/vmenu/<env>/ also holds the .env secrets.
+
+services:
+  alloy:
+    networks: [vmenu-staging, vmenu-prod]
+    volumes:
+      - /srv/vmenu/staging/deploy-history.log:/vmenu/staging/deploy-history.log:ro
+      - /srv/vmenu/prod/deploy-history.log:/vmenu/prod/deploy-history.log:ro
+
+networks:
+  vmenu-staging:
+    external: true
+    name: vmenu-staging_frontend
+  vmenu-prod:
+    external: true
+    name: vmenu-prod_frontend
