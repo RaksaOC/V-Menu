@@ -27,7 +27,6 @@ import Tables from "@/app/owner/components/manageRestaurant/tables/Tables";
 import Staff from '@/app/owner/components/manageRestaurant/staff/Staff';
 import Preferences from '@/app/owner/components/manageRestaurant/preferences/Preferences';
 import {AddRestaurantPopup} from "@/app/owner/AddRestaurantPopup";
-import {Allan} from "next/dist/compiled/@next/font/dist/google";
 import AllStaff from "@/app/owner/components/quickActions/staff/AllStaff";
 import AllOverview from "@/app/owner/components/quickActions/overview/AllOverview";
 import AllRestaurants from "@/app/owner/components/quickActions/allRestaurants/AllRestaurants";
