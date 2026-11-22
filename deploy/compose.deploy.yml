@@ -4,9 +4,6 @@
 #   (FRONTEND_PORT in .env). Caddy is the only thing that faces the internet.
 #   Note: Docker-published ports skip the ufw firewall, so binding to 127.0.0.1 matters.
 # - Container logs are capped so they cannot fill the disk.
-# - The frontend health check fetches a static file instead of rendering the home page, and
-#   gives a slow server more time. The image's own check (GET / within 5 s, 3 tries) marked a
-#   running frontend unhealthy on a busy server. The smoke test still loads the home page.
 #
 # Needs Docker Compose 2.24.4+ for the !override tag.
 
@@ -28,9 +25,3 @@ services:
     <<: *logging
     ports: !override
       - "127.0.0.1:${FRONTEND_PORT:?set FRONTEND_PORT}:3400"
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||3400)+'/favicon.ico').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
-      interval: 10s
-      timeout: 10s
-      start_period: 60s
-      retries: 5
