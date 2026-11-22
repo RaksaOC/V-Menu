@@ -1,0 +1,82 @@
+# Check the monitoring config on every PR, and deploy the agent when it reaches staging.
+# One agent watches both environments on the server, so this uses the staging Environment's
+# SSH secrets. It never runs the deploy job for a pull request.
+name: Monitoring
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - "monitoring/**"
+      - ".github/workflows/monitoring.yml"
+  pull_request:
+    paths:
+      - "monitoring/**"
+      - ".github/workflows/monitoring.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MONITOR_HOST: ci
+      GRAFANA_PROM_URL: http://127.0.0.1:9/push
+      GRAFANA_PROM_USER: "1"
+      GRAFANA_LOKI_URL: http://127.0.0.1:9/push
+      GRAFANA_LOKI_USER: "1"
+      GRAFANA_CLOUD_TOKEN: dummy
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploy script
+        run: shellcheck monitoring/deploy.sh
+
+      - name: Dashboards and alert rules are valid JSON
+        run: for f in monitoring/dashboards/*.json monitoring/alerts/*.json; do jq empty "$f"; done
+
+      - name: Compose files
+        run: |
+          docker compose -f monitoring/compose.yml -f monitoring/compose.server.yml config --quiet
+          docker compose -f monitoring/compose.yml -f monitoring/compose.local.yml config --quiet
+
+      - name: Alloy config
+        run: |
+          docker run --rm -v "$PWD/monitoring/config.alloy:/etc/alloy/config.alloy:ro" \
+            -e MONITOR_HOST -e GRAFANA_PROM_URL -e GRAFANA_PROM_USER -e GRAFANA_LOKI_URL \
+            -e GRAFANA_LOKI_USER -e GRAFANA_CLOUD_TOKEN \
+            grafana/alloy:v1.22.0 validate /etc/alloy/config.alloy
+
+      - name: Docker API filter
+        run: |
+          docker run --rm -v "$PWD/monitoring/docker-api.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" \
+            haproxy:3.4.8-alpine haproxy -c -f /usr/local/etc/haproxy/haproxy.cfg
+
+  deploy:
+    needs: validate
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: monitoring-deploy
+      cancel-in-progress: false
+    environment: staging
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      SSH_PORT: ${{ vars.SSH_PORT }}
+      GRAFANA_PROM_URL: ${{ secrets.GRAFANA_PROM_URL }}
+      GRAFANA_PROM_USER: ${{ secrets.GRAFANA_PROM_USER }}
+      GRAFANA_LOKI_URL: ${{ secrets.GRAFANA_LOKI_URL }}
+      GRAFANA_LOKI_USER: ${{ secrets.GRAFANA_LOKI_USER }}
+      GRAFANA_CLOUD_TOKEN: ${{ secrets.GRAFANA_CLOUD_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploy the monitoring agent
+        run: bash monitoring/deploy.sh

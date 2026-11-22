@@ -1,0 +1,129 @@
+# V-Menu monitoring agent. Grafana Alloy collects metrics and logs once a minute and sends
+# them to Grafana Cloud, so Prometheus, Loki and Grafana do not run on this machine.
+#
+# Add compose.local.yml on a laptop, or compose.server.yml on the server (see README.md).
+#
+# Alloy never touches the Docker socket directly. It goes through docker-api, which only
+# answers the read requests listed in docker-api.cfg. Mounting a socket ":ro" would not be
+# enough: it stops writes to the socket file, not API calls that create or start containers.
+
+name: vmenu-monitoring
+
+x-hardening: &hardening
+  restart: unless-stopped
+  read_only: true
+  security_opt: ["no-new-privileges:true"]
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  docker-api:
+    <<: *hardening
+    image: haproxy:3.4.8-alpine
+    user: "0:0" # the Docker socket belongs to root
+    cap_drop: [ALL]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker-api.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks: [docker-api]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2375/_ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+      start_interval: 2s
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.10"
+
+  container-stats:
+    <<: *hardening
+    image: node:22-alpine
+    user: "1000:1000" # the image's unprivileged node user
+    cap_drop: [ALL]
+    command: ["node", "--max-old-space-size=24", "/app/container-stats.mjs"]
+    depends_on:
+      docker-api:
+        condition: service_healthy
+    volumes:
+      - ./container-stats.mjs:/app/container-stats.mjs:ro
+    networks: [docker-api]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9417/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+      start_interval: 2s
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.10"
+
+  alloy:
+    <<: *hardening
+    image: grafana/alloy:v1.22.0
+    # The UI stays on the container's loopback, so app containers on the shared network
+    # cannot reach it.
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=127.0.0.1:12345
+      - --disable-reporting
+    hostname: vmenu-${MONITOR_HOST:-laptop}
+    user: "473:473" # the image's unprivileged alloy user
+    cap_drop: [ALL]
+    depends_on:
+      docker-api:
+        condition: service_healthy
+      container-stats:
+        condition: service_healthy
+    # Only these values reach the agent, even when the env file holds other settings.
+    environment:
+      MONITOR_HOST: ${MONITOR_HOST:-laptop}
+      GRAFANA_PROM_URL: ${GRAFANA_PROM_URL:?set GRAFANA_PROM_URL}
+      GRAFANA_PROM_USER: ${GRAFANA_PROM_USER:?set GRAFANA_PROM_USER}
+      GRAFANA_LOKI_URL: ${GRAFANA_LOKI_URL:?set GRAFANA_LOKI_URL}
+      GRAFANA_LOKI_USER: ${GRAFANA_LOKI_USER:?set GRAFANA_LOKI_USER}
+      GRAFANA_CLOUD_TOKEN: ${GRAFANA_CLOUD_TOKEN:?set GRAFANA_CLOUD_TOKEN}
+    # No "/" or /var/lib/docker mount: those would expose every secret on the host.
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    tmpfs:
+      - /tmp:size=16m
+    networks: [docker-api, egress]
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - exec 3<>/dev/tcp/127.0.0.1/12345 && printf 'GET /-/ready HTTP/1.0\r\n\r\n' >&3 && grep -q ' 200 ' <&3
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+      start_interval: 3s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+
+networks:
+  docker-api:
+    internal: true # no internet, and only Alloy can reach the filter
+  egress:
+
+volumes:
+  alloy-data:
