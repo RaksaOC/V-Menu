@@ -148,7 +148,7 @@
             "type": "loki",
             "uid": "${logs}"
           },
-          "expr": "(sum(count_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"deploy\",result=\"failed\"}[$__range])) or vector(0)) / sum(count_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"deploy\"}[$__range]))",
+          "expr": "sum(sum_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"deploy\"} | label_format failed_n=`{{ if eq .result \"failed\" }}1{{ else }}0{{ end }}` | unwrap failed_n [$__range])) / sum(count_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"deploy\"}[$__range]))",
           "refId": "A",
           "legendFormat": "Change failure rate",
           "queryType": "instant"
@@ -251,23 +251,66 @@
     },
     {
       "id": 4,
-      "type": "text",
+      "type": "stat",
       "title": "Lead time for changes",
+      "description": "Average time from commit to live. Each deploy records the average age of the commits it ships.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${logs}"
+      },
       "gridPos": {
         "x": 18,
         "y": 0,
         "w": 6,
         "h": 5
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${logs}"
+          },
+          "expr": "sum(sum_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"lead-time\"} | unwrap seconds [$__range])) / sum(count_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"lead-time\"}[$__range]))",
+          "refId": "A",
+          "legendFormat": "Lead time for changes",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "no data"
+        },
+        "overrides": []
+      },
       "options": {
-        "mode": "markdown",
-        "content": "**Not measured yet.** `deploy-history.log` records when a deploy ran, but not when its commit was made, so this number cannot be worked out from it."
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value"
       }
     },
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Deploys per day",
+      "title": "Deploys over time",
+      "description": "Each bar is one hour or longer, depending on the time range. The current hour appears when it ends.",
       "datasource": {
         "type": "loki",
         "uid": "${logs}"
@@ -278,19 +321,18 @@
         "w": 16,
         "h": 9
       },
-      "interval": "1d",
-      "maxDataPoints": 60,
+      "interval": "1h",
+      "maxDataPoints": 400,
       "targets": [
         {
           "datasource": {
             "type": "loki",
             "uid": "${logs}"
           },
-          "expr": "sum by (result) (count_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"deploy\"}[1d]))",
+          "expr": "sum by (result) (count_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"deploy\"}[$__auto]))",
           "refId": "A",
           "legendFormat": "{{result}}",
-          "queryType": "range",
-          "step": "1d"
+          "queryType": "range"
         }
       ],
       "fieldConfig": {
@@ -488,7 +530,7 @@
             "type": "loki",
             "uid": "${logs}"
           },
-          "expr": "{job=\"vmenu-deploys\",env=\"$env\"}",
+          "expr": "{job=\"vmenu-deploys\",env=\"$env\",action!=\"lead-time\"}",
           "refId": "A",
           "queryType": "range"
         }

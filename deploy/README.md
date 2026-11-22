@@ -179,7 +179,7 @@ Add both hostnames under Firebase → Authentication → Settings → Authorized
 | Roll back | Actions → **Rollback** → environment → Run (leave tag empty) |
 | Go to one specific version | Actions → **Rollback** → put the tag, e.g. `sha-1a2b3c4` |
 | Load demo data on staging | Actions → **Deploy** → staging, current tag, tick "Load demo data" |
-| See what ran when | `/srv/vmenu/<env>/deploy-history.log` (time, action, tag, result, seconds) |
+| See what ran when | `/srv/vmenu/<env>/deploy-history.log` (time, action, tag, result, seconds). A `lead-time` line holds the seconds from commit to live. |
 
 ### What a deploy does (`remote-deploy.sh`)
 

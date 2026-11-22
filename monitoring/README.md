@@ -87,7 +87,7 @@ It is safe to run again. Alerts go to the stack's default contact point.
 | Deployment frequency | Successful deploys per day |
 | Change failure rate | Failed deploys divided by all deploy attempts |
 | Time to restore | Average run time of successful rollbacks. For an automatic rollback this includes the failed deploy before it. It does not include the time before someone starts a manual rollback. |
-| Lead time for changes | **Not measured yet.** `deploy-history.log` has no commit time. |
+| Lead time for changes | Average time from commit to live. Each deploy records the average age of the commits it ships, as a `lead-time` line in `deploy-history.log`. |
 
 Grafana can reject log lines that are too old, so the history may start around the day the agent was first deployed.
 
