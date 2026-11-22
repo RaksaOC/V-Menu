@@ -251,17 +251,59 @@
     },
     {
       "id": 4,
-      "type": "text",
+      "type": "stat",
       "title": "Lead time for changes",
+      "description": "Average time from commit to live. Each deploy records the average age of the commits it ships.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${logs}"
+      },
       "gridPos": {
         "x": 18,
         "y": 0,
         "w": 6,
         "h": 5
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${logs}"
+          },
+          "expr": "sum(sum_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"lead-time\"} | unwrap seconds [$__range])) / sum(count_over_time({job=\"vmenu-deploys\",env=\"$env\",action=\"lead-time\"}[$__range]))",
+          "refId": "A",
+          "legendFormat": "Lead time for changes",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "no data"
+        },
+        "overrides": []
+      },
       "options": {
-        "mode": "markdown",
-        "content": "**Not measured yet.** `deploy-history.log` records when a deploy ran, but not when its commit was made, so this number cannot be worked out from it."
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value"
       }
     },
     {
@@ -488,7 +530,7 @@
             "type": "loki",
             "uid": "${logs}"
           },
-          "expr": "{job=\"vmenu-deploys\",env=\"$env\"}",
+          "expr": "{job=\"vmenu-deploys\",env=\"$env\",action!=\"lead-time\"}",
           "refId": "A",
           "queryType": "range"
         }
