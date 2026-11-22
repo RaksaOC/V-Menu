@@ -1,6 +1,7 @@
 # One-click rollback: Actions tab -> Rollback -> Run workflow.
-# Leave "tag" empty to go back to the version that ran before the current one.
-# Production still waits for the required reviewer, like any production deploy.
+# "Use workflow from": staging for staging, main for production (the environments only accept
+# their own branch). Leave "tag" empty to go back to the version that ran before the current one.
+# Only the repo owner can roll back production, like any production deploy.
 name: Rollback
 
 on:

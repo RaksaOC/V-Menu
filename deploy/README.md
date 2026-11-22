@@ -185,8 +185,8 @@ Add each hostname under its project's Firebase → Authentication → Settings �
 |---|---|
 | Deploy to staging | Merge a PR into `staging` (direct pushes are blocked, except for Raksa) |
 | Release to production | Raksa opens a PR `staging` → `main` and merges it |
-| Roll back | Actions → **Rollback** → environment → Run (leave tag empty) |
-| Go to one specific version | Actions → **Rollback** → put the tag, e.g. `sha-1a2b3c4` |
+| Roll back | Actions → **Rollback** → "Use workflow from": `staging` for staging, `main` for production → environment → Run (leave tag empty) |
+| Go to one specific version | Same, and put the tag, e.g. `sha-1a2b3c4` |
 | Load demo data on staging | Actions → **Deploy** → staging, current tag, tick "Load demo data" |
 | See what ran when | `/srv/vmenu/<env>/deploy-history.log` (time, action, tag, result, seconds). A `lead-time` line holds the seconds from commit to live. |
 
@@ -202,7 +202,11 @@ Add each hostname under its project's Firebase → Authentication → Settings �
 
 ### Rollback
 
-`rollback.yml` runs `remote-deploy.sh <env> --rollback`, which redeploys the tag in `.previous_tag`. The image is usually still on the server, so no download is needed. Production rollbacks still wait for the reviewer. `deploy-test.yml` measures the rollback time on every run (see its job summary).
+`rollback.yml` runs `remote-deploy.sh <env> --rollback`, which redeploys the tag in `.previous_tag`. It uses the images already on the server and downloads only missing ones, so it doesn't wait on GHCR, and it gets the build that actually ran even if that tag was pushed again since. The same applies when a failed deploy puts the previous tag back.
+
+- Run it from the branch that matches the environment: `staging` for staging, `main` for production. Any other branch is refused by the environment's branch rule ("Branch main is not allowed to deploy to staging").
+- Only the repo owner can roll back production.
+- `deploy-test.yml` measures the rollback time on every run (see its job summary).
 
 ### Emergency, by hand
 
