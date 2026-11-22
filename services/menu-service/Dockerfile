@@ -29,6 +29,7 @@ ENV GIT_SHA=$GIT_SHA
 
 USER node
 EXPOSE 4102
-HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
+# Every 3 s while starting, then every 30 s (each check is a process the Docker engine starts).
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --start-interval=3s --retries=3 \
     CMD wget -qO- http://localhost:$PORT/ready || exit 1
 CMD ["node", "dist/index.js"]
