@@ -1,5 +1,5 @@
 # Weekly dependency PRs. Minor and patch updates are grouped into one PR per folder so
-# CI runs once per group instead of once per package.
+# CI runs once per group instead of once per package. npm major versions are ignored.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -16,6 +16,11 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    # Major upgrades (Next 16, TypeScript 7, Firebase 13...) need code changes and failed CI
+    # as plain bumps, so they are done by hand as planned work. Security updates still come.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directories:

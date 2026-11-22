@@ -1,5 +1,5 @@
 # ---- deps: every dependency, needed to compile ----
-FROM node:22-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --no-audit --no-fund
@@ -11,7 +11,7 @@ COPY src ./src
 RUN npm run build
 
 # ---- runtime: production deps + compiled JS only ----
-FROM node:22-alpine AS runtime
+FROM node:26-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     SERVICE_NAME=menu-service \
