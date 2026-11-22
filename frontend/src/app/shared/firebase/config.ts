@@ -25,6 +25,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Analytics needs `window`; skip it during server rendering / next build
-export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
+// and a measurement ID; staging builds have none (Analytics is production only)
+export const analytics = typeof window !== "undefined" && firebaseConfig.measurementId ? getAnalytics(app) : null;
 export const auth = getAuth(app);
 export const storage = getStorage(app);
