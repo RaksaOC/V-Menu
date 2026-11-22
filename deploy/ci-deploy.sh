@@ -134,11 +134,20 @@ echo "Copying compose and env files to $remote_dir"
 tar -C "$bundle" -czf - . | ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" "test -d '$remote_dir' && tar -xzf - -C '$remote_dir'" ||
     die "copy failed. Does $remote_dir exist and belong to $SSH_USER? (deploy/setup-server.sh creates it)"
 
+# For the DORA lead time: the average commit time of what this deploy ships. A merge commit
+# ships the commits of its second parent; any other commit ships itself. Empty if unknown.
+commit_time=""
+if [[ -n ${EXPECTED_SHA:-} ]] && git cat-file -e "$EXPECTED_SHA^{commit}" 2>/dev/null; then
+    range="$EXPECTED_SHA^!"
+    if git rev-parse -q --verify "$EXPECTED_SHA^2" >/dev/null; then range="$EXPECTED_SHA^1..$EXPECTED_SHA^2"; fi
+    commit_time=$(git log --no-merges --format=%ct "$range" | awk '{s += $1} END {if (NR) printf "%.0f", s / NR}') || commit_time=""
+fi
+
 echo "Running remote-deploy.sh $TARGET $ACTION"
 log=$work/remote.log
 set +e
 ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" \
-    "EXPECTED_SHA='${EXPECTED_SHA:-}' VMENU_SKIP_PULL='${VMENU_SKIP_PULL:-0}' bash '$remote_dir/remote-deploy.sh' '$TARGET' '$ACTION'" 2>&1 | tee "$log"
+    "EXPECTED_SHA='${EXPECTED_SHA:-}' COMMIT_TIME='$commit_time' VMENU_SKIP_PULL='${VMENU_SKIP_PULL:-0}' bash '$remote_dir/remote-deploy.sh' '$TARGET' '$ACTION'" 2>&1 | tee "$log"
 status=${PIPESTATUS[0]}
 set -e
 
