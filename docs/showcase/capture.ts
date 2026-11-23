@@ -865,6 +865,40 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-18: someone who is both cashier and chef; the owner changes the chef row to cashier.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-18 ${vp.width} ${theme}`, async () => {
+        const email = `showcase-both-${vp.width}-${theme}@e2e.test`;
+        const { page, context } = await newPage(browser, vp, theme, "owner");
+        const staffApi = `${BASE}/api/restaurants/${SLUG}/staff`;
+        try {
+            for (const role of ["cashier", "chef"]) await page.request.post(staffApi, { data: { name: "Sok Both", email, role } });
+            await page.goto(`${BASE}/owner`);
+            await settle(page);
+            await page.getByRole("button", { name: "Staff", exact: true }).click({ timeout: 5000 });
+            await settle(page);
+            await page
+                .locator("tr:visible, [data-member]:visible")
+                .filter({ hasText: email })
+                .filter({ hasText: "Chef" })
+                .locator(".cursor-pointer")
+                .click({ timeout: 5000 });
+            await page.getByLabel("Role").selectOption("cashier");
+            await page.getByRole("button", { name: "Save Changes" }).click();
+            await page.waitForTimeout(600);
+            await shot({ page, theme, width: vp.width }, "VM-18-change-to-a-role-they-have", false);
+        } finally {
+            const list = (await (await page.request.get(staffApi)).json()) as { _id: string; email: string }[];
+            for (const m of list.filter((m) => m.email === email)) await page.request.delete(`${staffApi}/${m._id}`);
+            await context.close();
+        }
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
