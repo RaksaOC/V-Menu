@@ -2,12 +2,12 @@
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** -
+- **Issue:** [#119](https://github.com/RaksaOC/V-Menu/issues/119)
 - **Branch to create:** `tests/SEC-07-access-matrix`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue -.
+The full ticket (problem, what to change, tests, done when) is in issue [#119](https://github.com/RaksaOC/V-Menu/issues/119).
 
 ## Depends on
 

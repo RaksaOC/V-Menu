@@ -1,8 +1,8 @@
-# SEC-04 - 
+# SEC-04 - Security: who can order to a table (details private)
 
 - **Priority:** P2
 - **Status:** not started
-- **Issue:** -
+- **Issue:** [#116](https://github.com/RaksaOC/V-Menu/issues/116)
 - **Branch to create:** `feat/SEC-04-table-qr-token`
 
 ## What to do

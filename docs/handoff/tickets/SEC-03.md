@@ -1,8 +1,8 @@
-# SEC-03 - 
+# SEC-03 - Security: staff access after removal (details private)
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** -
+- **Issue:** [#115](https://github.com/RaksaOC/V-Menu/issues/115)
 - **Branch to create:** `fix/SEC-03-token-version`
 
 ## What to do

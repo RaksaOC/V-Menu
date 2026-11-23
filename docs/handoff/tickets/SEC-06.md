@@ -1,8 +1,8 @@
-# SEC-06 - 
+# SEC-06 - Security: how rate limits identify visitors (details private)
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** -
+- **Issue:** [#118](https://github.com/RaksaOC/V-Menu/issues/118)
 - **Branch to create:** `fix/SEC-06-trust-proxy`
 
 ## What to do

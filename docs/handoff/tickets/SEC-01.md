@@ -1,8 +1,8 @@
-# SEC-01 - 
+# SEC-01 - Security: where the login token is kept (details private)
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** -
+- **Issue:** [#113](https://github.com/RaksaOC/V-Menu/issues/113)
 - **Branch to create:** `fix/SEC-01-cookie-only-token`
 
 ## What to do

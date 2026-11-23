@@ -2,12 +2,12 @@
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** -
+- **Issue:** [#102](https://github.com/RaksaOC/V-Menu/issues/102)
 - **Branch to create:** `cleanup/CL-04-order-layers`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue -.
+The full ticket (problem, what to change, tests, done when) is in issue [#102](https://github.com/RaksaOC/V-Menu/issues/102).
 
 ## Depends on
 

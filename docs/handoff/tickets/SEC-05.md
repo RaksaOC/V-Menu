@@ -2,12 +2,12 @@
 
 - **Priority:** P0 (with VM-02) - **essential (P0 path)**
 - **Status:** not started
-- **Issue:** -
+- **Issue:** [#117](https://github.com/RaksaOC/V-Menu/issues/117)
 - **Branch to create:** `fix/SEC-05-safe-uploads`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue -.
+The full ticket (problem, what to change, tests, done when) is in issue [#117](https://github.com/RaksaOC/V-Menu/issues/117).
 
 ## Depends on
 
