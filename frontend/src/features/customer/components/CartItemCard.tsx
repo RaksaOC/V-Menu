@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { CartItem } from "@/lib/types/CartItem";
-import { ItemBase } from "@/lib/types/Item";
 import { toast } from "@/lib/toast";
+import type { MenuItem } from "@vmenu/contracts";
+import type { CartItem } from "@/features/customer/cart";
 
 type CartItemProps = {
     cartItem: CartItem;
@@ -14,7 +14,7 @@ type CartItemProps = {
 
 const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, removeItem }: CartItemProps) => {
     const [isRemoving, setIsRemoving] = useState(false);
-    const menuItem: ItemBase = cartItem.item;
+    const menuItem: Pick<MenuItem, "name" | "image" | "price"> = cartItem.item;
 
     const handleRemove = () => {
         setIsRemoving(true);

@@ -11,8 +11,21 @@ export const order: Order = {
     createdAt: "2026-11-23T10:00:00.000Z",
     orderedItems: [{ item: dish, quantity: 2 }],
 };
-export const bill: Bill = { _id: "665f00000000000000000041", table: "T1", isPayed: false, createdAt: "2026-11-23T10:00:00.000Z", orders: [order] };
-export const overview: Overview = { numOfActiveTables: 1, numOfUnpaidOrders: 0, numOfTables: 4, numOfItems: 4, numOfOrders: 2, numOfPayments: 1 };
+export const bill: Bill = {
+    _id: "665f00000000000000000041",
+    table: "T1",
+    isPayed: false,
+    createdAt: "2026-11-23T10:00:00.000Z",
+    orders: [order],
+};
+export const overview: Overview = {
+    numOfActiveTables: 1,
+    numOfUnpaidOrders: 0,
+    numOfTables: 4,
+    numOfItems: 4,
+    numOfOrders: 2,
+    numOfPayments: 1,
+};
 export const restaurant: Restaurant = { _id: "665f00000000000000000001", name: "Demo Bistro", slug: "demo-bistro", ownerId: "owner1" };
 export const staffMember: StaffMember = {
     _id: "665f00000000000000000051",
@@ -21,4 +34,6 @@ export const staffMember: StaffMember = {
     email: "bob@x.test",
     role: "chef",
     resId: "665f00000000000000000001",
+    createdAt: "2026-11-23T10:00:00.000Z",
+    updatedAt: "2026-11-23T10:00:00.000Z",
 };

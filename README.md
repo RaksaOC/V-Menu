@@ -195,7 +195,7 @@ Each one writes a "Security" section in its job summary (`scripts/security-summa
 
 ## Layout
 
-The services import their shared code from `@vmenu/common` (`backend/packages/common`), so a fix there applies to all three. The shapes they exchange (request bodies, responses, calls between services) are zod schemas in `@vmenu/contracts` (`backend/packages/contracts`, CL-05). Routes check bodies with `validate(schema)` from `@vmenu/common`, and a bad body is a `400 INVALID_INPUT` that names the fields: `{ fields: { price: "Must be a number" } }`. `npm run dev`, `build`, `typecheck`, `test` and `seed` in a service first compile `@vmenu/contracts` and `@vmenu/common` to `dist/`. The service images build with `backend/` as the context: `docker build -f backend/services/menu/Dockerfile backend`.
+The services import their shared code from `@vmenu/common` (`backend/packages/common`), so a fix there applies to all three. The shapes they exchange (request bodies, responses, calls between services) are zod schemas in `@vmenu/contracts` (`backend/packages/contracts`, CL-05). Routes check bodies with `validate(schema)` from `@vmenu/common`, and a bad body is a `400 INVALID_INPUT` that names the fields: `{ fields: { price: "Must be a number" } }`. `npm run dev`, `build`, `typecheck`, `test` and `seed` in a service first compile `@vmenu/contracts` and `@vmenu/common` to `dist/`. The service images build with `backend/` as the context: `docker build -f backend/services/menu/Dockerfile backend`. The frontend image builds from the repo root, so it can read the contracts' types: `docker build -f frontend/Dockerfile .` (its `Dockerfile.dockerignore` sends only `frontend/` and `backend/packages/contracts/src`). The frontend imports them with `import type` only, so no backend code reaches the browser.
 
 ```
 frontend/                    Next.js app (no database access)
@@ -206,7 +206,7 @@ frontend/                    Next.js app (no database access)
   src/components/layout/     DashboardHeader, MobileSidebar
   src/components/qr/         table QR codes and the printable sheet
   src/components/marketing/  landing page and tour
-  src/lib/                   API client, Firebase, dates, shared types
+  src/lib/                   API client, Firebase, dates (API types come from @vmenu/contracts)
   src/theme/deep-lab.css     design tokens
 backend/                     one npm workspace with one package-lock.json (npm install here installs all of it)
   packages/

@@ -5,11 +5,9 @@ import { CheckCircle, Pencil, QrCode, Table as TableIcon, XCircle } from "lucide
 import { Button, Card, Chip } from "@/components/ui";
 import TableQrModal from "@/components/qr/TableQrModal";
 import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
-import type { TableOutput } from "@/lib/types/Table";
+import type { Table } from "@vmenu/contracts";
 
-type Props = { table: TableOutput } & (
-    { role: "owner"; onEdit: (table: TableOutput) => void } | { role: "cashier"; onToggle: (table: TableOutput) => void }
-);
+type Props = { table: Table } & ({ role: "owner"; onEdit: (table: Table) => void } | { role: "cashier"; onToggle: (table: Table) => void });
 
 /** One table, for the owner (edit) and the cashier (open/close); both can show its QR code (CL-09). */
 export default function TableCard(props: Props) {

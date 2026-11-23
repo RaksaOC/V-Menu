@@ -49,7 +49,7 @@ jobs:
           - { name: restaurant-service, context: backend, file: backend/services/restaurant/Dockerfile }
           - { name: menu-service, context: backend, file: backend/services/menu/Dockerfile }
           - { name: order-service, context: backend, file: backend/services/order/Dockerfile }
-          - { name: frontend, context: frontend }
+          - { name: frontend, context: ., file: frontend/Dockerfile }
     env:
       # Same names infra/compose/docker-compose.prod.yml pulls (unchanged by the CL-01 move).
       IMAGE: ghcr.io/${{ needs.meta.outputs.owner }}/vmenu-${{ matrix.name }}

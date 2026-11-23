@@ -1,6 +1,5 @@
 import api, { seg } from "@/lib/api";
-import type { Overview } from "@/lib/types/Overview";
-import type { RestaurantOutput } from "@/lib/types/Restaurant";
+import type { Overview, Restaurant } from "@vmenu/contracts";
 
 export interface TopItem {
     name: string;
@@ -25,14 +24,14 @@ export interface RestaurantSummary extends Overview {
     resName: string;
 }
 
-export async function getRestaurants(): Promise<RestaurantOutput[]> {
-    const { data } = await api.get<RestaurantOutput[]>("/api/restaurants");
+export async function getRestaurants(): Promise<Restaurant[]> {
+    const { data } = await api.get<Restaurant[]>("/api/restaurants");
     return data;
 }
 
 /** Creates a restaurant and returns the owner's restaurants, the new one last. */
-export async function createRestaurant(name: string): Promise<RestaurantOutput[]> {
-    const { data } = await api.post<RestaurantOutput[]>("/api/restaurants", { name });
+export async function createRestaurant(name: string): Promise<Restaurant[]> {
+    const { data } = await api.post<Restaurant[]>("/api/restaurants", { name });
     return data;
 }
 

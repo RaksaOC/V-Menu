@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { CartItem } from "@/lib/types/CartItem";
+import type { CartItem } from "@/features/customer/cart";
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
 vi.mock("react-toastify", () => ({ toast, ToastContainer: () => null }));

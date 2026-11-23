@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as C from "@vmenu/contracts";
 import * as F from "./fixtures";
+
+vi.mock("react-toastify/dist/ReactToastify.css", () => ({}));
 
 // CL-05: the frontend's test fixtures are real API shapes.
 describe("frontend fixtures match @vmenu/contracts", () => {

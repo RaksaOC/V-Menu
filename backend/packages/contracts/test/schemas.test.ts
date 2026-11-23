@@ -183,7 +183,17 @@ describe("restaurants", () => {
 
     it("response shapes", () => {
         ok(C.Restaurant, { _id: ID, name: "A", slug: "a", ownerId: "o" });
-        const member = { _id: ID, name: "Bob", tenantId: "bob", email: "bob@x.test", role: "chef", resId: ID };
+        const member = {
+            _id: ID,
+            name: "Bob",
+            tenantId: "bob",
+            email: "bob@x.test",
+            role: "chef",
+            resId: ID,
+            createdAt: "2026-11-23T10:00:00.000Z",
+            updatedAt: "2026-11-23T10:00:00.000Z",
+        };
+        fieldsOf(C.StaffMember, { ...member, createdAt: undefined });
         ok(C.StaffMember, member);
         ok(C.StaffOverview, [{ resName: "A", staff: [member] }]);
         ok(C.Memberships, { "Mee Keav - mee-keav-abc123": ["owner", "chef"] });

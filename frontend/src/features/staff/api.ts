@@ -1,10 +1,10 @@
 import api, { seg } from "@/lib/api";
-import type { TenantOutput } from "@/lib/types/Tenant";
+import type { StaffMember } from "@vmenu/contracts";
 
 /** Staff grouped by restaurant, for the owner's "Staff management" page. */
 export interface RestaurantStaff {
     resName: string;
-    staff: TenantOutput[];
+    staff: StaffMember[];
 }
 
 /** What the API needs to add a member; the password stays with Firebase. */
@@ -20,8 +20,8 @@ export async function getAllStaff(): Promise<RestaurantStaff[]> {
     return data;
 }
 
-export async function getStaff(slug: string): Promise<TenantOutput[]> {
-    const { data } = await api.get<TenantOutput[]>(`/api/restaurants/${seg(slug)}/staff`);
+export async function getStaff(slug: string): Promise<StaffMember[]> {
+    const { data } = await api.get<StaffMember[]>(`/api/restaurants/${seg(slug)}/staff`);
     return data;
 }
 
@@ -29,7 +29,7 @@ export async function addStaff(slug: string, member: NewStaff): Promise<void> {
     await api.post(`/api/restaurants/${seg(slug)}/staff`, member);
 }
 
-export async function updateStaff(slug: string, member: TenantOutput): Promise<void> {
+export async function updateStaff(slug: string, member: StaffMember): Promise<void> {
     await api.put(`/api/restaurants/${seg(slug)}/staff/${seg(member._id)}`, member);
 }
 

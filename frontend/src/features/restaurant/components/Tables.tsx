@@ -10,7 +10,7 @@ import { createTable, deleteTable, getTables, setTableAvailability, updateTable 
 import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
 import TableCard from "./TableCard";
 import TableForm from "./TableForm";
-import type { TableInput, TableOutput } from "@/lib/types/Table";
+import type { CreateTableBody, Table } from "@vmenu/contracts";
 
 /**
  * A restaurant's tables (CL-09; was two copies). The owner adds, renames, deletes and prints QR
@@ -18,9 +18,9 @@ import type { TableInput, TableOutput } from "@/lib/types/Table";
  */
 export default function Tables({ role }: { role: "owner" | "cashier" }) {
     const slug = useRestaurantSlug();
-    const [tables, setTables] = useState<TableOutput[]>([]);
+    const [tables, setTables] = useState<Table[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editing, setEditing] = useState<TableOutput | "new" | null>(null);
+    const [editing, setEditing] = useState<Table | "new" | null>(null);
 
     const load = useCallback(async () => {
         if (!slug) return;
@@ -37,7 +37,7 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
         load();
     }, [load]);
 
-    async function toggle(table: TableOutput) {
+    async function toggle(table: Table) {
         const isEnabled = !table.isEnabled;
         setTables((all) => all.map((t) => (t._id === table._id ? { ...t, isEnabled } : t)));
         try {
@@ -49,7 +49,7 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
         }
     }
 
-    async function create(input: TableInput) {
+    async function create(input: CreateTableBody) {
         try {
             await createTable(slug, input);
             setEditing(null);

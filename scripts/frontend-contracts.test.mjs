@@ -35,7 +35,7 @@ test("TypeScript finds @vmenu/contracts (and its zod) from the frontend", () => 
 test("the frontend image is built from the repo root, with the contracts' source", () => {
     assert.match(read(".github/workflows/release.yml"), /\{ name: frontend, context: \., file: frontend\/Dockerfile \}/);
     const compose = read("infra/compose/docker-compose.yml");
-    assert.match(compose, /frontend:\n\s+build:\n\s+context: \.\.\/\.\.\n\s+dockerfile: frontend\/Dockerfile/);
+    assert.match(compose, /frontend:\n\s+build:\n(\s+#.*\n)?\s+context: \.\.\/\.\.\n\s+dockerfile: frontend\/Dockerfile/);
     assert.match(read("frontend/Dockerfile"), /COPY backend\/packages\/contracts\/src /);
     const ignore = read("frontend/Dockerfile.dockerignore");
     assert.match(ignore, /^\*$/m, "send nothing by default");

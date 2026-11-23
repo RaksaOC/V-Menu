@@ -5,7 +5,7 @@ import { getAllStaff, type RestaurantStaff } from "@/features/staff/api";
 import { Calendar, ChevronsUpDown, CreditCard, Crown, Mail, Pencil, Search, Users, Utensils, Building2, House } from "lucide-react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { prettyDate } from "@/lib/dates";
-import { TenantOutput } from "@/lib/types/Tenant";
+import type { StaffMember } from "@vmenu/contracts";
 
 const getRoleBadge = (role: string) => {
     const baseClasses = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium";

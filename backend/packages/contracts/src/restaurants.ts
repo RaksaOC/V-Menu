@@ -44,6 +44,8 @@ export const StaffMember = z.object({
     email: z.string(),
     role: Role,
     resId: z.string(),
+    createdAt: IsoDate,
+    updatedAt: IsoDate,
 });
 export type StaffMember = z.infer<typeof StaffMember>;
 

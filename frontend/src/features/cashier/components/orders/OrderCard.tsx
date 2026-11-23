@@ -1,15 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import Invoice from "./Invoice";
-import { Order } from "@/lib/types/Order";
-import { TableOrderOutput } from "@/lib/types/TableOrder";
 import { prettyDate } from "@/lib/dates";
 import { useParams } from "next/navigation";
 import { DollarSign, Eye, EyeOff } from "lucide-react";
 import { Chip } from "@/components/ui";
+import type { Bill, Order } from "@vmenu/contracts";
 
 interface Props {
-    order: TableOrderOutput;
+    order: Bill;
     onMarkPaid: (id: string) => void;
     /** VM-11: a new bill, or one that got another order since the cashier last looked */
     isNew?: boolean;
