@@ -10,9 +10,12 @@ import Link from "next/link";
 import {useParams} from "next/navigation";
 import {ChefHat, Clock, History, Bell} from "lucide-react";
 import {getKitchenOrders, markOrderDone} from "@/features/kitchen/api";
+import {useConnectionStatus} from "@/lib/useConnectionStatus";
+import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
 
-export default function KitchenPage() {
+export default function KitchenPage({pollMs = 2000}: {pollMs?: number} = {}) {
     const params = useParams();
+    const connection = useConnectionStatus();
     const [orders, setOrders] = useState<OrderOutput[]>([]);
     const [totalOrders, setTotalOrders] = useState(0);
     const previousOrderIdsRef = useRef<string[]>([]);
@@ -24,7 +27,9 @@ export default function KitchenPage() {
                 setOrders(activeOrders);
                 setTotalOrders(activeOrders.length);
                 previousOrderIdsRef.current = activeOrders.map((order: OrderOutput) => order._id);
+                connection.succeeded();
             } catch (err) {
+                connection.failed();
                 console.error("Initial fetch error:", err);
             }
         };
@@ -43,10 +48,13 @@ export default function KitchenPage() {
                 setOrders(activeOrders);
                 setTotalOrders(activeOrders.length);
                 previousOrderIdsRef.current = activeOrders.map((order: OrderOutput) => order._id);
+                connection.succeeded();
             } catch (err) {
+                // VM-03: after 2 failures in a row the screen says so (a 401 goes to the login page)
+                connection.failed();
                 console.error("Polling error:", err);
             }
-        }, 2000);
+        }, pollMs);
 
         return () => clearInterval(intervalId);
     }, []);
@@ -65,6 +73,7 @@ export default function KitchenPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+            {connection.lost && <ConnectionLostBar/>}
             {/* Professional Kitchen Header */}
             <header
                 className="relative bg-gradient-to-r from-slate-700 via-gray-700 to-slate-800 text-white overflow-hidden">
