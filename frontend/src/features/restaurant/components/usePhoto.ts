@@ -1,9 +1,9 @@
 "use client";
 
-import { useContext, useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { apiErrorMessage } from "@/lib/api";
-import { uploadMenuPhoto } from "@/features/owner/api";
-import { ResContext } from "@/features/owner/ResContext";
+import { uploadMenuPhoto } from "@/features/restaurant/api";
+import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
 
 export const PHOTO_TYPES = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -13,7 +13,7 @@ const MAX_BYTES = 5 * 1024 * 1024;
  * and only uploaded on Save; `upload()` returns its URL, or null when no new file was chosen.
  */
 export function usePhoto(initial = "") {
-    const slug = useContext(ResContext);
+    const slug = useRestaurantSlug();
     const [file, setFile] = useState<File | null>(null);
     const [preview, setPreview] = useState(initial);
     const [error, setError] = useState("");

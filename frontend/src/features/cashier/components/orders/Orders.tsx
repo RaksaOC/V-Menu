@@ -1,6 +1,6 @@
 import OrderCard from "./OrderCard";
 import {useEffect, useState} from "react";
-import SkeletonOrderCard from "@/components/ui/skeletons/SkeletonOrderCard";
+import {Skeleton} from "@/components/ui";
 import Link from "next/link";
 import {TableOrderOutput} from "@/lib/types/TableOrder";
 import {OrderOutput} from "@/lib/types/Order";
@@ -66,9 +66,7 @@ export default function Orders() {
                 {
                     isLoading && (
                         <>
-                            <SkeletonOrderCard/>
-                            <SkeletonOrderCard/>
-                            <SkeletonOrderCard/>
+                            <Skeleton variant="order" count={3} className="contents"/>
                         </>
                     )
                 }
