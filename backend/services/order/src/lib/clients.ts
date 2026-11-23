@@ -1,6 +1,5 @@
 import type { Request } from "express";
-import { callService } from "./internal.js";
-import type { RestaurantRef } from "./restaurants.js";
+import { callService, type RestaurantRef } from "@vmenu/common";
 
 export interface OrderLine {
     item: { _id: string; name: string; price: number; image: string; isEnabled: boolean };

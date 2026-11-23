@@ -6,17 +6,23 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
+    "predev": "npm --prefix ../../packages/common run build",
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
+    "prebuild": "npm --prefix ../../packages/common run build",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
+    "pretypecheck": "npm --prefix ../../packages/common run build",
     "typecheck": "tsc --noEmit",
+    "pretest": "npm --prefix ../../packages/common run build",
     "test": "vitest run",
+    "preseed": "npm --prefix ../../packages/common run build",
     "seed": "tsx --env-file-if-exists=.env src/seed.ts"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
+    "@vmenu/common": "^1.0.0",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.4",
     "helmet": "^8.3.0",

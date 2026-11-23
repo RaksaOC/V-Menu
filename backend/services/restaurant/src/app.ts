@@ -1,10 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import mongoose from "mongoose";
 import { rateLimit } from "express-rate-limit";
-import { assertRestaurantAccess, requireRole, signAppToken, type Role } from "./lib/auth.js";
-import { assertId, badRequest, HttpError, notFound, unauthorized } from "./lib/errors.js";
-import { requireInternal } from "./lib/internal.js";
-import { baseApp, finish } from "./lib/server.js";
+import { assertRestaurantAccess, requireRole, signAppToken, type Role, assertId, badRequest, HttpError, notFound, unauthorized, requireInternal, baseApp, finish } from "@vmenu/common";
 import type { VerifyIdToken } from "./firebase.js";
 import { createRestaurantForOwner, Restaurant, Tenant } from "./models.js";
 

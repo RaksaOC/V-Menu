@@ -1,6 +1,6 @@
 // Demo data for menu-service's own database: tables and dishes for the demo restaurant.
 import mongoose from "mongoose";
-import { requireEnv } from "./lib/config.js";
+import { requireEnv } from "@vmenu/common";
 import { Item, Table } from "./models.js";
 
 const DEMO_RES_ID = "64b000000000000000000001";

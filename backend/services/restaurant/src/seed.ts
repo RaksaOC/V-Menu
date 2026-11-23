@@ -2,7 +2,7 @@
 // Set SEED_OWNER_UID / SEED_OWNER_EMAIL to  Firebase user to sign in as the owner.
 
 import mongoose from "mongoose";
-import { requireEnv } from "./lib/config.js";
+import { requireEnv } from "@vmenu/common";
 import { Restaurant, Tenant } from "./models.js";
 
 const DEMO_RES_ID = "64b000000000000000000001";
