@@ -1,14 +1,14 @@
 # Remaining work: every ticket
 
-Generated 2026-11-23 16:27. 1 of 77 done (1%). Essential (P0 path): 1 of 14.
+Generated 2026-11-23 16:30. 2 of 77 done (3%). Essential (P0 path): 2 of 14.
 
 "Essential" = the 6 P0 blockers, the cleanup tickets they depend on, and the final showcase. Order = the order to work in (dependencies first).
 
 | # | Ticket | Title | Priority | Essential | Status | PR | Issue | Depends on | Handoff |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | B9 | Issue and PR templates, GitHub issues for every ticket | testing/CI | yes | completed | [#135](https://github.com/RaksaOC/V-Menu/pull/135) | [#132](https://github.com/RaksaOC/V-Menu/issues/132) |  |  |
-| 2 | CL-01 | Group the repo into frontend/ and backend/ | P1 | yes | in progress |  | [#99](https://github.com/RaksaOC/V-Menu/issues/99) |  | [notes](tickets/CL-01.md) |
-| 3 | CL-02 | One shared backend library: @vmenu/common | P1 | yes | not started |  | [#100](https://github.com/RaksaOC/V-Menu/issues/100) | CL-01 | [notes](tickets/CL-02.md) |
+| 2 | CL-01 | Group the repo into frontend/ and backend/ | P1 | yes | completed | [#136](https://github.com/RaksaOC/V-Menu/pull/136) | [#99](https://github.com/RaksaOC/V-Menu/issues/99) |  |  |
+| 3 | CL-02 | One shared backend library: @vmenu/common | P1 | yes | in progress |  | [#100](https://github.com/RaksaOC/V-Menu/issues/100) | CL-01 | [notes](tickets/CL-02.md) |
 | 4 | CL-12 | Repo hygiene | P1 |  | not started |  | [#110](https://github.com/RaksaOC/V-Menu/issues/110) | CL-02 | [notes](tickets/CL-12.md) |
 | 5 | CL-03 | Enforce the boundaries in CI | P1 |  | not started |  | [#101](https://github.com/RaksaOC/V-Menu/issues/101) | CL-02 | [notes](tickets/CL-03.md) |
 | 6 | SEC-09 | Security scanning in the pipeline | P1 |  | not started |  | [#121](https://github.com/RaksaOC/V-Menu/issues/121) | CL-01 | [notes](tickets/SEC-09.md) |

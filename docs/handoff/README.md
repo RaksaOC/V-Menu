@@ -1,12 +1,12 @@
 # QA run: report and handoff
 
-_Updated 2026-11-23 16:27._
+_Updated 2026-11-23 16:30._
 
 ## Summary
 
-- **Done:** 1 of 77 tickets (1%). Essential (P0 path): 1 of 14.
-- **Working on now:** CL-01
-- **Next essential tickets:** CL-01 -> CL-02 -> B1 -> CL-08 -> CL-10 -> CL-09 -> VM-01 -> VM-02 -> SEC-05 -> VM-04 -> VM-05 -> VM-03 -> B11
+- **Done:** 2 of 77 tickets (3%). Essential (P0 path): 2 of 14.
+- **Working on now:** CL-02
+- **Next essential tickets:** CL-02 -> B1 -> CL-08 -> CL-10 -> CL-09 -> VM-01 -> VM-02 -> SEC-05 -> VM-04 -> VM-05 -> VM-03 -> B11
 - Every ticket's status, PR and issue: [remaining.md](remaining.md). Notes for each unfinished ticket: [tickets/](tickets/).
 
 ## Finished
@@ -16,6 +16,7 @@ The baseline capture (#62, the "before" screenshots and numbers) comes first, th
 | Ticket | Title | PR | CI |
 |---|---|---|---|
 | B9 | Issue and PR templates, GitHub issues for every ticket | [#135](https://github.com/RaksaOC/V-Menu/pull/135) | green |
+| CL-01 | Group the repo into frontend/ and backend/ | [#136](https://github.com/RaksaOC/V-Menu/pull/136) | green |
 
 All of these PRs are open and waiting for Raksa's review. Nothing is merged, so nothing is verified on staging yet.
 

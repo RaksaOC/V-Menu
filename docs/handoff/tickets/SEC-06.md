@@ -11,7 +11,7 @@ Security ticket. The details are kept out of the public repo on purpose: read th
 
 ## Depends on
 
-- CL-02 : not started 
+- CL-02 : in progress 
 
 ## Notes from this run
 

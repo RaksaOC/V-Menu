@@ -11,7 +11,7 @@ The full ticket (problem, what to change, tests, done when) is in issue [#121](h
 
 ## Depends on
 
-- CL-01 : in progress 
+- CL-01 : completed [#136](https://github.com/RaksaOC/V-Menu/pull/136)
 
 ## Notes from this run
 
