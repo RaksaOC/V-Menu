@@ -12,6 +12,7 @@ import { billsRoutes } from "./routes/bills.routes.js";
 import { restaurantFrom, type RouteContext } from "./routes/context.js";
 import { kitchenRoutes } from "./routes/kitchen.routes.js";
 import { ordersRoutes } from "./routes/orders.routes.js";
+import { internalRoutes } from "./routes/internal.routes.js";
 import { overviewRoutes } from "./routes/overview.routes.js";
 import { ownerRoutes } from "./routes/owner.routes.js";
 import { byName, byToken, tableRoutes } from "./routes/table.routes.js";
@@ -53,5 +54,6 @@ export function createApp({
     app.use("/api/orders/:slug/tables/:table", tableRoutes(ctx, byName));
     app.use("/api/orders/:slug/t/:token", tableRoutes(ctx, byToken)); // SEC-04
     app.use("/api/orders/:slug", ordersRoutes(ctx));
+    app.use("/internal", internalRoutes(ctx));
     return finish(app);
 }

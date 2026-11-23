@@ -55,6 +55,7 @@ services:
     env_file: ./services/menu-service/.env
     environment:
       RESTAURANT_SERVICE_URL: http://restaurant-service:4101
+      ORDER_SERVICE_URL: http://order-service:4103 # VM-15
 
   order-service:
     <<: *service

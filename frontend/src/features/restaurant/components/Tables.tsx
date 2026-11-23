@@ -5,7 +5,7 @@ import { Plus, Printer, Table as TableIcon } from "lucide-react";
 import { Button, Chip, Skeleton, toast } from "@/components/ui";
 import { printQrCards } from "@/components/qr/print";
 import { tableUrl } from "@/lib/table-url";
-import { apiErrorCode, apiStatus } from "@/lib/api";
+import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import { useRestaurantName } from "@/lib/public-restaurant";
 import { createTable, deleteTable, getTables, resetTableQrToken, setTableAvailability, updateTable } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
@@ -70,6 +70,7 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
             await load();
             return "ok" as const;
         } catch (err) {
+            if (apiErrorCode(err) === "TABLE_HAS_OPEN_BILL") return { reason: apiErrorMessage(err, "") }; // VM-15
             return apiStatus(err) === 409 || apiStatus(err) === 400 ? ("taken" as const) : ("error" as const);
         }
     }
@@ -91,8 +92,11 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
             await deleteTable(slug, id);
             setEditing(null);
             await load();
-        } catch {
-            toast.error("Could not delete the table");
+            return "ok" as const;
+        } catch (err) {
+            // VM-15: a table with an unpaid bill stays; the popup says why
+            if (apiErrorCode(err) === "TABLE_HAS_OPEN_BILL") return { reason: apiErrorMessage(err, "") };
+            return "error" as const;
         }
     }
 

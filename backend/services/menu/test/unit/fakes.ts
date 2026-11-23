@@ -167,3 +167,6 @@ export function fakeImages(): ImagesRepo & { files: Map<string, { resId: string;
         },
     };
 }
+
+/** VM-15: order-service, mocked: no table has an unpaid bill. */
+export const NO_OPEN_BILLS = { hasOpenBill: async () => false };

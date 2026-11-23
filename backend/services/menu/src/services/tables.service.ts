@@ -1,5 +1,6 @@
 import { assertId, HttpError, invalidTableLink, notFound, tableNameLinksAllowed } from "@vmenu/common";
 import { QrToken, type TableLink } from "@vmenu/contracts";
+import type { OpenBills } from "../clients/open-bills.js";
 import { newQrToken } from "../qr-token.js";
 import { TableNameTaken, type TableRecord, type TablesRepo } from "../repositories/tables.repo.js";
 import type { CreateTableBody, UpdateTableBody } from "@vmenu/contracts";
@@ -27,6 +28,16 @@ async function orTaken<T>(write: () => Promise<T>): Promise<T> {
 }
 
 /** Tables, and whether a customer can order from one (CL-04). */
+/**
+ * VM-15: bills point at a table by its name. Renaming or deleting a table with an unpaid bill
+ * would split the bill or leave it behind, so it's refused until the bill is paid.
+ * If order-service can't answer, the error is passed on and nothing changes.
+ */
+async function noOpenBill(bills: OpenBills, resId: string, name: string) {
+    if (await bills.hasOpenBill(resId, name))
+        throw new HttpError(409, `Table ${name} has an unpaid bill. Mark it paid, then try again.`, "TABLE_HAS_OPEN_BILL");
+}
+
 export function tablesService({ tables }: { tables: TablesRepo }) {
     async function existing(resId: string, id: string) {
         assertId(id, "table id");
@@ -85,19 +96,24 @@ export function tablesService({ tables }: { tables: TablesRepo }) {
             throw new HttpError(409, "Many tables are being added at the same time. Please try again.", "NAME_TAKEN");
         },
 
-        async update(resId: string, id: string, body: UpdateTableBody) {
+        /** Owner renames, opens or closes a table. A new name needs no unpaid bill on either name (VM-15). */
+        async update(resId: string, id: string, body: UpdateTableBody, bills: OpenBills) {
             const table = await existing(resId, id);
             const fields: UpdateTableBody = {};
             if (body.name && body.name !== table.name) {
                 if (await tables.findByName(resId, body.name)) throw nameTaken();
+                await noOpenBill(bills, resId, table.name);
+                await noOpenBill(bills, resId, body.name); // an old, forgotten bill under the new name
                 fields.name = body.name;
             }
             if (body.isEnabled !== undefined) fields.isEnabled = body.isEnabled;
             return (await orTaken(() => tables.update(resId, id, fields))) ?? table;
         },
 
-        async remove(resId: string, id: string) {
-            assertId(id, "table id");
+        /** Owner deletes a table that has no unpaid bill (VM-15). */
+        async remove(resId: string, id: string, bills: OpenBills) {
+            const table = await existing(resId, id);
+            await noOpenBill(bills, resId, table.name);
             const removed = await tables.remove(resId, id);
             if (!removed) throw notFound("Table not found");
             return removed;

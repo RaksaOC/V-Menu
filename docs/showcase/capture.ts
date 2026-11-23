@@ -982,6 +982,53 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-15: a table with an unpaid bill can't be renamed or deleted; the popup says why. Before the
+// change the save went through (shown filled in, not saved, so the seeded table keeps its name).
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-15 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        // an unpaid bill at T1: one order, as a customer would place it
+        const menu = await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json();
+        const dish = menu.categories
+            .flatMap((cat: { items: { _id: string; isEnabled: boolean }[] }) => cat.items)
+            .find((i: { isEnabled: boolean }) => i.isEnabled);
+        await page.request.post(`${BASE}/api/orders/${SLUG}`, {
+            data: { table: "T1", orderedItems: [{ item: { _id: dish._id }, quantity: 1 }] },
+        });
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page
+            .getByRole("button", { name: /^\s*Tables\s*$/i })
+            .first()
+            .click({ timeout: 5000 });
+        await settle(page);
+        await page.getByRole("button", { name: "Edit Table" }).first().click({ timeout: 5000 });
+        const dialog = page.getByRole("dialog");
+        await dialog.getByRole("textbox", { name: "Table name" }).fill("Patio");
+        await page.waitForTimeout(300);
+        if (PHASE !== "after") {
+            await shot(c, "VM-15-rename", false);
+            await context.close();
+            return;
+        }
+        await dialog.getByRole("button", { name: "Save Changes" }).click();
+        await dialog.getByText(/has an unpaid bill/).waitFor({ timeout: 5000 });
+        await shot(c, "VM-15-rename", false);
+        await dialog.getByRole("textbox", { name: "Table name" }).fill("T1");
+        await dialog.getByRole("button", { name: "Delete" }).click();
+        await dialog.getByRole("button", { name: "Delete" }).click();
+        await dialog.getByRole("alert").waitFor({ timeout: 5000 });
+        await page.waitForTimeout(300);
+        await shot(c, "VM-15-delete", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

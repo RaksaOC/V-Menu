@@ -45,6 +45,10 @@ export const OrderCheckResponse = z.object({ table: z.string().optional(), items
 export type OrderCheckResponse = z.infer<typeof OrderCheckResponse>;
 
 /** SEC-04: menu-service → order-service: the table a link token belongs to. */
+/** VM-15: order-service answers menu-service: does this table have an unpaid bill? */
+export const OpenBillCheck = z.object({ open: z.boolean() });
+export type OpenBillCheck = z.infer<typeof OpenBillCheck>;
+
 export const TableByToken = z.object({ name: z.string() });
 export type TableByToken = z.infer<typeof TableByToken>;
 

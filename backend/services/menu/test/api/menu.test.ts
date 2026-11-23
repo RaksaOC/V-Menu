@@ -1,4 +1,5 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -14,6 +15,7 @@ const RESTAURANTS = {
     "other-xyz789": { _id: "665f00000000000000000002", name: "Other", slug: "other-xyz789", ownerId: "owner2" },
 };
 const app = createApp({
+    openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
     lookupRestaurant: async (_req, slug) => {
         const r = RESTAURANTS[slug as keyof typeof RESTAURANTS];
         if (!r) throw notFound("Restaurant not found");

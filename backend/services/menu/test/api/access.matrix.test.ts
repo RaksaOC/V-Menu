@@ -1,3 +1,4 @@
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import {
     CALLERS,
     callerHeaders,
@@ -30,6 +31,7 @@ const { mongoImagesRepo } = await import("../../src/repositories/images.repo.js"
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
 const app = createApp({
+    openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
     lookupRestaurant: async (_req, slug) => {
         const r = [A, B].find((x) => x.slug === slug);
         if (!r) throw notFound("Restaurant not found");

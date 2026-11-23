@@ -5,7 +5,7 @@ import { internalService } from "../../src/services/internal.service.js";
 import { itemsService } from "../../src/services/items.service.js";
 import { imageUrl, isOwnImage, PLACEHOLDER, sniff } from "../../src/services/photos.js";
 import { tablesService } from "../../src/services/tables.service.js";
-import { fakeCategories, fakeImages, fakeItems, fakeTables, newId } from "./fakes.js";
+import { fakeCategories, fakeImages, fakeItems, fakeTables, newId, NO_OPEN_BILLS } from "./fakes.js";
 
 // CL-04: menu-service's business rules, with in-memory repositories (no MongoDB, no HTTP).
 const A = { _id: "665f00000000000000000001", slug: "rest-a" };
@@ -108,15 +108,15 @@ describe("tables", () => {
         const { seating } = setup();
         const t1 = await seating.create(A._id, {});
         await seating.create(A._id, {});
-        expect((await seating.update(A._id, t1._id, { name: "Window", isEnabled: true })).name).toBe("Window");
-        expect((await seating.update(A._id, t1._id, { name: "Window" })).isEnabled).toBe(true); // same name is fine
-        expect(await status(seating.update(A._id, t1._id, { name: "2" }))).toBe(409); // VM-16
-        expect((await seating.update(A._id, t1._id, {})).name).toBe("Window");
+        expect((await seating.update(A._id, t1._id, { name: "Window", isEnabled: true }, NO_OPEN_BILLS)).name).toBe("Window");
+        expect((await seating.update(A._id, t1._id, { name: "Window" }, NO_OPEN_BILLS)).isEnabled).toBe(true); // same name is fine
+        expect(await status(seating.update(A._id, t1._id, { name: "2" }, NO_OPEN_BILLS))).toBe(409); // VM-16
+        expect((await seating.update(A._id, t1._id, {}, NO_OPEN_BILLS)).name).toBe("Window");
         expect((await seating.setEnabled(A._id, t1._id, false)).isEnabled).toBe(false);
-        expect((await seating.remove(A._id, t1._id)).name).toBe("Window");
-        expect(await status(seating.remove(A._id, t1._id))).toBe(404);
-        expect(await status(seating.update(B._id, "bad", {}))).toBe(400);
-        expect(await status(seating.update(B._id, newId(), {}))).toBe(404);
+        expect((await seating.remove(A._id, t1._id, NO_OPEN_BILLS)).name).toBe("Window");
+        expect(await status(seating.remove(A._id, t1._id, NO_OPEN_BILLS))).toBe(404);
+        expect(await status(seating.update(B._id, "bad", {}, NO_OPEN_BILLS))).toBe(400);
+        expect(await status(seating.update(B._id, newId(), {}, NO_OPEN_BILLS))).toBe(404);
         expect(await status(seating.setEnabled(A._id, newId(), true))).toBe(404);
     });
 
@@ -148,7 +148,7 @@ describe("table names stay unique when requests race (VM-16)", () => {
         const window = await seating.create(A._id, { type: "manual", name: "Window" });
         const findByName = tables.findByName;
         tables.findByName = async () => null; // as if "Patio" was taken after the check
-        expect(await code(seating.update(A._id, window._id, { name: "Patio" }))).toBe("NAME_TAKEN");
+        expect(await code(seating.update(A._id, window._id, { name: "Patio" }, NO_OPEN_BILLS))).toBe("NAME_TAKEN");
         tables.findByName = findByName;
     });
 

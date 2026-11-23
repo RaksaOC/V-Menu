@@ -1,4 +1,5 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -13,6 +14,7 @@ const SLUG = "mee-keav-abc123";
 const RES = { _id: "665f00000000000000000001", name: "Mee Keav", slug: SLUG, ownerId: "owner1" };
 let restaurantServiceDown = false;
 const app = createApp({
+    openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
     lookupRestaurant: async (_req, slug) => {
         if (restaurantServiceDown) throw new HttpError(503, "A required service is unavailable");
         if (slug !== SLUG) throw notFound("Restaurant not found");
