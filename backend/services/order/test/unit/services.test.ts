@@ -169,7 +169,7 @@ describe("dashboard numbers", () => {
         expect(o.avgItemsPerOrder).toBe(1.67);
         expect(o.numOfItems).toBe(20);
         expect(o.numOfPayments).toBe(1);
-        expect(o.numOfUnpaidOrders).toBe(1);
+        expect(o.numOfUnpaidOrders).toBe(2); // Mee Keav table 2 and Bai Sach table 5
         expect(o.topSellingItems).toEqual([{ name: DISH.name, quantity: 5 }]);
     });
 

@@ -32,3 +32,19 @@ export const httpClients: Clients = {
             body: JSON.stringify(body),
         }),
 };
+
+/** The clients with the incoming request already applied (it carries the caller's identity and
+ *  request id to the other services), so the services never see a request. */
+export interface BoundClients {
+    listOwnerRestaurants(ownerId: string): Promise<RestaurantRef[]>;
+    menuCounts(resId: string): Promise<MenuCounts>;
+    orderCheck(resId: string, body: { table: string; items: { _id: string; quantity: number }[] }): Promise<{ items: OrderLine[] }>;
+}
+
+export function bindClients(clients: Clients, req: Request): BoundClients {
+    return {
+        listOwnerRestaurants: (ownerId) => clients.listOwnerRestaurants(req, ownerId),
+        menuCounts: (resId) => clients.menuCounts(req, resId),
+        orderCheck: (resId, body) => clients.orderCheck(req, resId, body),
+    };
+}
