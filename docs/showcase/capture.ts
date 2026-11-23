@@ -916,6 +916,30 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-19: the kitchen's Sign Out button, and another restaurant's dashboard sending staff to its login.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-19 ${vp.width} ${theme}`, async () => {
+        const chef = await newPage(browser, vp, theme, "chef");
+        await chef.page.goto(`${BASE}/${SLUG}/kitchen`);
+        await settle(chef.page);
+        await shot({ page: chef.page, theme, width: vp.width }, "VM-19-kitchen", false);
+        await chef.page.goto(`${BASE}/${SLUG}/kitchen/history`);
+        await settle(chef.page);
+        await shot({ page: chef.page, theme, width: vp.width }, "VM-19-kitchen-history", false);
+        await chef.context.close();
+
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        await cashier.page.goto(`${BASE}/another-restaurant/cashier/dashboard`);
+        await settle(cashier.page);
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-19-other-restaurant", false);
+        await cashier.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
