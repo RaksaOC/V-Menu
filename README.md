@@ -110,9 +110,33 @@ npm run seed           # demo data (in another terminal)
 ```
 
 - `npm run dev` starts a local MongoDB on `127.0.0.1:27017`, with data in `.data/mongo`. To use Atlas instead, set `MONGODB_URI` in each `backend/services/*/.env`, using a separate database name per service, and run `npm run dev:services` plus `npm --prefix frontend run dev`.
-- `npm test` runs each service's tests (Vitest, Supertest and an in-memory MongoDB).
-- `npm run typecheck` type-checks all four packages.
-- `npm run test:repo` checks the issue forms (`.github/ISSUE_TEMPLATE/`) and the PR template (`.github/pull_request_template.md`) still have their required fields.
+
+### Run one service
+
+Each service runs on its own; it needs MongoDB (`npm run dev:db` starts one) and its `.env` from `npm run setup`.
+
+```bash
+npm run dev:db                                    # local MongoDB, if it isn't running
+npm --prefix backend/services/menu run dev        # menu-service on :4102 (restaurant :4101, order :4103)
+npm --prefix backend/services/menu test           # just that service's tests
+npm --prefix frontend run dev                     # the frontend on :3400, against whatever services are up
+```
+
+### Run all the tests and checks
+
+These are the same commands CI runs:
+
+| Command | What it runs |
+|---|---|
+| `npm run check` | everything below except e2e, in order: format, lint, typecheck, tests |
+| `npm test` | backend tests (each service and `@vmenu/common`: Vitest, Supertest, in-memory MongoDB), frontend tests (Vitest, Testing Library, MSW) and the repo checks |
+| `npm run test:e2e` | Playwright against a running stack (`npm run dev` and `npm run seed` first) |
+| `npm run lint` | ESLint on the frontend |
+| `npm run typecheck` | TypeScript for the backend workspace and the frontend |
+| `npm run format` / `format:check` | Prettier (settings in `.prettierrc.json`, `.editorconfig` for editors) |
+| `npm run test:repo` | the issue forms, the PR template and repo hygiene (no `.DS_Store`, root scripts, formatting commit listed in `.git-blame-ignore-revs`) |
+
+To hide the formatting commit from `git blame` locally: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 
 ### Environment
 
@@ -149,7 +173,10 @@ The services import their shared code from `@vmenu/common` (`backend/packages/co
 frontend/                    Next.js app (no database access)
   src/app/                   routes only: each page.tsx renders one feature component
   src/features/<area>/       customer, kitchen, cashier, owner, staff, auth: components and logic
-  src/components/ui/         shared UI pieces (loading skeletons)
+  src/features/restaurant/   screen parts the owner and cashier share (tables, menu, overview), role by props
+  src/components/ui/         the UI kit: Button, Card, Chip, Input, Modal, Skeleton, ToastHost (see /ui-kit)
+  src/components/layout/     DashboardHeader, MobileSidebar
+  src/components/qr/         table QR codes and the printable sheet
   src/components/marketing/  landing page and tour
   src/lib/                   API client, Firebase, dates, shared types
   src/theme/deep-lab.css     design tokens
@@ -166,6 +193,8 @@ infra/
   deploy/                    server setup and deploy scripts (see infra/deploy/README.md)
   monitoring/                Grafana Alloy agent, dashboards and alerts (see infra/monitoring/README.md)
 scripts/                     setup, local MongoDB, smoke test and repo checks
+docs/showcase/               before/after screenshots for each PR (capture.ts)
+.github/                     CI and deploy workflows, Dependabot, issue forms, PR template
 ```
 
 Photo credits for the tour images are in `frontend/public/images/tour/CREDITS.md`.
