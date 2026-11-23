@@ -11,7 +11,7 @@ Security ticket. The details are kept out of the public repo on purpose: read th
 
 ## Depends on
 
-- VM-01 : not started 
+- VM-01 : in progress 
 
 ## Notes from this run
 

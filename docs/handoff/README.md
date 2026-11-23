@@ -1,12 +1,12 @@
 # QA run: report and handoff
 
-_Updated 2026-11-23 21:53._
+_Updated 2026-11-23 22:23._
 
 ## Summary
 
-- **Done:** 6 of 77 tickets (8%). Essential (P0 path): 6 of 14.
-- **Working on now:** CL-09
-- **Next essential tickets:** CL-09 -> VM-01 -> VM-02 -> SEC-05 -> VM-04 -> VM-05 -> VM-03 -> B11
+- **Done:** 7 of 77 tickets (9%). Essential (P0 path): 7 of 14.
+- **Working on now:** VM-01
+- **Next essential tickets:** VM-01 -> VM-02 -> SEC-05 -> VM-04 -> VM-05 -> VM-03 -> B11
 - Every ticket's status, PR and issue: [remaining.md](remaining.md). Notes for each unfinished ticket: [tickets/](tickets/).
 
 ## Finished
@@ -21,6 +21,7 @@ The baseline capture (#62, the "before" screenshots and numbers) comes first, th
 | B1 | Frontend unit tests | [#140](https://github.com/RaksaOC/V-Menu/pull/140) | green |
 | CL-08 | Frontend folders by feature | [#141](https://github.com/RaksaOC/V-Menu/pull/141) | green |
 | CL-10 | One API client per feature, and one toast helper | [#167](https://github.com/RaksaOC/V-Menu/pull/167) | green |
+| CL-09 | Merge duplicate components and build a small UI kit | [#170](https://github.com/RaksaOC/V-Menu/pull/170) | green |
 
 All of these PRs are open and waiting for Raksa's review. Nothing is merged, so nothing is verified on staging yet.
 
