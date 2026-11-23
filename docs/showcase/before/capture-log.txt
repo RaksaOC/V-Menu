@@ -56,3 +56,8 @@ ok   VM-04-closed-table-360-dark
 ok   VM-04-unknown-table-360-dark
 ok   VM-04-unknown-restaurant-360-dark
 ok   VM-04-server-error-360-dark
+# ONLY=VM-05 (2026-11-23T11:32:42.157Z)
+ok   VM-05-t1-cart-360
+ok   VM-05-t2-cart-360
+ok   VM-05-t1-cart-360-dark
+ok   VM-05-t2-cart-360-dark
