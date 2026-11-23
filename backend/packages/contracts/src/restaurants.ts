@@ -59,5 +59,9 @@ export type StaffOverview = z.infer<typeof StaffOverview>;
 export const Memberships = z.record(z.string(), z.array(Role));
 export type Memberships = z.infer<typeof Memberships>;
 
+/** VM-20: who is signed in, for the dashboards' headers. */
+export const Me = z.object({ name: z.string(), email: z.string(), role: Role });
+export type Me = z.infer<typeof Me>;
+
 export const LoginResponse = z.object({ role: Role });
 export const SignupResponse = z.object({ message: z.string(), slug: z.string() });

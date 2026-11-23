@@ -1,4 +1,4 @@
-import { badRequest, HttpError, parse, signAppToken, unauthorized } from "@vmenu/common";
+import { badRequest, HttpError, parse, signAppToken, unauthorized, type AppUser } from "@vmenu/common";
 import { IdTokenBody, LoginBody, SessionVersionQuery, SignupBody } from "@vmenu/contracts";
 import type { VerifyIdToken } from "../clients/firebase.js";
 import type { RestaurantsRepo } from "../repositories/restaurants.repo.js";
@@ -78,6 +78,12 @@ export function authService({ restaurants, memberships, verifyIdToken, places }:
             const tv = (await memberships.sessionVersion(who.uid, role, resId)) ?? 0;
             const token = await signAppToken({ uid: who.uid, email: who.email, role, resId, resSlug: restaurant.slug, tv }, `${hours}h`);
             return { role, hours, token };
+        },
+
+        /** VM-20: who is signed in. The name is per restaurant, because an owner types it for each. */
+        async me({ uid, email, role, resId }: AppUser) {
+            const row = await memberships.rowFor(uid, role, role === "owner" ? undefined : resId);
+            return { name: row?.name ?? email, email: row?.email ?? email, role };
         },
 
         /** SEC-03: is this session still current? Staff need a restaurant; an owner's covers all of theirs. */

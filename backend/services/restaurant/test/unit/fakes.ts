@@ -88,6 +88,9 @@ export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] }
             if (endSessions) t.tokenVersion = (t.tokenVersion ?? 0) + 1;
             return { ...t };
         },
+        async rowFor(uid, role, resId) {
+            return copy(all.find((t) => t.tenantId === uid && t.role === role && (!resId || t.resId === resId)));
+        },
         async sessionVersion(uid, role, resId) {
             const rows = all.filter((t) => t.tenantId === uid && t.role === role && (!resId || t.resId === resId));
             return rows.length ? Math.max(...rows.map((t) => t.tokenVersion ?? 0)) : null;

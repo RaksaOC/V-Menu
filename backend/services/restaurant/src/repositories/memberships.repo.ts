@@ -54,6 +54,8 @@ export interface MembershipsRepo {
         opts?: { endSessions?: boolean },
     ): Promise<MembershipRecord | null>;
     remove(resId: string, id: string): Promise<MembershipRecord | null>;
+    /** VM-20: this account's row for this role (and restaurant), to show their name */
+    rowFor(uid: string, role: string, resId?: string): Promise<MembershipRecord | null>;
     /** SEC-03: the highest version among this account's rows for this role (and restaurant); null if none */
     sessionVersion(uid: string, role: string, resId?: string): Promise<number | null>;
     /** SEC-03: ends every session of this account, in every restaurant */
@@ -96,6 +98,7 @@ export const mongoMembershipsRepo: MembershipsRepo = {
             },
         ).lean<MembershipRecord>(),
     remove: (resId, id) => Membership.findOneAndDelete({ _id: id, resId }).lean<MembershipRecord>(),
+    rowFor: (uid, role, resId) => Membership.findOne({ tenantId: uid, role, ...(resId ? { resId } : {}) }).lean<MembershipRecord>(),
     async sessionVersion(uid, role, resId) {
         const rows = await Membership.find({ tenantId: uid, role, ...(resId ? { resId } : {}) }, { tokenVersion: 1 }).lean<
             Pick<MembershipRecord, "tokenVersion">[]

@@ -32,8 +32,10 @@ import AllStaff from "@/features/staff/components/AllStaff";
 import AllOverview from "@/features/owner/components/AllOverview";
 import AllRestaurants from "@/features/owner/components/AllRestaurants";
 import type { Restaurant } from "@vmenu/contracts";
+import { useMe } from "@/lib/use-me";
 
 const OwnerDashboard = () => {
+    const me = useMe(); // VM-20
     // temp fix for reloading res content when selected res changes
     const tabs = ["overview", "menu", "tables", "staff", "preferences"];
 
@@ -318,12 +320,13 @@ const OwnerDashboard = () => {
                 title="V-Menu Owner"
                 subtitle="Manage your restaurants"
                 roleLabel="Owner"
-                email="owner@gmail.com"
+                name={me?.name}
+                email={me?.email}
                 loginHref="/owner/login"
                 position="fixed"
                 onOpenMenu={() => setSidebarOpen(true)}
             />
-            <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={{ name: "John Doe", role: "Owner" }}>
+            <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={{ name: me?.name ?? "", role: "Owner" }}>
                 {sidebarContent}
             </MobileSidebar>
 

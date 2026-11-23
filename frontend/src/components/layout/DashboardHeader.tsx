@@ -12,9 +12,11 @@ interface Props {
     /** e.g. "V-Menu Owner", "V-Menu Cashier" */
     title: string;
     subtitle?: string;
-    /** Shown on the account button: "Owner", "Cashier" */
+    /** Shown until the name has loaded: "Owner", "Cashier" */
     roleLabel: string;
-    email: string;
+    /** VM-20: who is signed in; empty while loading */
+    name?: string;
+    email?: string;
     /** Where Sign Out goes */
     loginHref: string;
     /** The cashier shows the time, for the till */
@@ -29,6 +31,7 @@ export default function DashboardHeader({
     title,
     subtitle,
     roleLabel,
+    name,
     email,
     loginHref,
     clock = false,
@@ -83,14 +86,15 @@ export default function DashboardHeader({
                             <User size={16} aria-hidden />
                         </span>
                         <span className="hidden text-left sm:block">
-                            <span className="block text-sm font-medium">{roleLabel}</span>
-                            <span className="block max-w-32 truncate text-xs text-[var(--muted)]">{email}</span>
+                            <span className="block max-w-32 truncate text-sm font-medium">{name || roleLabel}</span>
+                            {email && <span className="block max-w-32 truncate text-xs text-[var(--muted)]">{email}</span>}
                         </span>
                     </MenuButton>
                     <MenuItems className="absolute right-0 z-40 mt-2 w-56 rounded-[var(--r-card)] border border-[var(--line)] bg-[var(--bg)] py-2 shadow-[var(--pop)] focus:outline-none">
                         <div className="border-b border-[var(--line)] px-4 py-3">
                             <p className="text-sm font-medium">Signed in as</p>
-                            <p className="truncate text-sm text-[var(--muted)]">{email}</p>
+                            {name && <p className="truncate text-sm font-medium">{name}</p>}
+                            {email && <p className="truncate text-sm text-[var(--muted)]">{email}</p>}
                         </div>
                         <MenuItem>
                             <Link
