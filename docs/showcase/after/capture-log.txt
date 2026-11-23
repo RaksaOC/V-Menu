@@ -239,3 +239,21 @@ ok   VM-28-cart-1280-dark
 ok   VM-28-kitchen-card-1280-dark
 ok   VM-28-cart-360
 ok   VM-28-kitchen-card-360
+# ONLY=VM-29 (2026-11-23T19:36:01.264Z)
+ok   VM-29-kitchen-board-1280
+ok   VM-29-kiosk-1280
+ok   VM-29-kitchen-board-1280-dark
+ok   VM-29-kitchen-board-360
+ok   VM-29-kiosk-360
+# ONLY=VM-29 (2026-11-23T19:36:28.763Z)
+ok   VM-29-kitchen-board-1280
+ok   VM-29-kiosk-1280
+ok   VM-29-kitchen-board-1280-dark
+ok   VM-29-kitchen-board-360
+ok   VM-29-kiosk-360
+# ONLY=VM-29 (2026-11-23T19:36:48.429Z)
+ok   VM-29-kitchen-board-1280
+ok   VM-29-kiosk-1280
+ok   VM-29-kitchen-board-1280-dark
+ok   VM-29-kitchen-board-360
+ok   VM-29-kiosk-360

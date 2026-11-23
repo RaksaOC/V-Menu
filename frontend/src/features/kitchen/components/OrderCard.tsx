@@ -48,13 +48,16 @@ const Card = ({ order, onAdvance, isNew = false, kiosk = false, now }: CardProps
         >
             {/* Order Header */}
             <div className="bg-gradient-to-r from-slate-600 to-gray-600 text-white p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                        {/* kiosk mode: the table number gets the room */}
+                        <div className={`p-2 bg-white/20 rounded-full backdrop-blur-sm ${kiosk ? "hidden" : ""}`}>
                             <Users size={20} className="text-white" />
                         </div>
                         <div>
-                            <h3 className={`font-bold ${kiosk ? "text-5xl leading-tight" : "text-2xl"}`}>Table {table}</h3>
+                            <h3 className={`font-bold ${kiosk ? "text-5xl leading-tight whitespace-nowrap" : "text-2xl"}`}>
+                                Table {table}
+                            </h3>
                             <p className="text-slate-200 text-sm">Order #{orderId.slice(-6).toUpperCase()}</p>
                             {!onAdvance && (
                                 <Chip tone={STATUS_TONE[status]} className="mt-1">
@@ -64,8 +67,8 @@ const Card = ({ order, onAdvance, isNew = false, kiosk = false, now }: CardProps
                         </div>
                     </div>
 
-                    <div className="text-right">
-                        <div className="flex items-center gap-2 mb-1">
+                    <div className="shrink-0 text-right">
+                        <div className={`flex items-center gap-2 mb-1 ${kiosk ? "hidden" : ""}`}>
                             <Clock size={16} className="text-slate-300" />
                             <span className="text-sm text-slate-200">{formatDateTime(orderedAt)}</span>
                         </div>
