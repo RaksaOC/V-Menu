@@ -10,6 +10,7 @@ import { statsService } from "./services/stats.service.js";
 import { tableService } from "./services/table.service.js";
 import { billsRoutes } from "./routes/bills.routes.js";
 import { restaurantFrom, type RouteContext } from "./routes/context.js";
+import { internalRoutes } from "./routes/internal.routes.js";
 import { kitchenRoutes } from "./routes/kitchen.routes.js";
 import { ordersRoutes } from "./routes/orders.routes.js";
 import { overviewRoutes } from "./routes/overview.routes.js";
@@ -45,6 +46,7 @@ export function createApp({
     };
 
     const app = baseApp();
+    app.use("/internal", internalRoutes(ctx));
     // Mounted before "/:slug" so "owner" is never read as a restaurant slug.
     app.use("/api/orders/owner", ownerRoutes(ctx));
     app.use("/api/orders/:slug/kitchen", kitchenRoutes(ctx));

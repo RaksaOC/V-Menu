@@ -48,7 +48,10 @@ export function billsService({ bills, orders }: { bills: BillsRepo; orders: Orde
             if (!isPaid) {
                 const current = await bills.get(resId, id);
                 if (!current) throw notFound("Bill not found");
-                if (current.isPaid && (await bills.hasOtherOpenBill(resId, current.table, id))) throw tableHasOpenBill();
+                if (current.isPaid) {
+                    await bills.removeEmptyOpen(resId, current.table); // VM-23: an empty bill has nothing to protect
+                    if (await bills.hasOtherOpenBill(resId, current.table, id)) throw tableHasOpenBill();
+                }
             }
             try {
                 const bill = await bills.setPaid(resId, id, isPaid);

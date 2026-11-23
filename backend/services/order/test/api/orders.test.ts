@@ -9,6 +9,7 @@ import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
 import { Order } from "../../src/models/order.model.js";
 import { mongoBillsRepo } from "../../src/repositories/bills.repo.js";
+import { mongoOrdersRepo } from "../../src/repositories/orders.repo.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 process.env.INTERNAL_API_KEY = "internal-test-key";
@@ -103,10 +104,6 @@ describe("an order is never left off its bill (VM-23)", () => {
                 fail();
                 return mongoBillsRepo.attachOrder(billId, orderId);
             },
-            addToOpenBill: async (resId: string, table: string, orderId: string) => {
-                fail();
-                return (mongoBillsRepo as unknown as { addToOpenBill: typeof bills.addToOpenBill }).addToOpenBill(resId, table, orderId);
-            },
         };
         return createApp({ clients, bills, lookupRestaurant: async () => R });
     }
@@ -128,6 +125,25 @@ describe("an order is never left off its bill (VM-23)", () => {
         expect((await send(flakyApp(99))).status).toBe(503);
         expect(await Order.countDocuments()).toBe(0);
         expect(await Bill.countDocuments()).toBe(0);
+    });
+
+    it("the bill is paid between the two steps: the order moves to the table's new bill", async () => {
+        const { body: first } = await place();
+        const [paying] = await Bill.find({ resId: R._id }).lean();
+        const orders = {
+            ...mongoOrdersRepo,
+            create: async (order: Parameters<typeof mongoOrdersRepo.create>[0]) => {
+                const saved = await mongoOrdersRepo.create(order);
+                await Bill.updateOne({ _id: paying._id }, { isPaid: true }); // the cashier, at the wrong moment
+                return saved;
+            },
+        };
+        const res = await send(createApp({ clients, orders, lookupRestaurant: async () => R }));
+        expect(res.status).toBe(201);
+        const open = await Bill.findOne({ resId: R._id, isPaid: false }).lean();
+        expect(open!.orders.map(String)).toEqual([res.body._id]);
+        expect(String((await Order.findById(res.body._id).lean())!.billId)).toBe(String(open!._id));
+        expect((await Bill.findById(paying._id).lean())!.orders.map(String)).toEqual([first._id]);
     });
 
     it("the internal check lists an order that's on no bill, and not one that is", async () => {
@@ -218,7 +234,7 @@ describe("one open bill per table (VM-08)", () => {
         // The bill upsert itself, as placing an order does it, 10 at once: without the unique
         // index, every run made several open bills.
         const orderIds = Array.from({ length: 10 }, () => new mongoose.Types.ObjectId().toString());
-        await Promise.all(orderIds.map((id) => mongoBillsRepo.addToOpenBill(R._id, "1", id)));
+        await Promise.all(orderIds.map(async (id) => mongoBillsRepo.attachOrder(await mongoBillsRepo.openBillFor(R._id, "1"), id)));
         const open = await Bill.find({ resId: R._id, table: "1", isPaid: false }).lean();
         expect(open).toHaveLength(1);
         expect(open[0].orders.map(String).sort()).toEqual([...orderIds].sort());

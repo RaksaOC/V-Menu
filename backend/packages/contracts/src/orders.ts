@@ -55,6 +55,8 @@ export const Order = z.object({
     cancelReason: z.string().optional(),
     orderedItems: z.array(OrderLine),
     resId: z.string().optional(),
+    /** VM-23: the bill it was placed on (orders from before VM-23 have none) */
+    billId: z.string().optional(),
     createdAt: IsoDate,
     orderedAt: IsoDate.optional(),
 });
@@ -73,6 +75,16 @@ export const Bill = z.object({
     updatedAt: IsoDate.optional(),
 });
 export type Bill = z.infer<typeof Bill>;
+
+/** VM-23: GET /internal/orders/without-bill: orders the cashier would never charge. */
+export const OrdersWithoutBill = z.object({
+    from: IsoDate,
+    to: IsoDate,
+    count: z.number().int(),
+    /** the oldest 100 */
+    orders: z.array(z.object({ _id: z.string(), resId: z.string(), table: z.string(), billId: z.string().optional(), createdAt: IsoDate })),
+});
+export type OrdersWithoutBill = z.infer<typeof OrdersWithoutBill>;
 
 export const KitchenHistoryPage = pageOf(Order, "orders");
 export type KitchenHistoryPage = { orders: Order[]; page: number; limit: number; total: number; pages: number };

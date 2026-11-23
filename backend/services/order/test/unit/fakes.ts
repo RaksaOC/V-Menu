@@ -134,16 +134,6 @@ export function fakeBills(orders: { all: OrderRecord[]; onBill?: (id: string) =>
             const i = all.findIndex((b) => b.resId === resId && b.table === table && !b.isPaid && b.orders.length === 0);
             if (i >= 0) all.splice(i, 1);
         },
-        // the old way, kept only so the failing tests run against the old code
-        async addToOpenBill(resId: string, table: string, orderId: string) {
-            hiccup();
-            let bill = all.find((b) => b.resId === resId && b.table === table && !b.isPaid);
-            if (!bill) {
-                bill = { _id: newId(), resId, table, isPaid: false, orders: [], createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, clock++)) };
-                all.push(bill);
-            }
-            bill.orders.push(orderId);
-        },
         async countOpen(resIds) {
             return all.filter((b) => resIds.includes(b.resId) && !b.isPaid && b.orders.length > 0).length;
         },
@@ -178,7 +168,7 @@ export function fakeBills(orders: { all: OrderRecord[]; onBill?: (id: string) =>
             b.updatedAt = new Date(Date.UTC(2026, 0, 1, 0, 0, clock++));
             return withOrders(b);
         },
-    } as BillsRepo & { all: FakeBill[]; failUpdates: number };
+    };
     return repo;
 }
 

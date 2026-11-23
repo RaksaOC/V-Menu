@@ -17,6 +17,8 @@ export interface OrderRecord {
     statusHistory: StatusChangeRecord[];
     cancelReason?: string;
     resId: string;
+    /** VM-23: orders from before it have none */
+    billId?: string;
     orderedAt: Date;
     createdAt: Date;
 }
@@ -33,9 +35,24 @@ export function inRange(field: string, { from, to }: DateRange = {}) {
     return { [field]: mongoose.trusted({ ...(from && { $gte: from }), ...(to && { $lt: to }) }) }; // dates parsed by DateRangeQuery
 }
 
+/** VM-23: an order that's on no bill, as the internal check reports it. */
+export interface OrderWithoutBill {
+    _id: string;
+    resId: string;
+    table: string;
+    billId?: string;
+    createdAt: Date;
+}
+
 /** Every MongoDB query on orders (CL-04). The services only see this interface. */
 export interface OrdersRepo {
-    create(order: { table: string; orderedItems: OrderLine[]; resId: string }): Promise<OrderRecord>;
+    create(order: { table: string; orderedItems: OrderLine[]; resId: string; billId: string }): Promise<OrderRecord>;
+    /** VM-23: the bill it was on was paid first, so it moves to the table's new one. */
+    setBill(resId: string, id: string, billId: string): Promise<void>;
+    /** VM-23: takes back an order that could not be put on a bill. */
+    remove(resId: string, id: string): Promise<void>;
+    /** VM-23: orders placed in the range that no bill holds, oldest first; cancelled ones aren't charged, so they're left out. */
+    listWithoutBill(range: { from: Date; to: Date }, limit: number): Promise<{ orders: OrderWithoutBill[]; total: number }>;
     /** orders that count: everything but cancelled (VM-27), placed in the range when one is given (VM-09) */
     countFor(resIds: string[], range?: DateRange): Promise<number>;
     /** pending, preparing and ready, oldest first (VM-10, VM-27) */
@@ -65,6 +82,24 @@ export const mongoOrdersRepo: OrdersRepo = {
         const at = new Date();
         const created = await Order.create({ ...order, status: "pending", statusHistory: [{ status: "pending", at, by: "customer" }] });
         return created.toObject() as unknown as OrderRecord;
+    },
+    async setBill(resId, id, billId) {
+        await Order.updateOne({ _id: id, resId }, { billId });
+    },
+    async remove(resId, id) {
+        await Order.deleteOne({ _id: id, resId });
+    },
+    async listWithoutBill({ from, to }, limit) {
+        const [result] = await Order.aggregate<{ rows: OrderWithoutBill[]; total: { n: number }[] }>([
+            { $match: { createdAt: { $gte: from, $lt: to }, status: { $ne: "cancelled" } } },
+            { $project: { resId: 1, table: 1, billId: 1, createdAt: 1 } },
+            { $lookup: { from: "table_orders", localField: "_id", foreignField: "orders", as: "bills" } },
+            { $match: { bills: { $size: 0 } } },
+            { $project: { bills: 0 } },
+            { $sort: { createdAt: 1 } },
+            { $facet: { rows: [{ $limit: limit }], total: [{ $count: "n" }] } },
+        ]);
+        return { orders: result.rows, total: result.total[0]?.n ?? 0 };
     },
     countFor: (resIds, range) =>
         Order.countDocuments({ ...inRestaurants(resIds), status: mongoose.trusted({ $ne: "cancelled" }), ...inRange("createdAt", range) }),

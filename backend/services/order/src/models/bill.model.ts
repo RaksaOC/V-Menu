@@ -12,6 +12,9 @@ const billSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
+// VM-23: finds the bill an order is on. Declared first: the unique index below can fail to build.
+billSchema.index({ orders: 1 });
+
 // VM-08: at most one open (unpaid) bill per table, enforced by MongoDB itself.
 billSchema.index({ resId: 1, table: 1 }, { unique: true, partialFilterExpression: { isPaid: false }, name: "one_open_bill_per_table" });
 

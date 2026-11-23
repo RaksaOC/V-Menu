@@ -19,6 +19,8 @@ const orderSchema = new mongoose.Schema(
         statusHistory: [{ _id: false, status: { type: String, enum: ORDER_STATUSES }, at: Date, by: String }],
         cancelReason: { type: String, maxlength: 200 },
         resId: { type: String, required: true, index: true },
+        // VM-23: the bill it was placed on. Orders from before VM-23 have none.
+        billId: { type: mongoose.Schema.Types.ObjectId, ref: "TableOrder" },
     },
     { timestamps: true },
 );
