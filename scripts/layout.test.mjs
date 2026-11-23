@@ -27,7 +27,8 @@ test("the repo uses the frontend / backend / infra layout", () => {
   ];
   for (const d of dirs) assert.ok(isDir(at(d)), `missing folder ${d}/`);
   for (const s of SERVICES) {
-    for (const f of ["package.json", "package-lock.json", "Dockerfile", ".env.example"]) {
+    // No per-service package-lock.json: since CL-02 backend/package-lock.json covers them all.
+    for (const f of ["package.json", "Dockerfile", ".env.example"]) {
       assert.ok(existsSync(at("backend/services", s, f)), `missing backend/services/${s}/${f}`);
     }
   }
@@ -56,13 +57,16 @@ test("CI test and audit jobs point at real packages", () => {
 
 test("release builds the four images from real folders, with the same names", () => {
   const rel = read(".github/workflows/release.yml");
-  const rows = [...rel.matchAll(/- \{ name: ([\w-]+), context: ([\w./-]+) \}/g)];
+  // `file:` is optional: the services build from backend/ with their own Dockerfile (CL-02).
+  const rows = [...rel.matchAll(/- \{ name: ([\w-]+), context: ([\w./-]+)(?:, file: ([\w./-]+))? \}/g)];
   assert.deepEqual(
     rows.map((m) => m[1]).sort(),
     ["frontend", "menu-service", "order-service", "restaurant-service"],
   );
-  for (const [, name, context] of rows) {
-    assert.ok(existsSync(at(context, "Dockerfile")), `image ${name}: no Dockerfile in ${context}`);
+  for (const [, name, context, file] of rows) {
+    assert.ok(isDir(at(context)), `image ${name}: context ${context} does not exist`);
+    const dockerfile = file ?? join(context, "Dockerfile");
+    assert.ok(existsSync(at(dockerfile)), `image ${name}: no Dockerfile at ${dockerfile}`);
   }
   assert.match(rel, /IMAGE: ghcr\.io\/\$\{\{ needs\.meta\.outputs\.owner \}\}\/vmenu-\$\{\{ matrix\.name \}\}/);
 });
@@ -71,9 +75,12 @@ test("the local compose file builds from real folders", () => {
   const file = "infra/compose/docker-compose.yml";
   const compose = read(file);
   const base = dirname(at(file));
-  const contexts = [...compose.matchAll(/^ {6}context: ([\w./-]+)$/gm)].map((m) => m[1]);
-  assert.equal(contexts.length, 4, "expected 4 build contexts");
-  for (const c of contexts) assert.ok(existsSync(join(resolve(base, c), "Dockerfile")), `${file}: no Dockerfile in ${c}`);
+  // `dockerfile:` (relative to the context) is optional: the services build from backend/.
+  const builds = [...compose.matchAll(/^ {6}context: ([\w./-]+)\n(?: {6}dockerfile: ([\w./-]+)\n)?/gm)];
+  assert.equal(builds.length, 4, "expected 4 build contexts");
+  for (const [, c, df] of builds) {
+    assert.ok(existsSync(join(resolve(base, c), df ?? "Dockerfile")), `${file}: no ${df ?? "Dockerfile"} in ${c}`);
+  }
   for (const [, envFile] of compose.matchAll(/^ {4}env_file: ([\w./-]+)$/gm)) {
     // .env files are not committed; their .env.example sits next to them.
     assert.ok(existsSync(resolve(base, envFile) + ".example"), `${file}: no ${envFile}.example`);
