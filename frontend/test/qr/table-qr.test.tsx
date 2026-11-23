@@ -86,6 +86,24 @@ describe("View QR Code buttons", () => {
     });
 });
 
+describe("Print all QR codes", () => {
+    it("prints one card per table from the owner's Tables page", async () => {
+        const { answer } = await import("../api/helpers");
+        const { ResContext } = await import("@/features/owner/ResContext");
+        const { default: OwnerTables } = await import("@/features/owner/components/tables/Tables");
+        answer("get", "/api/menu/demo-bistro/tables", [
+            { _id: "t1", name: "T1", isEnabled: true },
+            { _id: "t2", name: "Patio 2", isEnabled: false },
+        ]);
+        render(<ResContext.Provider value="demo-bistro"><OwnerTables /></ResContext.Provider>);
+        fireEvent.click(await screen.findByRole("button", { name: /print all qr codes/i }));
+        expect(printing.printQrCards).toHaveBeenLastCalledWith([
+            { tableName: "T1", url: tableUrl("demo-bistro", "T1") },
+            { tableName: "Patio 2", url: tableUrl("demo-bistro", "Patio 2") },
+        ]);
+    });
+});
+
 describe("printed QR sheet", () => {
     const card = (n: number) => ({ restaurantName: "Demo Bistro", tableName: `T${n}`, dataUrl: "data:image/png;base64,AA" });
 

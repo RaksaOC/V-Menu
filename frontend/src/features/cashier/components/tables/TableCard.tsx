@@ -1,5 +1,8 @@
 import {QrCode, Users, CheckCircle, XCircle, Table2Icon, TableIcon} from "lucide-react";
 import {TableOutput} from "@/lib/types/Table";
+import {useState} from "react";
+import {useParams} from "next/navigation";
+import TableQrModal from "@/components/qr/TableQrModal";
 
 interface TableCardProps {
     table: TableOutput;
@@ -7,7 +10,10 @@ interface TableCardProps {
 }
 
 function TableCard({table, onToggleStatus}: TableCardProps) {
+    const params = useParams();
+    const [showQr, setShowQr] = useState(false);
     return (
+        <>
         <div
             className={`relative bg-white dark:bg-slate-800 rounded-2xl border  border-slate-500 p-6 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 hover:-translate-y-1 ${
                 table.isEnabled ? "ring-2 ring-green-200 dark:ring-green-800" : ""
@@ -80,12 +86,16 @@ function TableCard({table, onToggleStatus}: TableCardProps) {
                 </button>
 
                 <button
+                    type="button"
+                    onClick={() => setShowQr(true)}
                     className="w-full py-3 px-4 text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-blue-200 dark:shadow-blue-900/30">
                     <QrCode size={16}/>
                     <span>View QR Code</span>
                 </button>
             </div>
         </div>
+        {showQr && <TableQrModal slug={String(params?.res ?? "")} tableName={table.name} onClose={() => setShowQr(false)}/>}
+        </>
     );
 }
 
