@@ -86,3 +86,18 @@ export async function updateTable(slug: string, tableId: string, changes: { name
 export async function deleteTable(slug: string, tableId: string): Promise<void> {
     await api.delete(`/api/menu/${seg(slug)}/tables/${seg(tableId)}`);
 }
+
+/**
+ * Uploads a menu photo (VM-02) and returns its short URL, which is then saved on the item.
+ * The server checks the type, re-encodes it and refuses files over 5 MB (413) or non-photos (415).
+ */
+export async function uploadMenuPhoto(slug: string, file: File, onProgress?: (percent: number) => void): Promise<string> {
+    const form = new FormData();
+    form.append("image", file);
+    const { data } = await api.post<{ url: string }>(`/api/menu/${seg(slug)}/images`, form, {
+        onUploadProgress: (e) => {
+            if (e.total) onProgress?.(Math.round((e.loaded * 100) / e.total));
+        },
+    });
+    return data.url;
+}

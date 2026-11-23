@@ -16,11 +16,11 @@ const URL_OK = "/api/menu/demo-bistro/images/" + "a".repeat(24);
 const photo = () => new File([new Uint8Array(300_000)], "amok.jpg", { type: "image/jpeg" });
 
 function uploads(status = 201, body: object = { url: URL_OK }) {
-    const seen: { type: string | null; file: FormDataEntryValue | null }[] = [];
+    const seen: { type: string | null; body: string }[] = [];
     server.use(
         http.post("*/api/menu/demo-bistro/images", async ({ request }) => {
-            const form = await request.formData();
-            seen.push({ type: request.headers.get("content-type"), file: form.get("image") });
+            // raw body: undici's formData() can't read jsdom's File objects
+            seen.push({ type: request.headers.get("content-type"), body: await request.text() });
             return HttpResponse.json(body, { status });
         }),
     );
@@ -43,7 +43,9 @@ describe("adding an item with a photo", () => {
         await waitFor(() => expect(onSave).toHaveBeenCalled());
         expect(seen).toHaveLength(1);
         expect(seen[0].type).toMatch(/^multipart\/form-data/);
-        expect((seen[0].file as File).name).toBe("amok.jpg");
+        // (jsdom sends the file as an empty "blob"; a browser sends the real name and bytes)
+        expect(seen[0].body).toMatch(/name="image"; filename="[^"]+"\r\nContent-Type: image\/jpeg/);
+        expect(seen[0].body).not.toContain("base64");
         expect(onSave).toHaveBeenCalledWith({ name: "Fish Amok", price: 5.5, image: URL_OK, isEnabled: true });
     });
 
