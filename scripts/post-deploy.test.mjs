@@ -2,7 +2,9 @@
 // browser suite, the ZAP baseline). If it fails, the run fails and the "Deploy failed" alert fires.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
@@ -96,4 +98,41 @@ test("the browser suite is a tagged e2e spec, so the e2e job runs it on every PR
     assert.match(spec, /\/cancel/, "the test order is cancelled, so staging's queue stays clean");
     assert.match(spec, /CHEF_TOKEN/);
     assert.doesNotMatch(spec, /JWT_SECRET/, "on staging it only gets the short-lived tokens");
+});
+
+test("recording a failed check only adds a history line: it copies no files and needs no database or app secrets", () => {
+    // The file copy replaces the server's .env, which holds the running TAG. This job isn't in the
+    // deploy queue, so doing that here could pull the TAG out from under a deploy in progress.
+    const dir = mkdtempSync(join(tmpdir(), "vmenu-b7-"));
+    try {
+        const calls = join(dir, "ssh-calls");
+        writeFileSync(join(dir, "ssh"), `#!/usr/bin/env bash\necho "\${@: -1}" >> "${calls}"\ncat > /dev/null\n`);
+        chmodSync(join(dir, "ssh"), 0o755);
+        const r = spawnSync("bash", [join(root, "infra/deploy/ci-deploy.sh")], {
+            encoding: "utf8",
+            cwd: root,
+            env: {
+                PATH: `${dir}:${process.env.PATH}`,
+                TARGET: "staging",
+                DEPLOY_ACTION: "--check-failed",
+                SSH_HOST: "server.invalid",
+                SSH_USER: "deploy",
+                SSH_KEY: "not-a-real-key",
+                SSH_KNOWN_HOSTS: "server.invalid ssh-ed25519 AAAA",
+            },
+        });
+        assert.equal(r.status, 0, r.stdout + r.stderr);
+        const remote = readFileSync(calls, "utf8").trim().split("\n");
+        assert.equal(remote.length, 1, `one ssh call, got: ${remote.join(" | ")}`);
+        assert.match(remote[0], /remote-deploy\.sh' 'staging' '--check-failed'/);
+        assert.doesNotMatch(remote[0], /tar /);
+    } finally {
+        rmSync(dir, { recursive: true, force: true });
+    }
+});
+
+test("the job that records the failure only gets the SSH secrets", () => {
+    const failed = job(deploy, "post-deploy-failed");
+    assert.match(failed, /secrets\.SSH_KEY/);
+    assert.doesNotMatch(failed, /secrets\.(MONGODB|JWT|INTERNAL)/);
 });
