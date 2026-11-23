@@ -1,6 +1,6 @@
 # Remaining work: every ticket
 
-Generated 2026-11-23 22:23. 7 of 77 done (9%). Essential (P0 path): 7 of 14.
+Generated 2026-11-23 22:59. 8 of 77 done (10%). Essential (P0 path): 8 of 14.
 
 "Essential" = the 6 P0 blockers, the cleanup tickets they depend on, and the final showcase. Order = the order to work in (dependencies first).
 
@@ -16,8 +16,8 @@ Generated 2026-11-23 22:23. 7 of 77 done (9%). Essential (P0 path): 7 of 14.
 | 8 | CL-08 | Frontend folders by feature | P1 | yes | completed | [#141](https://github.com/RaksaOC/V-Menu/pull/141) | [#106](https://github.com/RaksaOC/V-Menu/issues/106) | B1 |  |
 | 9 | CL-10 | One API client per feature, and one toast helper | P1 | yes | completed | [#167](https://github.com/RaksaOC/V-Menu/pull/167) | [#108](https://github.com/RaksaOC/V-Menu/issues/108) | CL-08 |  |
 | 10 | CL-09 | Merge duplicate components and build a small UI kit | P1 | yes | completed | [#170](https://github.com/RaksaOC/V-Menu/pull/170) | [#107](https://github.com/RaksaOC/V-Menu/issues/107) | CL-08 |  |
-| 11 | VM-01 | Table QR codes do not exist | P0 | yes | in progress |  | [#63](https://github.com/RaksaOC/V-Menu/issues/63) | CL-09, B1 | [notes](tickets/VM-01.md) |
-| 12 | VM-02 | Adding a menu item with a real photo fails | P0 | yes | not started |  | [#64](https://github.com/RaksaOC/V-Menu/issues/64) | CL-02, CL-09 | [notes](tickets/VM-02.md) |
+| 11 | VM-01 | Table QR codes do not exist | P0 | yes | completed | [#172](https://github.com/RaksaOC/V-Menu/pull/172) | [#63](https://github.com/RaksaOC/V-Menu/issues/63) | CL-09, B1 |  |
+| 12 | VM-02 | Adding a menu item with a real photo fails | P0 | yes | in progress |  | [#64](https://github.com/RaksaOC/V-Menu/issues/64) | CL-02, CL-09 | [notes](tickets/VM-02.md) |
 | 13 | SEC-05 | Make the photo upload safe | P0 (with VM-02) | yes | not started |  | [#117](https://github.com/RaksaOC/V-Menu/issues/117) | VM-02 | [notes](tickets/SEC-05.md) |
 | 14 | VM-04 | A closed table tells the customer to scan the QR code | P0 | yes | not started |  | [#66](https://github.com/RaksaOC/V-Menu/issues/66) | CL-08 | [notes](tickets/VM-04.md) |
 | 15 | VM-05 | The cart is shared across restaurants and tables | P0 | yes | not started |  | [#67](https://github.com/RaksaOC/V-Menu/issues/67) | CL-08 | [notes](tickets/VM-05.md) |

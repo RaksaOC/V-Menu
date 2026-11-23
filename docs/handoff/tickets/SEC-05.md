@@ -11,7 +11,7 @@ The full ticket (problem, what to change, tests, done when) is in issue [#117](h
 
 ## Depends on
 
-- VM-02 : not started 
+- VM-02 : in progress 
 
 ## Notes from this run
 

@@ -11,7 +11,7 @@ Security ticket. The details are kept out of the public repo on purpose: read th
 
 ## Depends on
 
-- VM-01 : in progress 
+- VM-01 : completed [#172](https://github.com/RaksaOC/V-Menu/pull/172)
 
 ## Notes from this run
 
