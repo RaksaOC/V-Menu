@@ -9,7 +9,7 @@
 // Every shot is taken with the same viewport, data and theme in both phases.
 // Node 22.18+ runs this file directly (type stripping), so there is no build step.
 
-import { mkdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, type Browser, type Page } from "playwright";
@@ -114,7 +114,10 @@ async function shot(c: Ctx, name: string, fullPage = true) {
     results.push(`ok   ${name}-${c.width}${suffix}`);
 }
 
+// ONLY=<regex> runs just the matching steps, e.g. ONLY="CL-10" for one ticket's shots.
+const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 async function step(label: string, fn: () => Promise<void>) {
+    if (ONLY && !ONLY.test(label)) return;
     try {
         await fn();
     } catch (err) {
@@ -154,6 +157,21 @@ for (const vp of [PHONE, DESKTOP]) {
             await context.close();
         });
     }
+}
+
+// CL-10: the toast a customer sees after adding a dish (one shared style, light and dark).
+for (const theme of ["light", "dark"] as const) {
+    await step(`CL-10 toast ${theme}`, async () => {
+        const { context, page } = await newPage(browser, PHONE, theme);
+        await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
+        await settle(page);
+        await page.getByRole("button", { name: /add/i }).first().click({ timeout: 5000 });
+        await page.locator(".Toastify__toast").first().waitFor({ timeout: 5000 });
+        await page.waitForTimeout(300);
+        await page.screenshot({ path: join(OUT, `CL-10-toast-added-to-cart-${PHONE.width}${theme === "dark" ? "-dark" : ""}.png`), animations: "disabled" });
+        results.push(`ok   CL-10-toast-added-to-cart-${PHONE.width}${theme === "dark" ? "-dark" : ""}`);
+        await context.close();
+    });
 }
 
 // The customer error states (VM-04): closed table and unknown restaurant.
@@ -241,5 +259,7 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 await browser.close();
-writeFileSync(join(OUT, "capture-log.txt"), results.join("\n") + "\n");
+// A partial run (ONLY) adds to the log instead of replacing the full run's log.
+if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
+else writeFileSync(join(OUT, "capture-log.txt"), results.join("\n") + "\n");
 console.log(results.join("\n"));
