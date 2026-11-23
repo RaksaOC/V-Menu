@@ -252,7 +252,8 @@ export function createApp({
             assertId(String(l?._id), "item id");
             if (!Number.isInteger(l.quantity) || l.quantity < 1 || l.quantity > 99) throw badRequest("Quantity must be 1 to 99");
         }
-        if (!(await Table.exists({ name: table, resId, isEnabled: true }))) throw new HttpError(409, "Table is not available", "TABLE_CLOSED");
+        if (!(await Table.exists({ name: table, resId, isEnabled: true })))
+            throw new HttpError(409, "Table is not available", "TABLE_CLOSED");
         const ids = [...new Set(lines.map((l) => String(l._id)))];
         const items = await Item.find({ _id: mongoose.trusted({ $in: ids }), resId, isEnabled: true }).lean();
         if (items.length !== ids.length) throw new HttpError(409, "Some items are no longer available", "ITEMS_UNAVAILABLE");
