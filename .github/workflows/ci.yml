@@ -58,6 +58,10 @@ jobs:
       - run: npm run typecheck
         if: matrix.kind != 'repo'
 
+      - name: Formatting (Prettier, CL-12)
+        if: matrix.kind == 'repo'
+        run: npm run format:check
+
       - name: Repo checks (templates)
         if: matrix.kind == 'repo'
         run: npm run test:repo
