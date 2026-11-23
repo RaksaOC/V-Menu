@@ -6,15 +6,19 @@ import { TableOrderOutput } from "@/lib/types/TableOrder";
 import { prettyDate } from "@/lib/dates";
 import { useParams } from "next/navigation";
 import { DollarSign, Eye, EyeOff } from "lucide-react";
+import { Chip } from "@/components/ui";
 
 interface Props {
     order: TableOrderOutput;
     onMarkPaid: (id: string) => void;
+    /** VM-11: a new bill, or one that got another order since the cashier last looked */
+    isNew?: boolean;
+    /** called when the cashier opens the invoice, which clears NEW */
+    onSeen?: (id: string) => void;
 }
 
-function OrderCard({ order, onMarkPaid }: Props) {
+function OrderCard({ order, onMarkPaid, isNew = false, onSeen }: Props) {
     const [showInvoice, setShowInvoice] = useState(false);
-    console.log(order);
     const params = useParams();
     // Access nested structure: order.orders = array of sub-orders, each with its own items
     const subOrders = order.orders;
@@ -28,9 +32,14 @@ function OrderCard({ order, onMarkPaid }: Props) {
     // }, [])
 
     return (
-        <div className="rounded-2xl overflow-hidden bg-none w-full p-4  ">
+        <article className="rounded-2xl overflow-hidden bg-none w-full p-4  ">
             <div className="flex justify-between items-center mb-2">
                 <h3 className="text-xl font-bold text-zinc-800 dark:text-white mb-2.5">Table {order.table}</h3>
+                {isNew && (
+                    <Chip tone="accent" className="font-bold tracking-wide">
+                        NEW
+                    </Chip>
+                )}
                 {/*<span className="text-sm text-zinc-500 dark:text-zinc-400">Order ID: {order._id}</span>*/}
             </div>
 
@@ -83,7 +92,10 @@ function OrderCard({ order, onMarkPaid }: Props) {
 
             <div className="flex gap-3 mt-6">
                 <button
-                    onClick={() => setShowInvoice((prev) => !prev)}
+                    onClick={() => {
+                        setShowInvoice((prev) => !prev);
+                        onSeen?.(order._id);
+                    }}
                     className="flex-1 flex items-center justify-center space-x-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-3 px-4 rounded-xl transition-all duration-200"
                 >
                     {showInvoice ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -100,7 +112,7 @@ function OrderCard({ order, onMarkPaid }: Props) {
                     </button>
                 )}
             </div>
-        </div>
+        </article>
     );
 }
 
