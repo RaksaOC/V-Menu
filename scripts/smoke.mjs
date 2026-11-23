@@ -18,14 +18,14 @@ if (!secret) throw new Error("JWT_SECRET must be set (the same value the service
 async function call(method, path, { body, token } = {}) {
     const headers = {};
     if (body) headers["content-type"] = "application/json";
-    if (token) headers.authorization = `Bearer ${token}`;
+    if (token) headers.cookie = `token=${token}`; // SEC-01: the session is a cookie, as in a browser
     const res = await fetch(`${base}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
     const data = await res.json().catch(() => null);
     if (!res.ok) throw new Error(`${method} ${path} -> ${res.status} ${JSON.stringify(data)}`);
     return data;
 }
 
-// HS256 app token in the shape restaurant-service issues (see backend/services/*/src/lib/auth.ts).
+// HS256 app token in the shape restaurant-service issues (see backend/packages/common/src/auth.ts).
 function signAppToken(claims) {
     const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const now = Math.floor(Date.now() / 1000);

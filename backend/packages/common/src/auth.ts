@@ -31,14 +31,20 @@ export async function signAppToken(user: AppUser, ttl = "1h") {
         .sign(secret());
 }
 
+// SEC-01: browsers carry the session in the httpOnly "token" cookie, which page scripts can't
+// read. A Bearer header is accepted only when AUTH_ALLOW_BEARER=true (tests and internal tools);
+// a browser never sends one.
+export const bearerAllowed = () => process.env.AUTH_ALLOW_BEARER === "true";
+
 function readToken(req: Request): string | null {
-    const header = req.headers.authorization;
-    if (header?.startsWith("Bearer ")) return header.slice(7);
     const cookie = req.headers.cookie
         ?.split(";")
         .map((c) => c.trim())
         .find((c) => c.startsWith("token="));
-    return cookie ? decodeURIComponent(cookie.slice(6)) : null;
+    if (cookie) return decodeURIComponent(cookie.slice(6));
+    const header = req.headers.authorization;
+    if (bearerAllowed() && header?.startsWith("Bearer ")) return header.slice(7);
+    return null;
 }
 
 // Checks the signature and expiry, then the role. Restaurant-level checks happen in the routes.

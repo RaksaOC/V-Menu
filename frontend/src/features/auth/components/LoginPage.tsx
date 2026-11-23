@@ -45,12 +45,11 @@ export default function LoginPage() {
             // "chef" is called "kitchen" in page URLs
             const realRole = role === "chef" ? "kitchen" : role;
             const resSlug = selectedRes?.split(" - ")[1];
-            const appToken = await login({
+            await login({
                 idToken: logInDetail.idToken,
                 role: role as StaffRole,
                 resSlug: role === "owner" ? undefined : resSlug,
             });
-            localStorage.setItem("token", appToken);
             router.push(role === "owner" ? `/owner` : `/${resSlug}/${realRole}`);
         } catch (error: any) {
             console.error(error);

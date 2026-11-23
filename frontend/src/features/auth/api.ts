@@ -9,10 +9,10 @@ export interface LoginRequest {
     resSlug?: string;
 }
 
-/** Exchanges a Firebase ID token for the app token the services accept. */
-export async function login(request: LoginRequest): Promise<string> {
-    const { data } = await api.post<{ appToken: string }>("/api/auth/login", request);
-    return data.appToken;
+/** Exchanges a Firebase ID token for a session. The server sets it as an httpOnly cookie;
+ *  nothing comes back for the page to keep (SEC-01). */
+export async function login(request: LoginRequest): Promise<void> {
+    await api.post("/api/auth/login", request);
 }
 
 /** The restaurants the user can sign in to, per role ("Name - slug" strings). */

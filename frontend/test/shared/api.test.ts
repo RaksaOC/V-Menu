@@ -19,11 +19,11 @@ function captureAuth() {
 }
 
 describe("shared API client", () => {
-    it("sends the saved app token as a Bearer header", async () => {
+    it("never sends a token from page storage; the browser sends the httpOnly cookie (SEC-01)", async () => {
         const seen = captureAuth();
         localStorage.setItem("token", "abc.def.ghi");
         await api.get("/api/ping");
-        expect(seen).toEqual(["Bearer abc.def.ghi"]);
+        expect(seen).toEqual([null]);
     });
 
     it("sends no Authorization header when nobody is signed in", async () => {

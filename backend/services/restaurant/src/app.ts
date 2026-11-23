@@ -111,7 +111,8 @@ export function createApp({ verifyIdToken }: { verifyIdToken: VerifyIdToken }) {
                 `${sessionHours()}h`,
             );
         }
-        res.cookie("token", token, cookieOptions()).json({ appToken: token });
+        // SEC-01: the token goes only into the httpOnly cookie; page scripts never see it.
+        res.cookie("token", token, cookieOptions()).json({ role });
     });
 
     auth.post("/logout", (_req, res) => {
