@@ -205,3 +205,29 @@ ok   VM-12-owner-staff-360
 ok   VM-12-add-staff-form-360
 ok   VM-12-login-360
 ok   VM-12-login-create-account-360
+# ONLY=VM-12 (2026-11-23T17:18:40.642Z)
+ok   VM-12-owner-staff-1280
+ok   VM-12-add-staff-form-1280
+ok   VM-12-login-1280
+ok   VM-12-login-create-account-1280
+ok   VM-12-owner-staff-1280-dark
+ok   VM-12-add-staff-form-1280-dark
+ok   VM-12-login-1280-dark
+ok   VM-12-login-create-account-1280-dark
+ok   VM-12-owner-staff-360
+ok   VM-12-add-staff-form-360
+ok   VM-12-login-360
+ok   VM-12-login-create-account-360
+# ONLY=VM-12 (2026-11-23T17:20:28.240Z)
+ok   VM-12-owner-staff-1280
+ok   VM-12-add-staff-form-1280
+ok   VM-12-login-1280
+ok   VM-12-login-create-account-1280
+ok   VM-12-owner-staff-1280-dark
+ok   VM-12-add-staff-form-1280-dark
+ok   VM-12-login-1280-dark
+ok   VM-12-login-create-account-1280-dark
+ok   VM-12-owner-staff-360
+ok   VM-12-add-staff-form-360
+ok   VM-12-login-360
+ok   VM-12-login-create-account-360

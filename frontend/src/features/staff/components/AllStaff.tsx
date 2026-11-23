@@ -400,7 +400,7 @@ export default function AllStaff() {
                                         className="bg-gray-50 rounded-xl border border-gray-100 p-4"
                                     >
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <div className="w-12 h-12 shrink-0 bg-blue-100 rounded-full flex items-center justify-center">
                                                 <span className="text-blue-600 font-semibold text-sm">
                                                     {member.name
                                                         .split(" ")
@@ -410,15 +410,13 @@ export default function AllStaff() {
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between gap-2 h-full">
-                                                    <div className="flex flex-col items-start gap-1 min-w-0">
-                                                        <p className="font-medium text-gray-900 truncate">{member.name}</p>
-                                                        <InvitePending member={member} />
-                                                    </div>
+                                                <p className="font-medium text-gray-900 truncate">{member.name}</p>
+                                                <div className="mt-1 flex flex-wrap items-center gap-1.5">
                                                     <span className={getRoleBadge(member.role)}>
                                                         {getRoleIcon(member.role)}
                                                         {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                                                     </span>
+                                                    <InvitePending member={member} />
                                                 </div>
                                             </div>
                                         </div>

@@ -333,7 +333,7 @@ const OwnerDashboard = () => {
                     {sidebarContent}
                 </div>
 
-                <div className="flex-1 pt-24 lg:pt-26 pr-2 lg:pr-4 pl-2 lg:pl-76">{renderContent()}</div>
+                <div className="flex-1 min-w-0 pt-24 lg:pt-26 pr-2 lg:pr-4 pl-2 lg:pl-76">{renderContent()}</div>
             </div>
             {showAddRes && <AddRestaurantPopup onClose={() => setShowAddRes(false)} onSave={handleAddRestaurant} />}
         </div>
