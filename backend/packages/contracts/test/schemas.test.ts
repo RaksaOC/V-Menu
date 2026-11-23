@@ -87,6 +87,13 @@ describe("menu", () => {
     });
 });
 
+describe("public restaurant info (VM-21)", () => {
+    it("is only a name and a slug: anything else is dropped", () => {
+        const safe = C.PublicRestaurant.parse({ name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1", email: "o@x.com" });
+        expect(safe).toEqual({ name: "Mee Keav", slug: "mee-keav-abc123" });
+    });
+});
+
 describe("menu categories (VM-25)", () => {
     it("a category's name, and a new order as every id once", () => {
         expect(C.CategoryBody.parse({ name: " Drinks " })).toEqual({ name: "Drinks" });

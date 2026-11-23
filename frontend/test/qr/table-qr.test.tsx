@@ -127,3 +127,26 @@ describe("printed QR sheet", () => {
         expect(html).toContain("A &amp; B");
     });
 });
+
+describe("the restaurant's name on the QR code (VM-21)", () => {
+    it("the Tables screen passes it to the QR popup", async () => {
+        const { http, HttpResponse } = await import("msw");
+        const { server } = await import("../msw");
+        vi.doMock("next/navigation", () => ({ useParams: () => ({ res: "demo-bistro" }), useRouter: () => ({ push: vi.fn() }) }));
+        server.use(
+            http.get("*/api/menu/demo-bistro/tables", () =>
+                HttpResponse.json([{ _id: "665f000000000000000000a1", name: "T1", isEnabled: true }]),
+            ),
+            http.get("*/api/restaurants/demo-bistro/public", () => HttpResponse.json({ name: "Demo Bistro", slug: "demo-bistro" })),
+        );
+        const { ResContext } = await import("@/lib/restaurant-context");
+        const { default: Tables } = await import("@/features/restaurant/components/Tables");
+        render(
+            <ResContext.Provider value="demo-bistro">
+                <Tables role="cashier" />
+            </ResContext.Provider>,
+        );
+        fireEvent.click(await screen.findByRole("button", { name: "View QR Code" }));
+        expect(await screen.findByText("Demo Bistro")).toBeTruthy();
+    });
+});
