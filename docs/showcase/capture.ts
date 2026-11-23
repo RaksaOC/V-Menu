@@ -174,18 +174,41 @@ for (const theme of ["light", "dark"] as const) {
     });
 }
 
-// The customer error states (VM-04): closed table and unknown restaurant.
-await step("customer errors", async () => {
-    const { context, page } = await newPage(browser, PHONE, "light");
-    const c = { page, theme: "light" as const, width: PHONE.width };
-    await page.goto(`${BASE}/${SLUG}/customer/NO-SUCH-TABLE`);
-    await settle(page);
-    await shot(c, "VM-04-closed-table");
-    await page.goto(`${BASE}/no-such-restaurant/customer/T1`);
-    await settle(page);
-    await shot(c, "VM-04-unknown-restaurant");
-    await context.close();
-});
+// VM-04: what a customer sees when the table can't be used: closed, unknown table, unknown
+// restaurant, and a server error. T4 is closed for the shot and opened again afterwards.
+for (const theme of ["light", "dark"] as const) {
+    await step(`VM-04 customer states ${theme}`, async () => {
+        const staff = await newPage(browser, PHONE, theme, "cashier");
+        const tables: { _id: string; name: string }[] = await (await staff.page.request.get(`${BASE}/api/menu/${SLUG}/tables`)).json();
+        const t4 = tables.find((t) => t.name === "T4")!;
+        const setOpen = (isEnabled: boolean) => staff.page.request.patch(`${BASE}/api/menu/${SLUG}/tables/${t4._id}/availability`, { data: { isEnabled } });
+        const { context, page } = await newPage(browser, PHONE, theme);
+        const c = { page, theme, width: PHONE.width };
+        try {
+            await setOpen(false);
+            await page.goto(`${BASE}/${SLUG}/customer/T4`);
+            await settle(page);
+            await shot(c, "VM-04-closed-table", false);
+        } finally {
+            await setOpen(true);
+        }
+        await page.goto(`${BASE}/${SLUG}/customer/NO-SUCH-TABLE`);
+        await settle(page);
+        await shot(c, "VM-04-unknown-table", false);
+        await page.goto(`${BASE}/no-such-restaurant/customer/T1`);
+        await settle(page);
+        await shot(c, "VM-04-unknown-restaurant", false);
+        await page.route(`**/api/menu/${SLUG}/public/tables/**`, (route) =>
+            route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ message: "A required service is unavailable" }) }),
+        );
+        await page.goto(`${BASE}/${SLUG}/customer/T1`);
+        await settle(page);
+        await page.waitForTimeout(1500);
+        await shot(c, "VM-04-server-error", false);
+        await context.close();
+        await staff.context.close();
+    });
+}
 
 // ---------------------------------------------------------------- kitchen
 for (const theme of ["light", "dark"] as const) {
