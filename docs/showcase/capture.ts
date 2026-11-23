@@ -832,6 +832,39 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-14: "Forgot password?" on the login pages, against the Auth emulator; real Firebase is blocked.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-14 ${vp.width} ${theme}`, async () => {
+        const { page, context } = await newPage(browser, vp, theme);
+        await context.route(/^https:\/\/[a-z0-9-]+\.googleapis\.com\//, (route) => route.abort("blockedbyclient"));
+        const c = { page, theme, width: vp.width };
+        for (const [name, path] of [
+            ["owner-login", "/owner/login"],
+            ["cashier-login", `/${SLUG}/cashier/login`],
+            ["kitchen-login", `/${SLUG}/kitchen/login`],
+        ]) {
+            await page.goto(`${BASE}${path}`);
+            await settle(page);
+            await shot(c, `VM-14-${name}`, false);
+        }
+        if (PHASE === "after") {
+            await page.goto(`${BASE}/owner/login`);
+            await settle(page);
+            await page.getByRole("button", { name: "Forgot password?" }).click({ timeout: 5000 });
+            await page.getByLabel("Email Address").fill(`someone-${vp.width}-${theme}@e2e.test`);
+            await shot(c, "VM-14-reset-form", false);
+            await page.getByRole("button", { name: "Send reset link" }).click();
+            await page.getByText("If that email has an account").waitFor({ timeout: 15_000 });
+            await shot(c, "VM-14-reset-sent", false);
+        }
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
