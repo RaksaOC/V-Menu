@@ -35,8 +35,12 @@ describe("Button", () => {
         const onClick = vi.fn();
         render(
             <>
-                <Button disabled onClick={onClick}>Off</Button>
-                <Button loading onClick={onClick}>Saving</Button>
+                <Button disabled onClick={onClick}>
+                    Off
+                </Button>
+                <Button loading onClick={onClick}>
+                    Saving
+                </Button>
             </>,
         );
         await userEvent.click(screen.getByRole("button", { name: "Off" }));
@@ -50,7 +54,11 @@ describe("Button", () => {
 
 describe("Card and Chip", () => {
     it("renders a card as any element", () => {
-        render(<Card as="section" aria-label="Stats">Inside</Card>);
+        render(
+            <Card as="section" aria-label="Stats">
+                Inside
+            </Card>,
+        );
         expect(screen.getByRole("region", { name: "Stats" })).toHaveTextContent("Inside");
     });
 

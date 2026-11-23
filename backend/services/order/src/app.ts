@@ -1,12 +1,26 @@
 import { Router, type Request } from "express";
 import mongoose from "mongoose";
-import { assertRestaurantAccess, requireRole, assertId, badRequest, notFound, lookupRestaurant as defaultLookup, type LookupRestaurant, type RestaurantRef, baseApp, finish } from "@vmenu/common";
+import {
+    assertRestaurantAccess,
+    requireRole,
+    assertId,
+    badRequest,
+    notFound,
+    lookupRestaurant as defaultLookup,
+    type LookupRestaurant,
+    type RestaurantRef,
+    baseApp,
+    finish,
+} from "@vmenu/common";
 import { httpClients, type Clients } from "./lib/clients.js";
 import { Order, TableOrder } from "./models.js";
 
 const str = (v: unknown, max = 200) => (typeof v === "string" && v.trim() && v.length <= max ? v.trim() : null);
 
-export function createApp({ lookupRestaurant = defaultLookup, clients = httpClients }: { lookupRestaurant?: LookupRestaurant; clients?: Clients } = {}) {
+export function createApp({
+    lookupRestaurant = defaultLookup,
+    clients = httpClients,
+}: { lookupRestaurant?: LookupRestaurant; clients?: Clients } = {}) {
     const app = baseApp();
 
     async function restaurantFor(req: Request) {
@@ -66,7 +80,10 @@ export function createApp({ lookupRestaurant = defaultLookup, clients = httpClie
             numOfMoneyEarned,
             totalItemsSold,
             avgItemsPerOrder: numOfOrders > 0 ? Number((totalItemsSold / numOfOrders).toFixed(2)) : 0,
-            topSellingItems: [...sold.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, quantity]) => ({ name, quantity })),
+            topSellingItems: [...sold.entries()]
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([name, quantity]) => ({ name, quantity })),
         });
     });
     app.use("/api/orders/owner", owner);
@@ -83,7 +100,10 @@ export function createApp({ lookupRestaurant = defaultLookup, clients = httpClie
         if (!table || lines.length === 0) throw badRequest("A table and at least one item are required");
         const { items } = await clients.orderCheck(req, restaurant._id, {
             table,
-            items: lines.map((l: { item?: { _id?: string }; quantity?: number }) => ({ _id: String(l?.item?._id ?? ""), quantity: Number(l?.quantity) })),
+            items: lines.map((l: { item?: { _id?: string }; quantity?: number }) => ({
+                _id: String(l?.item?._id ?? ""),
+                quantity: Number(l?.quantity),
+            })),
         });
         const order = await Order.create({ table, orderedItems: items, resId: restaurant._id });
         await TableOrder.findOneAndUpdate(
@@ -119,7 +139,11 @@ export function createApp({ lookupRestaurant = defaultLookup, clients = httpClie
         const restaurant = await restaurantFor(req);
         assertId(String(req.params.id), "bill id");
         if (typeof req.body?.isPayed !== "boolean") throw badRequest("isPayed must be true or false");
-        const bill = await TableOrder.findOneAndUpdate({ _id: req.params.id, resId: restaurant._id }, { isPayed: req.body.isPayed }, { new: true }).populate("orders");
+        const bill = await TableOrder.findOneAndUpdate(
+            { _id: req.params.id, resId: restaurant._id },
+            { isPayed: req.body.isPayed },
+            { new: true },
+        ).populate("orders");
         if (!bill) throw notFound("Bill not found");
         res.json(bill);
     });

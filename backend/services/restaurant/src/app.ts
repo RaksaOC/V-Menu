@@ -1,7 +1,20 @@
 import { Router, type Request, type Response } from "express";
 import mongoose from "mongoose";
 import { rateLimit } from "express-rate-limit";
-import { assertRestaurantAccess, requireRole, signAppToken, type Role, assertId, badRequest, HttpError, notFound, unauthorized, requireInternal, baseApp, finish } from "@vmenu/common";
+import {
+    assertRestaurantAccess,
+    requireRole,
+    signAppToken,
+    type Role,
+    assertId,
+    badRequest,
+    HttpError,
+    notFound,
+    unauthorized,
+    requireInternal,
+    baseApp,
+    finish,
+} from "@vmenu/common";
 import type { VerifyIdToken } from "./firebase.js";
 import { createRestaurantForOwner, Restaurant, Tenant } from "./models.js";
 
@@ -16,7 +29,13 @@ function sessionHours(): number {
 }
 
 function cookieOptions() {
-    return { httpOnly: true, secure: process.env.COOKIE_SECURE !== "false", sameSite: "lax" as const, path: "/", maxAge: sessionHours() * 3600 * 1000 };
+    return {
+        httpOnly: true,
+        secure: process.env.COOKIE_SECURE !== "false",
+        sameSite: "lax" as const,
+        path: "/",
+        maxAge: sessionHours() * 3600 * 1000,
+    };
 }
 
 async function restaurantBySlug(slug: string) {
@@ -87,7 +106,10 @@ export function createApp({ verifyIdToken }: { verifyIdToken: VerifyIdToken }) {
             const restaurant = await restaurantBySlug(slug);
             const member = await Tenant.exists({ resId: restaurant._id, role, $or: [{ tenantId: who.uid }, { email: who.email }] });
             if (!member) throw unauthorized("You do not have this role at this restaurant");
-            token = await signAppToken({ uid: who.uid, email: who.email, role, resId: restaurant._id, resSlug: restaurant.slug }, `${sessionHours()}h`);
+            token = await signAppToken(
+                { uid: who.uid, email: who.email, role, resId: restaurant._id, resSlug: restaurant.slug },
+                `${sessionHours()}h`,
+            );
         }
         res.cookie("token", token, cookieOptions()).json({ appToken: token });
     });
@@ -109,7 +131,11 @@ export function createApp({ verifyIdToken }: { verifyIdToken: VerifyIdToken }) {
         const name = str(req.body?.name, 120);
         if (!name) throw badRequest("Restaurant name is required");
         const me = await Tenant.findOne({ tenantId: req.user!.uid }).lean();
-        const restaurant = await createRestaurantForOwner(name, { uid: req.user!.uid, email: req.user!.email, name: me?.name ?? req.user!.email });
+        const restaurant = await createRestaurantForOwner(name, {
+            uid: req.user!.uid,
+            email: req.user!.email,
+            name: me?.name ?? req.user!.email,
+        });
         res.status(201).json(restaurant);
     });
 
@@ -137,8 +163,10 @@ export function createApp({ verifyIdToken }: { verifyIdToken: VerifyIdToken }) {
         const email = str(req.body.email, 200)?.toLowerCase();
         const tenantId = str(req.body.tenantId, 128);
         const role = req.body.role;
-        if (!name || !email || !tenantId || !STAFF_ROLES.includes(role)) throw badRequest("Name, email, account id and a cashier or chef role are required");
-        if (await Tenant.exists({ resId: restaurant._id, role, $or: [{ tenantId }, { email }] })) throw new HttpError(409, "This person already has that role here");
+        if (!name || !email || !tenantId || !STAFF_ROLES.includes(role))
+            throw badRequest("Name, email, account id and a cashier or chef role are required");
+        if (await Tenant.exists({ resId: restaurant._id, role, $or: [{ tenantId }, { email }] }))
+            throw new HttpError(409, "This person already has that role here");
         res.status(201).json(await Tenant.create({ name, email, tenantId, role, resId: restaurant._id }));
     });
 

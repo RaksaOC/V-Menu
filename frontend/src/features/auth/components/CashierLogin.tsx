@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import {useState, FormEvent} from "react";
-import {useParams, useRouter} from "next/navigation";
-import {signInWithEmailAndPassword} from "firebase/auth";
-import {auth} from "@/lib/firebase";
-import {Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight} from "lucide-react";
-import {login} from "@/features/auth/api";
+import { useState, FormEvent } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight } from "lucide-react";
+import { login } from "@/features/auth/api";
 import SessionEndedNotice from "@/features/auth/components/SessionEndedNotice";
 
 const Auth = () => {
     const router = useRouter();
     const params = useParams();
-    const [form, setForm] = useState({email: "", password: ""});
+    const [form, setForm] = useState({ email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({});
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm({...form, [e.target.name]: e.target.value});
+        setForm({ ...form, [e.target.name]: e.target.value });
         if (formErrors[e.target.name as keyof typeof formErrors]) {
-            setFormErrors({...formErrors, [e.target.name]: undefined});
+            setFormErrors({ ...formErrors, [e.target.name]: undefined });
         }
     };
 
@@ -68,26 +68,21 @@ const Auth = () => {
     };
 
     return (
-        <div
-            className={"w-full min-h-screen flex justify-center items-center bg-[var(--stage)] text-[var(--ink)] px-4 relative"}>
+        <div className={"w-full min-h-screen flex justify-center items-center bg-[var(--stage)] text-[var(--ink)] px-4 relative"}>
             <div className="bg-[var(--bg)] border border-[var(--line)] rounded-2xl shadow-xl p-8 max-w-md w-full">
-                <h2 className="text-3xl font-bold text-center text-zinc-800 dark:text-white mb-6">
-                    Cashier Login
-                </h2>
+                <h2 className="text-3xl font-bold text-center text-zinc-800 dark:text-white mb-6">Cashier Login</h2>
 
-                <SessionEndedNotice/>
+                <SessionEndedNotice />
 
                 <form onSubmit={handleLogin} className="space-y-5">
                     {/* Email */}
                     <div className="space-y-1">
-                        <label htmlFor="email"
-                               className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                        <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                             Email Address
                         </label>
                         <div className="relative">
-                            <div
-                                className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-zinc-400">
-                                <Mail size={18}/>
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-zinc-400">
+                                <Mail size={18} />
                             </div>
                             <input
                                 type="email"
@@ -105,7 +100,7 @@ const Auth = () => {
                         </div>
                         {formErrors.email && (
                             <div className="flex items-center text-red-500 text-sm mt-1">
-                                <AlertCircle size={14} className="mr-1"/>
+                                <AlertCircle size={14} className="mr-1" />
                                 {formErrors.email}
                             </div>
                         )}
@@ -113,14 +108,12 @@ const Auth = () => {
 
                     {/* Password */}
                     <div className="space-y-1">
-                        <label htmlFor="password"
-                               className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                        <label htmlFor="password" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                             Password
                         </label>
                         <div className="relative">
-                            <div
-                                className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-zinc-400">
-                                <Lock size={18}/>
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-zinc-400">
+                                <Lock size={18} />
                             </div>
                             <input
                                 type={showPassword ? "text" : "password"}
@@ -140,12 +133,12 @@ const Auth = () => {
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 focus:outline-none transition duration-200"
                             >
-                                {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
                         {formErrors.password && (
                             <div className="flex items-center text-red-500 text-sm mt-1">
-                                <AlertCircle size={14} className="mr-1"/>
+                                <AlertCircle size={14} className="mr-1" />
                                 {formErrors.password}
                             </div>
                         )}
@@ -161,20 +154,19 @@ const Auth = () => {
                     >
                         {loading ? (
                             <>
-                                <Loader2 size={18} className="animate-spin mr-2"/>
+                                <Loader2 size={18} className="animate-spin mr-2" />
                                 Logging in...
                             </>
                         ) : (
                             <>
                                 Login
-                                <ArrowRight size={18} className="ml-2"/>
+                                <ArrowRight size={18} className="ml-2" />
                             </>
                         )}
                     </button>
                 </form>
             </div>
         </div>
-
     );
 };
 

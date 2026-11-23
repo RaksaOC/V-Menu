@@ -31,4 +31,5 @@ for (const s of services) {
     writeFileSync(target, env, { mode: 0o600 });
     console.log(`wrote ${target}`);
 }
-if (!existsSync("frontend/.env.local")) console.log("\nfrontend/.env.local is missing: copy frontend/.env.example and add your Firebase web config.");
+if (!existsSync("frontend/.env.local"))
+    console.log("\nfrontend/.env.local is missing: copy frontend/.env.example and add your Firebase web config.");

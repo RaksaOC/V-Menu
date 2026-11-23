@@ -143,7 +143,11 @@ for (const vp of [PHONE, DESKTOP]) {
             if (theme === "light") {
                 // Add the first two dishes and open the cart.
                 const add = page.getByRole("button", { name: /add|\+/i });
-                for (let i = 0; i < 2; i++) await add.nth(i).click({ timeout: 5000 }).catch(() => {});
+                for (let i = 0; i < 2; i++)
+                    await add
+                        .nth(i)
+                        .click({ timeout: 5000 })
+                        .catch(() => {});
                 await page.goto(`${BASE}/${SLUG}/customer/${TABLE}/cart`);
                 await settle(page);
                 await shot(c, "VM-33-customer-cart");
@@ -168,7 +172,10 @@ for (const theme of ["light", "dark"] as const) {
         await page.getByRole("button", { name: /add/i }).first().click({ timeout: 5000 });
         await page.locator(".Toastify__toast").first().waitFor({ timeout: 5000 });
         await page.waitForTimeout(300);
-        await page.screenshot({ path: join(OUT, `CL-10-toast-added-to-cart-${PHONE.width}${theme === "dark" ? "-dark" : ""}.png`), animations: "disabled" });
+        await page.screenshot({
+            path: join(OUT, `CL-10-toast-added-to-cart-${PHONE.width}${theme === "dark" ? "-dark" : ""}.png`),
+            animations: "disabled",
+        });
         results.push(`ok   CL-10-toast-added-to-cart-${PHONE.width}${theme === "dark" ? "-dark" : ""}`);
         await context.close();
     });
@@ -181,7 +188,8 @@ for (const theme of ["light", "dark"] as const) {
         const staff = await newPage(browser, PHONE, theme, "cashier");
         const tables: { _id: string; name: string }[] = await (await staff.page.request.get(`${BASE}/api/menu/${SLUG}/tables`)).json();
         const t4 = tables.find((t) => t.name === "T4")!;
-        const setOpen = (isEnabled: boolean) => staff.page.request.patch(`${BASE}/api/menu/${SLUG}/tables/${t4._id}/availability`, { data: { isEnabled } });
+        const setOpen = (isEnabled: boolean) =>
+            staff.page.request.patch(`${BASE}/api/menu/${SLUG}/tables/${t4._id}/availability`, { data: { isEnabled } });
         const { context, page } = await newPage(browser, PHONE, theme);
         const c = { page, theme, width: PHONE.width };
         try {
@@ -199,7 +207,11 @@ for (const theme of ["light", "dark"] as const) {
         await settle(page);
         await shot(c, "VM-04-unknown-restaurant", false);
         await page.route(`**/api/menu/${SLUG}/public/tables/**`, (route) =>
-            route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ message: "A required service is unavailable" }) }),
+            route.fulfill({
+                status: 503,
+                contentType: "application/json",
+                body: JSON.stringify({ message: "A required service is unavailable" }),
+            }),
         );
         await page.goto(`${BASE}/${SLUG}/customer/T1`);
         await settle(page);
@@ -259,7 +271,9 @@ for (const theme of ["light", "dark"] as const) {
             const { context, page } = await newPage(browser, DESKTOP, theme, "chef");
             await page.goto(`${BASE}/${SLUG}/kitchen`);
             await settle(page);
-            await page.route(`**/api/orders/${SLUG}/kitchen`, (route) => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
+            await page.route(`**/api/orders/${SLUG}/kitchen`, (route) =>
+                route.fulfill({ status: 503, contentType: "application/json", body: "{}" }),
+            );
             await page.waitForTimeout(6000);
             await shot({ page, theme, width: DESKTOP.width }, "VM-03-connection-lost", false);
             await context.close();
@@ -288,13 +302,20 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 // VM-01: "View QR Code" opens the table's QR code (cashier and owner), and the owner can print them all.
-for (const [vp, theme] of [[DESKTOP, "light"], [DESKTOP, "dark"], [PHONE, "light"]] as const) {
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
     await step(`VM-01 cashier ${vp.width} ${theme}`, async () => {
         const { context, page } = await newPage(browser, vp, theme, "cashier");
         await context.addInitScript(() => localStorage.setItem("dashboardSection", "tables"));
         await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
         await settle(page);
-        await page.getByRole("button", { name: /view qr code/i }).first().click({ timeout: 5000 });
+        await page
+            .getByRole("button", { name: /view qr code/i })
+            .first()
+            .click({ timeout: 5000 });
         await page.waitForTimeout(800);
         await shot({ page, theme, width: vp.width }, "VM-01-cashier-qr", false);
         await context.close();
@@ -305,11 +326,17 @@ for (const theme of ["light", "dark"] as const) {
         const { context, page } = await newPage(browser, DESKTOP, theme, "owner");
         await page.goto(`${BASE}/owner`);
         await settle(page);
-        await page.getByRole("button", { name: /^\s*Tables\s*$/i }).first().click({ timeout: 5000 });
+        await page
+            .getByRole("button", { name: /^\s*Tables\s*$/i })
+            .first()
+            .click({ timeout: 5000 });
         await settle(page);
         const c = { page, theme, width: DESKTOP.width };
         await shot(c, "VM-01-owner-tables", false);
-        await page.getByRole("button", { name: /view qr code/i }).first().click({ timeout: 5000 });
+        await page
+            .getByRole("button", { name: /view qr code/i })
+            .first()
+            .click({ timeout: 5000 });
         await page.waitForTimeout(800);
         await shot(c, "VM-01-owner-qr", false);
         await context.close();
@@ -317,7 +344,11 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 // VM-02: the owner adds a dish with a ~1 MB phone-like photo; then the customer menu.
-for (const [vp, theme] of [[DESKTOP, "light"], [DESKTOP, "dark"], [PHONE, "light"]] as const) {
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
     await step(`VM-02 ${vp.width} ${theme}`, async () => {
         const { context, page } = await newPage(browser, vp, theme, "owner");
         const c = { page, theme, width: vp.width };
@@ -333,14 +364,20 @@ for (const [vp, theme] of [[DESKTOP, "light"], [DESKTOP, "dark"], [PHONE, "light
         await page.getByRole("button", { name: "Save" }).click();
         const res = await saved.catch(() => null);
         if (vp === DESKTOP && theme === "light") {
-            writeFileSync(join(OUT, "VM-02-add-item-response.txt"), `POST /items after choosing fixture-photo.jpg (${statSync(await photoFixture(page)).size} bytes) -> ${res ? `${res.status()} ${(await res.text()).slice(0, 300)}` : "no request"}\n`);
+            writeFileSync(
+                join(OUT, "VM-02-add-item-response.txt"),
+                `POST /items after choosing fixture-photo.jpg (${statSync(await photoFixture(page)).size} bytes) -> ${res ? `${res.status()} ${(await res.text()).slice(0, 300)}` : "no request"}\n`,
+            );
         }
         await page.waitForTimeout(1200);
         await shot(c, "VM-02-owner-add-photo", false);
         const created = res && res.ok() ? await res.json() : null;
         await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
         await settle(page);
-        await page.getByRole("img", { name: "Showcase Dish" }).scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
+        await page
+            .getByRole("img", { name: "Showcase Dish" })
+            .scrollIntoViewIfNeeded({ timeout: 3000 })
+            .catch(() => {});
         await shot(c, "VM-02-customer-menu", false);
         if (created) await page.request.delete(`${BASE}/api/menu/${SLUG}/items/${created._id}`); // keep the demo data the same
         await context.close();
@@ -363,10 +400,16 @@ for (const theme of ["light", "dark"] as const) {
         const c = { page, theme, width: DESKTOP.width };
         await page.goto(`${BASE}/owner`);
         await settle(page);
-        await page.getByRole("button", { name: /^\s*Tables\s*$/i }).first().click({ timeout: 5000 });
+        await page
+            .getByRole("button", { name: /^\s*Tables\s*$/i })
+            .first()
+            .click({ timeout: 5000 });
         await settle(page);
         await shot(c, "CL-09-owner-tables", false);
-        await page.getByRole("button", { name: /edit table/i }).first().click({ timeout: 5000 });
+        await page
+            .getByRole("button", { name: /edit table/i })
+            .first()
+            .click({ timeout: 5000 });
         await page.waitForTimeout(600);
         await shot(c, "CL-09-owner-edit-table", false);
         await page.goto(`${BASE}/owner`); // the old popups didn't close with Escape
@@ -401,7 +444,10 @@ for (const theme of ["light", "dark"] as const) {
         const c = { page, theme, width: DESKTOP.width };
         await shot(c, "VM-35-owner-overview");
         for (const tab of ["Tables", "Menu"]) {
-            await page.getByRole("button", { name: new RegExp(`^\\s*${tab}\\s*$`, "i") }).first().click({ timeout: 5000 });
+            await page
+                .getByRole("button", { name: new RegExp(`^\\s*${tab}\\s*$`, "i") })
+                .first()
+                .click({ timeout: 5000 });
             await settle(page);
             await shot(c, `VM-35-owner-${tab.toLowerCase()}`);
             if (theme !== "light") continue;
@@ -413,17 +459,28 @@ for (const theme of ["light", "dark"] as const) {
             if (tab === "Menu") {
                 // VM-02: add an item with a ~1 MB photo and record the API's answer.
                 const photo = await photoFixture(page);
-                await page.getByRole("button", { name: /add (new )?item|add dish|new item/i }).first().click({ timeout: 5000 });
+                await page
+                    .getByRole("button", { name: /add (new )?item|add dish|new item/i })
+                    .first()
+                    .click({ timeout: 5000 });
                 await page.waitForTimeout(500);
                 const dialog = page.locator("form, [role=dialog]").last();
                 await dialog.locator("input[type=text], input:not([type])").first().fill("Showcase Dish");
                 await dialog.locator("input[type=number]").first().fill("4.5");
                 await dialog.locator("input[type=file]").first().setInputFiles(photo);
-                const answer = page.waitForResponse((r) => r.url().includes("/items") && r.request().method() === "POST", { timeout: 10_000 });
-                await dialog.getByRole("button", { name: /save|add|create/i }).last().click();
+                const answer = page.waitForResponse((r) => r.url().includes("/items") && r.request().method() === "POST", {
+                    timeout: 10_000,
+                });
+                await dialog
+                    .getByRole("button", { name: /save|add|create/i })
+                    .last()
+                    .click();
                 const res = await answer.catch(() => null);
                 const status = res ? `${res.status()} ${await res.text()}` : "no request";
-                writeFileSync(join(OUT, "VM-02-add-item-response.txt"), `POST /items with fixture-photo.jpg (${statSync(photo).size} bytes) -> ${status}\n`);
+                writeFileSync(
+                    join(OUT, "VM-02-add-item-response.txt"),
+                    `POST /items with fixture-photo.jpg (${statSync(photo).size} bytes) -> ${status}\n`,
+                );
                 await page.waitForTimeout(800);
                 await shot(c, "VM-02-add-item-with-photo", false);
             }

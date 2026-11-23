@@ -1,4 +1,4 @@
-import {CartItem} from "@/lib/types/CartItem";
+import { CartItem } from "@/lib/types/CartItem";
 
 export interface Order {
     createdAt?: any;

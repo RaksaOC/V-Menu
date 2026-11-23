@@ -126,7 +126,13 @@ function RolesScene() {
     return (
         <div className={s.grid2}>
             {ROLES.map((r, i) => (
-                <motion.div key={r.name} className={s.panel} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
+                <motion.div
+                    key={r.name}
+                    className={s.panel}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                >
                     <div className={s.roleHead}>
                         <span className={s.iconDot}>
                             <r.icon size={18} />
@@ -279,7 +285,13 @@ function OwnershipScene() {
     return (
         <div className={s.three}>
             {SERVICES.map((svc, i) => (
-                <motion.div key={svc.id} className={s.svc} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+                <motion.div
+                    key={svc.id}
+                    className={s.svc}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                >
                     <strong>{svc.name}</strong>
                     <Db name={svc.db} />
                     <div className={s.label}>Collections</div>
@@ -325,7 +337,15 @@ function OrderScene() {
             <div className={s.svgScroll}>
                 <svg viewBox={`0 0 ${W} 360`} className={s.svg} role="img" aria-label="Sequence of service calls when an order is placed">
                     <defs>
-                        <marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <marker
+                            id="seq-arrow"
+                            viewBox="0 0 10 10"
+                            refX="9"
+                            refY="5"
+                            markerWidth="7"
+                            markerHeight="7"
+                            orient="auto-start-reverse"
+                        >
                             <path d="M0,0L10,5L0,10z" fill="var(--muted)" />
                         </marker>
                     </defs>
@@ -465,7 +485,17 @@ const ACTIONS = [
     { href: "/login", title: "Log in", sub: "pick a restaurant and role" },
     { href: "/owner/login", title: "Owner dashboard", sub: "menus, tables, staff" },
 ];
-const STACK = ["Next.js 15", "Express 5", "TypeScript", "MongoDB + Mongoose", "Firebase Auth", "jose (JWT)", "pino logs", "prom-client", "Vitest + Supertest"];
+const STACK = [
+    "Next.js 15",
+    "Express 5",
+    "TypeScript",
+    "MongoDB + Mongoose",
+    "Firebase Auth",
+    "jose (JWT)",
+    "pino logs",
+    "prom-client",
+    "Vitest + Supertest",
+];
 
 function TryScene() {
     return (

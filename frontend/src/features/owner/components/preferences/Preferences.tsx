@@ -9,7 +9,9 @@ export default function Preferences() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Preferences</h1>
-                        <p className="text-gray-600 mt-1 text-sm sm:text-base">Customize your restaurant settings and manage your business preferences</p>
+                        <p className="text-gray-600 mt-1 text-sm sm:text-base">
+                            Customize your restaurant settings and manage your business preferences
+                        </p>
                     </div>
                     <button className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg w-full sm:w-auto">
                         <Settings size={20} />
@@ -30,7 +32,12 @@ export default function Preferences() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Restaurant Name</label>
-                                <input type="text" placeholder="Bella Vista Restaurant" className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600" disabled />
+                                <input
+                                    type="text"
+                                    placeholder="Bella Vista Restaurant"
+                                    className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600"
+                                    disabled
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Business Hours</label>
@@ -100,7 +107,12 @@ export default function Preferences() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Change Password</label>
-                                <input type="password" placeholder="••••••••" className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600" disabled />
+                                <input
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600"
+                                    disabled
+                                />
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-gray-700">Two-Factor Authentication</span>
@@ -238,8 +250,8 @@ export default function Preferences() {
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Coming Soon</h2>
                     <p className="text-gray-600 mb-6 leading-relaxed">
-                        We&apos;re working hard to bring you advanced preference settings.
-                        This feature will allow you to customize every aspect of your restaurant management experience.
+                        We&apos;re working hard to bring you advanced preference settings. This feature will allow you to customize every
+                        aspect of your restaurant management experience.
                     </p>
                     <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
                         <Clock size={16} />

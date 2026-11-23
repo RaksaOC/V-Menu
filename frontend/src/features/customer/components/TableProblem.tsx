@@ -3,9 +3,18 @@ import { AlertTriangle, DoorClosed, RotateCw, SearchX } from "lucide-react";
 export type TableProblemKind = "closed" | "no-restaurant" | "no-table" | "error";
 
 const COPY: Record<TableProblemKind, { title: (table: string) => string; body: string }> = {
-    closed: { title: (t) => `Table ${t} isn't open yet`, body: "Please ask a staff member to open it. The menu will be here once they do." },
-    "no-restaurant": { title: () => "We couldn't find this restaurant", body: "The link may be mistyped or out of date. Please ask a staff member for help." },
-    "no-table": { title: (t) => `We couldn't find table ${t}`, body: "This table may have been renamed or removed. Please ask a staff member for help." },
+    closed: {
+        title: (t) => `Table ${t} isn't open yet`,
+        body: "Please ask a staff member to open it. The menu will be here once they do.",
+    },
+    "no-restaurant": {
+        title: () => "We couldn't find this restaurant",
+        body: "The link may be mistyped or out of date. Please ask a staff member for help.",
+    },
+    "no-table": {
+        title: (t) => `We couldn't find table ${t}`,
+        body: "This table may have been renamed or removed. Please ask a staff member for help.",
+    },
     error: { title: () => "Something went wrong", body: "We couldn't load the menu. Please check your connection and try again." },
 };
 

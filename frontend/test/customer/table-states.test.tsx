@@ -16,10 +16,7 @@ const { default: CustomerMenu } = await import("@/features/customer/components/C
 
 const dish = { _id: "i1", name: "Fish Amok", price: 5.5, image: "/images/img.png", isEnabled: true };
 function api(table: () => Response, items: () => Response = () => HttpResponse.json([dish])) {
-    server.use(
-        http.get("*/api/menu/demo-bistro/public/tables/:t", table),
-        http.get("*/api/menu/demo-bistro/public/items", items),
-    );
+    server.use(http.get("*/api/menu/demo-bistro/public/tables/:t", table), http.get("*/api/menu/demo-bistro/public/items", items));
 }
 
 describe("customer table page states", () => {
@@ -30,7 +27,12 @@ describe("customer table page states", () => {
     });
 
     it("explains a closed table, on the page, without redirecting", async () => {
-        api(() => HttpResponse.json({ code: "TABLE_CLOSED", message: "Table 4 isn't open yet. Please ask a staff member to open it." }, { status: 404 }));
+        api(() =>
+            HttpResponse.json(
+                { code: "TABLE_CLOSED", message: "Table 4 isn't open yet. Please ask a staff member to open it." },
+                { status: 404 },
+            ),
+        );
         render(<CustomerMenu />);
         expect(await screen.findByRole("heading", { name: "Table 4 isn't open yet" })).toBeInTheDocument();
         expect(screen.getByText(/ask a staff member to open it/i)).toBeInTheDocument();
@@ -53,7 +55,9 @@ describe("customer table page states", () => {
 
     it("offers Try again after a server error, and loads the menu when it works", async () => {
         let calls = 0;
-        api(() => (++calls === 1 ? HttpResponse.json({ message: "A required service is unavailable" }, { status: 503 }) : HttpResponse.json({})));
+        api(() =>
+            ++calls === 1 ? HttpResponse.json({ message: "A required service is unavailable" }, { status: 503 }) : HttpResponse.json({}),
+        );
         render(<CustomerMenu />);
         expect(await screen.findByRole("heading", { name: "Something went wrong" })).toBeInTheDocument();
         fireEvent.click(screen.getByRole("button", { name: "Try again" }));
@@ -61,14 +65,23 @@ describe("customer table page states", () => {
     });
 
     it("shows Try again when the menu itself fails to load, instead of endless skeletons", async () => {
-        api(() => HttpResponse.json({}), () => HttpResponse.json({ message: "boom" }, { status: 500 }));
+        api(
+            () => HttpResponse.json({}),
+            () => HttpResponse.json({ message: "boom" }, { status: 500 }),
+        );
         render(<CustomerMenu />);
         expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();
     });
 
     it("removes cart lines whose dish left the menu, and says so (VM-05)", async () => {
         const gone = { ...dish, _id: "i9", name: "Old Special" };
-        localStorage.setItem("cart:demo-bistro:4", JSON.stringify([{ item: dish, quantity: 1 }, { item: gone, quantity: 2 }]));
+        localStorage.setItem(
+            "cart:demo-bistro:4",
+            JSON.stringify([
+                { item: dish, quantity: 1 },
+                { item: gone, quantity: 2 },
+            ]),
+        );
         api(() => HttpResponse.json({}));
         render(<CustomerMenu />);
         await screen.findByText("Fish Amok");

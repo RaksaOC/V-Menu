@@ -74,7 +74,9 @@ export default function Menu({ role }: { role: "owner" | "cashier" }) {
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h2 className="text-xl font-semibold text-[var(--ink)]">{role === "owner" ? "Manage Menu" : "Menu"}</h2>
-                    <p className="text-sm text-[var(--muted)]">{role === "owner" ? "Create, Edit menu items" : "Switch off dishes that run out"}</p>
+                    <p className="text-sm text-[var(--muted)]">
+                        {role === "owner" ? "Create, Edit menu items" : "Switch off dishes that run out"}
+                    </p>
                 </div>
                 {role === "owner" && (
                     <Button icon={<Plus size={16} aria-hidden />} onClick={() => setEditing("new")}>
@@ -97,7 +99,9 @@ export default function Menu({ role }: { role: "owner" | "cashier" }) {
                 <div className="flex flex-col items-center py-16 text-center text-[var(--muted)]">
                     <Store size={40} aria-hidden className="mb-4" />
                     <h3 className="text-lg font-semibold text-[var(--ink)]">No dishes yet</h3>
-                    <p className="mt-1 text-sm">{role === "owner" ? "Add your first dish with a photo." : "The owner hasn't added any dishes yet."}</p>
+                    <p className="mt-1 text-sm">
+                        {role === "owner" ? "Add your first dish with a photo." : "The owner hasn't added any dishes yet."}
+                    </p>
                 </div>
             )}
 

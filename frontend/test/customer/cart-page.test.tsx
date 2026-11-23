@@ -20,7 +20,13 @@ const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", price: 4, ima
 // VM-05: the cart of this restaurant and table (the URL above is demo-bistro, table 1).
 const KEY = "cart:demo-bistro:1";
 function seedCart() {
-    localStorage.setItem(KEY, JSON.stringify([{ item: kuyTeav, quantity: 2 }, { item: lokLak, quantity: 1 }]));
+    localStorage.setItem(
+        KEY,
+        JSON.stringify([
+            { item: kuyTeav, quantity: 2 },
+            { item: lokLak, quantity: 1 },
+        ]),
+    );
 }
 const placeOrder = () => fireEvent.click(screen.getByRole("button", { name: /place order/i }));
 

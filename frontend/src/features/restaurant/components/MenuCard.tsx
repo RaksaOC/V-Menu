@@ -2,7 +2,9 @@ import { CheckCircle, Pencil, XCircle } from "lucide-react";
 import { Card, Chip } from "@/components/ui";
 import type { ItemOutput } from "@/lib/types/Item";
 
-type Props = { item: ItemOutput } & ({ role: "owner"; onEdit: (item: ItemOutput) => void } | { role: "cashier"; onToggle: (item: ItemOutput) => void });
+type Props = { item: ItemOutput } & (
+    { role: "owner"; onEdit: (item: ItemOutput) => void } | { role: "cashier"; onToggle: (item: ItemOutput) => void }
+);
 
 /** One dish, for the owner (edit) and the cashier (switch it on or off) (CL-09). */
 export default function MenuCard(props: Props) {
@@ -41,7 +43,9 @@ export default function MenuCard(props: Props) {
                         onClick={() => props.onToggle(item)}
                         className={`relative h-6 w-11 shrink-0 rounded-full transition ${item.isEnabled ? "bg-[var(--ok)]" : "bg-[var(--line)]"}`}
                     >
-                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${item.isEnabled ? "left-[22px]" : "left-0.5"}`} />
+                        <span
+                            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${item.isEnabled ? "left-[22px]" : "left-0.5"}`}
+                        />
                     </button>
                 )}
             </div>

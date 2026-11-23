@@ -1,7 +1,7 @@
-import {toast} from "@/lib/toast";
+import { toast } from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
-import type {CartItem} from "@/lib/types/CartItem";
-import type {ItemOutput} from "@/lib/types/Item";
+import type { CartItem } from "@/lib/types/CartItem";
+import type { ItemOutput } from "@/lib/types/Item";
 
 // The customer's cart, kept in localStorage until the order is placed.
 // VM-05: one cart per restaurant and table, so a cart never leaks into another restaurant or
@@ -53,7 +53,7 @@ export function addToCart(slug: string, table: string, itemToAdd: CartItem): voi
 export function reconcileCart(slug: string, table: string, menu: ItemOutput[]): number {
     const items = readCart(slug, table);
     const byId = new Map(menu.map((item) => [item._id, item]));
-    const kept = items.filter((line) => byId.has(line.item._id)).map((line) => ({...line, item: byId.get(line.item._id)!}));
+    const kept = items.filter((line) => byId.has(line.item._id)).map((line) => ({ ...line, item: byId.get(line.item._id)! }));
     if (kept.length !== items.length || JSON.stringify(kept) !== JSON.stringify(items)) saveCart(slug, table, kept);
     return items.length - kept.length;
 }

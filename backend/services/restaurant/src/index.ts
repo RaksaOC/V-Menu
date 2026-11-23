@@ -9,7 +9,9 @@ const port = Number(process.env.PORT ?? 4101);
 await mongoose.connect(process.env.MONGODB_URI!);
 logger.info("connected to MongoDB");
 
-const server = createApp({ verifyIdToken: verifyFirebaseIdToken }).listen(port, () => logger.info({ port }, "restaurant-service listening"));
+const server = createApp({ verifyIdToken: verifyFirebaseIdToken }).listen(port, () =>
+    logger.info({ port }, "restaurant-service listening"),
+);
 
 // Docker sends SIGTERM on stop: drain open requests, close MongoDB, exit (lib/server.ts).
 handleShutdown(server);

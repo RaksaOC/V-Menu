@@ -10,7 +10,9 @@ const read = (p) => readFileSync(join(root, p), "utf8");
 const pkg = JSON.parse(read("package.json"));
 
 test("no .DS_Store files are tracked, and generated folders are ignored", () => {
-    const tracked = execSync("git ls-files", { cwd: root, encoding: "utf8" }).split("\n").filter((f) => f.endsWith(".DS_Store"));
+    const tracked = execSync("git ls-files", { cwd: root, encoding: "utf8" })
+        .split("\n")
+        .filter((f) => f.endsWith(".DS_Store"));
     assert.deepEqual(tracked, []);
     const ignore = read(".gitignore");
     for (const entry of [".DS_Store", "coverage/", "playwright-report/", "test-results/"]) {
@@ -23,7 +25,8 @@ test("one root command for each job, and `check` runs them all", () => {
         assert.ok(pkg.scripts[name], `root package.json needs a "${name}" script`);
     }
     for (const part of ["backend", "frontend", "test:repo"]) assert.match(pkg.scripts.test, new RegExp(part));
-    for (const part of ["format:check", "lint", "typecheck", "npm test"]) assert.ok(pkg.scripts.check.includes(part), `check should run ${part}`);
+    for (const part of ["format:check", "lint", "typecheck", "npm test"])
+        assert.ok(pkg.scripts.check.includes(part), `check should run ${part}`);
 });
 
 test("shared editor and formatter settings", () => {
@@ -34,7 +37,9 @@ test("shared editor and formatter settings", () => {
 });
 
 test("the formatting commit is hidden from git blame", () => {
-    const revs = read(".git-blame-ignore-revs").split("\n").filter((l) => /^[0-9a-f]{40}$/.test(l));
+    const revs = read(".git-blame-ignore-revs")
+        .split("\n")
+        .filter((l) => /^[0-9a-f]{40}$/.test(l));
     assert.ok(revs.length >= 1, "list the formatting commit");
     for (const rev of revs) {
         const subject = execSync(`git log -1 --format=%s ${rev}`, { cwd: root, encoding: "utf8" });

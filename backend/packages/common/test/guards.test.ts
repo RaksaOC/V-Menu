@@ -57,7 +57,9 @@ describe("app tokens", () => {
 
     it("answers 401 without a token or with a bad one, 403 for the wrong role", async () => {
         expect((await request(app).get("/owner")).status).toBe(401);
-        expect((await request(app).get("/owner").set("authorization", "Bearer nope")).body).toEqual({ message: "Invalid or expired token" });
+        expect((await request(app).get("/owner").set("authorization", "Bearer nope")).body).toEqual({
+            message: "Invalid or expired token",
+        });
         const expired = await signAppToken(owner, "-1s");
         expect((await request(app).get("/owner").set("authorization", `Bearer ${expired}`)).status).toBe(401);
         const staff = await signAppToken(cashier);
@@ -108,7 +110,13 @@ describe("calling another service", () => {
         server = createServer((req, res) => {
             const status = req.url === "/missing" ? 404 : req.url === "/broken" ? 500 : 200;
             res.writeHead(status, { "content-type": "application/json" });
-            res.end(JSON.stringify(status === 200 ? { key: req.headers["x-internal-key"], requestId: req.headers["x-request-id"] } : { message: "No such restaurant" }));
+            res.end(
+                JSON.stringify(
+                    status === 200
+                        ? { key: req.headers["x-internal-key"], requestId: req.headers["x-request-id"] }
+                        : { message: "No such restaurant" },
+                ),
+            );
         });
         await new Promise<void>((resolve) => server.listen(0, resolve));
         base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;

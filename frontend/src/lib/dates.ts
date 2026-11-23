@@ -4,5 +4,4 @@ export const prettyDate = (date: string, hasTime: boolean = true) => {
         return toDate.toLocaleString();
     }
     return toDate.toLocaleDateString();
-
-}
+};

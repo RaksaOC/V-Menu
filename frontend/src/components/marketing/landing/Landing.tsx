@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from "react";
 import {
     Sun,
     Moon,
@@ -13,11 +13,15 @@ import {
     ShieldCheck,
     Settings,
     Star,
-    Twitter, Facebook, Instagram, Linkedin, BarChart4
-} from 'lucide-react';
-import {motion} from 'framer-motion';
+    Twitter,
+    Facebook,
+    Instagram,
+    Linkedin,
+    BarChart4,
+} from "lucide-react";
+import { motion } from "framer-motion";
 import Image from "next/image";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 // The original marketing landing page, shown behind (and after) the technical tour.
 export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
@@ -43,45 +47,45 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 10);
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     const navItems = [
-        {name: 'Home', href: '#'},
-        {name: 'About', href: '#about'},
-        {name: 'Features', href: '#features'},
-        {name: 'How It Works', href: '#how-it-works'}
+        { name: "Home", href: "#" },
+        { name: "About", href: "#about" },
+        { name: "Features", href: "#features" },
+        { name: "How It Works", href: "#how-it-works" },
         // {name: 'Pricing', href: '#pricing'},
         // {name: 'Testimonials', href: '#testimonials'},
         // {name: 'Contact', href: '#contact'},
     ];
 
     const fadeIn = {
-        hidden: {opacity: 0, y: 20},
+        hidden: { opacity: 0, y: 20 },
         visible: {
             opacity: 1,
             y: 0,
-            transition: {duration: 0.6}
-        }
+            transition: { duration: 0.6 },
+        },
     };
 
     const staggerContainer = {
-        hidden: {opacity: 0},
+        hidden: { opacity: 0 },
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.2
-            }
-        }
+                staggerChildren: 0.2,
+            },
+        },
     };
 
     return (
-        <main
-            className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-sans transition-colors duration-300">
+        <main className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-sans transition-colors duration-300">
             {/* Navigation */}
             <header
-                className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md' : 'bg-transparent'}`}>
+                className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md" : "bg-transparent"}`}
+            >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center py-4 md:py-6">
                         <div className="flex items-center">
@@ -112,22 +116,26 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                                 aria-label="Toggle dark mode"
                                 className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
                             >
-                                {darkMode ? <Sun size={20}/> : <Moon size={20}/>}
+                                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                             </button>
 
-                            <button onClick={onOpenTour}
-                                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2">
+                            <button
+                                onClick={onOpenTour}
+                                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2"
+                            >
                                 Tour
                             </button>
 
-                            <button onClick={() => router.push('/login')}
-                                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2">
+                            <button
+                                onClick={() => router.push("/login")}
+                                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2"
+                            >
                                 Log In
                             </button>
 
                             <a
                                 onClick={() => {
-                                    router.push('/signup')
+                                    router.push("/signup");
                                 }}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
                             >
@@ -142,14 +150,14 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                                 aria-label="Toggle dark mode"
                                 className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
                             >
-                                {darkMode ? <Sun size={20}/> : <Moon size={20}/>}
+                                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                             </button>
 
                             <button
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                                 className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                             >
-                                {mobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
+                                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                             </button>
                         </div>
                     </div>
@@ -169,8 +177,7 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                                     {item.name}
                                 </a>
                             ))}
-                            <div
-                                className="border-t border-gray-200 dark:border-gray-700 my-2 pt-2 flex flex-col space-y-2">
+                            <div className="border-t border-gray-200 dark:border-gray-700 my-2 pt-2 flex flex-col space-y-2">
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
@@ -181,13 +188,13 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                                     Tour
                                 </button>
                                 <a
-                                    onClick={() => router.push('/login')}
+                                    onClick={() => router.push("/login")}
                                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-center"
                                 >
                                     Log In
                                 </a>
                                 <a
-                                    onClick={() => router.push('/signup')}
+                                    onClick={() => router.push("/signup")}
                                     className="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 text-center"
                                 >
                                     Sign Up Free
@@ -206,26 +213,21 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                 </div>
 
                 <div className="max-w-7xl mx-auto relative z-10">
-                    <motion.div
-                        className="text-center max-w-3xl mx-auto"
-                        initial="hidden"
-                        animate="visible"
-                        variants={fadeIn}
-                    >
+                    <motion.div className="text-center max-w-3xl mx-auto" initial="hidden" animate="visible" variants={fadeIn}>
                         <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 mb-6 leading-tight">
                             Modernize Your Restaurant Experience
                         </h1>
                         <p className="text-xl sm:text-2xl max-w-2xl mx-auto text-gray-700 dark:text-gray-300 mb-10">
-                            V-Menu transforms how restaurants run with digital ordering, kitchen management, and cashier
-                            services — all in one powerful platform.
+                            V-Menu transforms how restaurants run with digital ordering, kitchen management, and cashier services — all in
+                            one powerful platform.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <a
-                                onClick={() => router.push('/signup')}
+                                onClick={() => router.push("/signup")}
                                 className="w-full sm:w-auto py-3 px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/20 focus:ring-4 focus:ring-blue-500/30 flex items-center justify-center gap-2 text-lg"
                             >
                                 Create a Restaurant
-                                <ChevronRight size={18}/>
+                                <ChevronRight size={18} />
                             </a>
                             <a
                                 href="#how-it-works"
@@ -238,21 +240,25 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
 
                     <motion.div
                         className="mt-16 relative"
-                        initial={{opacity: 0, y: 60}}
-                        animate={{opacity: 1, y: 0}}
-                        transition={{duration: 0.8, delay: 0.3}}
+                        initial={{ opacity: 0, y: 60 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.3 }}
                     >
-                        <div
-                            className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl shadow-2xl shadow-blue-500/20 dark:shadow-blue-500/10">
+                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl shadow-2xl shadow-blue-500/20 dark:shadow-blue-500/10">
                             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
                                 {/* Real screenshot of the owner dashboard (local sample data) */}
-                                <Image src="/images/landing/dashboard.png" alt="V-Menu owner dashboard with live restaurant stats"
-                                       width={1440} height={830} priority className="w-full h-auto"/>
+                                <Image
+                                    src="/images/landing/dashboard.png"
+                                    alt="V-Menu owner dashboard with live restaurant stats"
+                                    width={1440}
+                                    height={830}
+                                    priority
+                                    className="w-full h-auto"
+                                />
                             </div>
                         </div>
 
-                        <div
-                            className="absolute -bottom-6 -right-6 w-32 h-32 bg-yellow-400/20 dark:bg-yellow-400/10 rounded-full blur-2xl"></div>
+                        <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-yellow-400/20 dark:bg-yellow-400/10 rounded-full blur-2xl"></div>
                     </motion.div>
                 </div>
             </section>
@@ -262,7 +268,7 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                 <div className="max-w-7xl mx-auto">
                     <p className="text-center text-gray-600 dark:text-gray-400 mb-8">Built with</p>
                     <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-                        {['Next.js', 'Express', 'TypeScript', 'MongoDB', 'Firebase Auth', 'Prometheus'].map((brand) => (
+                        {["Next.js", "Express", "TypeScript", "MongoDB", "Firebase Auth", "Prometheus"].map((brand) => (
                             <div key={brand} className="flex items-center justify-center h-10">
                                 <span className="text-xl font-medium text-gray-400 dark:text-gray-500">{brand}</span>
                             </div>
@@ -278,7 +284,7 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                         className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{once: true, margin: "-100px"}}
+                        viewport={{ once: true, margin: "-100px" }}
                         variants={staggerContainer}
                     >
                         <motion.div variants={fadeIn}>
@@ -286,41 +292,42 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                                 Meet V-Menu: The Complete Restaurant Solution
                             </h2>
                             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-                                V-Menu is a modern SaaS platform designed specifically for restaurants of all sizes. We
-                                combine ordering, kitchen management, and billing in one seamless experience.
+                                V-Menu is a modern SaaS platform designed specifically for restaurants of all sizes. We combine ordering,
+                                kitchen management, and billing in one seamless experience.
                             </p>
                             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
-                                Whether you&apos;re running a small café or managing multiple locations, our intuitive
-                                platform streamlines operations, reduces errors, and enhances the dining experience.
+                                Whether you&apos;re running a small café or managing multiple locations, our intuitive platform streamlines
+                                operations, reduces errors, and enhances the dining experience.
                             </p>
-                            <a
-                                href="#features"
-                                className="text-blue-600 dark:text-blue-400 font-medium inline-flex items-center group"
-                            >
+                            <a href="#features" className="text-blue-600 dark:text-blue-400 font-medium inline-flex items-center group">
                                 Explore our features
-                                <ChevronRight size={18}
-                                              className="ml-1 transition-transform group-hover:translate-x-1"/>
+                                <ChevronRight size={18} className="ml-1 transition-transform group-hover:translate-x-1" />
                             </a>
                         </motion.div>
 
-                        <motion.div
-                            className="relative"
-                            variants={fadeIn}
-                        >
-                            <div
-                                className="aspect-square rounded-2xl overflow-hidden shadow-xl ring-1 ring-gray-200 dark:ring-gray-700">
+                        <motion.div className="relative" variants={fadeIn}>
+                            <div className="aspect-square rounded-2xl overflow-hidden shadow-xl ring-1 ring-gray-200 dark:ring-gray-700">
                                 {/* Kitchen screen with the customer's phone menu on top: the two ends of one order */}
                                 <div className="relative h-full bg-gray-100 dark:bg-gray-800">
-                                    <Image src="/images/landing/kitchen.png" alt="Kitchen screen listing a table's pending order"
-                                           fill sizes="(min-width: 1024px) 600px, 100vw" className="object-cover object-left-top"/>
+                                    <Image
+                                        src="/images/landing/kitchen.png"
+                                        alt="Kitchen screen listing a table's pending order"
+                                        fill
+                                        sizes="(min-width: 1024px) 600px, 100vw"
+                                        className="object-cover object-left-top"
+                                    />
                                     <div className="absolute bottom-4 right-4 w-[38%] overflow-hidden rounded-[1.4rem] border-[5px] border-gray-900 bg-white shadow-2xl">
-                                        <Image src="/images/landing/customer-phone.png" alt="Customer menu on a phone after scanning the table's QR code"
-                                               width={390} height={844} className="w-full h-auto"/>
+                                        <Image
+                                            src="/images/landing/customer-phone.png"
+                                            alt="Customer menu on a phone after scanning the table's QR code"
+                                            width={390}
+                                            height={844}
+                                            className="w-full h-auto"
+                                        />
                                     </div>
                                 </div>
                             </div>
-                            <div
-                                className="absolute -z-10 -bottom-6 -right-6 w-3/4 h-3/4 bg-blue-200/30 dark:bg-blue-900/20 rounded-2xl blur-xl"></div>
+                            <div className="absolute -z-10 -bottom-6 -right-6 w-3/4 h-3/4 bg-blue-200/30 dark:bg-blue-900/20 rounded-2xl blur-xl"></div>
                         </motion.div>
                     </motion.div>
                 </div>
@@ -333,15 +340,14 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                         className="text-center max-w-3xl mx-auto mb-16"
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{once: true, margin: "-100px"}}
+                        viewport={{ once: true, margin: "-100px" }}
                         variants={fadeIn}
                     >
                         <h2 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">
                             Powerful Features That Drive Results
                         </h2>
                         <p className="text-lg text-gray-700 dark:text-gray-300">
-                            Everything you need to streamline operations and delight your customers in one unified
-                            platform.
+                            Everything you need to streamline operations and delight your customers in one unified platform.
                         </p>
                     </motion.div>
 
@@ -349,50 +355,48 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                         className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{once: true, margin: "-100px"}}
+                        viewport={{ once: true, margin: "-100px" }}
                         variants={staggerContainer}
                     >
                         {[
                             {
-                                icon: <BarChart2 className="h-6 w-6"/>,
-                                title: 'Real-Time Order Management',
-                                desc: 'Track and update orders instantly, with automatic status updates for kitchen and servers.'
+                                icon: <BarChart2 className="h-6 w-6" />,
+                                title: "Real-Time Order Management",
+                                desc: "Track and update orders instantly, with automatic status updates for kitchen and servers.",
                             },
                             {
-                                icon: <Users className="h-6 w-6"/>,
-                                title: 'Multi-Tenant Support',
-                                desc: 'Seamlessly manage multiple branches or restaurants locations from a single dashboard.'
+                                icon: <Users className="h-6 w-6" />,
+                                title: "Multi-Tenant Support",
+                                desc: "Seamlessly manage multiple branches or restaurants locations from a single dashboard.",
                             },
                             {
-                                icon: <Clock className="h-6 w-6"/>,
-                                title: 'Smart Kitchen Display',
-                                desc: 'Orders automatically flow to kitchen with prep timers and priority indicators.'
+                                icon: <Clock className="h-6 w-6" />,
+                                title: "Smart Kitchen Display",
+                                desc: "Orders automatically flow to kitchen with prep timers and priority indicators.",
                             },
                             {
-                                icon: <Settings className="h-6 w-6"/>,
-                                title: 'Efficient Cashier Mode',
-                                desc: 'Streamlined billing, payment processing, and receipt generation with minimal clicks.'
+                                icon: <Settings className="h-6 w-6" />,
+                                title: "Efficient Cashier Mode",
+                                desc: "Streamlined billing, payment processing, and receipt generation with minimal clicks.",
                             },
                             {
-                                icon: <ShieldCheck className="h-6 w-6"/>,
-                                title: 'Role-Based Access Control',
-                                desc: 'Secure and tailored access for owners, kitchen staff, cashier and more.'
+                                icon: <ShieldCheck className="h-6 w-6" />,
+                                title: "Role-Based Access Control",
+                                desc: "Secure and tailored access for owners, kitchen staff, cashier and more.",
                             },
                             {
                                 icon: <BarChart4 className="h-6 w-6" />,
-                                title: 'Performance Insights',
-                                desc: 'Track sales trends, monitor staff activity, and gain valuable insights to make informed business decisions.'
-                            }
+                                title: "Performance Insights",
+                                desc: "Track sales trends, monitor staff activity, and gain valuable insights to make informed business decisions.",
+                            },
                         ].map((feature, index) => (
                             <motion.div
                                 key={feature.title}
                                 className="group bg-white dark:bg-gray-900 rounded-xl shadow-md hover:shadow-xl transition duration-300 p-8 border border-gray-100 dark:border-gray-700 relative overflow-hidden"
                                 variants={fadeIn}
                             >
-                                <div
-                                    className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 dark:from-blue-500/10 dark:to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                <div
-                                    className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 dark:from-blue-500/10 dark:to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6">
                                     {feature.icon}
                                 </div>
                                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{feature.title}</h3>
@@ -410,12 +414,10 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                         className="text-center max-w-3xl mx-auto mb-16"
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{once: true, margin: "-100px"}}
+                        viewport={{ once: true, margin: "-100px" }}
                         variants={fadeIn}
                     >
-                        <h2 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">
-                            How V-Menu Works
-                        </h2>
+                        <h2 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">How V-Menu Works</h2>
                         <p className="text-lg text-gray-700 dark:text-gray-300">
                             Simple, intuitive, and powerful — from setup to daily operations
                         </p>
@@ -424,19 +426,19 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                         {[
                             {
-                                step: '01',
-                                title: 'Setup Your Restaurant.ts',
-                                desc: 'Create your account, customize your menu, create tables and configure your restaurants in minutes.'
+                                step: "01",
+                                title: "Setup Your Restaurant.ts",
+                                desc: "Create your account, customize your menu, create tables and configure your restaurants in minutes.",
                             },
                             {
-                                step: '02',
-                                title: 'Add Your Team',
-                                desc: 'Easily invite team members and assign roles with the right permissions—no training required, thanks to our intuitive interface.'
+                                step: "02",
+                                title: "Add Your Team",
+                                desc: "Easily invite team members and assign roles with the right permissions—no training required, thanks to our intuitive interface.",
                             },
                             {
-                                step: '03',
-                                title: 'Start Serving Efficiently',
-                                desc: 'Take orders, manage kitchen flow, and process payments — all digitally synchronized in real-time.'
+                                step: "03",
+                                title: "Start Serving Efficiently",
+                                desc: "Take orders, manage kitchen flow, and process payments — all digitally synchronized in real-time.",
                             },
                         ].map((item, index) => (
                             <motion.div
@@ -444,19 +446,19 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                                 className="flex flex-col"
                                 initial="hidden"
                                 whileInView="visible"
-                                viewport={{once: true, margin: "-100px"}}
+                                viewport={{ once: true, margin: "-100px" }}
                                 variants={fadeIn}
-                                transition={{delay: index * 0.2}}
+                                transition={{ delay: index * 0.2 }}
                             >
-                                <div
-                                    className="text-5xl font-bold text-blue-600/20 dark:text-blue-400/20 mb-4">{item.step}</div>
+                                <div className="text-5xl font-bold text-blue-600/20 dark:text-blue-400/20 mb-4">{item.step}</div>
                                 <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">{item.title}</h3>
                                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">{item.desc}</p>
                                 <div className="mt-auto">
-                                    <div
-                                        className="h-1 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div className="h-full bg-blue-600 dark:bg-blue-500 rounded-full"
-                                             style={{width: `${33.33 * (index + 1)}%`}}></div>
+                                    <div className="h-1 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-blue-600 dark:bg-blue-500 rounded-full"
+                                            style={{ width: `${33.33 * (index + 1)}%` }}
+                                        ></div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -653,23 +655,20 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
             {/*</section>*/}
 
             {/* CTA Section */}
-            <section
-                className="py-20 px-6 sm:px-20 bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-700 dark:to-indigo-900 text-white">
+            <section className="py-20 px-6 sm:px-20 bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-700 dark:to-indigo-900 text-white">
                 <div className="max-w-7xl mx-auto">
                     <motion.div
                         className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{once: true, margin: "-100px"}}
+                        viewport={{ once: true, margin: "-100px" }}
                         variants={staggerContainer}
                     >
                         <motion.div variants={fadeIn}>
-                            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-                                Ready to Transform Your Restaurant Operations?
-                            </h2>
+                            <h2 className="text-3xl sm:text-4xl font-bold mb-6">Ready to Transform Your Restaurant Operations?</h2>
                             <p className="text-xl opacity-90 mb-8 leading-relaxed">
-                                Join restaurants that have streamlined their operations, increased
-                                efficiency, and improved customer satisfaction with V-Menu.
+                                Join restaurants that have streamlined their operations, increased efficiency, and improved customer
+                                satisfaction with V-Menu.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <a
@@ -687,10 +686,7 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                             </div>
                         </motion.div>
 
-                        <motion.div
-                            className="hidden relative lg:flex justify-center lg:justify-end"
-                            variants={fadeIn}
-                        >
+                        <motion.div className="hidden relative lg:flex justify-center lg:justify-end" variants={fadeIn}>
                             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 max-w-md">
                                 <div className="flex items-center space-x-2 mb-4">
                                     <div className="h-3 w-3 rounded-full bg-red-500"></div>
@@ -705,8 +701,7 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                                         <div className="h-10 bg-white/10 rounded-md"></div>
                                     </div>
                                 </div>
-                                <div
-                                    className="mt-4 px-4 py-2 bg-blue-500/20 rounded-md text-center text-sm font-medium">
+                                <div className="mt-4 px-4 py-2 bg-blue-500/20 rounded-md text-center text-sm font-medium">
                                     Get Started in Minutes
                                 </div>
                             </div>
@@ -914,7 +909,6 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
             {/* Footer */}
             <footer className="bg-gray-900 dark:bg-black text-white p-4 py-20 sm:p-16">
                 <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row justify-center items-center gap-16">
-
                     {/* Left Section: Logo, Desc, Social */}
                     <div className="flex-1 w-full">
                         <div className="flex items-center mb-6">
@@ -924,23 +918,25 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                             <span className="text-2xl font-bold text-blue-400">V-Menu</span>
                         </div>
                         <p className="text-gray-400 mb-6 max-w-md">
-                            Modern restaurant management software that streamlines operations, reduces errors, and
-                            enhances the dining experience.
+                            Modern restaurant management software that streamlines operations, reduces errors, and enhances the dining
+                            experience.
                         </p>
                         <div className="flex space-x-4">
-                            {['twitter', 'facebook', 'instagram', 'linkedin'].map((social) => (
+                            {["twitter", "facebook", "instagram", "linkedin"].map((social) => (
                                 <a
                                     key={social}
                                     href="#"
                                     className="h-10 w-10 rounded-full bg-gray-800 hover:bg-blue-600 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
                                 >
                                     <span className="sr-only">{social}</span>
-                                    {{
-                                        twitter: <Twitter className="h-5 w-5"/>,
-                                        facebook: <Facebook className="h-5 w-5"/>,
-                                        instagram: <Instagram className="h-5 w-5"/>,
-                                        linkedin: <Linkedin className="h-5 w-5"/>
-                                    }[social]}
+                                    {
+                                        {
+                                            twitter: <Twitter className="h-5 w-5" />,
+                                            facebook: <Facebook className="h-5 w-5" />,
+                                            instagram: <Instagram className="h-5 w-5" />,
+                                            linkedin: <Linkedin className="h-5 w-5" />,
+                                        }[social]
+                                    }
                                 </a>
                             ))}
                         </div>
@@ -949,11 +945,11 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
                     {/* Right Section: Link Columns */}
                     <div className="flex flex-wrap sm:flex-row gap-12 lg:gap-12 flex-1 justify-between w-full">
                         {[
-                            {title: 'Product', items: ['Features', 'Pricing', 'Integrations', 'Updates', 'Roadmap']},
-                            {title: 'Company', items: ['About Us', 'Careers', 'Press', 'Partners', 'Contact']},
+                            { title: "Product", items: ["Features", "Pricing", "Integrations", "Updates", "Roadmap"] },
+                            { title: "Company", items: ["About Us", "Careers", "Press", "Partners", "Contact"] },
                             {
-                                title: 'Resources',
-                                items: ['Documentation', 'Tutorials', 'Blog', 'Support Center', 'API Docs']
+                                title: "Resources",
+                                items: ["Documentation", "Tutorials", "Blog", "Support Center", "API Docs"],
                             },
                         ].map((section) => (
                             <div key={section.title}>
@@ -974,18 +970,22 @@ export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
 
                 {/* Bottom Footer */}
                 <div className="border-t border-gray-800 pt-8 mt-16">
-                    <div
-                        className="max-w-7xl mx-auto px-6  flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+                    <div className="max-w-7xl mx-auto px-6  flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
                         <p>© {new Date().getFullYear()} V-Menu. All rights reserved.</p>
                         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2">
-                            <a href="#" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
-                            <a href="#" className="hover:text-blue-400 transition-colors">Terms of Service</a>
-                            <a href="#" className="hover:text-blue-400 transition-colors">Cookie Policy</a>
+                            <a href="#" className="hover:text-blue-400 transition-colors">
+                                Privacy Policy
+                            </a>
+                            <a href="#" className="hover:text-blue-400 transition-colors">
+                                Terms of Service
+                            </a>
+                            <a href="#" className="hover:text-blue-400 transition-colors">
+                                Cookie Policy
+                            </a>
                         </div>
                     </div>
                 </div>
             </footer>
-
         </main>
     );
 }

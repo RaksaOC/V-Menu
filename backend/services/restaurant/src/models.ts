@@ -26,7 +26,12 @@ export const Restaurant = mongoose.model("Restaurant", restaurantSchema, "restau
 export const Tenant = mongoose.model("Tenant", tenantSchema, "tenants");
 
 function slugify(name: string) {
-    return name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
+    return name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
 }
 
 // Same slug format as before: "<name>-<6 random chars>".

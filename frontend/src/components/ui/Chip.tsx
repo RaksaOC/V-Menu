@@ -10,5 +10,11 @@ const TONES: Record<ChipTone, string> = {
 
 /** A small status label (CL-09). */
 export default function Chip({ tone = "neutral", className = "", ...rest }: HTMLAttributes<HTMLSpanElement> & { tone?: ChipTone }) {
-    return <span data-tone={tone} className={`inline-flex items-center gap-1 rounded-[var(--r-chip)] px-2.5 py-1 text-xs font-medium ${TONES[tone]} ${className}`} {...rest} />;
+    return (
+        <span
+            data-tone={tone}
+            className={`inline-flex items-center gap-1 rounded-[var(--r-chip)] px-2.5 py-1 text-xs font-medium ${TONES[tone]} ${className}`}
+            {...rest}
+        />
+    );
 }

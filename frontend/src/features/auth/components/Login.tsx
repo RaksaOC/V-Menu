@@ -1,8 +1,8 @@
 import { useState } from "react";
-import {toast} from "@/lib/toast";
+import { toast } from "@/lib/toast";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import {getMemberships} from "@/features/auth/api";
+import { getMemberships } from "@/features/auth/api";
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight } from "lucide-react";
 
 export interface LoginDetails {

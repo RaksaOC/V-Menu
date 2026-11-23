@@ -52,7 +52,12 @@ export default function TableForm({ table, onClose, onCreate, onRename, onDelete
     ) : (
         <>
             {table && onDelete && (
-                <Button variant="outline" className="mr-auto" icon={<Trash2 size={16} aria-hidden />} onClick={() => setConfirmDelete(true)}>
+                <Button
+                    variant="outline"
+                    className="mr-auto"
+                    icon={<Trash2 size={16} aria-hidden />}
+                    onClick={() => setConfirmDelete(true)}
+                >
                     Delete
                 </Button>
             )}

@@ -88,7 +88,9 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h2 className="text-xl font-semibold text-[var(--ink)]">{role === "owner" ? "Manage Tables" : "Tables"}</h2>
-                    <p className="text-sm text-[var(--muted)]">{role === "owner" ? "Add tables, rename them and print their QR codes" : "Open a table when guests sit down"}</p>
+                    <p className="text-sm text-[var(--muted)]">
+                        {role === "owner" ? "Add tables, rename them and print their QR codes" : "Open a table when guests sit down"}
+                    </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Chip tone="ok">{open} open</Chip>
@@ -124,7 +126,9 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                 <div className="flex flex-col items-center py-16 text-center text-[var(--muted)]">
                     <TableIcon size={40} aria-hidden className="mb-4" />
                     <h3 className="text-lg font-semibold text-[var(--ink)]">No tables yet</h3>
-                    <p className="mt-1 max-w-md text-sm">{role === "owner" ? "Add your first table to print its QR code." : "Ask the owner to add the restaurant's tables."}</p>
+                    <p className="mt-1 max-w-md text-sm">
+                        {role === "owner" ? "Add your first table to print its QR code." : "Ask the owner to add the restaurant's tables."}
+                    </p>
                 </div>
             )}
 

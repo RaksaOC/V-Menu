@@ -7,7 +7,9 @@ import TableQrModal from "@/components/qr/TableQrModal";
 import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
 import type { TableOutput } from "@/lib/types/Table";
 
-type Props = { table: TableOutput } & ({ role: "owner"; onEdit: (table: TableOutput) => void } | { role: "cashier"; onToggle: (table: TableOutput) => void });
+type Props = { table: TableOutput } & (
+    { role: "owner"; onEdit: (table: TableOutput) => void } | { role: "cashier"; onToggle: (table: TableOutput) => void }
+);
 
 /** One table, for the owner (edit) and the cashier (open/close); both can show its QR code (CL-09). */
 export default function TableCard(props: Props) {
@@ -16,8 +18,13 @@ export default function TableCard(props: Props) {
     const [showQr, setShowQr] = useState(false);
     return (
         <Card className="relative flex flex-col items-center gap-4 text-center">
-            <span aria-hidden className={`absolute right-4 top-4 h-2.5 w-2.5 rounded-full ${table.isEnabled ? "bg-[var(--ok)]" : "bg-[var(--bad)]"}`} />
-            <div className={`rounded-[var(--r-card)] p-3 ${table.isEnabled ? "bg-[var(--ok-soft)] text-[var(--ok)]" : "bg-[var(--bad-soft)] text-[var(--bad)]"}`}>
+            <span
+                aria-hidden
+                className={`absolute right-4 top-4 h-2.5 w-2.5 rounded-full ${table.isEnabled ? "bg-[var(--ok)]" : "bg-[var(--bad)]"}`}
+            />
+            <div
+                className={`rounded-[var(--r-card)] p-3 ${table.isEnabled ? "bg-[var(--ok-soft)] text-[var(--ok)]" : "bg-[var(--bad-soft)] text-[var(--bad)]"}`}
+            >
                 <TableIcon size={26} aria-hidden />
             </div>
             <h3 className="text-lg font-semibold">Table {table.name}</h3>

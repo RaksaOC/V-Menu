@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, {useState} from "react";
-import {CartItem} from "@/lib/types/CartItem";
-import {prettyDate} from "@/lib/dates";
-import {Clock, CheckCircle2, Users, Hash} from "lucide-react";
+import React, { useState } from "react";
+import { CartItem } from "@/lib/types/CartItem";
+import { prettyDate } from "@/lib/dates";
+import { Clock, CheckCircle2, Users, Hash } from "lucide-react";
 
 interface CardProps {
     orderId: string;
@@ -24,16 +24,13 @@ function formatTimeAgo(orderTime: Date): string {
         return `${diffDays}d`;
     } else if (diffHours > 0) {
         const remainingMinutes = diffMinutes % 60;
-        return remainingMinutes > 0
-            ? `${diffHours}h ${remainingMinutes}m`
-            : `${diffHours}h`;
+        return remainingMinutes > 0 ? `${diffHours}h ${remainingMinutes}m` : `${diffHours}h`;
     } else {
         return `${diffMinutes}m`;
     }
 }
 
-
-const Card = ({orderId, table, orderedItems, isDone, onDone, orderedAt}: CardProps) => {
+const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardProps) => {
     const [isCompleting, setIsCompleting] = useState(false);
 
     const handleComplete = async () => {
@@ -48,14 +45,13 @@ const Card = ({orderId, table, orderedItems, isDone, onDone, orderedAt}: CardPro
     const timeAgoDisplay = formatTimeAgo(orderTime); // e.g., "2h 15m" or "3d"
 
     return (
-        <div
-            className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group w-full">
+        <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group w-full">
             {/* Order Header */}
             <div className="bg-gradient-to-r from-slate-600 to-gray-600 text-white p-6">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
-                            <Users size={20} className="text-white"/>
+                            <Users size={20} className="text-white" />
                         </div>
                         <div>
                             <h3 className="text-2xl font-bold">Table {table}</h3>
@@ -65,37 +61,34 @@ const Card = ({orderId, table, orderedItems, isDone, onDone, orderedAt}: CardPro
 
                     <div className="text-right">
                         <div className="flex items-center gap-2 mb-1">
-                            <Clock size={16} className="text-slate-300"/>
+                            <Clock size={16} className="text-slate-300" />
                             <span className="text-sm text-slate-200">{prettyDate(orderedAt)}</span>
                         </div>
                         <div
                             className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
                                 timeAgo < 5
-                                    ? 'bg-green-500/20 text-green-200'
+                                    ? "bg-green-500/20 text-green-200"
                                     : timeAgo < 15
-                                        ? 'bg-yellow-500/20 text-yellow-200'
-                                        : 'bg-red-500/20 text-red-200'
+                                      ? "bg-yellow-500/20 text-yellow-200"
+                                      : "bg-red-500/20 text-red-200"
                             }`}
                         >
                             <div
                                 className={`w-2 h-2 rounded-full ${
-                                    timeAgo < 5
-                                        ? 'bg-green-400'
-                                        : timeAgo < 15
-                                            ? 'bg-yellow-400'
-                                            : 'bg-red-400'
+                                    timeAgo < 5 ? "bg-green-400" : timeAgo < 15 ? "bg-yellow-400" : "bg-red-400"
                                 } animate-pulse`}
                             ></div>
-                            {timeAgo < 1 ? 'Just now' : `${timeAgoDisplay} ago`}
+                            {timeAgo < 1 ? "Just now" : `${timeAgoDisplay} ago`}
                         </div>
                     </div>
-
                 </div>
 
                 <div className="flex items-center gap-4 text-slate-200">
                     <div className="flex items-center gap-2">
-                        <Hash size={16}/>
-                        <span className="text-sm font-medium">{totalItems} item{totalItems !== 1 ? 's' : ''}</span>
+                        <Hash size={16} />
+                        <span className="text-sm font-medium">
+                            {totalItems} item{totalItems !== 1 ? "s" : ""}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -122,17 +115,12 @@ const Card = ({orderId, table, orderedItems, isDone, onDone, orderedAt}: CardPro
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <h5 className="font-semibold text-gray-800 truncate mb-1">
-                                    {orderedItem.item.name}
-                                </h5>
-                                <p className="text-sm text-gray-500">
-                                    ${orderedItem.item.price.toFixed(2)} each
-                                </p>
+                                <h5 className="font-semibold text-gray-800 truncate mb-1">{orderedItem.item.name}</h5>
+                                <p className="text-sm text-gray-500">${orderedItem.item.price.toFixed(2)} each</p>
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div
-                                    className="bg-slate-600 text-white px-3 py-1.5 rounded-full font-bold text-sm min-w-[3rem] text-center">
+                                <div className="bg-slate-600 text-white px-3 py-1.5 rounded-full font-bold text-sm min-w-[3rem] text-center">
                                     ×{orderedItem.quantity}
                                 </div>
                             </div>
@@ -151,13 +139,12 @@ const Card = ({orderId, table, orderedItems, isDone, onDone, orderedAt}: CardPro
                     >
                         {isCompleting ? (
                             <>
-                                <div
-                                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 Completing Order...
                             </>
                         ) : (
                             <>
-                                <CheckCircle2 size={22}/>
+                                <CheckCircle2 size={22} />
                                 Mark as Complete
                             </>
                         )}

@@ -30,14 +30,21 @@ beforeAll(async () => {
     mongo = await MongoMemoryServer.create();
     await mongoose.connect(mongo.getUri("menu"));
     owner = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "o@x.com", role: "owner" })}` };
-    cashier = { authorization: `Bearer ${await signAppToken({ uid: "c1", email: "c@x.com", role: "cashier", resId: RES_ID, resSlug: SLUG })}` };
+    cashier = {
+        authorization: `Bearer ${await signAppToken({ uid: "c1", email: "c@x.com", role: "cashier", resId: RES_ID, resSlug: SLUG })}`,
+    };
     otherOwner = { authorization: `Bearer ${await signAppToken({ uid: "owner2", email: "p@x.com", role: "owner" })}` };
     // A 1600 x 1200 photo, like a phone's, and the same with a GPS location in its EXIF.
     const noise = Buffer.alloc(1600 * 1200 * 3);
     for (let i = 0, s = 7; i < noise.length; i++) noise[i] = (s = (s * 1103515245 + 12345) & 0x7fffffff) & 255;
-    photo = await sharp(noise, { raw: { width: 1600, height: 1200, channels: 3 } }).jpeg({ quality: 70 }).toBuffer();
+    photo = await sharp(noise, { raw: { width: 1600, height: 1200, channels: 3 } })
+        .jpeg({ quality: 70 })
+        .toBuffer();
     gpsPhoto = await sharp(photo)
-        .withExif({ IFD0: { Make: "PhoneCo" }, IFD3: { GPSLatitudeRef: "N", GPSLatitude: "11/1 33/1 25/1", GPSLongitudeRef: "E", GPSLongitude: "104/1 55/1 0/1" } })
+        .withExif({
+            IFD0: { Make: "PhoneCo" },
+            IFD3: { GPSLatitudeRef: "N", GPSLatitude: "11/1 33/1 25/1", GPSLongitudeRef: "E", GPSLongitude: "104/1 55/1 0/1" },
+        })
         .jpeg()
         .toBuffer();
 });
@@ -59,11 +66,14 @@ describe("photo upload (VM-02)", () => {
         expect(res.status).toBe(201);
         expect(res.body.url).toMatch(new RegExp(`^/api/menu/${SLUG}/images/[a-f0-9]{24}$`));
 
-        const img = await request(app).get(res.body.url).buffer(true).parse((r, cb) => {
-            const chunks: Buffer[] = [];
-            r.on("data", (c: Buffer) => chunks.push(c));
-            r.on("end", () => cb(null, Buffer.concat(chunks)));
-        });
+        const img = await request(app)
+            .get(res.body.url)
+            .buffer(true)
+            .parse((r, cb) => {
+                const chunks: Buffer[] = [];
+                r.on("data", (c: Buffer) => chunks.push(c));
+                r.on("end", () => cb(null, Buffer.concat(chunks)));
+            });
         expect(img.status).toBe(200);
         expect(img.headers["content-type"]).toBe("image/webp");
         expect(img.headers["cache-control"]).toBe("public, max-age=31536000, immutable");
@@ -124,11 +134,14 @@ describe("photo upload safety (SEC-05)", () => {
     it("re-encodes the photo, so the GPS location and other EXIF data are gone", async () => {
         expect((await sharp(gpsPhoto).metadata()).exif).toBeDefined();
         const { body } = await upload(gpsPhoto);
-        const img = await request(app).get(body.url).buffer(true).parse((r, cb) => {
-            const chunks: Buffer[] = [];
-            r.on("data", (c: Buffer) => chunks.push(c));
-            r.on("end", () => cb(null, Buffer.concat(chunks)));
-        });
+        const img = await request(app)
+            .get(body.url)
+            .buffer(true)
+            .parse((r, cb) => {
+                const chunks: Buffer[] = [];
+                r.on("data", (c: Buffer) => chunks.push(c));
+                r.on("end", () => cb(null, Buffer.concat(chunks)));
+            });
         const meta = await sharp(img.body as Buffer).metadata();
         expect(meta.exif).toBeUndefined();
         expect((img.body as Buffer).includes(Buffer.from("PhoneCo"))).toBe(false);
@@ -141,7 +154,9 @@ describe("photo upload safety (SEC-05)", () => {
 
     it("limits uploads per restaurant per hour", async () => {
         const limited = createApp({ lookupRestaurant, uploadsPerHour: 2 });
-        const small = await sharp({ create: { width: 10, height: 10, channels: 3, background: "#f00" } }).png().toBuffer();
+        const small = await sharp({ create: { width: 10, height: 10, channels: 3, background: "#f00" } })
+            .png()
+            .toBuffer();
         expect((await upload(small, "a.png", owner, SLUG, limited)).status).toBe(201);
         expect((await upload(small, "b.png", owner, SLUG, limited)).status).toBe(201);
         const third = await upload(small, "c.png", owner, SLUG, limited);
@@ -163,10 +178,16 @@ describe("photo upload safety (SEC-05)", () => {
         // items made before this change may still point elsewhere; editing the name must not fail
         const { Item } = await import("../src/models.js");
         const old = await Item.create({ name: "Old", price: 1, image: "https://images.example/old.jpg", resId: RES_ID });
-        const res = await request(app).put(`/api/menu/${SLUG}/items/${old._id}`).set(owner).send({ name: "Renamed", price: 1, image: "https://images.example/old.jpg" });
+        const res = await request(app)
+            .put(`/api/menu/${SLUG}/items/${old._id}`)
+            .set(owner)
+            .send({ name: "Renamed", price: 1, image: "https://images.example/old.jpg" });
         expect(res.status).toBe(200);
         expect(res.body.name).toBe("Renamed");
-        const swap = await request(app).put(`/api/menu/${SLUG}/items/${old._id}`).set(owner).send({ image: "https://tracker.example/new.jpg" });
+        const swap = await request(app)
+            .put(`/api/menu/${SLUG}/items/${old._id}`)
+            .set(owner)
+            .send({ image: "https://tracker.example/new.jpg" });
         expect(swap.status).toBe(400);
     });
 });
