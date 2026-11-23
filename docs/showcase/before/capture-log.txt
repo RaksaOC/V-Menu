@@ -47,3 +47,12 @@ ok   VM-02-owner-add-photo-1280-dark
 ok   VM-02-customer-menu-1280-dark
 ok   VM-02-owner-add-photo-360
 ok   VM-02-customer-menu-360
+# ONLY=VM-04 (2026-11-23T11:28:40.091Z)
+ok   VM-04-closed-table-360
+ok   VM-04-unknown-table-360
+ok   VM-04-unknown-restaurant-360
+ok   VM-04-server-error-360
+ok   VM-04-closed-table-360-dark
+ok   VM-04-unknown-table-360-dark
+ok   VM-04-unknown-restaurant-360-dark
+ok   VM-04-server-error-360-dark
