@@ -174,3 +174,13 @@ ok   VM-13-check-inbox-1280-dark
 ok   VM-13-not-verified-yet-1280-dark
 ok   VM-13-check-inbox-360
 ok   VM-13-not-verified-yet-360
+# ONLY=VM-09 (2026-11-23T17:12:01.021Z)
+ok   VM-09-owner-overview-1280
+ok   VM-09-owner-restaurants-1280
+ok   VM-09-restaurant-overview-1280
+ok   VM-09-owner-overview-1280-dark
+ok   VM-09-owner-restaurants-1280-dark
+ok   VM-09-restaurant-overview-1280-dark
+ok   VM-09-owner-overview-360
+ok   VM-09-owner-restaurants-360
+ok   VM-09-restaurant-overview-360

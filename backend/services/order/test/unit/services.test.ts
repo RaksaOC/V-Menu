@@ -4,7 +4,7 @@ import { HttpError } from "@vmenu/common";
 import { ordersService } from "../../src/services/orders.service.js";
 import { kitchenService } from "../../src/services/kitchen.service.js";
 import { billsService } from "../../src/services/bills.service.js";
-import { statsService } from "../../src/services/stats.service.js";
+import { sales, statsService } from "../../src/services/stats.service.js";
 import { tableService } from "../../src/services/table.service.js";
 import { DISH, R1, R2, fakeBills, fakeClients, fakeOrders, newId } from "./fakes.js";
 
@@ -415,5 +415,26 @@ describe("owner revenue and top sellers (VM-09)", () => {
         const { stats } = fixtures();
         expect(await status(stats.ownerOverview("owner1", { from: "yesterday" }))).toBe(400);
         expect(await status(stats.ownerOverview("owner1", { from: "2026-11-10", to: "2026-11-01" }))).toBe(400);
+    });
+});
+
+describe("sales from paid bills (VM-09)", () => {
+    const order = (orderedItems: unknown[]) => ({ _id: "o", status: "served", createdAt: new Date(), orderedItems }) as never;
+    const bill = (orders: unknown[]) => ({ _id: "b", table: "1", resId: R1._id, isPaid: true, createdAt: new Date(), orders }) as never;
+
+    it("skips an order that no longer exists and a line without a dish; a missing price is 0", () => {
+        const s = sales([bill([null, order([{ quantity: 2 }, { item: { _id: "x", name: "Water" }, quantity: 1 }])])]);
+        expect(s).toEqual({
+            revenue: 0,
+            itemsSoldCount: 1,
+            avgItemsPerOrder: 1,
+            topSellingItems: [{ _id: "x", name: "Water", quantity: 1 }],
+        });
+    });
+
+    it("equal sellers are listed by name", () => {
+        const line = (_id: string, name: string) => ({ item: { _id, name, price: 1 }, quantity: 1 });
+        const s = sales([bill([order([line("b", "Tea"), line("a", "Amok")])])]);
+        expect(s.topSellingItems.map((t) => t.name)).toEqual(["Amok", "Tea"]);
     });
 });
