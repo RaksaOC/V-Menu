@@ -161,6 +161,23 @@ describe("an order is never left off its bill (VM-23)", () => {
     });
 });
 
+describe("bills carry their server totals (VM-31)", () => {
+    it("GET /bills and PATCH /bills/:id answer with lines, subtotal and total in cents", async () => {
+        await place("1", 2);
+        await place("1", 1);
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        expect(bill).toMatchObject({
+            lines: [{ _id: ITEM._id, name: "Kuy Teav", priceCents: 250, quantity: 3, totalCents: 750 }],
+            subtotalCents: 750,
+            totalCents: 750,
+        });
+        const paid = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
+        expect(paid.body).toMatchObject({ subtotalCents: 750, totalCents: 750 });
+        const history = await request(app).get(`/api/orders/${R.slug}/bills?status=paid`).set(cashier);
+        expect(history.body.bills[0]).toMatchObject({ subtotalCents: 750, totalCents: 750 });
+    });
+});
+
 describe("kitchen and cashier", () => {
     it("chef serves an order; cashier marks the bill paid", async () => {
         const { body: order } = await place();

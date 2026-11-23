@@ -33,6 +33,32 @@ describe("formatMoney", () => {
     });
 });
 
+describe("a bill's lines and totals (VM-31)", () => {
+    const bill = {
+        _id: "1",
+        table: "1",
+        isPaid: false,
+        orders: [],
+        createdAt: "2026-11-24T00:00:00.000Z",
+        lines: [{ _id: "d1", name: "Amok", priceCents: 235, quantity: 3, totalCents: 705 }],
+        subtotalCents: 705,
+        totalCents: 705,
+    };
+
+    it("every bill has them, in whole cents", () => {
+        expect(C.Bill.safeParse(bill).success).toBe(true);
+        expect(C.Bill.safeParse({ ...bill, totalCents: undefined }).success).toBe(false);
+        expect(C.Bill.safeParse({ ...bill, subtotalCents: 7.05 }).success).toBe(false);
+        expect(C.Bill.safeParse({ ...bill, lines: undefined }).success).toBe(false);
+    });
+
+    it("so does the customer's view of the bill", () => {
+        const { lines, subtotalCents, totalCents } = bill;
+        expect(C.TableBill.safeParse({ table: "1", orders: [], lines, subtotalCents, totalCents }).success).toBe(true);
+        expect(C.TableBill.safeParse({ table: "1", orders: [], totalCents }).success).toBe(false);
+    });
+});
+
 describe("prices in the API are whole cents (CL-07)", () => {
     const dish = { name: "Amok", image: "/a.jpg" };
     const fieldsOf = (schema: { safeParse(v: unknown): { success: boolean; error?: { issues: { path: PropertyKey[] }[] } } }, v: unknown) =>
