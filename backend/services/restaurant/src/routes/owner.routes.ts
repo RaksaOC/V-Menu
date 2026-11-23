@@ -13,6 +13,9 @@ export function ownerRoutes({ services }: RouteContext) {
     r.post("/restaurants", validate(CreateRestaurantBody), async (req, res) => {
         res.status(201).json(await services.restaurants.create(req.user!, req.body));
     });
+    r.put("/restaurants/:slug/settings", async (req, res) => {
+        res.json(await services.restaurants.updateSettings(req.user!, String(req.params.slug), req.body));
+    });
     r.get("/staff", async (req, res) => {
         res.json(await services.staff.overview(req.user!.uid));
     });

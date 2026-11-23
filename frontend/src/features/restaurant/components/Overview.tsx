@@ -5,13 +5,14 @@ import { AlertTriangle, CheckCircle, CreditCard, Table as TableIcon, TrendingUp,
 import { Card, Skeleton } from "@/components/ui";
 import { getOverview } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 import type { Overview as OverviewData } from "@vmenu/contracts";
 
 const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
 /** One restaurant's numbers, the same for the owner and the cashier (CL-09; was two copies). */
 export default function Overview() {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const slug = useRestaurantSlug();
     const [data, setData] = useState<OverviewData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -95,7 +96,7 @@ export default function Overview() {
                 </div>
                 <div>
                     <p className="text-sm text-[var(--muted)]">Revenue (paid bills)</p>
-                    <p className="text-lg font-bold">{formatMoney(data.revenueCents ?? 0)}</p>
+                    <p className="text-lg font-bold">{money(data.revenueCents ?? 0)}</p>
                 </div>
             </Card>
         </div>

@@ -1,7 +1,7 @@
 import { addToCart } from "../cart";
 import { Plus } from "lucide-react";
 import type { MenuItem } from "@vmenu/contracts";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 
 interface CardProps {
     /** The restaurant and table whose cart the dish goes into (VM-05). */
@@ -14,6 +14,7 @@ interface CardProps {
 }
 
 export default function Card({ slug, table, _id, name, priceCents, image }: CardProps) {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     return (
         <div className="bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:scale-[1.02] hover:border-emerald-200">
             {/* Image Container */}
@@ -30,7 +31,7 @@ export default function Card({ slug, table, _id, name, priceCents, image }: Card
                         {name}
                     </h4>
                     <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-emerald-600">{formatMoney(priceCents)}</span>
+                        <span className="text-2xl font-bold text-emerald-600">{money(priceCents)}</span>
                     </div>
                 </div>
 

@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 import { bill } from "../fixtures";
@@ -53,7 +53,8 @@ describe("the restaurant's currency on every page (VM-24)", () => {
                 <OrderCard order={bill} onMarkPaid={vi.fn()} />
             </MoneyProvider>,
         );
-        expect(await screen.findByText("៛20,500")).toBeTruthy(); // the bill total, $5.00
+        const total = screen.getByRole("group", { name: "Bill total" });
+        expect(await within(total).findByText("៛20,500")).toBeTruthy(); // $5.00
     });
 
     it("without settings (or while they load) prices show in US dollars", () => {

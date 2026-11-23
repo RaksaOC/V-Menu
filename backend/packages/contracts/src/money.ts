@@ -12,7 +12,31 @@ export function toCents(amount: number): number {
     return Math.round(Number.isNaN(shifted) ? amount * 100 : shifted);
 }
 
-/** Cents as a price: 122525 is "$1,225.25". */
-export function formatMoney(cents: number): string {
-    return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+/**
+ * VM-24: how a restaurant shows prices. Prices are kept in US cents; riel is worked out for
+ * display, at the restaurant's own rate.
+ */
+export interface MoneySettings {
+    currency: "USD" | "KHR" | "both";
+    /** riel for one US dollar, a whole number */
+    khrPerUsd: number;
+}
+export const DEFAULT_MONEY: MoneySettings = { currency: "USD", khrPerUsd: 4100 };
+
+const dollars = (cents: number) => (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+
+/** Riel, rounded half up to the nearest 100, as prices are paid in cash. Whole-number maths only. */
+function riel(cents: number, khrPerUsd: number) {
+    const hundreds = Math.floor((cents * khrPerUsd + 5000) / 10000);
+    return `៛${(hundreds * 100).toLocaleString("en-US")}`;
+}
+
+/**
+ * Cents as a price, in the restaurant's currency: "$1,225.25", "៛5,000", or "$1.25 · ៛5,100".
+ * The pages call it through useMoney(), which knows the restaurant's settings.
+ */
+export function formatMoney(cents: number, money: MoneySettings = DEFAULT_MONEY): string {
+    if (money.currency === "KHR") return riel(cents, money.khrPerUsd);
+    if (money.currency === "both") return `${dollars(cents)} · ${riel(cents, money.khrPerUsd)}`;
+    return dollars(cents);
 }

@@ -1,5 +1,5 @@
-import { notFound, parse, type AppUser } from "@vmenu/common";
-import { OwnerIdQuery, type CreateRestaurantBody } from "@vmenu/contracts";
+import { assertRestaurantAccess, badRequest, notFound, parse, type AppUser } from "@vmenu/common";
+import { DEFAULT_MONEY, OwnerIdQuery, UpdateSettingsBody, type CreateRestaurantBody, type RestaurantSettings } from "@vmenu/contracts";
 import type { RestaurantRecord, RestaurantsRepo } from "../repositories/restaurants.repo.js";
 import type { MembershipsRepo } from "../repositories/memberships.repo.js";
 
@@ -19,6 +19,14 @@ export function generateSlug(name: string) {
 
 /** What other services may know about a restaurant. */
 const publicShape = (r: RestaurantRecord) => ({ _id: String(r._id), name: r.name, slug: r.slug, ownerId: r.ownerId });
+
+/** VM-24: the settings any page may read, with the defaults for a restaurant that never set them. */
+const settingsOf = (r: RestaurantRecord): RestaurantSettings => ({
+    name: r.name,
+    currency: r.settings?.currency ?? DEFAULT_MONEY.currency,
+    khrPerUsd: r.settings?.khrPerUsd ?? DEFAULT_MONEY.khrPerUsd,
+    paymentQrUrl: r.settings?.paymentQrUrl ?? null,
+});
 
 /** Restaurants: creating them, and finding them for other services (CL-04). */
 export function restaurantsService({ restaurants, memberships }: { restaurants: RestaurantsRepo; memberships: MembershipsRepo }) {
@@ -53,6 +61,25 @@ export function restaurantsService({ restaurants, memberships }: { restaurants: 
             const r = await restaurants.bySlug(slug);
             if (!r) throw notFound("Restaurant not found");
             return r;
+        },
+
+        /** VM-24: for anyone, signed in or not: customers' pages show prices in this currency. */
+        async settings(slug: string) {
+            const r = await restaurants.bySlug(slug);
+            if (!r) throw notFound("Restaurant not found");
+            return settingsOf(r);
+        },
+
+        /** VM-24: the restaurant's owner changes its settings. */
+        async updateSettings(user: AppUser, slug: string, body: unknown) {
+            const r = await restaurants.bySlug(slug);
+            if (!r) throw notFound("Restaurant not found");
+            assertRestaurantAccess(user, { _id: String(r._id), ownerId: r.ownerId });
+            const changes = parse(UpdateSettingsBody, body);
+            // the QR must be a photo uploaded for this restaurant, not another one's
+            if (changes.paymentQrUrl && !changes.paymentQrUrl.startsWith(`/api/menu/${r.slug}/images/`))
+                throw badRequest("Upload the payment QR for this restaurant");
+            return settingsOf((await restaurants.updateSettings(String(r._id), changes)) ?? r);
         },
 
         /** For other services: a restaurant by slug. */

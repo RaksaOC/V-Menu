@@ -1,2 +1,3 @@
-// CL-07: one way to convert and show money, shared with the services.
-export { formatMoney, toCents } from "@vmenu/contracts/money";
+// CL-07, VM-24: the one money helper, shared with the services. Components don't call formatMoney
+// themselves: they use useMoney() (components/money/MoneyProvider), which knows the restaurant's currency.
+export { DEFAULT_MONEY, formatMoney, toCents, type MoneySettings } from "@vmenu/contracts/money";

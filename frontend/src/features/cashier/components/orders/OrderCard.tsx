@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Invoice from "./Invoice";
 import { formatDateTime } from "@/lib/dates";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 import { useParams } from "next/navigation";
 import { DollarSign, Eye, EyeOff, XCircle } from "lucide-react";
 import { Button, Chip, Input } from "@/components/ui";
@@ -23,6 +23,7 @@ interface Props {
 const orderNumber = (id: string) => id.slice(-6).toUpperCase();
 
 function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: Props) {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [showInvoice, setShowInvoice] = useState(false);
     const [cancelling, setCancelling] = useState<{ id: string; reason: string; error: string } | null>(null);
     const params = useParams();
@@ -63,13 +64,11 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                                     <div>
                                         <p className="text-zinc-800 dark:text-white font-semibold">{item.item.name}</p>
                                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                            {formatMoney(item.item.priceCents)} × {item.quantity}
+                                            {money(item.item.priceCents)} × {item.quantity}
                                         </p>
                                     </div>
                                 </div>
-                                <p className="font-bold text-zinc-700 dark:text-white">
-                                    {formatMoney(item.item.priceCents * item.quantity)}
-                                </p>
+                                <p className="font-bold text-zinc-700 dark:text-white">{money(item.item.priceCents * item.quantity)}</p>
                             </div>
                         ));
                         return (
@@ -149,18 +148,17 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                         className="mx-4 mt-2 flex items-center justify-between border-t border-zinc-300 pt-3 dark:border-zinc-600"
                     >
                         <span className="font-semibold text-zinc-700 dark:text-zinc-200">Bill total</span>
-                        <span className="text-lg font-bold text-zinc-900 dark:text-white">{formatMoney(order.totalCents)}</span>
+                        <span className="text-lg font-bold text-zinc-900 dark:text-white">{money(order.totalCents)}</span>
                     </div>
                 )}
             </div>
 
             {showInvoice && (
                 <Invoice
-                    businessName={params.res as string}
-                    address={"Address will be supported soon"}
-                    phone={"(123) 456-7890"}
-                    invoiceId={`${order._id}`}
-                    date={formatDateTime(new Date())}
+                    slug={params.res as string}
+                    table={order.table}
+                    billNumber={orderNumber(order._id)}
+                    date={formatDateTime(order.isPaid && order.updatedAt ? order.updatedAt : new Date())} // paid: when it was paid
                     lines={order.lines}
                     subtotalCents={order.subtotalCents}
                     totalCents={order.totalCents}

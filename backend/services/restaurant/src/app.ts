@@ -9,6 +9,7 @@ import { authRoutes } from "./routes/auth.routes.js";
 import type { RouteContext } from "./routes/context.js";
 import { internalRoutes } from "./routes/internal.routes.js";
 import { ownerRoutes } from "./routes/owner.routes.js";
+import { settingsRoutes } from "./routes/settings.routes.js";
 
 interface Deps {
     verifyIdToken: VerifyIdToken;
@@ -29,6 +30,7 @@ export function createApp({ verifyIdToken, restaurants = mongoRestaurantsRepo, m
 
     const app = baseApp();
     app.use("/api/auth", authRoutes(ctx));
+    app.use("/api", settingsRoutes(ctx)); // before the owner routes, which need a sign-in
     app.use("/api", ownerRoutes(ctx));
     app.use("/internal", internalRoutes(ctx));
     return finish(app);

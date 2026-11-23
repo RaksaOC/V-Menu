@@ -7,12 +7,13 @@ import { CheckCircle2, ChefHat, Clock, Plus, Receipt } from "lucide-react";
 import { getTableBill, getTableOrder, type TableBill, type TableOrderView } from "@/features/customer/api";
 import { apiErrorMessage } from "@/lib/api";
 import { formatTime } from "@/lib/dates";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 import { CUSTOMER_STATUS, isFinal } from "@/lib/order-status";
 
 /** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far.
  *  VM-27: its status, checked every 10 seconds until it's served or cancelled. */
 export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number } = {}) {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const params = useParams<{ res: string; table: string; orderId: string }>();
     const slug = String(params.res);
     const table = decodeURIComponent(String(params.table));
@@ -108,16 +109,16 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
                                     <div>
                                         <p className="font-medium text-slate-900">{line.name}</p>
                                         <p className="text-sm text-slate-500">
-                                            {line.quantity} × {formatMoney(line.priceCents)}
+                                            {line.quantity} × {money(line.priceCents)}
                                         </p>
                                     </div>
-                                    <p className="font-semibold text-slate-900">{formatMoney(line.totalCents)}</p>
+                                    <p className="font-semibold text-slate-900">{money(line.totalCents)}</p>
                                 </li>
                             ))}
                         </ul>
                         <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-4">
                             <p className="font-semibold text-slate-700">Total</p>
-                            <p className="text-2xl font-bold text-emerald-700">{formatMoney(order.totalCents)}</p>
+                            <p className="text-2xl font-bold text-emerald-700">{money(order.totalCents)}</p>
                         </div>
                     </section>
                 )}
@@ -141,17 +142,17 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
                                     </span>
                                     {o.status === "cancelled" ? (
                                         <span className="text-slate-400">
-                                            <del>{formatMoney(o.totalCents)}</del> cancelled
+                                            <del>{money(o.totalCents)}</del> cancelled
                                         </span>
                                     ) : (
-                                        <span className="font-semibold text-slate-900">{formatMoney(o.totalCents)}</span>
+                                        <span className="font-semibold text-slate-900">{money(o.totalCents)}</span>
                                     )}
                                 </li>
                             ))}
                         </ul>
                         <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-3">
                             <p className="text-sm font-semibold text-slate-700">Bill so far</p>
-                            <p className="font-bold text-slate-900">{formatMoney(bill.totalCents)}</p>
+                            <p className="font-bold text-slate-900">{money(bill.totalCents)}</p>
                         </div>
                         <p className="mt-2 text-xs text-slate-500">Pay at the counter when you&apos;re done.</p>
                     </section>

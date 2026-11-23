@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { formatDateTime } from "@/lib/dates";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 import { Clock, ArrowRight, Users, Hash } from "lucide-react";
 import { Chip } from "@/components/ui";
 import { NEXT_ACTION, STATUS_LABEL, STATUS_TONE } from "@/lib/order-status";
@@ -31,6 +31,7 @@ function formatTimeAgo(orderTime: Date): string {
 }
 
 const Card = ({ order, onAdvance }: CardProps) => {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const { _id: orderId, table, orderedItems, createdAt: orderedAt, status } = order;
     const action = onAdvance && NEXT_ACTION[status];
     const [isCompleting, setIsCompleting] = useState(false);
@@ -126,7 +127,7 @@ const Card = ({ order, onAdvance }: CardProps) => {
 
                             <div className="flex-1 min-w-0">
                                 <h5 className="font-semibold text-gray-800 truncate mb-1">{orderedItem.item.name}</h5>
-                                <p className="text-sm text-gray-500">{formatMoney(orderedItem.item.priceCents)} each</p>
+                                <p className="text-sm text-gray-500">{money(orderedItem.item.priceCents)} each</p>
                             </div>
 
                             <div className="flex items-center gap-2">

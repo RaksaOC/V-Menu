@@ -62,7 +62,7 @@ describe("the invoice (VM-24)", () => {
     it("prices are in the restaurant's currency", async () => {
         settings({ currency: "both", khrPerUsd: 4000 });
         const invoice = await openInvoice();
-        expect(await invoice.findAllByText("$5.00 · ៛20,000")).toHaveLength(2); // subtotal and total
+        expect(await invoice.findAllByText("$5.00 · ៛20,000")).toHaveLength(3); // the line, the subtotal and the total
     });
 
     it("prints only the invoice", async () => {

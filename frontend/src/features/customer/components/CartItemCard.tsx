@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 import { toast } from "@/lib/toast";
 import type { MenuItem } from "@vmenu/contracts";
 import type { CartItem } from "@/features/customer/cart";
@@ -14,6 +14,7 @@ type CartItemProps = {
 };
 
 const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, removeItem }: CartItemProps) => {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [isRemoving, setIsRemoving] = useState(false);
     const menuItem: Pick<MenuItem, "name" | "image" | "priceCents"> = cartItem.item;
 
@@ -42,7 +43,7 @@ const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, rem
                     <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-lg text-gray-800 mb-1 truncate">{menuItem.name}</h3>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">{formatMoney(menuItem.priceCents)} each</span>
+                            <span className="text-sm text-gray-500">{money(menuItem.priceCents)} each</span>
                         </div>
                     </div>
 

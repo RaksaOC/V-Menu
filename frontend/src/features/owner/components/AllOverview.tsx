@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line } from "recharts";
 import { DollarSign, ShoppingCart, Users, TrendingUp, Package, CreditCard, AlertTriangle, Trophy, Target, Activity } from "lucide-react";
 import { getOwnerOverview, PERIODS, type OwnerOverview, type Period, type TopSeller } from "@/features/owner/api";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 
 interface StatCardProps {
     title: string;
@@ -185,6 +185,7 @@ const MetricsChart: React.FC<MetricsChartProps> = ({ data, isVisible }) => {
 };
 
 export default function AllOverview() {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [data, setData] = useState<OwnerOverview | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [cardsVisible, setCardsVisible] = useState(false);
@@ -281,7 +282,7 @@ export default function AllOverview() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <StatCard
                         title="Revenue"
-                        value={formatMoney(data.revenueCents)}
+                        value={money(data.revenueCents)}
                         icon={DollarSign}
                         color="from-green-500 to-emerald-600"
                         bgColor="bg-green-50"

@@ -956,6 +956,87 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-24: the invoice, the owner's Preferences (currency and payment QR), and a customer's menu.
+// The "after" run sets "Both" and uploads a QR that says DEMO ONLY (not a payment account) through
+// the real form, then puts the demo restaurant back to US dollars.
+const VM24 = { ready: false, set: false };
+async function paymentQrFixture(): Promise<string> {
+    const file = join(OUT, "..", "fixture-payment-qr.png");
+    if (!existsSync(file)) {
+        const { createRequire } = await import("node:module");
+        const QRCode = createRequire(import.meta.url)("../../frontend/node_modules/qrcode");
+        await QRCode.toFile(file, "DEMO ONLY - not a payment account", { width: 480, margin: 2 });
+    }
+    return file;
+}
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-24 ${vp.width} ${theme}`, async () => {
+        const owner = await newPage(browser, vp, theme, "owner");
+        await owner.page.goto(`${BASE}/owner`);
+        await settle(owner.page);
+        await owner.page.getByRole("button", { name: "Preferences" }).click({ timeout: 5000 });
+        await settle(owner.page);
+        if (PHASE === "after" && !VM24.set) {
+            VM24.set = true;
+            await owner.page.getByRole("radio", { name: /Both/ }).check();
+            await owner.page.getByLabel("Riel per US dollar").fill("4100");
+            await owner.page.getByLabel("Upload payment QR").setInputFiles(await paymentQrFixture());
+            await owner.page.getByRole("img", { name: "Payment QR" }).waitFor({ timeout: 15_000 });
+            await owner.page.getByRole("button", { name: "Save settings" }).click();
+            await owner.page.getByText("Saved").waitFor({ timeout: 10_000 });
+        }
+        await shot({ page: owner.page, theme, width: vp.width }, "VM-24-preferences");
+        await owner.context.close();
+
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM24.ready) {
+            VM24.ready = true;
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open.filter((b) => b.table === "T3"))
+                await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            for (const lines of [
+                [{ item: { _id: menu[0]._id }, quantity: 2 }],
+                [
+                    { item: { _id: menu[0]._id }, quantity: 1 },
+                    { item: { _id: menu[3]._id }, quantity: 3 },
+                ],
+            ])
+                await cashier.page.request.post(api(""), { data: { table: "T3", orderedItems: lines } });
+        }
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T3" }) });
+        await card.getByRole("button", { name: "View Invoice" }).click();
+        await cashier.page.getByRole("dialog").waitFor();
+        await settle(cashier.page);
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-24-invoice", false);
+        await cashier.context.close();
+
+        const customer = await newPage(browser, vp, theme);
+        await customer.page.goto(`${BASE}/${SLUG}/customer/T1`);
+        await settle(customer.page);
+        await shot({ page: customer.page, theme, width: vp.width }, "VM-24-customer-menu", false);
+        await customer.context.close();
+    });
+}
+if (PHASE === "after" && VM24.set) {
+    await step("VM-24 reset to US dollars", async () => {
+        const owner = await newPage(browser, DESKTOP, "light", "owner");
+        const res = await owner.page.request.put(`${BASE}/api/restaurants/${SLUG}/settings`, {
+            data: { currency: "USD", khrPerUsd: 4100, paymentQrUrl: null },
+        });
+        if (!res.ok()) throw new Error(`reset failed: ${res.status()}`);
+        await owner.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

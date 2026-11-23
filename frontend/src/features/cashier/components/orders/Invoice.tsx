@@ -1,14 +1,14 @@
 import { Printer, X } from "lucide-react";
-import { useRef } from "react";
 import { Button, Modal } from "@/components/ui";
-import { formatMoney } from "@/lib/money";
+import { useMoney, useRestaurantSettings } from "@/components/money/MoneyProvider";
 import type { BillLine } from "@vmenu/contracts";
 
 interface Props {
-    businessName: string;
-    address: string;
-    phone: string;
-    invoiceId: string;
+    /** shown until the restaurant's settings load */
+    slug: string;
+    table: string;
+    /** short bill number, as on the cashier's screen */
+    billNumber: string;
     date: string;
     /** VM-31: the server's merged lines and totals */
     lines: BillLine[];
@@ -17,47 +17,48 @@ interface Props {
     onClose: () => void;
 }
 
-function Invoice({ businessName, address, phone, invoiceId, date, lines, subtotalCents, totalCents, onClose }: Props) {
-    const invoiceRef = useRef<HTMLDivElement>(null);
-    const printInvoice = () => {
-        if (!invoiceRef.current) return;
-        window.print();
-    };
+/**
+ * VM-24: the invoice the cashier prints. The restaurant's real name, the table, bill number, date
+ * and time, the server's lines and totals in the restaurant's currency, and the owner's payment QR
+ * when there is one. Printing prints only this (see the print rules in globals.css).
+ */
+function Invoice({ slug, table, billNumber, date, lines, subtotalCents, totalCents, onClose }: Props) {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
+    const settings = useRestaurantSettings();
 
     return (
         <Modal
-            title={`Invoice ${invoiceId}`}
+            title={`Invoice #${billNumber}`}
             onClose={onClose}
             footer={
                 <>
                     <Button variant="outline" icon={<X size={16} aria-hidden />} onClick={onClose}>
                         Close
                     </Button>
-                    <Button variant="solid" icon={<Printer size={16} aria-hidden />} onClick={printInvoice}>
+                    <Button variant="solid" icon={<Printer size={16} aria-hidden />} onClick={() => window.print()}>
                         Print
                     </Button>
                 </>
             }
         >
-            <div ref={invoiceRef} className="bg-white p-6 font-mono text-black">
-                <header className="text-center mb-8">
-                    <h1 className="text-3xl font-bold uppercase tracking-wide">{businessName}</h1>
-                    <p>{address}</p>
-                    <p>{phone}</p>
+            <div data-print className="bg-white p-6 font-mono text-black">
+                <header className="mb-6 text-center">
+                    <h1 className="text-2xl font-bold uppercase tracking-wide break-words">{settings?.name ?? slug}</h1>
+                    <p className="mt-1">Table {table}</p>
                 </header>
 
-                <div className="flex justify-between text-sm mb-4">
-                    <p className={"text-left"}>
-                        <strong>Invoice ID:</strong> {invoiceId}
+                <div className="mb-4 flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
+                    <p>
+                        <strong>Bill:</strong> #{billNumber}
                     </p>
-                    <p className={"text-right"}>
+                    <p className="text-right">
                         <strong>Date:</strong> {date}
                     </p>
                 </div>
 
-                <table className="w-full text-sm border-t border-b border-black mb-6">
+                <table className="mb-6 w-full border-t border-b border-black text-sm">
                     <thead>
-                        <tr className="text-left border-b border-black">
+                        <tr className="border-b border-black text-left">
                             <th className="py-2">Item</th>
                             <th className="py-2">Qty</th>
                             <th className="py-2">Price</th>
@@ -67,37 +68,40 @@ function Invoice({ businessName, address, phone, invoiceId, date, lines, subtota
                     <tbody>
                         {lines.map((line) => (
                             <tr key={`${line._id}:${line.priceCents}`} className="border-b border-dashed">
-                                <td className="py-2 text-left">{line.name}</td>
-                                <td className="py-2 text-left">{line.quantity}</td>
-                                <td className="py-2 text-left">{formatMoney(line.priceCents)}</td>
-                                <td className="py-2 text-right">{formatMoney(line.totalCents)}</td>
+                                <td className="py-2 pr-2 text-left">{line.name}</td>
+                                <td className="py-2 pr-2 text-left">{line.quantity}</td>
+                                <td className="py-2 pr-2 text-left">{money(line.priceCents)}</td>
+                                <td className="py-2 text-right">{money(line.totalCents)}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
 
                 <div className="flex justify-end text-sm">
-                    <div className="w-full sm:w-1/2">
-                        <div className="flex justify-between py-2 border-t border-black">
+                    <div className="w-full sm:w-2/3">
+                        <div className="flex justify-between gap-4 border-t border-black py-2">
                             <span>Subtotal</span>
-                            <span>{formatMoney(subtotalCents)}</span>
+                            <span>{money(subtotalCents)}</span>
                         </div>
-                        <div className="flex justify-between py-2 border-t border-black">
+                        <div className="flex justify-between gap-4 border-t border-black py-2">
                             <span>
                                 <strong>Total</strong>
                             </span>
                             <span>
-                                <strong>{formatMoney(totalCents)}</strong>
+                                <strong>{money(totalCents)}</strong>
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-8 flex justify-center">
-                    <img src="/images/qr.png" alt="QR Code" className="w-24 h-24 border border-black" />
-                </div>
+                {settings?.paymentQrUrl && (
+                    <figure className="mt-8 flex flex-col items-center gap-2">
+                        <img src={settings.paymentQrUrl} alt="Scan to pay" className="h-40 w-40 object-contain" />
+                        <figcaption className="text-xs">Scan to pay</figcaption>
+                    </figure>
+                )}
 
-                <footer className="text-center text-xs mt-10 border-t pt-4">
+                <footer className="mt-10 border-t pt-4 text-center text-xs">
                     <p>Thank you for dining with us!</p>
                     <p>Powered by V-Menu</p>
                 </footer>

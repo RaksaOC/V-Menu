@@ -13,9 +13,10 @@ import { AlertCircle, ArrowLeft, ShoppingBag, Receipt, Plus, RotateCcw } from "l
 import { addToCart } from "@/features/customer/cart";
 import type { MenuItem } from "@vmenu/contracts";
 import type { CartItem } from "@/features/customer/cart";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 
 export default function CartPage() {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const router = useRouter();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -171,7 +172,7 @@ export default function CartPage() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-bold text-emerald-600">{formatMoney(totalCents)}</p>
+                                            <p className="text-2xl font-bold text-emerald-600">{money(totalCents)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -251,7 +252,7 @@ export default function CartPage() {
                                 {cartItems.length > 0 && (
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <p className="text-lg font-bold text-gray-800">Total: {formatMoney(totalCents)}</p>
+                                            <p className="text-lg font-bold text-gray-800">Total: {money(totalCents)}</p>
                                             <p className="text-sm text-gray-500">
                                                 {itemCount} item{itemCount !== 1 ? "s" : ""}
                                             </p>

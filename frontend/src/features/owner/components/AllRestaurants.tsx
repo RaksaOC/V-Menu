@@ -2,13 +2,14 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { Users, Table, UtensilsCrossed, CheckCircle, CreditCard, TrendingUp, AlertTriangle, Plus, Settings } from "lucide-react";
 import { getRestaurantSummaries, type RestaurantSummary } from "@/features/owner/api";
-import { formatMoney } from "@/lib/money";
+import { useMoney } from "@/components/money/MoneyProvider";
 
 interface Props {
     onManage: (id: string) => void;
 }
 
 export default function AllRestaurants({ onManage }: Props) {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [isLoading, setIsLoading] = useState(true);
     const [overviewData, setOverviewData] = useState<RestaurantSummary[]>([]);
 
@@ -235,7 +236,7 @@ export default function AllRestaurants({ onManage }: Props) {
                                     </div>
                                     <div className="text-center">
                                         <p className="text-gray-600">Revenue (paid bills)</p>
-                                        <p className="text-lg font-bold text-amber-600">{formatMoney(restaurant.revenueCents)}</p>
+                                        <p className="text-lg font-bold text-amber-600">{money(restaurant.revenueCents)}</p>
                                     </div>
                                 </div>
                             </div>

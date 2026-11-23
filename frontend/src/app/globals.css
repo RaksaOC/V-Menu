@@ -354,3 +354,21 @@ button {
     color: var(--muted, #63637a);
     opacity: 1;
 }
+
+/* VM-24: printing while an invoice is open prints only the invoice, in black on white. */
+@media print {
+    body:has([data-print]) * {
+        visibility: hidden;
+    }
+    body:has([data-print]) [data-print],
+    body:has([data-print]) [data-print] * {
+        visibility: visible;
+    }
+    body:has([data-print]) [data-print] {
+        position: fixed;
+        inset: 0 0 auto 0;
+        width: 100%;
+        background: #fff;
+        color: #000;
+    }
+}
