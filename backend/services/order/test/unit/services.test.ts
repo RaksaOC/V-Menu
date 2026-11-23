@@ -4,6 +4,7 @@ import { ordersService } from "../../src/services/orders.service.js";
 import { kitchenService } from "../../src/services/kitchen.service.js";
 import { billsService } from "../../src/services/bills.service.js";
 import { statsService } from "../../src/services/stats.service.js";
+import { tableService } from "../../src/services/table.service.js";
 import { DISH, R1, R2, fakeBills, fakeClients, fakeOrders, newId } from "./fakes.js";
 
 // CL-04: the business rules, with in-memory repositories (no MongoDB, no HTTP).
@@ -19,6 +20,7 @@ function setup(clientOverrides = {}) {
         kitchen: kitchenService({ orders }),
         billing: billsService({ bills }),
         stats: statsService({ orders, bills, clients }),
+        tableView: tableService({ orders, bills }),
     };
 }
 const status = async (p: Promise<unknown>) => {
@@ -141,6 +143,47 @@ describe("one open bill per table (VM-08)", () => {
         expect((await billing.setPaid(R1._id, first, false)).isPayed).toBe(false); // already open
         await billing.setPaid(R1._id, first, true);
         expect((await billing.setPaid(R1._id, first, false)).isPayed).toBe(false);
+    });
+});
+
+describe("what the customer sees (VM-07)", () => {
+    it("an order at its table, with its number, lines and total", async () => {
+        const { placing, tableView } = setup();
+        const o = await placing.place(R1._id, { table: "1", orderedItems: [line(3)] });
+        const view = await tableView.order(R1._id, "1", o._id);
+        expect(view).toMatchObject({
+            number: o._id.slice(-6).toUpperCase(),
+            table: "1",
+            total: 7.5,
+            lines: [{ name: DISH.name, price: 2.5, quantity: 3, total: 7.5 }],
+        });
+        expect(view.placedAt).toEqual(o.orderedAt);
+        expect(await status(tableView.order(R1._id, "2", o._id))).toBe(404);
+        expect(await status(tableView.order(R2._id, "1", o._id))).toBe(404);
+        expect(await status(tableView.order(R1._id, "1", "bad"))).toBe(400);
+    });
+
+    it("the open bill of one table, and an empty one when there is none", async () => {
+        const { placing, tableView, billing, bills } = setup();
+        await placing.place(R1._id, { table: "1", orderedItems: [line(1)] });
+        await placing.place(R1._id, { table: "1", orderedItems: [line(2)] });
+        await placing.place(R1._id, { table: "2", orderedItems: [line(5)] });
+        const bill = await tableView.openBill(R1._id, "1");
+        expect(bill.orders.map((o) => o.total)).toEqual([2.5, 5]);
+        expect(bill.total).toBe(7.5);
+        await billing.setPaid(R1._id, bills.all[0]._id, true);
+        expect(await tableView.openBill(R1._id, "1")).toEqual({ table: "1", orders: [], total: 0 });
+        expect(await tableView.openBill(R1._id, "x".repeat(41))).toEqual({ table: "x".repeat(41), orders: [], total: 0 });
+    });
+
+    it("rounds money to cents", async () => {
+        const { placing, tableView } = setup({
+            orderCheck: async (_r: string, body: { items: { quantity: number }[] }) => ({
+                items: body.items.map((l) => ({ item: { ...DISH, price: 0.1 }, quantity: l.quantity })),
+            }),
+        });
+        const o = await placing.place(R1._id, { table: "1", orderedItems: [line(3)] });
+        expect((await tableView.order(R1._id, "1", o._id)).total).toBe(0.3);
     });
 });
 
