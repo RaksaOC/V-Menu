@@ -63,11 +63,12 @@ const askRestaurantService: SessionLookup = async (req, { uid, role, resId }) =>
     return version;
 };
 
-// Answers are kept briefly because every staff request needs one. With this TTL, a removal or role
-// change reaches every service within 30 seconds.
+// Versions are kept briefly because every staff request needs one. With this TTL, a removal or role
+// change reaches every service within 30 seconds. "No longer has the role" isn't kept, so someone
+// added back gets in straight away.
 const SESSION_TTL = 20_000;
 const SESSION_CACHE_MAX = 10_000;
-const sessions = new Map<string, { at: number; version: number | null }>();
+const sessions = new Map<string, { at: number; version: number }>();
 let lookupSession: SessionLookup = askRestaurantService;
 let cacheSessions = true;
 
@@ -82,8 +83,13 @@ async function currentVersion(req: Request, user: AppUser) {
     if (!cacheSessions) return lookupSession(req, user);
     const key = JSON.stringify([user.uid, user.role, user.resId ?? ""]);
     const hit = sessions.get(key);
-    if (hit && Date.now() - hit.at < SESSION_TTL) return hit.version;
+    // a token newer than the kept version means the kept one is out of date: they just signed in again
+    if (hit && Date.now() - hit.at < SESSION_TTL && (user.tv ?? 0) <= hit.version) return hit.version;
     const version = await lookupSession(req, user);
+    if (version === null) {
+        sessions.delete(key);
+        return null;
+    }
     if (sessions.size >= SESSION_CACHE_MAX) sessions.clear();
     sessions.set(key, { at: Date.now(), version });
     return version;

@@ -20,12 +20,6 @@ interface Deps {
 
 /** Builds the Express app: wires the repositories and Firebase into the services, and mounts the routers (CL-04). */
 export function createApp({ verifyIdToken, restaurants = mongoRestaurantsRepo, memberships = mongoMembershipsRepo, sessionLookup }: Deps) {
-    setSessionLookup(
-        sessionLookup ?? ((_req, user) => memberships.sessionVersion(user.uid, user.role, user.role === "owner" ? undefined : user.resId)),
-        {
-            cache: false,
-        },
-    );
     const places = restaurantsService({ restaurants, memberships });
     const ctx: RouteContext = {
         services: {
@@ -34,6 +28,11 @@ export function createApp({ verifyIdToken, restaurants = mongoRestaurantsRepo, m
             staff: staffService({ restaurants, memberships }),
         },
     };
+
+    // SEC-03: this service holds the memberships, so it reads them directly, with no cache
+    const ownData: SessionLookup = async (_req, { uid, role, resId }) =>
+        (await ctx.services.auth.sessionVersion({ uid, role, resId })).version;
+    setSessionLookup(sessionLookup ?? ownData, { cache: false });
 
     const app = baseApp();
     app.use("/api/auth", authRoutes(ctx));
