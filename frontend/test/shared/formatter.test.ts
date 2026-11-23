@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { prettyDate } from "@/app/shared/util/formatter";
+import { prettyDate } from "@/lib/dates";
 
 describe("prettyDate", () => {
     const iso = "2026-11-23T09:30:00.000Z";

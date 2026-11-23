@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { server } from "../msw";
 
 // The shared client imports the Firebase config only for `auth`; no Firebase app is needed here.
-vi.mock("@/app/shared/firebase/config", () => ({ auth: {} }));
-const { default: api } = await import("@/app/shared/lib/axios");
+vi.mock("@/lib/firebase", () => ({ auth: {} }));
+const { default: api } = await import("@/lib/api");
 
 // Captures the Authorization header the API receives.
 function captureAuth() {
