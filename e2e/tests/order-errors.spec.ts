@@ -12,6 +12,8 @@ async function fillCart(page: Page) {
     await page.goto(CART);
     await expect(page.getByRole("button", { name: /place order/i })).toBeEnabled();
 }
+// Next adds its own (empty) role="alert" route announcer; this is the cart's message.
+const alertBox = (page: Page) => page.locator('[role="alert"]:not(#__next-route-announcer__)');
 const cartLines = (page: Page) => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "[]").length, `cart:${SLUG}:T1`);
 
 for (const [status, body, text] of [
@@ -22,7 +24,7 @@ for (const [status, body, text] of [
         await fillCart(page);
         await page.route(`**/api/orders/${SLUG}`, (route) => route.fulfill({ status, json: body }));
         await page.getByRole("button", { name: /place order/i }).click();
-        await expect(page.getByRole("alert")).toContainText(text);
+        await expect(alertBox(page)).toContainText(text);
         expect(await cartLines(page)).toBe(2);
         await expect(page).toHaveURL(new RegExp(`${CART}$`));
     });
@@ -40,8 +42,8 @@ test("dishes no longer available are taken out of the cart, the rest is kept", a
         await route.fulfill({ json: menu.filter((i: { name: string }) => i.name !== goneName) });
     });
     await page.getByRole("button", { name: /place order/i }).click();
-    await expect(page.getByRole("alert")).toContainText("Some items are no longer available");
-    await expect(page.getByRole("alert")).toContainText(goneName);
+    await expect(alertBox(page)).toContainText("Some items are no longer available");
+    await expect(alertBox(page)).toContainText(goneName);
     expect(await cartLines(page)).toBe(1);
 });
 

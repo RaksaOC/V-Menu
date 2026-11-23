@@ -86,15 +86,14 @@ describe("cart page", () => {
         expect(body.orderedItems?.map((l) => l.quantity)).toEqual([2, 1]);
     });
 
-    // Today every failure shows the same message, whatever the server said (VM-06 changes this:
-    // update this test there to expect the server's message).
+    // VM-06: the server's own message, in the page (more cases in order-errors.test.tsx).
     it("shows an error when the order fails", async () => {
         seedCart();
         server.use(http.post("*/api/orders/demo-bistro", () => HttpResponse.json({ message: "This table is closed" }, { status: 409 })));
         render(<CartPage />);
         await screen.findByText("Kuy Teav");
         placeOrder();
-        await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to place order. Please try again.", expect.any(Object)));
+        expect(await screen.findByRole("alert")).toHaveTextContent("This table is closed");
         expect(toast.success).not.toHaveBeenCalled();
         expect(JSON.parse(localStorage.getItem(KEY)!)).toHaveLength(2); // the cart is kept
     });
