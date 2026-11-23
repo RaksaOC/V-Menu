@@ -174,6 +174,3 @@ export default function KitchenPage({ pollMs = 2000 }: { pollMs?: number } = {})
         </div>
     );
 }
-
-// CL-03 demo: a deliberately bad import (kitchen -> customer). Reverted in the next commit.
-export { cartKey as boundaryDemo } from "@/features/customer/cart";
