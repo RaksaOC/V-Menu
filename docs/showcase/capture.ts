@@ -247,6 +247,37 @@ for (const theme of ["light", "dark"] as const) {
     });
 }
 
+// VM-02: the owner adds a dish with a ~1 MB phone-like photo; then the customer menu.
+for (const [vp, theme] of [[DESKTOP, "light"], [DESKTOP, "dark"], [PHONE, "light"]] as const) {
+    await step(`VM-02 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page.getByRole("button", { name: "Menu", exact: true }).click({ timeout: 5000 });
+        await settle(page);
+        await page.getByRole("button", { name: "Add Item" }).click({ timeout: 5000 });
+        await page.locator('input[type="file"]').setInputFiles(await photoFixture(page));
+        await page.getByPlaceholder("Enter item name").fill("Showcase Dish");
+        await page.getByPlaceholder("0.00").fill("4.5");
+        const saved = page.waitForResponse((r) => r.url().endsWith("/items") && r.request().method() === "POST", { timeout: 15_000 });
+        await page.getByRole("button", { name: "Save" }).click();
+        const res = await saved.catch(() => null);
+        if (vp === DESKTOP && theme === "light") {
+            writeFileSync(join(OUT, "VM-02-add-item-response.txt"), `POST /items after choosing fixture-photo.jpg (${statSync(await photoFixture(page)).size} bytes) -> ${res ? `${res.status()} ${(await res.text()).slice(0, 300)}` : "no request"}\n`);
+        }
+        await page.waitForTimeout(1200);
+        await shot(c, "VM-02-owner-add-photo", false);
+        const created = res && res.ok() ? await res.json() : null;
+        await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
+        await settle(page);
+        await page.getByRole("img", { name: "Showcase Dish" }).scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
+        await shot(c, "VM-02-customer-menu", false);
+        if (created) await page.request.delete(`${BASE}/api/menu/${SLUG}/items/${created._id}`); // keep the demo data the same
+        await context.close();
+    });
+}
+
 // ---------------------------------------------------------------- owner
 for (const theme of ["light", "dark"] as const) {
     await step(`owner ${theme}`, async () => {
