@@ -9,12 +9,14 @@ export interface ItemRecord {
     isEnabled: boolean;
     resId: string;
     categoryId?: string | null;
+    description?: string; // VM-26: dishes from before it have neither
+    tags?: string[];
 }
-export type ItemFields = Partial<Pick<ItemRecord, "name" | "price" | "image" | "isEnabled" | "categoryId">>;
+export type ItemFields = Partial<Pick<ItemRecord, "name" | "price" | "image" | "isEnabled" | "categoryId" | "description" | "tags">>;
 
 /** Every MongoDB query on menu items (CL-04). Ids are checked by the services first. */
 export interface ItemsRepo {
-    list(resId: string, opts?: { enabledOnly?: boolean }): Promise<ItemRecord[]>;
+    list(resId: string): Promise<ItemRecord[]>;
     get(resId: string, id: string): Promise<ItemRecord | null>;
     create(resId: string, fields: ItemFields & Pick<ItemRecord, "name" | "price" | "image">): Promise<ItemRecord>;
     /** null when there's no such item in this restaurant */
@@ -30,7 +32,7 @@ export interface ItemsRepo {
 const plain = <T>(doc: T) => doc as unknown as ItemRecord;
 
 export const mongoItemsRepo: ItemsRepo = {
-    list: (resId, { enabledOnly = false } = {}) => Item.find(enabledOnly ? { resId, isEnabled: true } : { resId }).lean<ItemRecord[]>(),
+    list: (resId) => Item.find({ resId }).lean<ItemRecord[]>(),
     get: (resId, id) => Item.findOne({ _id: id, resId }).lean<ItemRecord>(),
     async create(resId, fields) {
         return plain((await Item.create({ ...fields, resId })).toObject());

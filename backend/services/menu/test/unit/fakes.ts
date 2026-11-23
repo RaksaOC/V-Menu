@@ -14,8 +14,8 @@ export function fakeItems(): ItemsRepo & { all: ItemRecord[] } {
     const find = (resId: string, id: string) => all.find((i) => i._id === id && i.resId === resId);
     return {
         all,
-        async list(resId, { enabledOnly = false } = {}) {
-            return all.filter((i) => i.resId === resId && (!enabledOnly || i.isEnabled));
+        async list(resId) {
+            return all.filter((i) => i.resId === resId);
         },
         async get(resId, id) {
             const found = find(resId, id);

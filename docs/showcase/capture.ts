@@ -873,6 +873,56 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-26: Fish Amok gets a description and tags, and Fried Rice is switched off. The customer's
+// menu, the owner's item form and the cashier's menu. Both dishes are put back afterwards.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-26 ${vp.width} ${theme}`, async () => {
+        const after = PHASE === "after";
+        const owner = await newPage(browser, vp, theme, "owner");
+        const api = `${BASE}/api/menu/${SLUG}/items`;
+        const dishes = (await (await owner.page.request.get(api)).json()) as { _id: string; name: string }[];
+        const amok = dishes.find((d) => d.name === "Fish Amok")!;
+        const rice = dishes.find((d) => d.name === "Fried Rice")!;
+        try {
+            await owner.page.request.put(`${api}/${amok._id}`, {
+                data: { description: "Steamed fish curry with coconut, in a banana leaf", tags: ["spicy", "contains nuts"] },
+            });
+            await owner.page.request.patch(`${api}/${rice._id}/availability`, { data: { isEnabled: false } });
+            {
+                const { context, page } = await newPage(browser, vp, theme);
+                await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
+                await settle(page);
+                await shot({ page, theme, width: vp.width }, "VM-26-customer-menu", vp === PHONE);
+                await context.close();
+            }
+            const c = { page: owner.page, theme, width: vp.width };
+            await owner.page.goto(`${BASE}/owner`);
+            await settle(owner.page);
+            await owner.page.getByRole("button", { name: "Menu", exact: true }).click({ timeout: 5000 });
+            await settle(owner.page);
+            await owner.page.getByRole("button", { name: "Edit Fish Amok" }).click({ timeout: 5000 });
+            await owner.page.waitForTimeout(400);
+            await shot(c, "VM-26-owner-item-form", false);
+            {
+                const { context, page } = await newPage(browser, vp, theme, "cashier");
+                await context.addInitScript(() => localStorage.setItem("dashboardSection", "menu"));
+                await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+                await settle(page);
+                await shot({ page, theme, width: vp.width }, "VM-26-cashier-menu", vp === PHONE);
+                await context.close();
+            }
+        } finally {
+            await owner.page.request.patch(`${api}/${rice._id}/availability`, { data: { isEnabled: true } });
+            if (after) await owner.page.request.put(`${api}/${amok._id}`, { data: { description: "", tags: [] } });
+            await owner.context.close();
+        }
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

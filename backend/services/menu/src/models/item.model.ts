@@ -9,6 +9,8 @@ const itemSchema = new mongoose.Schema(
         isEnabled: { type: Boolean, default: true },
         resId: { type: String, required: true, index: true },
         categoryId: { type: String, default: null }, // VM-25: null means "Other"
+        description: { type: String, trim: true, maxlength: 300, default: "" }, // VM-26
+        tags: { type: [String], default: [] }, // VM-26: from DISH_TAGS in @vmenu/contracts
     },
     { timestamps: true },
 );
