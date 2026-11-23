@@ -241,6 +241,32 @@ for (const theme of ["light", "dark"] as const) {
     });
 }
 
+// VM-03: the kitchen when its sign-in ends, and when it can't reach the server.
+for (const theme of ["light", "dark"] as const) {
+    await step(`VM-03 kitchen ${theme}`, async () => {
+        {
+            const { context, page } = await newPage(browser, DESKTOP, theme, "chef");
+            await page.goto(`${BASE}/${SLUG}/kitchen`);
+            await settle(page);
+            await context.clearCookies();
+            await page.evaluate(() => localStorage.setItem("token", "ended.session.token"));
+            await page.waitForTimeout(6000); // a few polls
+            await settle(page);
+            await shot({ page, theme, width: DESKTOP.width }, "VM-03-session-ended", false);
+            await context.close();
+        }
+        {
+            const { context, page } = await newPage(browser, DESKTOP, theme, "chef");
+            await page.goto(`${BASE}/${SLUG}/kitchen`);
+            await settle(page);
+            await page.route(`**/api/orders/${SLUG}/kitchen`, (route) => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
+            await page.waitForTimeout(6000);
+            await shot({ page, theme, width: DESKTOP.width }, "VM-03-connection-lost", false);
+            await context.close();
+        }
+    });
+}
+
 // ---------------------------------------------------------------- cashier
 for (const theme of ["light", "dark"] as const) {
     for (const section of ["overview", "tables", "orders", "menu"]) {
