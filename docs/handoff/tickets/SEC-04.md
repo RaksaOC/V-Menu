@@ -1,0 +1,25 @@
+# SEC-04 - Security: who can order to a table (details private)
+
+- **Priority:** P2
+- **Status:** not started
+- **Issue:** [#116](https://github.com/RaksaOC/V-Menu/issues/116)
+- **Branch to create:** `feat/SEC-04-table-qr-token`
+
+## What to do
+
+Security ticket. The details are kept out of the public repo on purpose: read them in the private task document (section 5) or ask Visal.
+
+## Depends on
+
+- VM-01 : not started 
+
+## Notes from this run
+
+- nothing beyond the issue yet
+
+## How to start
+
+1. `git fetch origin`, then branch from the newest finished ticket branch (the "train head", see [../README.md](../README.md#how-to-continue)), and merge `origin/staging` in.
+2. Paths in the spec and issues are from before CL-01. `services/<name>-service` is now `backend/services/<name>`; `deploy/`, `monitoring/` and the compose files are under `infra/`.
+3. Failing test first (its own commit), then the fix, with the ticket ID in every commit message.
+4. Open the PR into `staging` using the PR template, with the "Failing before the fix" output and a compare link that shows only this ticket's changes.
