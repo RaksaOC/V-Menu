@@ -205,7 +205,7 @@ describe("kitchen queue and history (VM-10)", () => {
     it("the queue has unfinished orders only, oldest first (the default, and ?status=active)", async () => {
         const a = (await place("1")).body;
         const b = (await place("2")).body;
-        const c = (await place("3")).body;
+        const c = (await place("1")).body;
         await done(b._id);
         for (const path of ["?status=active", ""]) {
             const res = await kitchen(path);
