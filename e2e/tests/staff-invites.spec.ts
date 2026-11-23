@@ -7,14 +7,7 @@ import * as firebase from "./support/firebase";
 // firebase-auth.spec.ts, whose comment says how to run these locally.
 test.describe("staff invites, against the Auth emulator (VM-12)", () => {
     test.beforeAll(async ({ request }) => {
-        const running = await firebase.isRunning();
-        const res = await request.get("/login");
-        const csp = res.headers()["content-security-policy"] ?? res.headers()["content-security-policy-report-only"] ?? "";
-        const why = !running
-            ? `the Auth emulator isn't running at ${firebase.EMULATOR}`
-            : !csp.includes(firebase.EMULATOR)
-              ? "this frontend isn't an E2E build"
-              : "";
+        const why = await firebase.emulatorProblem(request);
         if (why && process.env.CI) throw new Error(why);
         test.skip(Boolean(why), `${why}; see firebase-auth.spec.ts to run these`);
     });
