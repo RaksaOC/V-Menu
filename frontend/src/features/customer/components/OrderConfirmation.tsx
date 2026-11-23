@@ -6,12 +6,14 @@ import { useParams } from "next/navigation";
 import { CheckCircle2, ChefHat, Clock, Plus, Receipt } from "lucide-react";
 import { getTableBill, getTableOrder, type TableBill, type TableOrderView } from "@/features/customer/api";
 import { apiErrorMessage } from "@/lib/api";
+import { CUSTOMER_STATUS, isFinal } from "@/lib/order-status";
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-/** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far. */
-export default function OrderConfirmation() {
+/** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far.
+ *  VM-27: its status, checked every 10 seconds until it's served or cancelled. */
+export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number } = {}) {
     const params = useParams<{ res: string; table: string; orderId: string }>();
     const slug = String(params.res);
     const table = decodeURIComponent(String(params.table));
@@ -21,14 +23,25 @@ export default function OrderConfirmation() {
     const [bill, setBill] = useState<TableBill | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const finished = order ? isFinal(order.status) : false;
     useEffect(() => {
-        getTableOrder(slug, table, String(params.orderId))
-            .then(setOrder)
-            .catch((err) => setError(apiErrorMessage(err, "Couldn't load this order.")));
-        getTableBill(slug, table)
-            .then(setBill)
-            .catch(() => setBill(null)); // the list is a bonus; the order above is what matters
-    }, [slug, table, params.orderId]);
+        let stopped = false;
+        const load = () => {
+            getTableOrder(slug, table, String(params.orderId))
+                .then((o) => !stopped && setOrder(o))
+                .catch((err) => !stopped && setError(apiErrorMessage(err, "Couldn't load this order.")));
+            getTableBill(slug, table)
+                .then((b) => !stopped && setBill(b))
+                .catch(() => !stopped && setBill(null)); // the list is a bonus; the order above is what matters
+        };
+        load();
+        // VM-27: keep the status fresh until it can't change any more
+        const timer = finished ? undefined : setInterval(load, pollMs);
+        return () => {
+            stopped = true;
+            clearInterval(timer);
+        };
+    }, [slug, table, params.orderId, pollMs, finished]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 pb-28">
@@ -65,6 +78,25 @@ export default function OrderConfirmation() {
                                     <Clock size={14} aria-hidden /> Placed at {time(order.placedAt)}
                                 </p>
                             </div>
+                        </div>
+
+                        <div
+                            role="status"
+                            aria-label="Order status"
+                            className={`mt-4 rounded-xl px-4 py-3 ${
+                                order.status === "cancelled"
+                                    ? "bg-red-50 text-red-800"
+                                    : order.status === "ready"
+                                      ? "bg-emerald-600 text-white"
+                                      : "bg-emerald-50 text-emerald-900"
+                            }`}
+                        >
+                            <p className="text-lg font-bold">{CUSTOMER_STATUS[order.status].label}</p>
+                            <p className="text-sm opacity-90">
+                                {order.status === "cancelled" && order.cancelReason
+                                    ? `Reason: ${order.cancelReason}. It won't be on your bill.`
+                                    : CUSTOMER_STATUS[order.status].note}
+                            </p>
                         </div>
 
                         <h2 id="this-order" className="sr-only">
@@ -107,7 +139,13 @@ export default function OrderConfirmation() {
                                             </span>
                                         )}
                                     </span>
-                                    <span className="font-semibold text-slate-900">{money(o.total)}</span>
+                                    {o.status === "cancelled" ? (
+                                        <span className="text-slate-400">
+                                            <del>{money(o.total)}</del> cancelled
+                                        </span>
+                                    ) : (
+                                        <span className="font-semibold text-slate-900">{money(o.total)}</span>
+                                    )}
                                 </li>
                             ))}
                         </ul>

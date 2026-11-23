@@ -14,7 +14,7 @@ const auth = await import("@/features/auth/api");
 
 const dish = { _id: "i1", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
 const table = { _id: "t1", name: "T1", isEnabled: true };
-const order = { _id: "o1", table: "T1", isDone: false, createdAt: "2026-11-23T10:00:00Z", orderedItems: [{ item: dish, quantity: 2 }] };
+const order = { _id: "o1", table: "T1", status: "pending", createdAt: "2026-11-23T10:00:00Z", orderedItems: [{ item: dish, quantity: 2 }] };
 
 describe("customer api", () => {
     it("loads the public menu", async () => {

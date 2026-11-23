@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import type { OrderStatus } from "@vmenu/contracts";
 
 // VM-27: the cashier's bill shows each order's status; cancelled lines are struck through and
 // not charged; an order can be cancelled with a reason.
@@ -14,7 +15,7 @@ const dish = (name: string, price: number) => ({
     image: "/x.jpg",
     isEnabled: true,
 });
-const order = (id: string, status: string, line: ReturnType<typeof dish>, extra = {}) => ({
+const order = (id: string, status: OrderStatus, line: ReturnType<typeof dish>, extra = {}) => ({
     _id: id,
     table: "T1",
     status,
@@ -39,6 +40,7 @@ describe("the cashier's bill", () => {
         render(<OrderCard order={BILL} onMarkPaid={vi.fn()} onCancelOrder={vi.fn()} />);
         expect(screen.getByText("Served")).toBeTruthy();
         expect(screen.getByText("Preparing")).toBeTruthy();
+        expect(screen.queryByText("New")).toBeNull(); // pending reads "Ordered" here, not like the bill's NEW badge
         const struck = screen.getByRole("deletion");
         expect(within(struck).getByText("Lok Lak")).toBeTruthy();
         expect(screen.getByText(/Cancelled: Sent back/)).toBeTruthy();

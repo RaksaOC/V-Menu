@@ -20,6 +20,8 @@ function view(order: OrderRecord) {
     return {
         _id: String(order._id),
         number: orderNumber(String(order._id)),
+        status: order.status, // VM-27: the customer's page shows it
+        ...(order.cancelReason && { cancelReason: order.cancelReason }),
         table: order.table,
         placedAt: order.orderedAt,
         lines,
@@ -41,7 +43,9 @@ export function tableService({ orders, bills }: { orders: OrdersRepo; bills: Bil
         async openBill(resId: string, table: string) {
             const bill = await bills.findOpen(resId, table);
             const list = (bill?.orders ?? []).map(view);
-            return { table, orders: list, total: cents(list.reduce((sum, o) => sum + o.total, 0)) };
+            // VM-27: a cancelled order stays on the bill but isn't charged
+            const charged = list.filter((o) => o.status !== "cancelled");
+            return { table, orders: list, total: cents(charged.reduce((sum, o) => sum + o.total, 0)) };
         },
     };
 }

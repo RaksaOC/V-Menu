@@ -14,7 +14,7 @@ const dish = { _id: "i1", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabl
 const order = (id: string) => ({
     _id: id,
     table: "x",
-    isDone: false,
+    status: "pending", // VM-27
     createdAt: "2026-11-23T10:00:00Z",
     orderedItems: [{ item: dish, quantity: 1 }],
 });

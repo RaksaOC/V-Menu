@@ -19,7 +19,7 @@ function setup(clientOverrides = {}) {
         clients,
         placing: ordersService({ orders, bills, clients }),
         kitchen: kitchenService({ orders }),
-        billing: billsService({ bills }),
+        billing: billsService({ bills, orders }),
         stats: statsService({ orders, bills, clients }),
         tableView: tableService({ orders, bills }),
     };
@@ -33,6 +33,12 @@ const status = async (p: Promise<unknown>) => {
     }
 };
 const line = (quantity = 1, price = 0) => ({ item: { _id: DISH._id, price }, quantity });
+/** VM-27: what "done" used to mean: the kitchen takes the order to served, step by step. */
+async function serve(kitchen: ReturnType<typeof kitchenService>, resId: string, id: string) {
+    let order;
+    for (const status of ["preparing", "ready", "served"] as const) order = await kitchen.setStatus(resId, id, { status }, "chef");
+    return order!;
+}
 
 describe("placing an order", () => {
     it("takes the menu's dish and price, not the browser's", async () => {
@@ -86,15 +92,15 @@ describe("kitchen", () => {
         await placing.place(R2._id, { table: "9", orderedItems: [line()] });
         const queue = await kitchen.queue(R1._id);
         expect(queue.map((o) => o.table)).toEqual(["1", "2"]);
-        expect((await kitchen.markDone(R1._id, first._id)).isDone).toBe(true);
+        expect((await serve(kitchen, R1._id, first._id)).status).toBe("served");
     });
 
     it("refuses a bad id, an unknown order and another restaurant's order", async () => {
         const { placing, kitchen } = setup();
         const other = await placing.place(R2._id, { table: "9", orderedItems: [line()] });
-        expect(await status(kitchen.markDone(R1._id, "nope"))).toBe(400);
-        expect(await status(kitchen.markDone(R1._id, newId()))).toBe(404);
-        expect(await status(kitchen.markDone(R1._id, other._id))).toBe(404);
+        expect(await status(kitchen.setStatus(R1._id, "nope", { status: "preparing" }, "chef"))).toBe(400);
+        expect(await status(kitchen.setStatus(R1._id, newId(), { status: "preparing" }, "chef"))).toBe(404);
+        expect(await status(kitchen.setStatus(R1._id, other._id, { status: "preparing" }, "chef"))).toBe(404);
     });
 });
 
@@ -103,7 +109,7 @@ describe("kitchen history (VM-10)", () => {
         const { placing, kitchen } = setup();
         for (let i = 0; i < 23; i++) {
             const o = await placing.place(R1._id, { table: String(i), orderedItems: [line()] });
-            await kitchen.markDone(R1._id, o._id);
+            await serve(kitchen, R1._id, o._id);
         }
         await placing.place(R1._id, { table: "cooking", orderedItems: [line()] });
         const first = await kitchen.history(R1._id, {});
@@ -122,7 +128,7 @@ describe("kitchen history (VM-10)", () => {
         const { placing, kitchen } = setup();
         const o = await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         await placing.place(R1._id, { table: "2", orderedItems: [line()] });
-        await kitchen.markDone(R1._id, o._id);
+        await serve(kitchen, R1._id, o._id);
         expect((await kitchen.queue(R1._id)).map((x) => x.table)).toEqual(["2"]);
     });
 });
@@ -243,7 +249,7 @@ describe("dashboard numbers", () => {
         const s = setup();
         const done = async (resId: string, table: string, quantity: number) => {
             const o = await s.placing.place(resId, { table, orderedItems: [line(quantity)] });
-            await s.kitchen.markDone(resId, o._id);
+            await serve(s.kitchen, resId, o._id);
             return o;
         };
         await done(R1._id, "1", 2);
@@ -303,7 +309,7 @@ describe("dashboard numbers", () => {
             }),
         });
         const o = await free.placing.place(R1._id, { table: "1", orderedItems: [line(1)] });
-        await free.kitchen.markDone(R1._id, o._id);
+        await serve(free.kitchen, R1._id, o._id);
         expect((await free.stats.ownerOverview("owner1")).totalItemsSold).toBe(0);
     });
 
@@ -318,7 +324,7 @@ describe("dashboard numbers", () => {
             table: "1",
             orderedItems: dishes.map((d, i) => ({ item: { _id: d._id }, quantity: i + 1 })),
         });
-        await s.kitchen.markDone(R1._id, o._id);
+        await serve(s.kitchen, R1._id, o._id);
         const top = (await s.stats.ownerOverview("owner1")).topSellingItems;
         expect(top.map((t) => t.name)).toEqual(["F", "E", "D", "C", "B"]);
     });

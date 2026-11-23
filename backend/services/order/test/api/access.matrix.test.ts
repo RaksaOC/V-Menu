@@ -74,7 +74,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
-    const order = (resId: string) => Order.create({ table: "1", resId, isDone: false, orderedItems: [{ item: DISH, quantity: 1 }] });
+    const order = (resId: string) => Order.create({ table: "1", resId, status: "pending", orderedItems: [{ item: DISH, quantity: 1 }] });
     const a = await order(A._id);
     const b = await order(B._id);
     ids.orderA = String(a._id);

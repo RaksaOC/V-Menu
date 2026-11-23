@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IsoDate, ObjectId, label, pageOf } from "./common.js";
+import { IsoDate, ObjectId, label, pageOf, text } from "./common.js";
 import { OrderLine } from "./internal.js";
 
 // order-service: orders, bills and the dashboards (CL-05).
@@ -29,10 +29,30 @@ export const UpdateBillBody = z.preprocess(
 );
 export type UpdateBillBody = z.infer<typeof UpdateBillBody>;
 
+/** VM-27: an order's steps. The kitchen moves it one step at a time; the cashier can cancel it. */
+export const ORDER_STATUSES = ["pending", "preparing", "ready", "served", "cancelled"] as const;
+export const OrderStatus = z.enum(ORDER_STATUSES, "Must be pending, preparing, ready, served or cancelled");
+export type OrderStatus = z.infer<typeof OrderStatus>;
+/** The only step the kitchen may take from each status. */
+export const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = { pending: "preparing", preparing: "ready", ready: "served" };
+/** Still the kitchen's to do. */
+export const ACTIVE_STATUSES: OrderStatus[] = ["pending", "preparing", "ready"];
+
+export const UpdateOrderStatusBody = z.object({ status: OrderStatus });
+export type UpdateOrderStatusBody = z.infer<typeof UpdateOrderStatusBody>;
+export const CancelOrderBody = z.object({ reason: text(200) });
+export type CancelOrderBody = z.infer<typeof CancelOrderBody>;
+
+/** One step in an order's life: what, when, and who (a staff member's id, "customer" or "migration"). */
+export const StatusChange = z.object({ status: OrderStatus, at: IsoDate, by: z.string() });
+export type StatusChange = z.infer<typeof StatusChange>;
+
 export const Order = z.object({
     _id: z.string(),
     table: z.string(),
-    isDone: z.boolean(),
+    status: OrderStatus,
+    statusHistory: z.array(StatusChange).optional(),
+    cancelReason: z.string().optional(),
     orderedItems: z.array(OrderLine),
     resId: z.string().optional(),
     createdAt: IsoDate,
@@ -63,6 +83,8 @@ export type PaidBillsPage = { bills: Bill[]; page: number; limit: number; total:
 export const TableOrderView = z.object({
     _id: z.string(),
     number: z.string(),
+    status: OrderStatus,
+    cancelReason: z.string().optional(),
     table: z.string(),
     placedAt: IsoDate,
     lines: z.array(z.object({ name: z.string(), price: z.number(), quantity: z.number(), total: z.number() })),

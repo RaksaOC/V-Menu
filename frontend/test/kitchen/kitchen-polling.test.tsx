@@ -16,10 +16,10 @@ const { default: KitchenBoard } = await import("@/features/kitchen/components/Ki
 const { default: KitchenHistory } = await import("@/features/kitchen/components/KitchenHistory");
 
 const dish = { _id: "i1", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
-const order = (n: number, isDone = false) => ({
+const order = (n: number, status = "pending") => ({
     _id: `o${n}`,
     table: `T${n}`,
-    isDone,
+    status, // VM-27 (was isDone)
     createdAt: "2026-11-23T10:00:00Z",
     orderedItems: [{ item: dish, quantity: 1 }],
 });
@@ -49,8 +49,8 @@ describe("kitchen board", () => {
 describe("kitchen history", () => {
     it("shows one page of finished orders and moves between pages", async () => {
         const pages: Record<string, object> = {
-            "1": { orders: [order(1, true), order(2, true)], page: 1, limit: 20, total: 22, pages: 2 },
-            "2": { orders: [order(21, true), order(22, true)], page: 2, limit: 20, total: 22, pages: 2 },
+            "1": { orders: [order(1, "served"), order(2, "served")], page: 1, limit: 20, total: 22, pages: 2 },
+            "2": { orders: [order(21, "served"), order(22, "cancelled")], page: 2, limit: 20, total: 22, pages: 2 },
         };
         server.use(
             http.get("*/api/orders/demo-bistro/kitchen/history", ({ request }) =>

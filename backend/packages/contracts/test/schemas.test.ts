@@ -25,7 +25,8 @@ describe("shared", () => {
         expect(C.text(5).parse("  hi  ")).toBe("hi");
         fieldsOf(C.text(5), "   ");
         fieldsOf(C.text(5), "toolong");
-        fieldsOf(C.text(5), 7);
+        expect(C.text(5).safeParse(7).error?.issues[0].message).toBe("Must be text");
+        expect(C.text(5).safeParse(undefined).error?.issues[0].message).toBe("Required"); // a missing field
         expect(C.label(5).parse(7)).toBe("7");
         expect(C.Email.parse(" BOB@X.test ")).toBe("bob@x.test");
         fieldsOf(C.Email, "not-an-email");
@@ -133,7 +134,7 @@ describe("orders", () => {
     const order = {
         _id: ID,
         table: "1",
-        isDone: false,
+        status: "pending",
         createdAt: "2026-11-23T10:00:00.000Z",
         orderedItems: [{ item: { _id: ID, name: "Amok", price: 5, image: "/x", isEnabled: true }, quantity: 1 }],
     };
@@ -162,7 +163,7 @@ describe("orders", () => {
         ok(C.UpdateBillBody, { isPaid: true });
         expect(fieldsOf(C.UpdateBillBody, { isPaid: "yes" })).toEqual(["isPaid"]);
         ok(C.Order, order);
-        fieldsOf(C.Order, { ...order, isDone: "no" });
+        fieldsOf(C.Order, { ...order, status: "done" });
         ok(C.Bill, { _id: ID, table: "1", isPaid: false, orders: [order], createdAt: order.createdAt });
         ok(C.KitchenHistoryPage, { orders: [order], page: 1, limit: 20, total: 1, pages: 1 });
         fieldsOf(C.PaidBillsPage, { bills: [], page: 1, limit: 20, total: 1 });
@@ -172,6 +173,7 @@ describe("orders", () => {
         const view = {
             _id: ID,
             number: "000001",
+            status: "pending",
             table: "1",
             placedAt: order.createdAt,
             lines: [{ name: "Amok", price: 5, quantity: 1, total: 5 }],

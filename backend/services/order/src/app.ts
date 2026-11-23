@@ -36,7 +36,7 @@ export function createApp({
             return {
                 orders: ordersService({ orders, bills, clients: bound }),
                 kitchen: kitchenService({ orders }),
-                bills: billsService({ bills }),
+                bills: billsService({ bills, orders }),
                 stats: statsService({ orders, bills, clients: bound }),
                 table: tableService({ orders, bills }),
             };

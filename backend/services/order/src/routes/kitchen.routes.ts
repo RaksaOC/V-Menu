@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { badRequest, requireRole } from "@vmenu/common";
+import { badRequest, parse, requireRole } from "@vmenu/common";
+import { UpdateOrderStatusBody } from "@vmenu/contracts";
 import type { RouteContext } from "./context.js";
 
 /** /api/orders/:slug/kitchen: the chef's queue. */
@@ -14,8 +15,11 @@ export function kitchenRoutes({ services, restaurant }: RouteContext) {
     r.get("/history", async (req, res) => {
         res.json(await services(req).kitchen.history((await restaurant(req))._id, req.query));
     });
-    r.patch("/:id/done", async (req, res) => {
-        res.json(await services(req).kitchen.markDone((await restaurant(req))._id, String(req.params.id)));
+    // VM-27: one step at a time (was PATCH /:id/done)
+    r.patch("/:id/status", async (req, res) => {
+        const resId = (await restaurant(req))._id; // access first: 403 before 400
+        const body = parse(UpdateOrderStatusBody, req.body ?? {});
+        res.json(await services(req).kitchen.setStatus(resId, String(req.params.id), body, req.user!.uid));
     });
     return r;
 }

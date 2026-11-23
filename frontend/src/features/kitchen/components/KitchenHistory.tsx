@@ -61,17 +61,7 @@ export default function History() {
                 </div>
                 <div className={"container flex flex-col justify-center items-center w-full max-w-[1024px]"}>
                     {orders.length > 0 ? (
-                        orders.map((order) => (
-                            <Card
-                                key={order._id}
-                                orderId={order._id}
-                                table={order.table}
-                                orderedItems={order.orderedItems}
-                                onDone={() => {}}
-                                orderedAt={order.createdAt}
-                                isDone={order.isDone}
-                            />
-                        ))
+                        orders.map((order) => <Card key={order._id} order={order} />)
                     ) : (
                         <h1 className="mt-[50vh] text-4xl text-center">No Orders To Display</h1>
                     )}

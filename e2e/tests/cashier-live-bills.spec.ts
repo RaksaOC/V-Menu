@@ -21,7 +21,7 @@ test("a customer's new order shows up on the cashier's Orders within 15 s, marke
     // the customer orders from another device (no reload on the cashier's side)
     const [dish] = dishesOf(await (await page.request.get(`/api/menu/${SLUG}/public/items`)).json());
     const placed = await page.request.post(`/api/orders/${SLUG}`, {
-        data: { table: TABLE, isDone: false, orderedItems: [{ item: dish, quantity: 1 }] },
+        data: { table: TABLE, orderedItems: [{ item: dish, quantity: 1 }] },
     });
     expect(placed.status()).toBe(201);
 

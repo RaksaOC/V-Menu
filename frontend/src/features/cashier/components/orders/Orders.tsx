@@ -2,7 +2,7 @@ import OrderCard from "./OrderCard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
-import { getOpenBills, getPaidBills, setBillPaid, type PaidBillsPage } from "@/features/cashier/api";
+import { getOpenBills, getPaidBills, setBillPaid, type PaidBillsPage, cancelOrder } from "@/features/cashier/api";
 import { apiErrorMessage } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { useConnectionStatus } from "@/lib/use-connection-status";
@@ -85,6 +85,17 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
         }
     };
 
+    // VM-27: a cancelled order stays on the bill, struck through and not charged
+    const handleCancelOrder = async (billId: string, orderId: string, reason: string) => {
+        try {
+            await cancelOrder(slug, billId, orderId, reason);
+            toast.success(`Order #${orderId.slice(-6).toUpperCase()} cancelled`);
+            await loadOpen();
+        } catch (err) {
+            toast.error(apiErrorMessage(err, "Couldn't cancel the order. Try again."));
+        }
+    };
+
     // ---- paid bills, a page at a time
     const [showHistory, setShowHistory] = useState(false);
     const [historyPage, setHistoryPage] = useState(1);
@@ -142,6 +153,7 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
                                         key={order._id}
                                         order={order}
                                         onMarkPaid={handleMarkPaid}
+                                        onCancelOrder={handleCancelOrder}
                                         isNew={fresh.has(order._id)}
                                         onSeen={markSeen}
                                     />

@@ -14,7 +14,12 @@ export type StaffRole = z.infer<typeof StaffRole>;
 export const ObjectId = z.string("Must be an id").regex(/^[a-f0-9]{24}$/i, "Must be a 24-character id");
 
 /** Trimmed text, 1 to `max` characters. */
-export const text = (max: number) => z.string("Must be text").trim().min(1, "Required").max(max, `At most ${max} characters`);
+export const text = (max: number) =>
+    z
+        .string({ error: (issue) => (issue.input === undefined ? "Required" : "Must be text") })
+        .trim()
+        .min(1, "Required")
+        .max(max, `At most ${max} characters`);
 
 /** Text or a number (a table can be called 7), as trimmed text. */
 export const label = (max: number) => z.union([z.string(), z.number()], "Must be text").transform(String).pipe(text(max));

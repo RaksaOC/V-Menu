@@ -7,7 +7,7 @@ export const table: Table = { _id: "665f00000000000000000021", name: "T1", isEna
 export const order: Order = {
     _id: "665f00000000000000000031",
     table: "T1",
-    isDone: false,
+    status: "pending",
     createdAt: "2026-11-23T10:00:00.000Z",
     orderedItems: [{ item: dish, quantity: 2 }],
 };

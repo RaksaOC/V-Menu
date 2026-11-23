@@ -27,4 +27,9 @@ export async function setBillPaid(slug: string, billId: string, isPaid: boolean)
     await api.patch(`/api/orders/${seg(slug)}/bills/${seg(billId)}`, { isPaid });
 }
 
+/** VM-27: cancel one order on an open bill, with a reason. It stays on the bill, struck through, uncharged. */
+export async function cancelOrder(slug: string, billId: string, orderId: string, reason: string): Promise<void> {
+    await api.patch(`/api/orders/${seg(slug)}/bills/${seg(billId)}/orders/${seg(orderId)}/cancel`, { reason });
+}
+
 export { getTables, setTableAvailability, getMenuItems, setItemAvailability, getOverview } from "@/features/restaurant/api";

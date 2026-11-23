@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { badRequest, parse, requireRole } from "@vmenu/common";
-import { UpdateBillBody } from "@vmenu/contracts";
+import { CancelOrderBody, UpdateBillBody } from "@vmenu/contracts";
 import type { RouteContext } from "./context.js";
 
 // CL-06: answers carry the old name too, for clients not yet updated. Remove in the next release.
@@ -25,6 +25,12 @@ export function billsRoutes({ services, restaurant }: RouteContext) {
         const resId = (await restaurant(req))._id; // access first: 403 before 400
         const { isPaid } = parse(UpdateBillBody, req.body ?? {});
         res.json(withOldName(await services(req).bills.setPaid(resId, String(req.params.id), isPaid)));
+    });
+    // VM-27: cancel one order on an open bill, with a reason
+    r.patch("/:id/orders/:orderId/cancel", async (req, res) => {
+        const resId = (await restaurant(req))._id; // access first: 403 before 400
+        const body = parse(CancelOrderBody, req.body ?? {});
+        res.json(await services(req).bills.cancelOrder(resId, String(req.params.id), String(req.params.orderId), body, req.user!.uid));
     });
     return r;
 }

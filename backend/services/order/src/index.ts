@@ -11,7 +11,9 @@ logger.info("connected to MongoDB");
 
 // CL-06: migrations, then indexes, before the first request.
 const migrated = await prepareDatabase();
-if (migrated.renamed || migrated.droppedIndexes.length) logger.info(migrated, "migrated bills from isPayed to isPaid");
+if (migrated.bills.renamed || migrated.bills.droppedIndexes.length) logger.info(migrated.bills, "migrated bills from isPayed to isPaid");
+if (migrated.orders.migrated || migrated.orders.droppedIndexes.length)
+    logger.info(migrated.orders, "migrated orders from isDone to status");
 
 const server = createApp().listen(port, () => logger.info({ port }, "order-service listening"));
 

@@ -39,7 +39,7 @@ async function seedLikeProduction() {
 describe("prepareDatabase: the isPayed → isPaid migration (CL-06)", () => {
     it("renames the field on every bill and rebuilds the indexes on the new name", async () => {
         await seedLikeProduction();
-        expect(await prepareDatabase()).toEqual({
+        expect((await prepareDatabase()).bills).toEqual({
             renamed: 3,
             droppedIndexes: ["one_open_bill_per_table", "resId_1_isPayed_1_updatedAt_-1"],
         });

@@ -55,6 +55,14 @@ beforeEach(async () => {
     await Bill.createIndexes(); // dropDatabase drops them too
 });
 
+/** VM-27: the kitchen takes an order to served, one step at a time (what "done" used to be). */
+async function serve(id: string) {
+    let res;
+    for (const status of ["preparing", "ready", "served"])
+        res = await request(app).patch(`/api/orders/${R.slug}/kitchen/${id}/status`).set(chef).send({ status });
+    return res!;
+}
+
 const place = (table = "1", quantity = 2) =>
     request(app)
         .post(`/api/orders/${R.slug}`)
@@ -82,11 +90,11 @@ describe("placing orders", () => {
 });
 
 describe("kitchen and cashier", () => {
-    it("chef marks an order done; cashier marks the bill paid", async () => {
+    it("chef serves an order; cashier marks the bill paid", async () => {
         const { body: order } = await place();
-        expect((await request(app).patch(`/api/orders/${R.slug}/kitchen/${order._id}/done`).set(cashier)).status).toBe(403);
-        const done = await request(app).patch(`/api/orders/${R.slug}/kitchen/${order._id}/done`).set(chef);
-        expect(done.body.isDone).toBe(true);
+        const asCashier = request(app).patch(`/api/orders/${R.slug}/kitchen/${order._id}/status`).set(cashier);
+        expect((await asCashier.send({ status: "preparing" })).status).toBe(403);
+        expect((await serve(order._id)).body.status).toBe("served");
         const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
         const paid = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
         expect(paid.body.isPaid).toBe(true);
@@ -96,7 +104,7 @@ describe("kitchen and cashier", () => {
 
     it("totals money and top sellers for the owner", async () => {
         const { body: order } = await place("1", 3);
-        await request(app).patch(`/api/orders/${R.slug}/kitchen/${order._id}/done`).set(chef);
+        await serve(order._id);
         const res = await request(app).get("/api/orders/owner/overview").set(owner);
         expect(res.body).toMatchObject({ numOfMoneyEarned: 7.5, totalItemsSold: 3, topSellingItems: [{ name: "Kuy Teav", quantity: 3 }] });
     });
@@ -200,13 +208,12 @@ describe("what the customer sees after ordering (VM-07)", () => {
 
 describe("kitchen queue and history (VM-10)", () => {
     const kitchen = (path = "") => request(app).get(`/api/orders/${R.slug}/kitchen${path}`).set(chef);
-    const done = (id: string) => request(app).patch(`/api/orders/${R.slug}/kitchen/${id}/done`).set(chef);
 
-    it("the queue has unfinished orders only, oldest first (the default, and ?status=active)", async () => {
+    it("the queue has pending, preparing and ready orders only, oldest first (the default, and ?status=active)", async () => {
         const a = (await place("1")).body;
         const b = (await place("1")).body; // (the fake menu check only accepts table "1")
         const c = (await place("1")).body;
-        await done(b._id);
+        await serve(b._id);
         for (const path of ["?status=active", ""]) {
             const res = await kitchen(path);
             expect(res.status).toBe(200);
@@ -215,20 +222,20 @@ describe("kitchen queue and history (VM-10)", () => {
         expect((await kitchen("?status=everything")).status).toBe(400);
     });
 
-    it("history: finished orders, newest first, 20 to a page, with the total", async () => {
+    it("history: served and cancelled orders, newest first, 20 to a page, with the total", async () => {
         const docs = Array.from({ length: 25 }, (_, i) => ({
             table: "1",
             resId: R._id,
-            isDone: true,
+            status: i % 5 ? "served" : "cancelled",
             orderedItems: [{ item: ITEM, quantity: 1 }],
             createdAt: new Date(Date.UTC(2026, 0, 1, 0, i)),
         }));
-        await Order.insertMany([...docs, { ...docs[0], isDone: false, createdAt: new Date(Date.UTC(2026, 0, 2)) }]);
+        await Order.insertMany([...docs, { ...docs[0], status: "ready", createdAt: new Date(Date.UTC(2026, 0, 2)) }]);
         const first = await kitchen("/history?page=1&limit=20");
         expect(first.status).toBe(200);
         expect(first.body).toMatchObject({ page: 1, limit: 20, total: 25, pages: 2 });
         expect(first.body.orders).toHaveLength(20);
-        expect(first.body.orders.every((o: { isDone: boolean }) => o.isDone)).toBe(true);
+        expect(first.body.orders.every((o: { status: string }) => ["served", "cancelled"].includes(o.status))).toBe(true);
         expect(new Date(first.body.orders[0].createdAt).getUTCMinutes()).toBe(24); // newest first
         const second = await kitchen("/history?page=2");
         expect(second.body.orders).toHaveLength(5);
@@ -245,11 +252,11 @@ describe("kitchen queue and history (VM-10)", () => {
     it("is backed by an index, and answers fast with 5,000 orders", async () => {
         await Order.createIndexes();
         const names = (await Order.listIndexes()).map((i: { name: string }) => i.name);
-        expect(names).toContain("resId_1_isDone_1_createdAt_1");
+        expect(names).toContain("resId_1_status_1_createdAt_1"); // VM-27 (was on isDone)
         const many = Array.from({ length: 5000 }, (_, i) => ({
             table: String(i % 30),
             resId: R._id,
-            isDone: i % 1000 !== 0, // 5 still cooking
+            status: i % 1000 ? "served" : "preparing", // 5 still cooking
             orderedItems: [{ item: ITEM, quantity: 1 }],
         }));
         await Order.insertMany(many);

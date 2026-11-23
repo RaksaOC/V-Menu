@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { logger } from "@vmenu/common";
 import { renameIsPayed } from "./migrations/is-paid.js";
+import { isDoneToStatus } from "./migrations/order-status.js";
 import { Bill } from "./models/bill.model.js";
 import { Order } from "./models/order.model.js";
 
@@ -10,7 +11,8 @@ import { Order } from "./models/order.model.js";
  * on the new field name is never built before the old one is dropped (CL-06).
  */
 export async function prepareDatabase() {
-    const migrated = await renameIsPayed(mongoose.connection.db!);
+    const db = mongoose.connection.db!;
+    const migrated = { bills: await renameIsPayed(db), orders: await isDoneToStatus(db) }; // CL-06, VM-27
     await Order.createIndexes();
     try {
         await Bill.createIndexes();

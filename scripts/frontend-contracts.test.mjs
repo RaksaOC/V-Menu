@@ -20,7 +20,8 @@ test("the frontend has no API types of its own, and imports them from @vmenu/con
         for (const line of read(f).split("\n")) {
             if (!line.includes('from "@vmenu/contracts"')) continue;
             users.push(f);
-            assert.match(line, /^import type /, `${f}: import types only, so no backend code reaches the browser bundle`);
+            // `import type` and `export type` are both erased at build time
+            assert.match(line, /^(import|export) type /, `${f}: import types only, so no backend code reaches the browser bundle`);
         }
     }
     assert.ok(new Set(users).size >= 10, `only ${new Set(users).size} files use @vmenu/contracts`);

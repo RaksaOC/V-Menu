@@ -18,6 +18,11 @@ describe("frontend fixtures match @vmenu/contracts", () => {
         expect(schema.safeParse(value).success).toBe(true);
     });
 
+    it("the kitchen's steps are the contract's (VM-27)", async () => {
+        const { NEXT_STATUS } = await import("@/lib/order-status");
+        expect(NEXT_STATUS).toEqual(C.NEXT_STATUS);
+    });
+
     it("what the cart sends is a valid PlaceOrderBody (and no isDone)", async () => {
         const { toOrderBody } = await import("@/features/customer/cart");
         const body = toOrderBody("T1", [{ item: F.dish, quantity: 2 }]);
