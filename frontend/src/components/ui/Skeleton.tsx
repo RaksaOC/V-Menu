@@ -44,11 +44,14 @@ const GRIDS: Record<SkeletonVariant, string> = {
     table: "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
 };
 
-/** Loading placeholders; one component instead of four Skeleton*Card files (CL-09). */
+/**
+ * Loading placeholders; one component instead of four Skeleton*Card files (CL-09).
+ * Static on purpose: the Deep Lab rules (section 3) allow no continuous pulse.
+ */
 export default function Skeleton({ variant, count = 3, className }: { variant: SkeletonVariant; count?: number; className?: string }) {
     const Shape = SHAPES[variant];
     return (
-        <div role="status" aria-label="Loading" aria-busy="true" className={`w-full animate-pulse ${className ?? GRIDS[variant]}`}>
+        <div role="status" aria-label="Loading" aria-busy="true" className={`w-full ${className ?? GRIDS[variant]}`}>
             {Array.from({ length: count }, (_, i) => (
                 <div key={i} data-skeleton className="overflow-hidden rounded-[var(--r-card)] border border-[var(--line)] bg-[var(--bg)]">
                     <Shape />

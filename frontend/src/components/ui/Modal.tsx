@@ -79,7 +79,7 @@ export default function Modal({ title, onClose, children, footer, size = "md", d
                         type="button"
                         onClick={() => close.current()}
                         aria-label="Close"
-                        className="rounded-[var(--r-chip)] p-1.5 text-[var(--muted)] hover:bg-[var(--card)]"
+                        className="-mr-2 -mt-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-[var(--r-chip)] text-[var(--muted)] hover:bg-[var(--card)]"
                     >
                         <X size={18} />
                     </button>

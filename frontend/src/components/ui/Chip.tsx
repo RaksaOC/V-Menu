@@ -8,7 +8,13 @@ const TONES: Record<ChipTone, string> = {
     neutral: "bg-[var(--card)] text-[var(--muted)]",
 };
 
-/** A small status label (CL-09). */
+/** A small status label (CL-09), in the mono label style: label font, uppercase, label tracking. */
 export default function Chip({ tone = "neutral", className = "", ...rest }: HTMLAttributes<HTMLSpanElement> & { tone?: ChipTone }) {
-    return <span data-tone={tone} className={`inline-flex items-center gap-1 rounded-[var(--r-chip)] px-2.5 py-1 text-xs font-medium ${TONES[tone]} ${className}`} {...rest} />;
+    return (
+        <span
+            data-tone={tone}
+            className={`inline-flex items-center gap-1 rounded-[var(--r-chip)] px-2.5 py-1 font-[family-name:var(--f-label)] text-xs font-medium uppercase tracking-[var(--label-track)] ${TONES[tone]} ${className}`}
+            {...rest}
+        />
+    );
 }

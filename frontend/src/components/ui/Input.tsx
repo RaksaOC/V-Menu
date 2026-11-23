@@ -22,7 +22,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ label, e
                 id={fieldId}
                 aria-invalid={error ? true : undefined}
                 aria-describedby={note ? noteId : undefined}
-                className={`w-full rounded-[var(--r-in)] border bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-60 ${error ? "border-[var(--bad)]" : "border-[var(--line)]"} ${className}`}
+                className={`min-h-11 w-full rounded-[var(--r-in)] border bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-60 ${error ? "border-[var(--bad)]" : "border-[var(--line)]"} ${className}`}
                 {...rest}
             />
             {note && (

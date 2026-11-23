@@ -7,12 +7,14 @@ const VARIANTS: Record<ButtonVariant, string> = {
     primary: "bg-[var(--accent)] text-[var(--accent-ink)] hover:brightness-95",
     solid: "bg-[var(--btn-bg)] text-[var(--btn-ink)] hover:opacity-90",
     outline: "border border-[var(--line)] bg-transparent text-[var(--ink)] hover:bg-[var(--card)]",
-    danger: "bg-[var(--bad)] text-white hover:opacity-90",
+    // An outline on the soft red reads in light and dark; white text on dark mode's light red didn't.
+    danger: "border border-[var(--bad)] bg-[var(--bad-soft)] text-[var(--bad)] hover:bg-[var(--bad)] hover:text-[var(--bg)]",
 };
-const SIZES = { sm: "px-3 py-1.5 text-sm", md: "px-4 py-2.5 text-sm" };
+// Both sizes keep the 44 x 44 px touch target (section 3); "sm" only has less padding.
+const SIZES = { sm: "min-h-11 min-w-11 px-3 py-1.5 text-sm", md: "min-h-11 min-w-11 px-4 py-2.5 text-sm" };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    /** primary = coral, solid = ink, outline = line, danger = red (Deep Lab, section 3). */
+    /** primary = coral, solid = ink, outline = line, danger = red outline (Deep Lab, section 3). */
     variant?: ButtonVariant;
     size?: keyof typeof SIZES;
     icon?: ReactNode;
@@ -32,10 +34,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
             data-variant={variant}
             disabled={disabled || loading}
             aria-busy={loading || undefined}
-            className={`inline-flex items-center justify-center gap-2 rounded-[var(--r-chip)] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${SIZES[size]} ${block ? "w-full" : ""} ${className}`}
+            className={`inline-flex items-center justify-center gap-2 rounded-[var(--r-chip)] font-semibold motion-safe:transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${SIZES[size]} ${block ? "w-full" : ""} ${className}`}
             {...rest}
         >
-            {loading ? <Loader2 size={16} className="animate-spin" aria-hidden /> : icon}
+            {loading ? <Loader2 size={16} className="motion-safe:animate-spin" aria-hidden /> : icon}
             {children}
         </button>
     );
