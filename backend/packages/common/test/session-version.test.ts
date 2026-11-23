@@ -78,6 +78,22 @@ describe("checking the session version (SEC-03)", () => {
         expect(await call(token)).toBe(401);
     });
 
+    it("signing in again right after a change works, though the cache still has the old version", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        expect(await call({ ...cashier, tv: 3 })).toBe(200);
+        current = 4; // signed out everywhere, then signed in again with a new token
+        expect(await call({ ...cashier, tv: 4 })).toBe(200);
+        expect(await call({ ...cashier, tv: 3 })).toBe(401); // and the old token no longer works
+    });
+
+    it("someone added back right after being removed isn't held out by the cache", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        current = null;
+        expect(await call({ ...cashier, tv: 0 })).toBe(401);
+        current = 0;
+        expect(await call({ ...cashier, tv: 0 })).toBe(200);
+    });
+
     it("keeps one answer per person, role and restaurant", async () => {
         expect(await call({ ...cashier, tv: 3 })).toBe(200);
         expect(await call({ ...cashier, resId: "r2", tv: 3 })).toBe(200);
