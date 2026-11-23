@@ -272,3 +272,7 @@ ok   VM-20-owner-header-1280-dark
 ok   VM-20-cashier-1280-dark
 ok   VM-20-owner-header-360
 ok   VM-20-cashier-360
+# ONLY=SEC-08 (2026-11-23T19:08:12.472Z)
+ok   SEC-08-signup-short-password-1280
+ok   SEC-08-signup-short-password-1280-dark
+ok   SEC-08-signup-short-password-360
