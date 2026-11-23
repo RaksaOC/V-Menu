@@ -192,3 +192,10 @@ ok   VM-17-add-item-errors-1280-dark
 ok   VM-17-edit-item-too-long-1280-dark
 ok   VM-17-add-item-errors-360
 ok   VM-17-edit-item-too-long-360
+# ONLY=VM-21 (2026-11-23T17:26:52.166Z)
+ok   VM-21-customer-heading-1280
+ok   VM-21-qr-popup-1280
+ok   VM-21-customer-heading-1280-dark
+ok   VM-21-qr-popup-1280-dark
+ok   VM-21-customer-heading-360
+ok   VM-21-qr-popup-360
