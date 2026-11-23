@@ -8,6 +8,8 @@ interface PolicyOptions {
     dev: boolean;
     /** Google Analytics is on (production builds with a measurement ID) */
     analytics: boolean;
+    /** B6: e2e builds sign in against the Firebase Auth emulator at this URL */
+    authEmulator?: string | null;
 }
 
 /**
@@ -17,7 +19,7 @@ interface PolicyOptions {
  *   images.unsplash.com for the demo seed's photos.
  * - Next and the theme script (layout.tsx) need inline scripts until we move to nonces.
  */
-export function contentSecurityPolicy({ dev, analytics }: PolicyOptions): string {
+export function contentSecurityPolicy({ dev, analytics, authEmulator }: PolicyOptions): string {
     const ga = analytics;
     const policy: Record<string, string[]> = {
         "default-src": ["'self'"],
@@ -36,6 +38,7 @@ export function contentSecurityPolicy({ dev, analytics }: PolicyOptions): string
             "https://*.googleapis.com",
             ...(ga ? ["https://*.google-analytics.com", "https://*.analytics.google.com", "https://*.googletagmanager.com"] : []),
             ...(dev ? ["ws:"] : []),
+            ...(authEmulator ? [authEmulator] : []),
         ],
         "frame-src": ["https://*.firebaseapp.com"],
         "worker-src": ["'self'", "blob:"],

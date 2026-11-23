@@ -8,7 +8,7 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 test("compose runs the Auth emulator only under the e2e profile", () => {
     const compose = read("infra/compose/docker-compose.yml");
-    const block = compose.slice(compose.indexOf("\n  auth-emulator:"));
+    const block = compose.slice(compose.indexOf("\n  auth-emulator:") + "\n  auth-emulator:".length);
     assert.ok(compose.includes("\n  auth-emulator:"), "an auth-emulator service");
     assert.match(block.split(/\n  [a-z-]+:\n/)[0], /profiles: \[e2e\]/);
     assert.match(read("infra/firebase-emulator/firebase.json"), /"auth"/);

@@ -2,13 +2,22 @@ import { expect, test } from "@playwright/test";
 import * as firebase from "./support/firebase";
 
 // B6: real Firebase sign-ins, against the Auth emulator, never a real Firebase project. CI starts
-// the emulator with the stack (the e2e profile). Locally the tests skip unless it's running:
-//   docker compose --profile e2e up -d auth-emulator   (and a frontend/restaurant-service with E2E=1)
+// the emulator with the stack (the e2e profile). Locally they skip unless the emulator runs and
+// the frontend and restaurant-service were started for it:
+//   docker compose -f infra/compose/docker-compose.yml --profile e2e up -d auth-emulator
+//   restaurant-service: E2E=1 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 FIREBASE_PROJECT_ID=demo-vmenu
+//   frontend: NEXT_PUBLIC_E2E=1 NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL=http://127.0.0.1:9099 NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-vmenu
 test.describe("Firebase sign-in, against the Auth emulator (B6)", () => {
-    test.beforeAll(async () => {
+    test.beforeAll(async ({ request }) => {
+        // the emulator is up, and the app under test is an E2E build: only those put the
+        // emulator's address in their CSP (frontend/security-headers.ts)
         const running = await firebase.isRunning();
-        if (!running && process.env.CI) throw new Error(`The Auth emulator isn't running at ${firebase.EMULATOR}`);
-        test.skip(!running, `start the Auth emulator at ${firebase.EMULATOR} to run these`);
+        const res = await request.get("/owner/login");
+        const csp = res.headers()["content-security-policy"] ?? res.headers()["content-security-policy-report-only"] ?? "";
+        const wired = csp.includes(firebase.EMULATOR);
+        const why = !running ? `the Auth emulator isn't running at ${firebase.EMULATOR}` : !wired ? "this frontend isn't an E2E build" : "";
+        if (why && process.env.CI) throw new Error(why);
+        test.skip(Boolean(why), `${why}; see the comment above to run these`);
     });
 
     // Never the real thing: a build that isn't pointed at the emulator fails here instead of

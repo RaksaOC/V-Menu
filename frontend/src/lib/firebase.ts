@@ -2,7 +2,8 @@
 
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
+import { connectAuthEmulator, getAuth } from "firebase/auth";
+import { AUTH_EMULATOR_URL } from "./auth-emulator";
 import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
 
@@ -28,4 +29,6 @@ const app = initializeApp(firebaseConfig);
 // and a measurement ID; staging builds have none (Analytics is production only)
 export const analytics = typeof window !== "undefined" && firebaseConfig.measurementId ? getAnalytics(app) : null;
 export const auth = getAuth(app);
+// B6: e2e builds only; every real build has no emulator URL
+if (AUTH_EMULATOR_URL) connectAuthEmulator(auth, AUTH_EMULATOR_URL, { disableWarnings: true });
 export const storage = getStorage(app);
