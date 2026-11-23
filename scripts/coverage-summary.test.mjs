@@ -10,7 +10,9 @@ const run = promisify(execFile);
 const { coverageMarkdown } = await import("./coverage-summary.mjs");
 
 const total = (pct) => ({
-    total: Object.fromEntries(["lines", "statements", "functions", "branches"].map((k) => [k, { pct, covered: pct, total: 100 }])),
+    total: Object.fromEntries(
+        ["lines", "statements", "functions", "branches"].map((k) => [k, { pct, covered: Math.floor(pct), total: 100 }]),
+    ),
 });
 
 test("a table of the four numbers, the minimum and the target", () => {

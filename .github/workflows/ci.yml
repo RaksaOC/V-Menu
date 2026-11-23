@@ -91,37 +91,27 @@ jobs:
         if: matrix.kind == 'service'
         run: npm test -- --coverage
 
+      # ---- frontend: unit tests (B1) with coverage (B3), then lint and the production build ----
+      - name: Unit tests with coverage
+        if: matrix.kind == 'web'
+        run: npm test -- --coverage
+
+      # ---- coverage, every package (B3): a table in the job summary, the HTML report as an artifact ----
       - name: Coverage summary
-        if: always() && matrix.kind == 'service'
-        run: |
-          node -e '
-            const fs = require("fs");
-            const f = "coverage/coverage-summary.json";
-            if (!fs.existsSync(f)) { console.log("no coverage report"); process.exit(0); }
-            const t = JSON.parse(fs.readFileSync(f, "utf8")).total;
-            const row = (k) => `| ${k} | ${t[k].pct}% | ${t[k].covered}/${t[k].total} |`;
-            const md = [
-              "### Coverage: ${{ matrix.name }}",
-              "| Metric | % | Covered |", "|---|---|---|",
-              ...["lines", "statements", "functions", "branches"].map(row),
-              "", "Threshold: 70% lines.", "",
-            ].join("\n");
-            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + "\n");
-          '
+        if: always() && (matrix.kind == 'service' || matrix.kind == 'web')
+        run: >-
+          node "$GITHUB_WORKSPACE/scripts/coverage-summary.mjs" coverage/coverage-summary.json
+          --label "${{ matrix.name }}" --config "${{ matrix.kind == 'web' && 'vitest.config.mts' || 'vitest.config.ts' }}"
+          --target "${{ matrix.kind == 'web' && '60' || '80' }}"
 
       - name: Upload coverage report
-        if: always() && matrix.kind == 'service'
+        if: always() && (matrix.kind == 'service' || matrix.kind == 'web')
         uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.name }}
           path: ${{ matrix.dir }}/coverage/
           if-no-files-found: ignore
           retention-days: 14
-
-      # ---- frontend: unit tests (B1), then lint and the production build ----
-      - name: Unit tests
-        if: matrix.kind == 'web'
-        run: npm test
 
       - name: Lint
         if: matrix.kind == 'web'

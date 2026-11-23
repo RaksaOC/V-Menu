@@ -10,8 +10,9 @@ export default defineConfig({
             exclude: ["src/index.ts"],
             reporter: ["text", "text-summary", "json-summary", "html"],
             reportsDirectory: "coverage",
-            // CI fails below this, the same minimum as the services.
-            thresholds: { lines: 70 },
+            // B3: CI fails below this. It started at today's number (94%, 2026-11-23); raise it as
+            // tests are added, never lower it (scripts/coverage.test.mjs). Target: 80%.
+            thresholds: { lines: 94 },
         },
     },
 });

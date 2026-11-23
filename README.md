@@ -139,6 +139,18 @@ These are the same commands CI runs:
 | `npm run format` / `format:check` | Prettier (settings in `.prettierrc.json`, `.editorconfig` for editors) |
 | `npm run test:repo` | the issue forms, the PR template and repo hygiene (no `.DS_Store`, root scripts, formatting commit listed in `.git-blame-ignore-revs`) |
 
+**Coverage (B3).** In any package, run `npx vitest run --coverage`. The report is written to `coverage/`; open `coverage/index.html`. CI does the same for each service and the frontend, puts a table in the job summary, and keeps the report as the `coverage-<name>` artifact. Each package fails below its lines minimum, which is set in its `vitest.config`:
+
+| Package | Minimum (lines) | Target |
+|---|---|---|
+| `@vmenu/common` | 94% | 80% |
+| restaurant-service | 87% | 80% |
+| menu-service | 98% | 80% |
+| order-service | 96% (plus 90% on `src/services`) | 80% |
+| frontend | 34% | 60% |
+
+The minimums started at the numbers of 2026-11-23. Raise them as tests are added; `scripts/coverage.test.mjs` stops them from going down.
+
 To hide the formatting commit from `git blame` locally: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 
 ### Environment
