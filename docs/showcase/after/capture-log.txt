@@ -247,3 +247,7 @@ ok   VM-14-cashier-login-360
 ok   VM-14-kitchen-login-360
 ok   VM-14-reset-form-360
 ok   VM-14-reset-sent-360
+# ONLY=VM-18 (2026-11-23T17:35:48.161Z)
+ok   VM-18-change-to-a-role-they-have-1280
+ok   VM-18-change-to-a-role-they-have-1280-dark
+ok   VM-18-change-to-a-role-they-have-360
