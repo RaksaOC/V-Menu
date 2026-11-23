@@ -2,8 +2,10 @@ import type { MenuItem, MenuSection, PublicMenu } from "@vmenu/contracts";
 
 // VM-25: the customer's menu comes in sections (one per category, "Other" last).
 
-/** Every dish on the menu, in one list (the cart checks against this, VM-05). */
-export const dishesOf = (menu: PublicMenu): MenuItem[] => menu.categories.flatMap((section) => section.items);
+/** The dishes that can be ordered, in one list (the cart checks against this, VM-05).
+ *  VM-26: sold-out dishes are on the menu, but not here, so they leave the cart. */
+export const orderableDishes = (menu: PublicMenu): MenuItem[] =>
+    menu.categories.flatMap((section) => section.items).filter((item) => item.isEnabled);
 
 /** The page anchor of a section; "Other" has no id. */
 export const sectionId = (section: MenuSection) => `menu-${section._id ?? "other"}`;

@@ -4,7 +4,7 @@ import { useId, useState, type FormEvent } from "react";
 import { ImageIcon, Trash2, Upload, X } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
 import { PHOTO_TYPES, usePhoto } from "./use-photo";
-import { checkItem, type ItemFieldErrors } from "../item-rules";
+import { checkItem, DISH_TAGS, ITEM_DESCRIPTION_MAX, type ItemFieldErrors } from "../item-rules";
 import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
 
 const PLACEHOLDER = "/images/img.png";
@@ -25,19 +25,22 @@ interface Props {
 /** Add and edit a dish, in the shared Modal (CL-09; was AddItemPopup and EditItemPopup). */
 export default function ItemForm({ item, categories, onClose, onSave, onDelete }: Props) {
     const categoryFieldId = useId();
+    const descriptionId = useId();
     const formId = useId();
     const fileId = useId();
     const photo = usePhoto(item?.image ?? "");
     const [name, setName] = useState(item?.name ?? "");
     const [price, setPrice] = useState(item ? String(item.price) : "");
     const [categoryId, setCategoryId] = useState(item?.categoryId ?? "");
+    const [description, setDescription] = useState(item?.description ?? ""); // VM-26
+    const [tags, setTags] = useState<string[]>(item?.tags ?? []);
     const [errors, setErrors] = useState<ItemFieldErrors>(NO_ERRORS);
     const [saving, setSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     async function submit(e: FormEvent) {
         e.preventDefault();
-        const found = checkItem({ name, price }); // VM-17: the server's rules, before sending
+        const found = checkItem({ name, price, description }); // VM-17: the server's rules, before sending
         setErrors(found);
         if (Object.keys(found).length) return;
         setSaving(true);
@@ -50,6 +53,8 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                 image: uploaded ?? item?.image ?? PLACEHOLDER,
                 isEnabled: item?.isEnabled ?? true,
                 ...(categories && { categoryId: categoryId || null }),
+                description: description.trim(),
+                tags: DISH_TAGS.filter((tag) => tags.includes(tag)) as CreateItemBody["tags"],
             };
             const refused = await onSave(item ? { _id: item._id, ...fields } : fields);
             if (refused) setErrors(refused); // VM-17: the server's reasons, next to the fields
@@ -159,6 +164,53 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                         setErrors(({ price: _, ...rest }) => rest);
                     }}
                 />
+                <div className="space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-3">
+                        <label htmlFor={descriptionId} className="block text-sm font-semibold text-[var(--ink)]">
+                            Description (optional)
+                        </label>
+                        <span aria-hidden className="font-[family-name:var(--f-label)] text-xs text-[var(--muted)]">
+                            {description.trim().length}/{ITEM_DESCRIPTION_MAX}
+                        </span>
+                    </div>
+                    <textarea
+                        id={descriptionId}
+                        rows={3}
+                        value={description}
+                        placeholder="What's in it, how it's served"
+                        aria-invalid={errors.description ? true : undefined}
+                        aria-describedby={errors.description ? `${descriptionId}-note` : undefined}
+                        onChange={(e) => {
+                            setDescription(e.target.value);
+                            setErrors(({ description: _, ...rest }) => rest);
+                        }}
+                        className={`w-full rounded-[var(--r-in)] border bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${errors.description ? "border-[var(--bad)]" : "border-[var(--line)]"}`}
+                    />
+                    {errors.description && (
+                        <p id={`${descriptionId}-note`} className="text-xs text-[var(--bad)]">
+                            {errors.description}
+                        </p>
+                    )}
+                </div>
+                <fieldset className="space-y-2">
+                    <legend className="text-sm font-semibold text-[var(--ink)]">Tags</legend>
+                    <div className="flex flex-wrap gap-2">
+                        {DISH_TAGS.map((tag) => (
+                            <label
+                                key={tag}
+                                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[var(--r-chip)] border border-[var(--line)] px-3 text-sm has-[:checked]:border-[var(--ink)] has-[:checked]:bg-[var(--card)]"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={tags.includes(tag)}
+                                    onChange={(e) => setTags((all) => (e.target.checked ? [...all, tag] : all.filter((t) => t !== tag)))}
+                                />
+                                {tag}
+                            </label>
+                        ))}
+                    </div>
+                    {errors.tags && <p className="text-xs text-[var(--bad)]">{errors.tags}</p>}
+                </fieldset>
                 {categories && (
                     <div className="space-y-1.5">
                         <label htmlFor={categoryFieldId} className="block text-sm font-semibold text-[var(--ink)]">

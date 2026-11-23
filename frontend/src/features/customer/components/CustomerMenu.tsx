@@ -12,7 +12,7 @@ import { useRestaurantName } from "@/lib/public-restaurant";
 import TableProblem, { type TableProblemKind } from "@/features/customer/components/TableProblem";
 import { checkTable, getMenu } from "@/features/customer/api";
 import { reconcileCart } from "@/features/customer/cart";
-import { dishesOf, searchMenu, sectionId } from "@/features/customer/menu";
+import { orderableDishes, searchMenu, sectionId } from "@/features/customer/menu";
 import { toast } from "@/lib/toast";
 import type { MenuSection } from "@vmenu/contracts";
 
@@ -43,7 +43,7 @@ export default function CustomerPage() {
             const menu = await getMenu(resSlug);
             setSections(menu.categories);
             // VM-05: dishes taken off the menu since they were added leave the cart.
-            const dropped = reconcileCart(resSlug, table, dishesOf(menu));
+            const dropped = reconcileCart(resSlug, table, orderableDishes(menu));
             if (dropped)
                 toast.info(
                     `${dropped} ${dropped === 1 ? "item is" : "items are"} no longer available and ${dropped === 1 ? "was" : "were"} removed from your cart.`,
@@ -75,7 +75,18 @@ export default function CustomerPage() {
         document.getElementById(sectionId(section))?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     const card = (item: MenuSection["items"][number]) => (
-        <ItemCard key={item._id} slug={resSlug} table={table} _id={item._id} name={item.name} image={item.image} price={item.price} />
+        <ItemCard
+            key={item._id}
+            slug={resSlug}
+            table={table}
+            _id={item._id}
+            name={item.name}
+            image={item.image}
+            price={item.price}
+            description={item.description}
+            tags={item.tags}
+            soldOut={!item.isEnabled}
+        />
     );
 
     return (

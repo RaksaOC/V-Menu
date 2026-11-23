@@ -57,7 +57,7 @@ export default function Menu({ role }: { role: "owner" | "cashier" }) {
         setItems((all) => all.map((i) => (i._id === item._id ? { ...i, isEnabled } : i)));
         try {
             await setItemAvailability(slug, item._id, isEnabled);
-            toast.info(`${item.name} ${isEnabled ? "enabled" : "disabled"}`);
+            toast.info(`${item.name} ${isEnabled ? "is available" : "is sold out"}`); // VM-26: the customer's words
         } catch {
             setItems((all) => all.map((i) => (i._id === item._id ? item : i)));
             toast.error(`Could not update ${item.name}`);

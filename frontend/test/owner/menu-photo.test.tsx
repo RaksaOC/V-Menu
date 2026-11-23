@@ -62,7 +62,7 @@ describe("adding an item with a photo", () => {
         // (jsdom sends the file as an empty "blob"; a browser sends the real name and bytes)
         expect(seen[0].body).toMatch(/name="image"; filename="[^"]+"\r\nContent-Type: image\/jpeg/);
         expect(seen[0].body).not.toContain("base64");
-        expect(onSave).toHaveBeenCalledWith({ name: "Fish Amok", price: 5.5, image: URL_OK, isEnabled: true });
+        expect(onSave).toHaveBeenCalledWith({ name: "Fish Amok", price: 5.5, image: URL_OK, isEnabled: true, description: "", tags: [] });
     });
 
     it("shows the server's reason when the upload is refused, and does not save", async () => {
