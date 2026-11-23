@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import { getMenu, placeOrder as sendOrder } from "@/features/customer/api";
-import { clearCart, readCart, reconcileCart, saveCart, toOrderBody } from "@/features/customer/cart";
+import { clearCart, MAX_ORDER_LINES, readCart, reconcileCart, saveCart, toOrderBody } from "@/features/customer/cart";
 import { dishesOf } from "@/features/customer/menu";
 import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
@@ -80,6 +80,14 @@ export default function CartPage() {
         setOrderError(null);
         if (!cartItems.length) {
             toast.error("No items in cart! 🛒");
+            return;
+        }
+
+        if (cartItems.length > MAX_ORDER_LINES) {
+            setOrderError({
+                message: `An order can have at most ${MAX_ORDER_LINES} different dishes. Remove some, or place two orders.`,
+                retry: false,
+            });
             return;
         }
 

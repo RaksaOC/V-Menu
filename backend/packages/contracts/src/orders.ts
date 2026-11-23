@@ -4,6 +4,9 @@ import { OrderLine } from "./internal.js";
 
 // order-service: orders, bills and the dashboards (CL-05).
 
+/** VM-22: the most lines one order can have. */
+export const MAX_ORDER_LINES = 50;
+
 /** What the cart sends. The browser's prices are ignored: menu-service supplies them. */
 export const PlaceOrderBody = z.object({
     table: label(40),
@@ -15,7 +18,7 @@ export const PlaceOrderBody = z.object({
             }),
         )
         .min(1, "At least one item")
-        .max(100, "At most 100 items"),
+        .max(MAX_ORDER_LINES, `At most ${MAX_ORDER_LINES} lines`),
 });
 export type PlaceOrderBody = z.infer<typeof PlaceOrderBody>;
 

@@ -5,6 +5,9 @@ import type { MenuItem, PlaceOrderBody } from "@vmenu/contracts";
 /** A line in the cart: a dish as the menu showed it, and how many. */
 export type CartItem = { item: MenuItem; quantity: number };
 
+/** VM-22: the most lines one order can have (the same as MAX_ORDER_LINES in @vmenu/contracts). */
+export const MAX_ORDER_LINES = 50;
+
 /** What the cart sends: the dish ids and quantities; menu-service supplies the names and prices. */
 export function toOrderBody(table: string, items: CartItem[]): PlaceOrderBody {
     return { table, orderedItems: items.map((l) => ({ item: { _id: l.item._id }, quantity: l.quantity })) };

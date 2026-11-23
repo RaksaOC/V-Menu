@@ -12,6 +12,7 @@ import { billsRoutes } from "./routes/bills.routes.js";
 import { restaurantFrom, type RouteContext } from "./routes/context.js";
 import { internalRoutes } from "./routes/internal.routes.js";
 import { kitchenRoutes } from "./routes/kitchen.routes.js";
+import { orderLimitsFromEnv, type OrderLimits } from "./routes/order-limits.js";
 import { ordersRoutes } from "./routes/orders.routes.js";
 import { overviewRoutes } from "./routes/overview.routes.js";
 import { ownerRoutes } from "./routes/owner.routes.js";
@@ -22,6 +23,8 @@ interface Deps {
     clients?: Clients;
     orders?: OrdersRepo;
     bills?: BillsRepo;
+    /** VM-22: from ORDERS_PER_MINUTE and ORDERS_PER_TABLE unless a test sets them */
+    orderLimits?: OrderLimits;
 }
 
 /** Builds the Express app: wires repositories and clients into the services, and mounts the routers. */
@@ -30,6 +33,7 @@ export function createApp({
     clients = httpClients,
     orders = mongoOrdersRepo,
     bills = mongoBillsRepo,
+    orderLimits = orderLimitsFromEnv(),
 }: Deps = {}) {
     const ctx: RouteContext = {
         services(req: Request) {
@@ -53,6 +57,6 @@ export function createApp({
     app.use("/api/orders/:slug/bills", billsRoutes(ctx));
     app.use("/api/orders/:slug/overview", overviewRoutes(ctx));
     app.use("/api/orders/:slug/tables/:table", tableRoutes(ctx));
-    app.use("/api/orders/:slug", ordersRoutes(ctx));
+    app.use("/api/orders/:slug", ordersRoutes(ctx, orderLimits));
     return finish(app);
 }

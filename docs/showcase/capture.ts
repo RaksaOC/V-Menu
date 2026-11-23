@@ -830,6 +830,43 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-22: the message on the cart page when too many orders were placed. A real 429 from a stack on
+// the default limits: each run uses its own address (as Caddy would send it) and places 10 orders
+// first, so the 11th, from the cart, is refused. The screen is new: no "before" shot.
+for (const [vp, theme, n] of [
+    [DESKTOP, "light", 1],
+    [DESKTOP, "dark", 2],
+    [PHONE, "light", 3],
+] as const) {
+    await step(`VM-22 ${vp.width} ${theme}`, async () => {
+        if (PHASE !== "after") return;
+        const client = `198.18.22.${(Date.now() % 200) + n}`;
+        const context = await browser.newContext({
+            viewport: vp,
+            colorScheme: theme,
+            reducedMotion: "reduce",
+            extraHTTPHeaders: { "X-Forwarded-For": client },
+        });
+        await context.addInitScript((th) => localStorage.setItem("vm-theme", th), theme);
+        const page = await context.newPage();
+        const menu = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+        for (let i = 0; i < 10; i++) {
+            const placed = await page.request.post(`${BASE}/api/orders/${SLUG}`, {
+                data: { table: `T${(i % 4) + 1}`, orderedItems: [{ item: { _id: menu[0]._id }, quantity: 1 }] },
+            });
+            if (placed.status() !== 201) throw new Error(`order ${i + 1} answered ${placed.status()}`);
+        }
+        const lines = menu.slice(0, 2).map((item, i) => ({ item, quantity: i + 1 }));
+        await context.addInitScript(([key, value]) => localStorage.setItem(key, value), [`cart:${SLUG}:T2`, JSON.stringify(lines)]);
+        await page.goto(`${BASE}/${SLUG}/customer/T2/cart`);
+        await settle(page);
+        await page.getByRole("button", { name: /place order/i }).click();
+        await page.getByRole("alert").filter({ hasText: "wait a minute" }).waitFor({ timeout: 10_000 });
+        await shot({ page, theme, width: vp.width }, "VM-22-cart-too-many-orders", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

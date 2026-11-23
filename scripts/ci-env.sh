@@ -20,6 +20,8 @@ for svc in restaurant menu order; do
       -e "s|^INTERNAL_API_KEY=.*|INTERNAL_API_KEY=${INTERNAL_API_KEY}|" \
       -e "s|^FIREBASE_PROJECT_ID=.*|FIREBASE_PROJECT_ID=demo-vmenu|" \
       -e "s|^COOKIE_SECURE=.*|COOKIE_SECURE=false|" \
+      -e "s|^ORDERS_PER_MINUTE=.*|ORDERS_PER_MINUTE=100000|" \
+      -e "s|^ORDERS_PER_TABLE=.*|ORDERS_PER_TABLE=100000|" \
       "backend/services/${svc}/.env.example" > "backend/services/${svc}/.env"
 done
 # B6: restaurant-service checks sign-ins with the Auth emulator (compose's e2e profile). A demo-

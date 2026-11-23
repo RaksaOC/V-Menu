@@ -23,6 +23,11 @@ describe("frontend fixtures match @vmenu/contracts", () => {
         expect(NEXT_STATUS).toEqual(C.NEXT_STATUS);
     });
 
+    it("the cart's limit on lines is the contract's (VM-22)", async () => {
+        const { MAX_ORDER_LINES } = await import("@/features/customer/cart");
+        expect(MAX_ORDER_LINES).toBe(C.MAX_ORDER_LINES);
+    });
+
     it("what the cart sends is a valid PlaceOrderBody (and no isDone)", async () => {
         const { toOrderBody } = await import("@/features/customer/cart");
         const body = toOrderBody("T1", [{ item: F.dish, quantity: 2 }]);
