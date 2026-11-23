@@ -188,3 +188,13 @@ ok   VM-09-restaurant-overview-360
 ok   VM-22-cart-too-many-orders-1280
 ok   VM-22-cart-too-many-orders-1280-dark
 ok   VM-22-cart-too-many-orders-360
+# ONLY=CL-07 (2026-11-23T17:50:29.556Z)
+ok   CL-07-kitchen-1280
+ok   CL-07-customer-order-1280
+ok   CL-07-cashier-bill-1280
+ok   CL-07-kitchen-1280-dark
+ok   CL-07-customer-order-1280-dark
+ok   CL-07-cashier-bill-1280-dark
+ok   CL-07-kitchen-360
+ok   CL-07-customer-order-360
+ok   CL-07-cashier-bill-360
