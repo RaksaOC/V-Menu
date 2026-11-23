@@ -93,7 +93,7 @@ It is safe to run again. Alerts go to the stack's default contact point.
 
 The **Order pending for over 15 minutes** alert reads the third one. The agent only forwards metrics on its keep-list in `config.alloy`, which now includes every `vmenu_*` metric from the services.
 
-Counters restart at 0 when a service restarts. `increase()` and `rate()` in the dashboard handle that.
+Counters restart at 0 when a service restarts, and `increase()` and `rate()` in the dashboard handle that. Each status and result is listed at 0 from the start, because `increase()` can't see a series' first value.
 
 ## DORA metrics
 

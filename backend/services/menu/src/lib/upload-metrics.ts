@@ -9,6 +9,9 @@ const uploads = new prom.Counter({
     registers: [registry],
 });
 
+// Every result starts at 0: Prometheus' increase() can't see a series' first value.
+for (const result of ["ok", "not_a_photo", "too_large", "bad_request", "denied", "rate_limited", "error"]) uploads.inc({ result }, 0);
+
 /** The result label for an upload answer's status code. */
 export function uploadResult(status: number): string {
     if (status < 300) return "ok";

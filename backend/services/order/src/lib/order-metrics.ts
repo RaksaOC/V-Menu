@@ -1,5 +1,5 @@
 import { prom, registry } from "@vmenu/common";
-import type { OrderStatus } from "@vmenu/contracts";
+import { ORDER_STATUSES, type OrderStatus } from "@vmenu/contracts";
 
 // B10: the kitchen's numbers, on this service's /metrics. The monitoring agent collects them every
 // minute (infra/monitoring/config.alloy keeps vmenu_*); the Kitchen row on the Overview dashboard
@@ -12,6 +12,10 @@ const ordersTotal = new prom.Counter({
     labelNames: ["status"],
     registers: [registry],
 });
+
+// Every status starts at 0: Prometheus' increase() can't see a series' first value, so without
+// this the first order after each restart would be missing from the dashboard.
+for (const status of ORDER_STATUSES) ordersTotal.inc({ status }, 0);
 
 /** VM-27: from the customer's order to "ready", in seconds. */
 const readySeconds = new prom.Histogram({
