@@ -16,6 +16,8 @@ export interface OrderRecord {
     status: OrderStatus;
     statusHistory: StatusChangeRecord[];
     cancelReason?: string;
+    /** VM-28 */
+    note?: string;
     resId: string;
     /** VM-23: orders from before it have none */
     billId?: string;
@@ -46,7 +48,7 @@ export interface OrderWithoutBill {
 
 /** Every MongoDB query on orders (CL-04). The services only see this interface. */
 export interface OrdersRepo {
-    create(order: { table: string; orderedItems: OrderLine[]; resId: string; billId: string }): Promise<OrderRecord>;
+    create(order: { table: string; orderedItems: OrderLine[]; resId: string; billId: string; note?: string }): Promise<OrderRecord>;
     /** VM-23: the bill it was on was paid first, so it moves to the table's new one. */
     setBill(resId: string, id: string, billId: string): Promise<void>;
     /** VM-23: takes back an order that could not be put on a bill. */

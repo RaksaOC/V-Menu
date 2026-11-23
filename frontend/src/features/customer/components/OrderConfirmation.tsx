@@ -111,6 +111,7 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
                                         <p className="text-sm text-slate-500">
                                             {line.quantity} × {money(line.priceCents)}
                                         </p>
+                                        {line.note && <p className="text-sm italic text-slate-600">“{line.note}”</p>}
                                     </div>
                                     <p className="font-semibold text-slate-900">{money(line.totalCents)}</p>
                                 </li>

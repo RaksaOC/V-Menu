@@ -20,6 +20,7 @@ function view(order: OrderRecord) {
             totalCents,
             price: l.item.priceCents / 100,
             total: totalCents / 100,
+            ...(l.note && { note: l.note }), // VM-28
         };
     });
     const totalCents = lines.reduce((sum, l) => sum + l.totalCents, 0);
@@ -28,6 +29,7 @@ function view(order: OrderRecord) {
         number: orderNumber(String(order._id)),
         status: order.status, // VM-27: the customer's page shows it
         ...(order.cancelReason && { cancelReason: order.cancelReason }),
+        ...(order.note && { note: order.note }), // VM-28
         table: order.table,
         placedAt: order.orderedAt,
         lines,

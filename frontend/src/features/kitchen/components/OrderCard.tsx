@@ -111,6 +111,14 @@ const Card = ({ order, onAdvance }: CardProps) => {
                     Order Details
                 </h4>
 
+                {/* VM-28: the customer's note for the whole order */}
+                {order.note && (
+                    <div data-note className="mb-4 rounded-2xl border-l-4 border-[var(--accent)] bg-[var(--accent-soft)] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent-text)]">Note</p>
+                        <p className="text-lg font-semibold text-gray-900">{order.note}</p>
+                    </div>
+                )}
+
                 <div className="space-y-3">
                     {orderedItems.map((orderedItem, index) => (
                         <div
@@ -128,6 +136,12 @@ const Card = ({ order, onAdvance }: CardProps) => {
                             <div className="flex-1 min-w-0">
                                 <h5 className="font-semibold text-gray-800 truncate mb-1">{orderedItem.item.name}</h5>
                                 <p className="text-sm text-gray-500">{money(orderedItem.item.priceCents)} each</p>
+                                {/* VM-28: "no chilli", under the dish, in the accent colour */}
+                                {orderedItem.note && (
+                                    <p className="mt-2 inline-block rounded-lg border-l-4 border-[var(--accent)] bg-[var(--accent-soft)] px-2 py-1 font-semibold text-[var(--accent-text)] break-words">
+                                        {orderedItem.note}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="flex items-center gap-2">

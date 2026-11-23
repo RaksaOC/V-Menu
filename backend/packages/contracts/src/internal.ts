@@ -33,7 +33,8 @@ export const OrderedDish = z.object({
     image: z.string(),
     isEnabled: z.boolean(),
 });
-export const OrderLine = z.object({ item: OrderedDish, quantity: z.number().int().min(1) });
+/** VM-28: the customer's note on the line, kept with the order (menu-service never sees it). */
+export const OrderLine = z.object({ item: OrderedDish, quantity: z.number().int().min(1), note: z.string().optional() });
 export type OrderLine = z.infer<typeof OrderLine>;
 
 export const OrderCheckResponse = z.object({ items: z.array(OrderLine).min(1) });

@@ -12,8 +12,10 @@ const orderSchema = new mongoose.Schema(
                 // CL-07: priceCents is the price; `price` (dollars) stays for one release, for a rollback
                 item: { _id: String, name: String, priceCents: Number, price: Number, image: String, isEnabled: Boolean },
                 quantity: { type: Number, required: true, min: 1 },
+                note: { type: String, maxlength: 100 }, // VM-28: "no chilli"
             },
         ],
+        note: { type: String, maxlength: 200 }, // VM-28: the customer's note for the whole order
         orderedAt: { type: Date, default: Date.now },
         // VM-27: pending → preparing → ready → served, or cancelled by the cashier (was isDone)
         status: { type: String, enum: ORDER_STATUSES, default: "pending" },

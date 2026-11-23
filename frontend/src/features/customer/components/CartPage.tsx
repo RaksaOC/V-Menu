@@ -4,7 +4,17 @@ import { useEffect, useState } from "react";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import { getMenu, placeOrder as sendOrder } from "@/features/customer/api";
-import { clearCart, MAX_ORDER_LINES, readCart, reconcileCart, saveCart, toOrderBody } from "@/features/customer/cart";
+import {
+    clearCart,
+    MAX_ORDER_LINES,
+    ORDER_NOTE_MAX,
+    readCart,
+    readOrderNote,
+    reconcileCart,
+    saveCart,
+    saveOrderNote,
+    toOrderBody,
+} from "@/features/customer/cart";
 import { dishesOf } from "@/features/customer/menu";
 import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
@@ -28,9 +38,19 @@ export default function CartPage() {
     const slug = String(params.res ?? "");
     const table = String(params.table ?? "");
 
+    // VM-28: the customer's note for the whole order
+    const [orderNote, setOrderNote] = useState("");
+
     useEffect(() => {
         setCartItems(readCart(slug, table));
+        setOrderNote(readOrderNote(slug, table));
     }, [slug, table]);
+
+    const setNote = (index: number, note: string) => {
+        const updatedItems = [...cartItems];
+        updatedItems[index] = { ...updatedItems[index], note };
+        updateCart(updatedItems);
+    };
 
     const updateCart = (updatedItems: CartItem[]) => {
         setCartItems(updatedItems);
@@ -96,9 +116,10 @@ export default function CartPage() {
         setIsPlacingOrder(true);
 
         try {
-            const order = await sendOrder(slug, toOrderBody(table, cartItems));
+            const order = await sendOrder(slug, toOrderBody(table, cartItems, orderNote));
             clearCart(slug, table); // straight away, so the same cart can't be sent twice
             setCartItems([]);
+            setOrderNote("");
             // VM-07: the order's confirmation, with its number and the server's prices
             router.push(`/${slug}/customer/${encodeURIComponent(table)}/orders/${order._id}`);
         } catch (error) {
@@ -187,9 +208,25 @@ export default function CartPage() {
                                             increaseQuantity={increaseQuantity}
                                             decreaseQuantity={decreaseQuantity}
                                             removeItem={removeItem}
+                                            setNote={setNote}
                                         />
                                     ))}
                                 </div>
+                                <label className="mt-6 block">
+                                    <span className="mb-1 block text-sm font-semibold text-gray-700">Note for the kitchen (optional)</span>
+                                    <textarea
+                                        aria-label="Note for the kitchen"
+                                        maxLength={ORDER_NOTE_MAX}
+                                        rows={2}
+                                        value={orderNote}
+                                        onChange={(e) => {
+                                            setOrderNote(e.target.value);
+                                            saveOrderNote(slug, table, e.target.value);
+                                        }}
+                                        placeholder="e.g. it's a birthday, or bring the drinks first"
+                                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                    />
+                                </label>
                                 <div className={"w-full flex justify-center items-center mt-6"}>
                                     <button
                                         onClick={() => router.push(`/${params.res}/customer/${params.table}`)}

@@ -1055,10 +1055,13 @@ for (const [vp, theme] of [
         const customer = await newPage(browser, vp, theme);
         const menu = dishesOf(await (await customer.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
         const dish = menu[2] ?? menu[0];
-        await customer.context.addInitScript(
-            ([key, lines]) => localStorage.setItem(key, lines),
-            [`cart:${SLUG}:T2`, JSON.stringify([{ item: dish, quantity: 1 }, { item: dish, quantity: 2 }])] as const,
-        );
+        await customer.context.addInitScript(([key, lines]) => localStorage.setItem(key, lines), [
+            `cart:${SLUG}:T2`,
+            JSON.stringify([
+                { item: dish, quantity: 1 },
+                { item: dish, quantity: 2 },
+            ]),
+        ] as const);
         await customer.page.goto(`${BASE}/${SLUG}/customer/T2/cart`);
         await settle(customer.page);
         const lineNote = customer.page.getByRole("textbox", { name: /^Note for / }).first();
@@ -1078,7 +1081,9 @@ for (const [vp, theme] of [
                     ],
                 },
             });
-            VM28.number = String((await res.json())._id).slice(-6).toUpperCase();
+            VM28.number = String((await res.json())._id)
+                .slice(-6)
+                .toUpperCase();
         }
         await customer.context.close();
 

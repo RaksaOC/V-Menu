@@ -7,19 +7,41 @@ import { OrderLine } from "./internal.js";
 /** VM-22: the most lines one order can have. */
 export const MAX_ORDER_LINES = 50;
 
+/** VM-28: the longest note on one line ("no chilli"), and on the whole order. */
+export const LINE_NOTE_MAX = 100;
+export const ORDER_NOTE_MAX = 200;
+
+/** A customer's note: spaces and line breaks become one space, then it's trimmed and limited. */
+const note = (max: number, what: string) =>
+    z
+        .string("Must be text")
+        .transform((v) => v.replace(/\s+/g, " ").trim())
+        .pipe(z.string().max(max, `${what} can be at most ${max} characters`))
+        .optional();
+/** An empty note is no note: the key is left out. */
+function withoutEmptyNote<T extends { note?: string }>({ note, ...rest }: T): Omit<T, "note"> & { note?: string } {
+    return note ? { ...rest, note } : rest;
+}
+
 /** What the cart sends. The browser's prices are ignored: menu-service supplies them. */
-export const PlaceOrderBody = z.object({
-    table: label(40),
-    orderedItems: z
-        .array(
-            z.object({
-                item: z.object({ _id: ObjectId }),
-                quantity: z.number("Must be a number").int("Must be a whole number").min(1, "At least 1").max(99, "At most 99"),
-            }),
-        )
-        .min(1, "At least one item")
-        .max(MAX_ORDER_LINES, `At most ${MAX_ORDER_LINES} lines`),
-});
+export const PlaceOrderBody = z
+    .object({
+        table: label(40),
+        orderedItems: z
+            .array(
+                z
+                    .object({
+                        item: z.object({ _id: ObjectId }),
+                        quantity: z.number("Must be a number").int("Must be a whole number").min(1, "At least 1").max(99, "At most 99"),
+                        note: note(LINE_NOTE_MAX, "A note"),
+                    })
+                    .transform(withoutEmptyNote),
+            )
+            .min(1, "At least one item")
+            .max(MAX_ORDER_LINES, `At most ${MAX_ORDER_LINES} lines`),
+        note: note(ORDER_NOTE_MAX, "The order's note"),
+    })
+    .transform(withoutEmptyNote);
 export type PlaceOrderBody = z.infer<typeof PlaceOrderBody>;
 
 /** CL-06: the field is `isPaid`. The old `isPayed` is still accepted for one release. */
@@ -57,6 +79,8 @@ export const Order = z.object({
     statusHistory: z.array(StatusChange).optional(),
     cancelReason: z.string().optional(),
     orderedItems: z.array(OrderLine),
+    /** VM-28: the customer's note for the whole order */
+    note: z.string().optional(),
     resId: z.string().optional(),
     /** VM-23: the bill it was placed on (orders from before VM-23 have none) */
     billId: z.string().optional(),
@@ -108,6 +132,8 @@ export const TableOrderView = z.object({
     number: z.string(),
     status: OrderStatus,
     cancelReason: z.string().optional(),
+    /** VM-28 */
+    note: z.string().optional(),
     table: z.string(),
     placedAt: IsoDate,
     lines: z.array(
@@ -116,6 +142,7 @@ export const TableOrderView = z.object({
             priceCents: Cents,
             quantity: z.number(),
             totalCents: Cents,
+            note: z.string().optional(),
             /** @deprecated CL-07: in dollars, for pages opened before the deploy; gone in the next release. */
             price: z.number().optional(),
             /** @deprecated CL-07: as above. */

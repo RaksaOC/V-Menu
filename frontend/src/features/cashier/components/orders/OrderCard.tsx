@@ -54,9 +54,9 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                 {subOrders.length > 0 ? (
                     subOrders.map((subOrder, index) => {
                         const cancelled = subOrder.status === "cancelled";
-                        const lines = subOrder.orderedItems.map((item) => (
+                        const lines = subOrder.orderedItems.map((item, line) => (
                             <div
-                                key={item.item._id}
+                                key={line} // VM-28: the same dish can be on two lines, with different notes
                                 className="flex items-center justify-between gap-2 border-b last:border-none border-zinc-200 dark:border-zinc-600 py-2"
                             >
                                 <div className="flex items-center gap-3">
@@ -66,6 +66,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
                                             {money(item.item.priceCents)} × {item.quantity}
                                         </p>
+                                        {item.note && <p className="text-sm italic text-zinc-600 dark:text-zinc-300">“{item.note}”</p>}
                                     </div>
                                 </div>
                                 <p className="font-bold text-zinc-700 dark:text-white">{money(item.item.priceCents * item.quantity)}</p>

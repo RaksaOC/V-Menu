@@ -3,7 +3,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useMoney } from "@/components/money/MoneyProvider";
 import { toast } from "@/lib/toast";
 import type { MenuItem } from "@vmenu/contracts";
-import type { CartItem } from "@/features/customer/cart";
+import { LINE_NOTE_MAX, type CartItem } from "@/features/customer/cart";
 
 type CartItemProps = {
     cartItem: CartItem;
@@ -11,9 +11,11 @@ type CartItemProps = {
     increaseQuantity: (index: number) => void;
     decreaseQuantity: (index: number) => void;
     removeItem: (index: number) => void;
+    /** VM-28: the customer's note on this line */
+    setNote: (index: number, note: string) => void;
 };
 
-const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, removeItem }: CartItemProps) => {
+const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, removeItem, setNote }: CartItemProps) => {
     const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [isRemoving, setIsRemoving] = useState(false);
     const menuItem: Pick<MenuItem, "name" | "image" | "priceCents"> = cartItem.item;
@@ -76,6 +78,16 @@ const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, rem
                         </button>
                     </div>
                 </div>
+                {/* VM-28: "no chilli": the kitchen sees it under the dish */}
+                <input
+                    type="text"
+                    aria-label={`Note for ${menuItem.name}`}
+                    maxLength={LINE_NOTE_MAX}
+                    value={cartItem.note ?? ""}
+                    onChange={(e) => setNote(index, e.target.value)}
+                    placeholder="Add a note, e.g. no chilli"
+                    className="mt-3 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                />
             </div>
         </div>
     );
