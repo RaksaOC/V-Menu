@@ -1,11 +1,10 @@
 import OrderCard from "./OrderCard";
-import axios from "axios";
 import {useEffect, useState} from "react";
 import SkeletonOrderCard from "@/components/ui/skeletons/SkeletonOrderCard";
 import Link from "next/link";
 import {TableOrderOutput} from "@/lib/types/TableOrder";
 import {OrderOutput} from "@/lib/types/Order";
-import api from "@/lib/api";
+import {getBills, setBillPaid} from "@/features/cashier/api";
 import {useParams, useRouter} from "next/navigation";
 import {Clock, ShoppingCart} from "lucide-react";
 
@@ -23,8 +22,7 @@ export default function Orders() {
     useEffect(() => {
         async function fetchOrders() {
             try {
-                const response = await api.get(`/api/orders/${params.res}/bills`);
-                const filtered = response.data.filter(
+                const filtered = (await getBills(String(params.res))).filter(
                     (order: TableOrderOutput) => !order.isPayed && order.orders.length > 0
                 );
                 setOrders(filtered);
@@ -41,8 +39,7 @@ export default function Orders() {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const response = await api.get(`/api/orders/${params.res}/bills`);
-                setHistory(response.data.filter((d: TableOrderOutput) => d.isPayed));
+                setHistory((await getBills(String(params.res))).filter((d: TableOrderOutput) => d.isPayed));
             } catch (err) {
                 console.error("Failed to fetch order history:", err);
             } finally {
@@ -58,10 +55,7 @@ export default function Orders() {
         if (!orderToMark) {
             return;
         }
-        const response = await api.patch(`/api/orders/${params.res}/bills/${orderId}`, {isPayed: !orderToMark.isPayed});
-        if (response.status !== 200) {
-            return;
-        }
+        await setBillPaid(String(params.res), orderId, !orderToMark.isPayed);
 
         location.reload();
     };

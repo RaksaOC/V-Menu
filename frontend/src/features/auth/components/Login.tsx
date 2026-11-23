@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { toast } from "react-toastify";
+import {toast} from "@/lib/toast";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import api from "@/lib/api";
+import {getMemberships} from "@/features/auth/api";
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight } from "lucide-react";
 
 export interface LoginDetails {
@@ -53,12 +53,12 @@ export function Login({ onSuccess }: Props) {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
             const idToken = await userCredential.user.getIdToken();
-            const response = await api.post("/api/auth/memberships", { idToken });
+            const memberships = await getMemberships(idToken);
             const logInDetail = {
                 email: form.email.toLowerCase(),
                 idToken,
             };
-            onSuccess(logInDetail, response.data);
+            onSuccess(logInDetail, memberships);
         } catch (err: any) {
             console.error("Login error:", err?.message);
             toast.error("Login failed");

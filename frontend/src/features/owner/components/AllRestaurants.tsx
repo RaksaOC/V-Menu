@@ -11,13 +11,7 @@ import {
     Plus,
     Settings
 } from "lucide-react";
-import api from "@/lib/api";
-import {Overview as OverviewData} from "@/lib/types/Overview";
-
-interface AllRestaurants extends OverviewData {
-    resId: string;
-    resName: string;
-}
+import {getRestaurantSummaries, type RestaurantSummary} from "@/features/owner/api";
 
 interface Props {
     onManage: (id: string) => void;
@@ -25,13 +19,12 @@ interface Props {
 
 export default function AllRestaurants({onManage}: Props) {
     const [isLoading, setIsLoading] = useState(true);
-    const [overviewData, setOverviewData] = useState<AllRestaurants[]>([]);
+    const [overviewData, setOverviewData] = useState<RestaurantSummary[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get("/api/orders/owner/restaurants");
-                setOverviewData(response.data);
+                setOverviewData(await getRestaurantSummaries());
             } catch (error) {
                 console.error("Error fetching allRestaurants:", error);
             } finally {
@@ -41,7 +34,7 @@ export default function AllRestaurants({onManage}: Props) {
         fetchData();
     }, []);
 
-    const createCardsForRestaurant = (restaurantData: AllRestaurants) => {
+    const createCardsForRestaurant = (restaurantData: RestaurantSummary) => {
         return [
             {
                 label: "Active Tables",

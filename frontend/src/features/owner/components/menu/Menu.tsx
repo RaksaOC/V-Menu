@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState} from "react";
 import MenuCard from "./MenuCard";
 import SkeletonMenuCard from "@/components/ui/skeletons/SkeletonMenuCard";
 import {ItemInput, ItemOutput} from "@/lib/types/Item";
-import api from "@/lib/api";
+import {createMenuItem, getMenuItems} from "@/features/owner/api";
 import {ResContext} from "@/features/owner/ResContext";
 import {Plus, TrendingUp, UtensilsCrossed} from "lucide-react";
 import AddItemPopup from "@/features/owner/components/menu/AddItemPopup";
@@ -17,8 +17,7 @@ const Menu = () => {
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await api.get(`/api/menu/${resSlug}/items`);
-                setMenuItems(res.data);
+                setMenuItems(await getMenuItems(resSlug));
             } catch (err) {
                 console.error("Error fetching menu:", err);
             } finally {
@@ -31,7 +30,7 @@ const Menu = () => {
 
     const handleOnSave = async (newItem: ItemInput) => {
         try {
-            const response = await api.post(`/api/menu/${resSlug}/items`, newItem);
+            await createMenuItem(resSlug, newItem);
             setRefresh(prev => !prev);
             setShowAddItems(false);
         } catch (err) {

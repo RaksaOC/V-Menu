@@ -5,8 +5,9 @@ import {useParams, useRouter} from "next/navigation";
 import {signInWithEmailAndPassword} from "firebase/auth";
 import {auth} from "@/lib/firebase";
 import {Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight} from "lucide-react";
-import api from "@/lib/api";
-import {toast, ToastContainer} from "react-toastify";
+import {login} from "@/features/auth/api";
+import {ToastContainer} from "react-toastify";
+import {toast} from "@/lib/toast";
 
 const Auth = () => {
     const router = useRouter();
@@ -49,13 +50,13 @@ const Auth = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
 
-            const response = await api.post(`/api/auth/login`, {
+            const appToken = await login({
                 idToken: await userCredential.user.getIdToken(),
                 role: "chef",
-                resSlug: params.res,
+                resSlug: String(params.res),
             });
 
-            localStorage.setItem("token", response.data.appToken);
+            localStorage.setItem("token", appToken);
 
             router.push(`/${params.res}/kitchen`);
         } catch (err: any) {

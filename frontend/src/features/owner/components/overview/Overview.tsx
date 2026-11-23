@@ -1,12 +1,11 @@
 import React from "react";
 import {useEffect, useState, useContext} from "react";
-import axios from "axios";
 import SkeletonOverviewCard from "@/components/ui/skeletons/SkeletonOverviewCard";
 import {Users, Clock, Table, UtensilsCrossed, CheckCircle, CreditCard, TrendingUp, AlertTriangle} from "lucide-react";
 import {ResContext} from "@/features/owner/ResContext";
 
 import {Overview as OverviewData} from "@/lib/types/Overview";
-import api from "@/lib/api";
+import {getOverview} from "@/features/owner/api";
 
 export default function Overview() {
     const [isLoading, setIsLoading] = useState(true);
@@ -19,8 +18,7 @@ export default function Overview() {
                 if (!resSlug) {
                     return;
                 }
-                const response = await api.get(`/api/orders/${resSlug}/overview`);
-                setOverviewData(await response.data || {});
+                setOverviewData(await getOverview(resSlug));
             } catch (error) {
                 console.error("Error fetching allRestaurants:", error);
             } finally {
