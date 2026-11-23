@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ToastHost } from "@/components/ui";
 import { Skeleton } from "@/components/ui";
 import { apiErrorCode } from "@/lib/api";
+import { useRestaurantName } from "@/lib/public-restaurant";
 import TableProblem, { type TableProblemKind } from "@/features/customer/components/TableProblem";
 import { checkTable, getMenu } from "@/features/customer/api";
 import { reconcileCart } from "@/features/customer/cart";
@@ -24,6 +25,13 @@ export default function CustomerPage() {
     const params = useParams();
     const table = String(params.table ?? "");
     const resSlug = String(params.res ?? "");
+    // VM-21: the real name. While it loads the heading keeps its space; the slug is never shown.
+    const restaurantName = useRestaurantName(resSlug);
+    const heading = restaurantName ?? "Menu";
+
+    useEffect(() => {
+        if (restaurantName !== undefined) document.title = `${heading} · Table ${table}`;
+    }, [restaurantName, heading, table]);
 
     // VM-04: check the table, then load the menu. Every failure is explained on this page
     // (closed table, unknown restaurant or table, or a server error with Try again).
@@ -88,7 +96,9 @@ export default function CustomerPage() {
                                 <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
                                     <Utensils size={24} className="text-white" />
                                 </div>
-                                <h1 className="text-3xl font-bold tracking-tight">{params.res}</h1>
+                                <h1 className={`text-3xl font-bold tracking-tight ${restaurantName === undefined ? "invisible" : ""}`}>
+                                    {heading}
+                                </h1>
                             </div>
                             <p className="text-emerald-100 text-lg font-medium">Table {table}</p>
                             <p className="text-emerald-50/80 text-sm mt-1">Browse our delicious menu and order with ease</p>

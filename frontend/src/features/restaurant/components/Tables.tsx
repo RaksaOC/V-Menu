@@ -6,6 +6,7 @@ import { Button, Chip, Skeleton, toast } from "@/components/ui";
 import { printQrCards } from "@/components/qr/print";
 import { tableUrl } from "@/lib/table-url";
 import { apiErrorCode, apiStatus } from "@/lib/api";
+import { useRestaurantName } from "@/lib/public-restaurant";
 import { createTable, deleteTable, getTables, setTableAvailability, updateTable } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 import TableCard from "./TableCard";
@@ -18,6 +19,7 @@ import type { CreateTableBody, Table } from "@vmenu/contracts";
  */
 export default function Tables({ role }: { role: "owner" | "cashier" }) {
     const slug = useRestaurantSlug();
+    const restaurantName = useRestaurantName(slug) ?? undefined; // VM-21: on the QR popup and printed cards
     const [tables, setTables] = useState<Table[]>([]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState<Table | "new" | null>(null);
@@ -101,7 +103,9 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                         <Button
                             variant="outline"
                             icon={<Printer size={16} aria-hidden />}
-                            onClick={() => printQrCards(tables.map((t) => ({ tableName: t.name, url: tableUrl(slug, t.name) })))}
+                            onClick={() =>
+                                printQrCards(tables.map((t) => ({ restaurantName, tableName: t.name, url: tableUrl(slug, t.name) })))
+                            }
                         >
                             Print all QR codes
                         </Button>
@@ -118,9 +122,9 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {tables.map((table) =>
                         role === "owner" ? (
-                            <TableCard key={table._id} role="owner" table={table} onEdit={setEditing} />
+                            <TableCard key={table._id} role="owner" table={table} restaurantName={restaurantName} onEdit={setEditing} />
                         ) : (
-                            <TableCard key={table._id} role="cashier" table={table} onToggle={toggle} />
+                            <TableCard key={table._id} role="cashier" table={table} restaurantName={restaurantName} onToggle={toggle} />
                         ),
                     )}
                 </div>

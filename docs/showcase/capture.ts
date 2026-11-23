@@ -847,6 +847,32 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-21: the customer's heading shows the restaurant's name instead of its slug, and the
+// cashier's QR popup says which restaurant the code belongs to.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-21 ${vp.width} ${theme}`, async () => {
+        {
+            const { context, page } = await newPage(browser, vp, theme);
+            await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
+            await settle(page);
+            await shot({ page, theme, width: vp.width }, "VM-21-customer-heading", false);
+            await context.close();
+        }
+        const { context, page } = await newPage(browser, vp, theme, "cashier");
+        await context.addInitScript(() => localStorage.setItem("dashboardSection", "tables"));
+        await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(page);
+        await page.getByRole("button", { name: "View QR Code" }).first().click({ timeout: 5000 });
+        await page.getByRole("img", { name: /^QR code for table / }).waitFor({ timeout: 5000 });
+        await shot({ page, theme, width: vp.width }, "VM-21-qr-popup", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

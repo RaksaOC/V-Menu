@@ -1,5 +1,5 @@
-import { notFound, parse, type AppUser } from "@vmenu/common";
-import { OwnerIdQuery, type CreateRestaurantBody } from "@vmenu/contracts";
+import { HttpError, notFound, parse, type AppUser } from "@vmenu/common";
+import { OwnerIdQuery, PublicRestaurant, type CreateRestaurantBody } from "@vmenu/contracts";
 import type { RestaurantRecord, RestaurantsRepo } from "../repositories/restaurants.repo.js";
 import type { MembershipsRepo } from "../repositories/memberships.repo.js";
 
@@ -53,6 +53,13 @@ export function restaurantsService({ restaurants, memberships }: { restaurants: 
             const r = await restaurants.bySlug(slug);
             if (!r) throw notFound("Restaurant not found");
             return r;
+        },
+
+        /** VM-21: for anyone, signed in or not. The schema keeps it to the public fields. */
+        async publicInfo(slug: string): Promise<PublicRestaurant> {
+            const r = await restaurants.bySlug(slug);
+            if (!r) throw new HttpError(404, "We couldn't find this restaurant.", "RESTAURANT_NOT_FOUND");
+            return PublicRestaurant.parse(r);
         },
 
         /** For other services: a restaurant by slug. */

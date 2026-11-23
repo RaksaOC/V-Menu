@@ -36,6 +36,10 @@ export const Restaurant = z.object({
 });
 export type Restaurant = z.infer<typeof Restaurant>;
 
+/** VM-21: what anyone may know about a restaurant. No ids, no owner, no email. */
+export const PublicRestaurant = z.object({ name: z.string(), slug: z.string() });
+export type PublicRestaurant = z.infer<typeof PublicRestaurant>;
+
 /** One role of one person at one restaurant (called a tenant in the database). */
 export const StaffMember = z.object({
     _id: z.string(),

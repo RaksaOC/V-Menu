@@ -9,7 +9,7 @@ import { printQrCards, qrDataUrl } from "@/components/qr/print";
 interface Props {
     slug: string;
     tableName: string;
-    /** Shown above the code; optional until there is a public restaurant-name lookup (VM-21). */
+    /** Shown above the code and on the printed card (VM-21). */
     restaurantName?: string;
     onClose: () => void;
 }
