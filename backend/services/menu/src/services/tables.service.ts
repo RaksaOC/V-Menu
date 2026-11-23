@@ -1,4 +1,6 @@
-import { assertId, HttpError, notFound } from "@vmenu/common";
+import { assertId, HttpError, invalidTableLink, notFound, tableNameLinksAllowed } from "@vmenu/common";
+import { QrToken, type TableLink } from "@vmenu/contracts";
+import { newQrToken } from "../qr-token.js";
 import { TableNameTaken, type TableRecord, type TablesRepo } from "../repositories/tables.repo.js";
 import type { CreateTableBody, UpdateTableBody } from "@vmenu/contracts";
 
@@ -36,11 +38,28 @@ export function tablesService({ tables }: { tables: TablesRepo }) {
     return {
         /** For a customer who scanned a table's QR code: a code the page can explain (VM-04). */
         async check(resId: string, name: string) {
+            if (!tableNameLinksAllowed()) throw invalidTableLink(); // SEC-04: before any lookup
             const table = await tables.findByName(resId, name);
             if (!table) throw new HttpError(404, `We couldn't find table ${name}.`, "TABLE_NOT_FOUND");
             if (!table.isEnabled)
                 throw new HttpError(404, `Table ${name} isn't open yet. Please ask a staff member to open it.`, "TABLE_CLOSED");
             return { message: "Table is available" };
+        },
+
+        /** SEC-04: for a customer with a table's link: its name and whether it's open, nothing else. */
+        async openByToken(resId: string, token: string): Promise<TableLink> {
+            if (!QrToken.safeParse(token).success) throw invalidTableLink();
+            const table = await tables.findByToken(resId, token);
+            if (!table) throw invalidTableLink();
+            return { table: table.name, isOpen: table.isEnabled };
+        },
+
+        /** SEC-04: the owner replaces a table's link; the old one stops working at once. */
+        async resetQrToken(resId: string, id: string) {
+            await existing(resId, id);
+            const table = await tables.update(resId, id, { qrToken: newQrToken() });
+            if (!table) throw notFound("Table not found");
+            return table;
         },
 
         list: (resId: string) => tables.list(resId),

@@ -123,6 +123,7 @@ export function fakeClients(over: Partial<BoundClients> = {}): BoundClients {
             if (body.table === "closed") throw Object.assign(new Error("Table is not available"), { status: 409 });
             return { items: body.items.map((l) => ({ item: DISH, quantity: l.quantity })) };
         },
+        tableByToken: async () => ({ name: "1" }), // SEC-04
         ...over,
     };
 }

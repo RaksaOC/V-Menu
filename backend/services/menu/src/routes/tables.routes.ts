@@ -19,6 +19,9 @@ export function tablesRoutes({ services, restaurant }: RouteContext) {
     r.delete("/tables/:id", requireRole("owner"), place, async (req, res) => {
         res.json(await services.tables.remove(res.locals.restaurant._id, String(req.params.id)));
     });
+    r.post("/tables/:id/qr-token", requireRole("owner"), place, async (req, res) => {
+        res.json(await services.tables.resetQrToken(res.locals.restaurant._id, String(req.params.id))); // SEC-04
+    });
     r.patch("/tables/:id/availability", requireRole("owner", "cashier"), place, validate(AvailabilityBody), async (req, res) => {
         res.json(await services.tables.setEnabled(res.locals.restaurant._id, String(req.params.id), req.body.isEnabled));
     });

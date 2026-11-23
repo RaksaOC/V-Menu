@@ -85,11 +85,17 @@ export const Table = z.object({
     _id: z.string(),
     name: z.string(),
     isEnabled: z.boolean(),
+    /** SEC-04: the secret part of this table's QR code. Staff only. */
+    qrToken: z.string(),
     resId: z.string().optional(),
     createdAt: IsoDate.optional(),
     updatedAt: IsoDate.optional(),
 });
 export type Table = z.infer<typeof Table>;
+
+/** SEC-04: all a customer learns from a table's link token. */
+export const TableLink = z.object({ table: z.string(), isOpen: z.boolean() });
+export type TableLink = z.infer<typeof TableLink>;
 
 /** The answer to a photo upload: the URL to save on the item. */
 export const UploadedPhoto = z.object({ url: z.string() });

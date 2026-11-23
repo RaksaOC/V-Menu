@@ -4,6 +4,7 @@ import { Readable } from "node:stream";
 import type { CategoriesRepo, CategoryRecord } from "../../src/repositories/categories.repo.js";
 import type { ImagesRepo } from "../../src/repositories/images.repo.js";
 import type { ItemRecord, ItemsRepo } from "../../src/repositories/items.repo.js";
+import { newQrToken } from "../../src/qr-token.js";
 import { TableNameTaken, type TableRecord, type TablesRepo } from "../../src/repositories/tables.repo.js";
 
 let seq = 0;
@@ -112,11 +113,14 @@ export function fakeTables(): TablesRepo & { all: TableRecord[] } {
         async findByName(resId, name) {
             return all.find((t) => t.resId === resId && t.name === name) ?? null;
         },
+        async findByToken(resId, qrToken) {
+            return all.find((t) => t.resId === resId && t.qrToken === qrToken) ?? null;
+        },
         // Like the unique { resId, name } index (VM-16): a used name is refused at write time.
         async create(resId, fields) {
             await Promise.resolve(); // a write takes a moment, so parallel creates can race as they do on MongoDB
             if (all.some((t) => t.resId === resId && t.name === fields.name)) throw new TableNameTaken(fields.name);
-            const table = { _id: newId(), ...fields, resId };
+            const table = { _id: newId(), qrToken: newQrToken(), ...fields, resId };
             all.push(table);
             return table;
         },

@@ -26,6 +26,7 @@ const clients: Clients = {
         // The browser said the price was 0; the menu answers with the real one.
         return OrderCheckResponse.parse({ items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) }); // CL-05
     },
+    tableByToken: async () => ({ name: "1" }), // SEC-04
 };
 const app = createApp({
     clients,
