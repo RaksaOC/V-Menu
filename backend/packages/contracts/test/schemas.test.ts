@@ -181,20 +181,41 @@ describe("orders", () => {
         };
         ok(C.TableOrderView, view);
         ok(C.TableBill, { table: "1", orders: [view], total: 5 });
-        const six = { numOfTables: 1, numOfActiveTables: 1, numOfItems: 1, numOfOrders: 1, numOfUnpaidOrders: 0, numOfPayments: 1 };
+        // VM-09: the counts are named xCount, and the revenue comes with the range it covers
+        const six = {
+            tableCount: 1,
+            activeTableCount: 1,
+            itemCount: 1,
+            orderCount: 1,
+            unpaidBillCount: 0,
+            paymentCount: 1,
+            revenue: 5,
+            from: null,
+            to: null,
+        };
         ok(C.Overview, six);
+        fieldsOf(C.Overview, { ...six, numOfTables: 1, tableCount: undefined });
         ok(C.OwnerRestaurantOverview, { ...six, resId: ID, resName: "A" });
         fieldsOf(C.OwnerRestaurantOverview, six);
         ok(C.OwnerOverview, {
-            numOfUnpaidOrders: 0,
-            numOfItems: 1,
-            numOfOrders: 1,
-            numOfPayments: 1,
-            numOfMoneyEarned: 5,
-            totalItemsSold: 1,
+            unpaidBillCount: 0,
+            itemCount: 1,
+            orderCount: 1,
+            paymentCount: 1,
+            revenue: 5,
+            itemsSoldCount: 1,
             avgItemsPerOrder: 1,
-            topSellingItems: [{ name: "Amok", quantity: 1 }],
+            topSellingItems: [{ _id: ID, name: "Amok", quantity: 1 }],
+            from: "2026-11-01T00:00:00.000Z",
+            to: null,
         });
+    });
+
+    it("a date range for the dashboards: optional dates, from before to (VM-09)", () => {
+        ok(C.DateRangeQuery, {});
+        expect(C.DateRangeQuery.parse({ from: "2026-11-01T00:00:00.000Z" })).toEqual({ from: new Date("2026-11-01T00:00:00.000Z") });
+        expect(fieldsOf(C.DateRangeQuery, { from: "yesterday" })).toEqual(["from"]);
+        expect(fieldsOf(C.DateRangeQuery, { from: "2026-11-10", to: "2026-11-01" })).toEqual(["to"]);
     });
 });
 

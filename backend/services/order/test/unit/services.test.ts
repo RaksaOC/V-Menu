@@ -1,4 +1,4 @@
-import { PlaceOrderBody } from "@vmenu/contracts";
+import { PlaceOrderBody, type OrderStatus } from "@vmenu/contracts";
 import { describe, expect, it } from "vitest";
 import { HttpError } from "@vmenu/common";
 import { ordersService } from "../../src/services/orders.service.js";
@@ -254,52 +254,43 @@ describe("dashboard numbers", () => {
         };
         await done(R1._id, "1", 2);
         await done(R2._id, "5", 3);
-        await s.placing.place(R1._id, { table: "2", orderedItems: [line(4)] }); // not done yet: not earned
+        await s.placing.place(R1._id, { table: "2", orderedItems: [line(4)] }); // on an open bill: not earned
         await s.billing.setPaid(R1._id, s.bills.all[0]._id, true);
         return s;
     }
 
-    it("one restaurant: the six numbers the cashier and owner see", async () => {
+    it("one restaurant: its counts, and the revenue from its paid bills (VM-09)", async () => {
         const { stats } = await busyDay();
         expect(await stats.restaurantOverview(R1._id)).toEqual({
-            numOfTables: 4,
-            numOfActiveTables: 2,
-            numOfItems: 10,
-            numOfOrders: 2,
-            numOfUnpaidOrders: 1,
-            numOfPayments: 1,
+            tableCount: 4,
+            activeTableCount: 2,
+            itemCount: 10,
+            orderCount: 2,
+            unpaidBillCount: 1,
+            paymentCount: 1,
+            revenue: 5, // table 1's paid bill: 2 x 2.50
+            from: null,
+            to: null,
         });
     });
 
     it("the owner's list of restaurants, each with its numbers", async () => {
         const { stats } = await busyDay();
         const list = await stats.ownerRestaurants("owner1");
-        expect(list.map((r) => [r.resName, r.numOfOrders])).toEqual([
-            ["Mee Keav", 2],
-            ["Bai Sach", 1],
+        expect(list.map((r) => [r.resName, r.orderCount, r.revenue])).toEqual([
+            ["Mee Keav", 2, 5],
+            ["Bai Sach", 1, 0],
         ]);
         expect(await stats.ownerRestaurants("someone-else")).toEqual([]);
-    });
-
-    it("the owner's totals: money and items from finished orders only, top sellers, average", async () => {
-        const { stats } = await busyDay();
-        const o = await stats.ownerOverview("owner1");
-        expect(o.numOfOrders).toBe(3);
-        expect(o.numOfMoneyEarned).toBe(12.5); // (2 + 3) x 2.50; the unfinished order isn't counted
-        expect(o.totalItemsSold).toBe(5);
-        expect(o.avgItemsPerOrder).toBe(1.67);
-        expect(o.numOfItems).toBe(20);
-        expect(o.numOfPayments).toBe(1);
-        expect(o.numOfUnpaidOrders).toBe(2); // Mee Keav table 2 and Bai Sach table 5
-        expect(o.topSellingItems).toEqual([{ name: DISH.name, quantity: 5 }]);
     });
 
     it("the owner's totals with no orders, and lines without a price", async () => {
         const empty = setup();
         expect(await empty.stats.ownerOverview("owner1")).toMatchObject({
-            numOfOrders: 0,
+            orderCount: 0,
             avgItemsPerOrder: 0,
-            numOfMoneyEarned: 0,
+            revenue: 0,
+            itemsSoldCount: 0,
             topSellingItems: [],
         });
 
@@ -308,9 +299,9 @@ describe("dashboard numbers", () => {
                 items: body.items.map((l) => ({ item: { ...DISH, price: 0 }, quantity: l.quantity })),
             }),
         });
-        const o = await free.placing.place(R1._id, { table: "1", orderedItems: [line(1)] });
-        await serve(free.kitchen, R1._id, o._id);
-        expect((await free.stats.ownerOverview("owner1")).totalItemsSold).toBe(0);
+        await free.placing.place(R1._id, { table: "1", orderedItems: [line(1)] });
+        await free.billing.setPaid(R1._id, free.bills.all[0]._id, true);
+        expect(await free.stats.ownerOverview("owner1")).toMatchObject({ revenue: 0, itemsSoldCount: 1, avgItemsPerOrder: 1 });
     });
 
     it("ranks the top five sellers", async () => {
@@ -320,12 +311,109 @@ describe("dashboard numbers", () => {
                 items: body.items.map((l) => ({ item: dishes.find((d) => d._id === l._id)!, quantity: l.quantity })),
             }),
         });
-        const o = await s.placing.place(R1._id, {
+        await s.placing.place(R1._id, {
             table: "1",
             orderedItems: dishes.map((d, i) => ({ item: { _id: d._id }, quantity: i + 1 })),
         });
-        await serve(s.kitchen, R1._id, o._id);
+        await s.billing.setPaid(R1._id, s.bills.all[0]._id, true);
         const top = (await s.stats.ownerOverview("owner1")).topSellingItems;
         expect(top.map((t) => t.name)).toEqual(["F", "E", "D", "C", "B"]);
+    });
+});
+
+// VM-09: fixed fixtures. Two paid bills, one unpaid, a dish renamed between orders, and two
+// different dishes that once shared a name. Revenue comes from paid bills only.
+describe("owner revenue and top sellers (VM-09)", () => {
+    const at = (day: number) => new Date(Date.UTC(2026, 10, day, 12));
+    const KUY = "665f00000000000000000a01"; // renamed from "Kuy Teav" to "Kuy Teav (large)"
+    const COFFEE = "665f00000000000000000a02";
+    const OTHER_KUY = "665f00000000000000000a03"; // a different dish, also called "Kuy Teav"
+    const dish = (_id: string, name: string, price: number) => ({ _id, name, price, image: "x.jpg", isEnabled: true });
+
+    function fixtures() {
+        const s = setup();
+        const order = (
+            _id: string,
+            resId: string,
+            table: string,
+            status: OrderStatus,
+            day: number,
+            lines: [ReturnType<typeof dish>, number][],
+        ) => {
+            s.orders.all.push({
+                _id,
+                resId,
+                table,
+                status,
+                statusHistory: [],
+                orderedItems: lines.map(([item, quantity]) => ({ item, quantity })),
+                orderedAt: at(day),
+                createdAt: at(day),
+            });
+            return _id;
+        };
+        const bill = (_id: string, resId: string, table: string, isPaid: boolean, day: number, orders: string[]) =>
+            s.bills.all.push({ _id, resId, table, isPaid, orders, createdAt: at(day), updatedAt: at(day) });
+
+        // Mee Keav, table 1, paid on 1 Nov: 2 x 2.50 + 1 x 1.25, and a cancelled order of 4 coffees
+        bill("b1", R1._id, "1", true, 1, [
+            order("o1", R1._id, "1", "served", 1, [
+                [dish(KUY, "Kuy Teav", 2.5), 2],
+                [dish(COFFEE, "Iced Coffee", 1.25), 1],
+            ]),
+            order("o2", R1._id, "1", "cancelled", 1, [[dish(COFFEE, "Iced Coffee", 1.25), 4]]),
+        ]);
+        // Bai Sach, table 5, paid on 10 Nov. The kitchen never marked it served; it was paid, so it counts.
+        bill("b2", R2._id, "5", true, 10, [
+            order("o3", R2._id, "5", "ready", 10, [
+                [dish(KUY, "Kuy Teav (large)", 3), 1],
+                [dish(OTHER_KUY, "Kuy Teav", 4), 4],
+            ]),
+        ]);
+        // Mee Keav, table 2, still open: served, but not paid, so not revenue
+        bill("b3", R1._id, "2", false, 12, [order("o4", R1._id, "2", "served", 12, [[dish(KUY, "Kuy Teav (large)", 3), 10]])]);
+        return s;
+    }
+
+    it("revenue is the lines on paid bills; cancelled orders and open bills count nowhere", async () => {
+        const o = await fixtures().stats.ownerOverview("owner1");
+        expect(o.revenue).toBe(25.25); // 5 + 1.25 + 3 + 16
+        expect(o.itemsSoldCount).toBe(8); // 2 + 1 + 1 + 4
+        expect(o.avgItemsPerOrder).toBe(4); // 8 items on the 2 paid, not cancelled orders
+        expect(o.orderCount).toBe(3); // o1, o3, o4; the cancelled o2 isn't an order that counts
+        expect(o.paymentCount).toBe(2);
+        expect(o.unpaidBillCount).toBe(1);
+        expect(o.itemCount).toBe(20);
+    });
+
+    it("top sellers are grouped by dish id, with the dish's most recent name", async () => {
+        const o = await fixtures().stats.ownerOverview("owner1");
+        expect(o.topSellingItems).toEqual([
+            { _id: OTHER_KUY, name: "Kuy Teav", quantity: 4 },
+            { _id: KUY, name: "Kuy Teav (large)", quantity: 3 },
+            { _id: COFFEE, name: "Iced Coffee", quantity: 1 },
+        ]);
+    });
+
+    it("each restaurant's overview has its own revenue", async () => {
+        const { stats } = fixtures();
+        expect((await stats.restaurantOverview(R1._id)).revenue).toBe(6.25);
+        expect((await stats.restaurantOverview(R2._id)).revenue).toBe(19);
+    });
+
+    it("a date range keeps the bills paid in it, and the orders placed in it", async () => {
+        const { stats } = fixtures();
+        const range = { from: "2026-11-05T00:00:00.000Z", to: "2026-11-30T00:00:00.000Z" };
+        const o = await stats.ownerOverview("owner1", range);
+        expect(o).toMatchObject({ revenue: 19, itemsSoldCount: 5, orderCount: 2, paymentCount: 1, ...range });
+        expect(await stats.restaurantOverview(R1._id, range)).toMatchObject({ revenue: 0, orderCount: 1, paymentCount: 0, ...range });
+        // open bills are what's open now, whatever the range
+        expect(o.unpaidBillCount).toBe(1);
+    });
+
+    it("refuses a date that isn't one, and a range that ends before it starts", async () => {
+        const { stats } = fixtures();
+        expect(await status(stats.ownerOverview("owner1", { from: "yesterday" }))).toBe(400);
+        expect(await status(stats.ownerOverview("owner1", { from: "2026-11-10", to: "2026-11-01" }))).toBe(400);
     });
 });

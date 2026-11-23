@@ -99,14 +99,52 @@ describe("kitchen and cashier", () => {
         const paid = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
         expect(paid.body.isPaid).toBe(true);
         const overview = await request(app).get(`/api/orders/${R.slug}/overview`).set(owner);
-        expect(overview.body).toMatchObject({ numOfOrders: 1, numOfPayments: 1, numOfUnpaidOrders: 0, numOfTables: 4 });
+        expect(overview.body).toMatchObject({ orderCount: 1, paymentCount: 1, unpaidBillCount: 0, tableCount: 4, revenue: 5 });
     });
+});
 
-    it("totals money and top sellers for the owner", async () => {
+describe("the owner's numbers come from paid bills (VM-09)", () => {
+    const payTable = async () => {
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
+    };
+
+    it("an order on an open bill isn't revenue, even once served; paying the bill makes it revenue", async () => {
         const { body: order } = await place("1", 3);
         await serve(order._id);
-        const res = await request(app).get("/api/orders/owner/overview").set(owner);
-        expect(res.body).toMatchObject({ numOfMoneyEarned: 7.5, totalItemsSold: 3, topSellingItems: [{ name: "Kuy Teav", quantity: 3 }] });
+        const before = await request(app).get("/api/orders/owner/overview").set(owner);
+        expect(before.body).toMatchObject({ revenue: 0, itemsSoldCount: 0, unpaidBillCount: 1, topSellingItems: [] });
+        await payTable();
+        const after = await request(app).get("/api/orders/owner/overview").set(owner);
+        expect(after.body).toMatchObject({
+            revenue: 7.5,
+            itemsSoldCount: 3,
+            avgItemsPerOrder: 3,
+            paymentCount: 1,
+            unpaidBillCount: 0,
+            topSellingItems: [{ _id: ITEM._id, name: "Kuy Teav", quantity: 3 }],
+            from: null,
+            to: null,
+        });
+        expect(after.body).not.toHaveProperty("numOfMoneyEarned");
+    });
+
+    it("?from=&to= keeps the bills paid in that range", async () => {
+        await place("1", 2);
+        await payTable();
+        const inRange = { from: new Date(Date.now() - 60_000).toISOString(), to: new Date(Date.now() + 60_000).toISOString() };
+        const now = await request(app).get("/api/orders/owner/overview").query(inRange).set(owner);
+        expect(now.body).toMatchObject({ revenue: 5, paymentCount: 1, orderCount: 1, ...inRange });
+        const lastYear = await request(app)
+            .get(`/api/orders/${R.slug}/overview`)
+            .query({ from: "2025-01-01T00:00:00.000Z", to: "2025-02-01T00:00:00.000Z" })
+            .set(owner);
+        expect(lastYear.body).toMatchObject({ revenue: 0, paymentCount: 0, orderCount: 0, tableCount: 4 });
+    });
+
+    it("answers 400 for a date that isn't one", async () => {
+        const res = await request(app).get("/api/orders/owner/overview").query({ from: "soon" }).set(owner);
+        expect(res.status).toBe(400);
     });
 });
 

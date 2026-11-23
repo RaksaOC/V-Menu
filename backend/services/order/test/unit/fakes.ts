@@ -4,6 +4,8 @@ import type { OrderRecord, OrdersRepo } from "../../src/repositories/orders.repo
 import type { BoundClients } from "../../src/clients/index.js";
 
 let seq = 0;
+/** VM-09: is the date inside the range (from inclusive, to exclusive)? */
+const within = (range: { from?: Date; to?: Date }, at: Date) => (!range.from || at >= range.from) && (!range.to || at < range.to);
 export const newId = () => (++seq).toString(16).padStart(24, "0");
 
 export function fakeOrders(): OrdersRepo & { all: OrderRecord[] } {
@@ -27,8 +29,8 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[] } {
             all.push(order);
             return order;
         },
-        async countFor(resIds) {
-            return all.filter(inRes(resIds)).filter((o) => o.status !== "cancelled").length;
+        async countFor(resIds, range = {}) {
+            return all.filter(inRes(resIds)).filter((o) => o.status !== "cancelled" && within(range, o.createdAt)).length;
         },
         async listActive(resId) {
             return all
@@ -76,8 +78,11 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
             }
             bill.orders.push(orderId);
         },
-        async countFor(resIds, isPaid) {
-            return all.filter((b) => resIds.includes(b.resId) && b.isPaid === isPaid).length;
+        async countFor(resIds, isPaid, range = {}) {
+            return all.filter((b) => resIds.includes(b.resId) && b.isPaid === isPaid && (!isPaid || within(range, b.updatedAt!))).length;
+        },
+        async listPaid(resIds, range = {}) {
+            return all.filter((b) => resIds.includes(b.resId) && b.isPaid && within(range, b.updatedAt!)).map(withOrders);
         },
         async listOpen(resId) {
             return all

@@ -19,12 +19,15 @@ export const bill: Bill = {
     orders: [order],
 };
 export const overview: Overview = {
-    numOfActiveTables: 1,
-    numOfUnpaidOrders: 0,
-    numOfTables: 4,
-    numOfItems: 4,
-    numOfOrders: 2,
-    numOfPayments: 1,
+    activeTableCount: 1,
+    unpaidBillCount: 0,
+    tableCount: 4,
+    itemCount: 4,
+    orderCount: 2,
+    paymentCount: 1,
+    revenue: 5,
+    from: null,
+    to: null,
 };
 export const restaurant: Restaurant = { _id: "665f00000000000000000001", name: "Demo Bistro", slug: "demo-bistro", ownerId: "owner1" };
 export const staffMember: StaffMember = {
