@@ -8,8 +8,15 @@ import { createRestaurantForOwner, Restaurant, Tenant } from "./models.js";
 const STAFF_ROLES = ["cashier", "chef"] as const;
 const str = (v: unknown, max = 200) => (typeof v === "string" && v.trim() && v.length <= max ? v.trim() : null);
 
+// VM-03: a sign-in lasts a whole shift (12 hours unless SESSION_HOURS says otherwise, 1 to 24),
+// so a kitchen screen doesn't silently stop after an hour. The cookie lasts exactly as long.
+function sessionHours(): number {
+    const h = Number(process.env.SESSION_HOURS ?? 12);
+    return Number.isFinite(h) && h >= 1 && h <= 24 ? h : 12;
+}
+
 function cookieOptions() {
-    return { httpOnly: true, secure: process.env.COOKIE_SECURE !== "false", sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 1000 };
+    return { httpOnly: true, secure: process.env.COOKIE_SECURE !== "false", sameSite: "lax" as const, path: "/", maxAge: sessionHours() * 3600 * 1000 };
 }
 
 async function restaurantBySlug(slug: string) {
@@ -73,14 +80,14 @@ export function createApp({ verifyIdToken }: { verifyIdToken: VerifyIdToken }) {
         if (role === "owner") {
             const isOwner = await Tenant.exists({ tenantId: who.uid, role: "owner" });
             if (!isOwner) throw unauthorized("This account is not a restaurant owner");
-            token = await signAppToken({ uid: who.uid, email: who.email, role });
+            token = await signAppToken({ uid: who.uid, email: who.email, role }, `${sessionHours()}h`);
         } else {
             const slug = str(req.body.resSlug, 120);
             if (!slug) throw badRequest("Restaurant is required");
             const restaurant = await restaurantBySlug(slug);
             const member = await Tenant.exists({ resId: restaurant._id, role, $or: [{ tenantId: who.uid }, { email: who.email }] });
             if (!member) throw unauthorized("You do not have this role at this restaurant");
-            token = await signAppToken({ uid: who.uid, email: who.email, role, resId: restaurant._id, resSlug: restaurant.slug });
+            token = await signAppToken({ uid: who.uid, email: who.email, role, resId: restaurant._id, resSlug: restaurant.slug }, `${sessionHours()}h`);
         }
         res.cookie("token", token, cookieOptions()).json({ appToken: token });
     });
