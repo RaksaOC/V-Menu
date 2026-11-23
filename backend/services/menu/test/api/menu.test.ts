@@ -131,6 +131,29 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
         expect(Object.keys(res.body.fields).sort()).toEqual(["image", "name", "price"]);
     });
 
+    // VM-17: an edit with a bad value used to answer 200 and change nothing (or, for an empty
+    // price, set it to 0). Now each bad field is a 400 that names it, and the dish is unchanged.
+    it.each([
+        [{ price: -5 }, "price", "Must be 0 or more"],
+        [{ price: "" }, "price", "Required"],
+        [{ price: null }, "price", "Must be a number"],
+        [{ price: "abc" }, "price", "Must be a number"],
+        [{ name: "" }, "name", "Required"],
+        [{ name: "   " }, "name", "Required"],
+        [{ name: "x".repeat(121) }, "name", "At most 120 characters"],
+        [{ image: "" }, "image", "Required"],
+        [{ isEnabled: "yes" }, "isEnabled", "Must be true or false"],
+        [{ categoryId: "nope" }, "categoryId", "Must be a 24-character id"],
+    ])("editing a dish with %j is a 400 naming %s, and changes nothing", async (body, field, message) => {
+        const { body: dish } = await addItem({ name: "Amok", price: 5, image: PHOTO });
+        const res = await request(app).put(`/api/menu/${SLUG}/items/${dish._id}`).set(owner).send(body);
+        expect(res.status).toBe(400);
+        expect(res.body).toMatchObject({ code: "INVALID_INPUT", fields: { [field]: message } });
+        expect(Object.keys(res.body.fields)).toEqual([field]);
+        const [after] = (await request(app).get(`/api/menu/${SLUG}/items`).set(owner)).body;
+        expect(after).toMatchObject({ name: "Amok", price: 5, image: PHOTO, isEnabled: true });
+    });
+
     it("a manual table needs its name", async () => {
         const res = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: " " });
         expect(res.status).toBe(400);

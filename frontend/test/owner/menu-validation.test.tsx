@@ -1,0 +1,67 @@
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { answer } from "../api/helpers";
+
+// VM-17: the Add and Edit item popups check the same rules as the server before sending, and
+// show the server's answer for a field next to that field instead of a toast.
+vi.mock("next/navigation", () => ({ useParams: () => ({}), useRouter: () => ({ push: vi.fn() }) }));
+const { ResContext } = await import("@/lib/restaurant-context");
+const { default: ItemForm } = await import("@/features/restaurant/components/ItemForm");
+const { default: Menu } = await import("@/features/restaurant/components/Menu");
+
+const field = (name: string) => screen.getByLabelText(name);
+const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
+const submit = () => fireEvent.submit(field("Item Name").closest("form")!);
+
+describe("checks in the browser, the same as the server's (VM-17)", () => {
+    it.each([
+        ["Item Name", "Required", "", "5"],
+        ["Item Name", "At most 120 characters", "x".repeat(121), "5"],
+        ["Price ($)", "Required", "Amok", ""],
+        ["Price ($)", "Must be 0 or more", "Amok", "-1"],
+    ])("'%s' says '%s' before anything is sent", async (label, message, name, price) => {
+        const onSave = vi.fn();
+        render(<ItemForm onClose={vi.fn()} onSave={onSave} />);
+        type("Item Name", name);
+        type("Price ($)", price);
+        submit();
+        await waitFor(() => expect(field(label)).toHaveAccessibleDescription(message));
+        expect(onSave).not.toHaveBeenCalled();
+    });
+
+    it("what the server accepts, the form accepts too: a one-letter name and a price of 0", async () => {
+        const onSave = vi.fn();
+        render(<ItemForm onClose={vi.fn()} onSave={onSave} />);
+        type("Item Name", "B");
+        type("Price ($)", "0");
+        submit();
+        await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: "B", price: 0 })));
+    });
+});
+
+describe("the server's answer is shown next to the field (VM-17)", () => {
+    const DISH = { _id: "665f0000000000000000d001", name: "Amok", price: 5, image: "/images/img.png", isEnabled: true, categoryId: null };
+
+    it("a 400 naming the price shows under Price, and the popup stays open", async () => {
+        answer("get", "/api/menu/demo-bistro/items", [DISH]);
+        answer("get", "/api/menu/demo-bistro/categories", []);
+        render(
+            <ResContext.Provider value="demo-bistro">
+                <Menu role="owner" />
+            </ResContext.Provider>,
+        );
+        fireEvent.click(await screen.findByRole("button", { name: "Edit Amok" }));
+        const dialog = screen.getByRole("dialog");
+        const sent = answer(
+            "put",
+            `/api/menu/demo-bistro/items/${DISH._id}`,
+            { code: "INVALID_INPUT", message: "Please check: price", fields: { price: "At most 2 decimal places" } },
+            400,
+        );
+        type("Price ($)", "6");
+        fireEvent.click(within(dialog).getByRole("button", { name: "Save Changes" }));
+        await waitFor(() => expect(sent).toHaveLength(1));
+        await waitFor(() => expect(field("Price ($)")).toHaveAccessibleDescription("At most 2 decimal places"));
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+});

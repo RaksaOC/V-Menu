@@ -42,6 +42,16 @@ describe("menu", () => {
         expect(fieldsOf(C.CreateItemBody, { name: "A", price: 1, image: "/x", isEnabled: "yes" })).toEqual(["isEnabled"]);
     });
 
+    it("a price is a number from 0, or numeric text; anything else is refused, never turned into 0 (VM-17)", () => {
+        const price = (value: unknown) => C.UpdateItemBody.safeParse({ price: value });
+        expect(price(0).data).toEqual({ price: 0 });
+        expect(price(" 2.5 ").data).toEqual({ price: 2.5 });
+        for (const bad of ["", "  ", null, true, [], "abc", "1e999", -5, "-1"]) expect(price(bad).success, JSON.stringify(bad)).toBe(false);
+        expect(price(-5).error?.issues[0].message).toBe("Must be 0 or more");
+        expect(price("").error?.issues[0].message).toBe("Required");
+        expect(price("abc").error?.issues[0].message).toBe("Must be a number");
+    });
+
     it("UpdateItemBody: any subset, each still checked", () => {
         ok(C.UpdateItemBody, {});
         ok(C.UpdateItemBody, { price: 6 });
