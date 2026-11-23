@@ -156,6 +156,7 @@ describe("photo upload safety (SEC-05)", () => {
         expect((await add("data:image/jpeg;base64,/9j/4AAQ")).status).toBe(400);
         expect((await add(`/api/menu/other-xyz789/images/${"a".repeat(24)}`)).status).toBe(400);
         expect((await add(`/api/menu/${SLUG}/images/${"a".repeat(24)}`)).status).toBe(201);
+        expect((await add("/images/img.png")).status).toBe(201); // the app's own "no photo" picture
     });
 
     it("an existing item keeps its old image when other fields are edited", async () => {
