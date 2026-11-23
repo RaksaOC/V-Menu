@@ -5,7 +5,7 @@ import { SLUG, signInAs } from "./support/auth";
 // button, and the order check refuses it. Uses its own dish, so other specs aren't affected.
 test("a sold-out dish shows the label and has no Add button", async ({ page, context, baseURL }) => {
     await signInAs(context, baseURL!, "owner");
-    const name = `Sold Out Soup ${Date.now()}`;
+    const name = `Test Soup ${Date.now()}`;
     const created = await page.request.post(`/api/menu/${SLUG}/items`, {
         data: { name, price: 2, image: "/images/img.png", description: "A very good soup", tags: ["spicy"], isEnabled: false },
     });
@@ -14,7 +14,7 @@ test("a sold-out dish shows the label and has no Add button", async ({ page, con
     try {
         await page.goto(`/${SLUG}/customer/T1`);
         const card = page.locator("article").filter({ has: page.getByRole("heading", { name }) });
-        await expect(card.getByText("SOLD OUT")).toBeVisible();
+        await expect(card.getByText("SOLD OUT", { exact: true })).toBeVisible();
         await expect(card.getByText("A very good soup")).toBeVisible();
         await expect(card.getByText("spicy")).toBeVisible();
         await expect(card.getByRole("button")).toHaveCount(0);
