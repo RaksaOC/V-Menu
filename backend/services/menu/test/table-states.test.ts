@@ -39,15 +39,16 @@ beforeEach(async () => {
 const check = (table: string, slug = SLUG) => request(app).get(`/api/menu/${slug}/public/tables/${encodeURIComponent(table)}`);
 
 describe("public table check (VM-04)", () => {
-    it("new tables start open, so a freshly printed QR code works", async () => {
+    it("new tables start closed, and say so until the cashier opens them", async () => {
         const { body } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "Patio 4" });
-        expect(body.isEnabled).toBe(true);
+        expect(body.isEnabled).toBe(false);
+        expect((await check("Patio 4")).body.code).toBe("TABLE_CLOSED");
+        await request(app).patch(`/api/menu/${SLUG}/tables/${body._id}/availability`).set(owner).send({ isEnabled: true });
         expect((await check("Patio 4")).status).toBe(200);
     });
 
     it("a closed table answers TABLE_CLOSED with the table's name", async () => {
-        const { body: t } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "4" });
-        await request(app).patch(`/api/menu/${SLUG}/tables/${t._id}/availability`).set(owner).send({ isEnabled: false });
+        await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "4" });
         const res = await check("4");
         expect(res.status).toBe(404);
         expect(res.body).toEqual({ code: "TABLE_CLOSED", message: "Table 4 isn't open yet. Please ask a staff member to open it." });
