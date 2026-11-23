@@ -207,6 +207,31 @@ describe("what the customer sees after ordering (VM-07)", () => {
     });
 });
 
+describe("internal: does a table have an unpaid bill? (VM-15)", () => {
+    const ask = (name: string, key = "internal-test-key") =>
+        request(app)
+            .get(`/internal/restaurants/${R._id}/tables/${encodeURIComponent(name)}/open-bill`)
+            .set("x-internal-key", key);
+
+    it("yes while the table's bill is unpaid, no once it's paid, and no for a table without orders", async () => {
+        process.env.INTERNAL_API_KEY = "internal-test-key";
+        expect((await ask("1")).body).toEqual({ open: false });
+        await request(app)
+            .post(`/api/orders/${R.slug}`)
+            .send({ table: "1", orderedItems: [{ item: { _id: ITEM._id }, quantity: 1 }] });
+        expect((await ask("1")).body).toEqual({ open: true });
+        expect((await ask("2")).body).toEqual({ open: false });
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
+        expect((await ask("1")).body).toEqual({ open: false });
+    });
+
+    it("needs the internal key", async () => {
+        process.env.INTERNAL_API_KEY = "internal-test-key";
+        expect((await ask("1", "wrong-key-wrong-key")).status).toBe(401);
+    });
+});
+
 describe("kitchen queue and history (VM-10)", () => {
     const kitchen = (path = "") => request(app).get(`/api/orders/${R.slug}/kitchen${path}`).set(chef);
 

@@ -3,6 +3,7 @@ import {
     callerHeaders,
     listRoutes,
     mismatches,
+    NO_APP_TOKEN,
     only,
     PUBLIC,
     trackRoutes,
@@ -61,6 +62,7 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /api/orders/:slug/overview", only(["owner", "cashier"])],
     ["GET /api/orders/owner/restaurants", only(["owner"], { ownData: true })],
     ["GET /api/orders/owner/overview", only(["owner"], { ownData: true })],
+    ["GET /internal/restaurants/:resId/tables/:name/open-bill", NO_APP_TOKEN], // VM-15, for menu-service
 ];
 
 let mongo: MongoMemoryServer;
@@ -90,6 +92,8 @@ function urlFor(route: string) {
     return route
         .split(" ")[1]
         .replace(":slug", A.slug)
+        .replace(":resId", A._id)
+        .replace(":name", "1")
         .replace(":table", "1")
         .replace(":token", "AbCdEfGhIjKlMnOpQrSt_-")
         .replace(":orderId", ids.orderA)

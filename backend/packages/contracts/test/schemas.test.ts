@@ -142,6 +142,13 @@ describe("table links (SEC-04)", () => {
     });
 });
 
+describe("a table's unpaid bill (VM-15)", () => {
+    it("order-service answers whether one is open", () => {
+        ok(C.OpenBillCheck, { open: true });
+        fieldsOf(C.OpenBillCheck, { open: "yes" });
+    });
+});
+
 describe("public restaurant info (VM-21)", () => {
     it("is only a name and a slug: anything else is dropped", () => {
         const safe = C.PublicRestaurant.parse({ name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1", email: "o@x.com" });
