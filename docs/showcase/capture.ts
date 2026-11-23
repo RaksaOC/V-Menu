@@ -899,6 +899,23 @@ for (const [vp, theme] of [
     });
 }
 
+// SEC-03: the account menu on the staff dashboards, with "Sign out everywhere".
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`SEC-03 ${vp.width} ${theme}`, async () => {
+        const { page, context } = await newPage(browser, vp, theme, "cashier");
+        await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(page);
+        await page.locator("header button").first().click({ timeout: 5000 });
+        await page.getByRole("menu").waitFor({ timeout: 5000 });
+        await shot({ page, theme, width: vp.width }, "SEC-03-account-menu", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

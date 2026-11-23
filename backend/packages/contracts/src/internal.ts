@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ObjectId, label } from "./common.js";
+import { ObjectId, Role, label, text } from "./common.js";
 
 // Calls between services (CL-05): if either side changes a shape, the contract tests fail.
 
@@ -7,6 +7,13 @@ import { ObjectId, label } from "./common.js";
 export const RestaurantRef = z.object({ _id: z.string(), name: z.string(), slug: z.string(), ownerId: z.string() });
 export type RestaurantRef = z.infer<typeof RestaurantRef>;
 export const RestaurantRefList = z.array(RestaurantRef);
+
+/** every service → restaurant-service: the current session version of this person's role (SEC-03). */
+export const SessionVersionQuery = z.object({ uid: text(128), role: Role, resId: text(64).optional() });
+export type SessionVersionQuery = z.infer<typeof SessionVersionQuery>;
+/** null when they no longer have that role. */
+export const SessionVersion = z.object({ version: z.number().int().min(0).nullable() });
+export type SessionVersion = z.infer<typeof SessionVersion>;
 
 /** order-service → menu-service: is the table open, and what do these dishes cost? */
 export const OrderCheckRequest = z.object({

@@ -1,4 +1,4 @@
-import { baseApp, finish } from "@vmenu/common";
+import { baseApp, finish, setSessionLookup, type SessionLookup } from "@vmenu/common";
 import type { VerifyIdToken } from "./clients/firebase.js";
 import { mongoRestaurantsRepo, type RestaurantsRepo } from "./repositories/restaurants.repo.js";
 import { mongoMembershipsRepo, type MembershipsRepo } from "./repositories/memberships.repo.js";
@@ -14,10 +14,18 @@ interface Deps {
     verifyIdToken: VerifyIdToken;
     restaurants?: RestaurantsRepo;
     memberships?: MembershipsRepo;
+    /** SEC-03: how this service checks a session; by default straight from its own data */
+    sessionLookup?: SessionLookup;
 }
 
 /** Builds the Express app: wires the repositories and Firebase into the services, and mounts the routers (CL-04). */
-export function createApp({ verifyIdToken, restaurants = mongoRestaurantsRepo, memberships = mongoMembershipsRepo }: Deps) {
+export function createApp({ verifyIdToken, restaurants = mongoRestaurantsRepo, memberships = mongoMembershipsRepo, sessionLookup }: Deps) {
+    setSessionLookup(
+        sessionLookup ?? ((_req, user) => memberships.sessionVersion(user.uid, user.role, user.role === "owner" ? undefined : user.resId)),
+        {
+            cache: false,
+        },
+    );
     const places = restaurantsService({ restaurants, memberships });
     const ctx: RouteContext = {
         services: {

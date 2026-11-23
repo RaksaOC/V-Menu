@@ -92,6 +92,7 @@ describe("sign-up and sign-in", () => {
 describe("owner routes", () => {
     it("keeps owners out of restaurants they do not own", async () => {
         const slug = await signUp("owner1", "a@x.com");
+        await signUp("owner2", "b@x.com"); // a real owner, of another restaurant (SEC-03)
         const other = await signAppToken({ uid: "owner2", email: "b@x.com", role: "owner" });
         const res = await request(app).get(`/api/restaurants/${slug}/staff`).set("authorization", `Bearer ${other}`);
         expect(res.status).toBe(403);
@@ -166,56 +167,6 @@ describe("internal routes", () => {
 });
 
 // VM-03: staff stay signed in for a whole shift; the token and the cookie last as long.
-describe("ending sessions (SEC-03)", () => {
-    const internal = { "x-internal-key": "internal-test-key" };
-    const versionOf = async (query: Record<string, string>) =>
-        (await request(app).get("/internal/sessions/version").query(query).set(internal)).body.version;
-
-    it("a staff member's version is gone once they're removed", async () => {
-        const slug = await signUp();
-        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
-        const added = await request(app)
-            .post(`/api/restaurants/${slug}/staff`)
-            .set(auth)
-            .send({ name: "Sok", email: "sok@x.com", role: "chef" });
-        await request(app).post("/api/auth/login").send({ idToken: "sok-uid:sok@x.com", role: "chef", resSlug: slug });
-        const query = { uid: "sok-uid", role: "chef", resId: added.body.resId };
-        expect(await versionOf(query)).toBe(0);
-        await request(app).delete(`/api/restaurants/${slug}/staff/${added.body._id}`).set(auth);
-        expect(await versionOf(query)).toBeNull();
-    });
-
-    it("a role change raises the version", async () => {
-        const slug = await signUp();
-        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
-        const added = await request(app)
-            .post(`/api/restaurants/${slug}/staff`)
-            .set(auth)
-            .send({ name: "Sok", email: "sok@x.com", role: "chef" });
-        await request(app).post("/api/auth/memberships").send({ idToken: "sok-uid:sok@x.com" });
-        await request(app).put(`/api/restaurants/${slug}/staff/${added.body._id}`).set(auth).send({ role: "cashier" });
-        expect(await versionOf({ uid: "sok-uid", role: "cashier", resId: added.body.resId })).toBe(1);
-    });
-
-    it("Sign out everywhere ends this token at once and clears the cookie", async () => {
-        await signUp();
-        const login = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "owner" });
-        const cookie = login.headers["set-cookie"][0].split(";")[0];
-        expect((await request(app).get("/api/restaurants").set("cookie", cookie)).status).toBe(200);
-        const out = await request(app).post("/api/auth/sign-out-everywhere").set("cookie", cookie);
-        expect(out.status).toBe(200);
-        expect(out.headers["set-cookie"][0]).toMatch(/^token=;/);
-        expect((await request(app).get("/api/restaurants").set("cookie", cookie)).status).toBe(401);
-        const again = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "owner" });
-        expect((await request(app).get("/api/restaurants").set("cookie", again.headers["set-cookie"][0].split(";")[0])).status).toBe(200);
-    });
-
-    it("a token for someone with no membership is refused", async () => {
-        const token = await signAppToken({ uid: "nobody", email: "n@x.com", role: "owner" });
-        expect((await request(app).get("/api/restaurants").set("authorization", `Bearer ${token}`)).status).toBe(401);
-    });
-});
-
 describe("session length (VM-03)", () => {
     // SEC-01: the token is only in the httpOnly cookie
     const cookieToken = (res: { headers: Record<string, unknown> }) =>
@@ -248,6 +199,7 @@ describe("session length (VM-03)", () => {
 
 describe("input checks name the fields (CL-05, VM-17)", () => {
     it("a bad staff member is a 400 with the fields to fix", async () => {
+        await signUp();
         const token = await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" });
         const auth = { authorization: `Bearer ${token}` };
         const { body: r } = await request(app).post("/api/restaurants").set(auth).send({ name: "Fields" });

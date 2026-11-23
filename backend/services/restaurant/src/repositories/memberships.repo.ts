@@ -10,8 +10,10 @@ export interface MembershipRecord {
     email: string;
     role: TenantRole;
     resId: string;
+    /** SEC-03: tokens issued with an older number no longer work; missing on old rows, meaning 0 */
+    tokenVersion?: number;
 }
-type NewTenant = Omit<MembershipRecord, "_id">;
+type NewTenant = Omit<MembershipRecord, "_id" | "tokenVersion">;
 /** Who is signing in. VM-13: an email match counts only when Firebase verified the email. */
 export interface Person {
     uid: string;
@@ -45,8 +47,17 @@ export interface MembershipsRepo {
     createMany(list: NewTenant[]): Promise<MembershipRecord[]>;
     get(resId: string, id: string): Promise<MembershipRecord | null>;
     /** null when there's no such membership in this restaurant */
-    update(resId: string, id: string, fields: Partial<Pick<MembershipRecord, "name" | "email" | "role">>): Promise<MembershipRecord | null>;
+    update(
+        resId: string,
+        id: string,
+        fields: Partial<Pick<MembershipRecord, "name" | "email" | "role">>,
+        opts?: { endSessions?: boolean },
+    ): Promise<MembershipRecord | null>;
     remove(resId: string, id: string): Promise<MembershipRecord | null>;
+    /** SEC-03: the highest version among this account's rows for this role (and restaurant); null if none */
+    sessionVersion(uid: string, role: string, resId?: string): Promise<number | null>;
+    /** SEC-03: ends every session of this account, in every restaurant */
+    endSessions(uid: string): Promise<void>;
 }
 
 export const mongoMembershipsRepo: MembershipsRepo = {
@@ -75,7 +86,23 @@ export const mongoMembershipsRepo: MembershipsRepo = {
         return (await Membership.insertMany(list)).map((t) => t.toObject() as unknown as MembershipRecord);
     },
     get: (resId, id) => Membership.findOne({ _id: id, resId }).lean<MembershipRecord>(),
-    update: (resId, id, fields) =>
-        Membership.findOneAndUpdate({ _id: id, resId }, fields, { new: true, runValidators: true }).lean<MembershipRecord>(),
+    update: (resId, id, fields, { endSessions = false } = {}) =>
+        Membership.findOneAndUpdate(
+            { _id: id, resId },
+            { $set: fields, ...(endSessions ? { $inc: { tokenVersion: 1 } } : {}) },
+            {
+                new: true,
+                runValidators: true,
+            },
+        ).lean<MembershipRecord>(),
     remove: (resId, id) => Membership.findOneAndDelete({ _id: id, resId }).lean<MembershipRecord>(),
+    async sessionVersion(uid, role, resId) {
+        const rows = await Membership.find({ tenantId: uid, role, ...(resId ? { resId } : {}) }, { tokenVersion: 1 }).lean<
+            Pick<MembershipRecord, "tokenVersion">[]
+        >();
+        return rows.length ? Math.max(...rows.map((t) => t.tokenVersion ?? 0)) : null;
+    },
+    async endSessions(uid) {
+        await Membership.updateMany({ tenantId: uid }, { $inc: { tokenVersion: 1 } });
+    },
 };

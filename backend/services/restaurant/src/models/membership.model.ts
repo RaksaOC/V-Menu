@@ -9,6 +9,8 @@ const membershipSchema = new mongoose.Schema(
         email: { type: String, required: true, lowercase: true, trim: true, index: true },
         role: { type: String, required: true, enum: ["owner", "cashier", "chef"] },
         resId: { type: String, required: true, index: true },
+        // SEC-03: raised to end this person's sessions; rows from before it count as 0
+        tokenVersion: { type: Number, default: 0, min: 0 },
     },
     { timestamps: true },
 );

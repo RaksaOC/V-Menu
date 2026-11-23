@@ -1,5 +1,5 @@
 import { badRequest, HttpError, parse, signAppToken, unauthorized } from "@vmenu/common";
-import { IdTokenBody, LoginBody, SignupBody } from "@vmenu/contracts";
+import { IdTokenBody, LoginBody, SessionVersionQuery, SignupBody } from "@vmenu/contracts";
 import type { VerifyIdToken } from "../clients/firebase.js";
 import type { RestaurantsRepo } from "../repositories/restaurants.repo.js";
 import type { MembershipsRepo } from "../repositories/memberships.repo.js";
@@ -67,17 +67,29 @@ export function authService({ restaurants, memberships, verifyIdToken, places }:
             const hours = sessionHours();
             if (role === "owner") {
                 if (!(await memberships.isOwner(who.uid))) throw unauthorized("This account is not a restaurant owner");
-                return { role, hours, token: await signAppToken({ uid: who.uid, email: who.email, role }, `${hours}h`) };
+                const tv = (await memberships.sessionVersion(who.uid, role)) ?? 0;
+                return { role, hours, token: await signAppToken({ uid: who.uid, email: who.email, role, tv }, `${hours}h`) };
             }
             if (!slug) throw badRequest("Restaurant is required");
             const restaurant = await places.find(slug);
             if (!(await memberships.hasRole(String(restaurant._id), role, who)))
                 throw unauthorized("You do not have this role at this restaurant");
-            const token = await signAppToken(
-                { uid: who.uid, email: who.email, role, resId: String(restaurant._id), resSlug: restaurant.slug },
-                `${hours}h`,
-            );
+            const resId = String(restaurant._id);
+            const tv = (await memberships.sessionVersion(who.uid, role, resId)) ?? 0;
+            const token = await signAppToken({ uid: who.uid, email: who.email, role, resId, resSlug: restaurant.slug, tv }, `${hours}h`);
             return { role, hours, token };
+        },
+
+        /** SEC-03: is this session still current? Staff need a restaurant; an owner's covers all of theirs. */
+        async sessionVersion(query: unknown) {
+            const { uid, role, resId } = parse(SessionVersionQuery, query);
+            if (role !== "owner" && !resId) return { version: null };
+            return { version: await memberships.sessionVersion(uid, role, role === "owner" ? undefined : resId) };
+        },
+
+        /** SEC-03: "Sign out everywhere": every token this account holds stops working. */
+        async signOutEverywhere(uid: string) {
+            await memberships.endSessions(uid);
         },
     };
 }

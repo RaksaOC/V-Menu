@@ -54,7 +54,8 @@ export function staffService({ restaurants, memberships }: { restaurants: Restau
                 (await memberships.otherRowHasRole(resId, id, role, { email, tenantId: m.tenantId }))
             )
                 throw new HttpError(409, "This person already has that role here");
-            return (await memberships.update(resId, id, fields)) ?? m;
+            // SEC-03: a new role means a new sign-in; the old token stops working
+            return (await memberships.update(resId, id, fields, { endSessions: role !== m.role })) ?? m;
         },
 
         async remove(user: AppUser, slug: string, id: string) {

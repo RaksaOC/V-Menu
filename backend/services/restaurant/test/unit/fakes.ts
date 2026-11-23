@@ -81,11 +81,19 @@ export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] }
         async get(resId, id) {
             return copy(find(resId, id));
         },
-        async update(resId, id, fields) {
+        async update(resId, id, fields, { endSessions = false } = {}) {
             const t = find(resId, id);
             if (!t) return null;
             Object.assign(t, fields);
+            if (endSessions) t.tokenVersion = (t.tokenVersion ?? 0) + 1;
             return { ...t };
+        },
+        async sessionVersion(uid, role, resId) {
+            const rows = all.filter((t) => t.tenantId === uid && t.role === role && (!resId || t.resId === resId));
+            return rows.length ? Math.max(...rows.map((t) => t.tokenVersion ?? 0)) : null;
+        },
+        async endSessions(uid) {
+            for (const t of all) if (t.tenantId === uid) t.tokenVersion = (t.tokenVersion ?? 0) + 1;
         },
         async remove(resId, id) {
             const t = find(resId, id);

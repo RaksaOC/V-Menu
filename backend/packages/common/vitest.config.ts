@@ -4,6 +4,7 @@ export default defineConfig({
     test: {
         // SEC-01: the API tests sign in with a Bearer header; browsers only ever use the cookie.
         env: { AUTH_ALLOW_BEARER: "true" },
+        setupFiles: ["./test/setup.ts"],
         coverage: {
             provider: "v8",
             include: ["src/**/*.ts"],

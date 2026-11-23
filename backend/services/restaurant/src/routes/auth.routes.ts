@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
+import { requireRole } from "@vmenu/common";
 import { sessionHours } from "../services/session.js";
 import type { RouteContext } from "./context.js";
 
@@ -30,6 +31,11 @@ export function authRoutes({ services }: RouteContext) {
     });
     r.post("/logout", (_req, res) => {
         res.clearCookie("token", { ...cookieOptions(), maxAge: undefined }).json({ message: "Signed out" });
+    });
+    // SEC-03: ends this account's sessions on every device, then this browser's cookie
+    r.post("/sign-out-everywhere", requireRole("owner", "cashier", "chef"), async (req, res) => {
+        await services.auth.signOutEverywhere(req.user!.uid);
+        res.clearCookie("token", { ...cookieOptions(), maxAge: undefined }).json({ message: "Signed out everywhere" });
     });
     return r;
 }

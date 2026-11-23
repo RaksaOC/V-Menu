@@ -58,7 +58,7 @@ if (!order?._id) throw new Error(`Order response has no _id: ${JSON.stringify(or
 step(`order ${order._id} placed at table ${table} (${order.orderedItems.length} lines)`);
 
 // 3. kitchen queue
-const chef = signAppToken({ uid: "smoke-chef", email: "chef@smoke.local", role: "chef", resId, resSlug: slug });
+const chef = signAppToken({ uid: "demo-owner", email: "owner@demo.local", role: "chef", resId, resSlug: slug }); // SEC-03: a seeded membership;
 const queue = await call("GET", `/api/orders/${slug}/kitchen`, { token: chef });
 const found = queue.find((o) => String(o._id) === String(order._id));
 if (!found) throw new Error(`Order ${order._id} is not in the kitchen queue (${queue.length} orders)`);

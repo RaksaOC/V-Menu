@@ -31,6 +31,7 @@ const app = createApp({
     verifyIdToken: async () => {
         throw new Error("not a Firebase ID token");
     },
+    sessionLookup: async (_req, user) => user.tv ?? 0, // these callers have no membership rows (SEC-03 has its own tests)
 });
 
 const owner = only(["owner"]);
