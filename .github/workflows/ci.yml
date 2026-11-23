@@ -216,7 +216,7 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: e2e
 
-      - name: Customer flow
+      - name: Browser tests (customer order, table QR codes)
         run: npx playwright test
         working-directory: e2e
 
