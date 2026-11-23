@@ -19,6 +19,7 @@ On the test laptop the agent and its helpers use about 130 MB of memory in total
 | Data | Source | Used for |
 |---|---|---|
 | Requests, errors, latency, Node.js health | each service's `/metrics` | Overview dashboard, alerts |
+| Orders by status, time to ready, oldest pending order, refused orders, photo uploads (B10) | order-service and menu-service `/metrics` | Kitchen row on the Overview dashboard, alert |
 | Container CPU, memory, network | Docker stats | Overview dashboard, alerts |
 | Server CPU, memory, network, disk | `/proc`, `/sys`, Docker's disk | Overview dashboard, alerts |
 | Service and frontend logs | Docker logs, with customer IPs removed | Overview dashboard |
@@ -79,6 +80,20 @@ GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=<token> node infra/moni
 ```
 
 It is safe to run again. Alerts go to the stack's default contact point.
+
+## Kitchen metrics (B10)
+
+| Metric | What it means |
+|---|---|
+| `vmenu_orders_total{status}` | Orders that entered each status: `pending` when placed, then `preparing`, `ready`, `served` or `cancelled`. It counts steps, so one served order adds 1 to four statuses. |
+| `vmenu_order_ready_seconds` | Histogram: seconds from the customer's order to "ready" |
+| `vmenu_orders_pending_oldest_seconds` | How long the oldest pending order has waited, read from the database at each scrape. Orders placed over 24 hours ago don't count, so one forgotten order can't keep the alert on. |
+| `vmenu_orders_rate_limited_total` | Orders refused by the order rate limit. Stays at 0 until VM-22 adds the limit, which must call `countRateLimitedOrder()`. |
+| `vmenu_image_uploads_total{result}` | Photo uploads: `ok`, `not_a_photo`, `too_large`, `bad_request`, `denied`, `rate_limited` or `error` |
+
+The **Order pending for over 15 minutes** alert reads the third one. The agent only forwards metrics on its keep-list in `config.alloy`, which now includes every `vmenu_*` metric from the services.
+
+Counters restart at 0 when a service restarts. `increase()` and `rate()` in the dashboard handle that.
 
 ## DORA metrics
 

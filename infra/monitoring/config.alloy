@@ -124,7 +124,7 @@ prometheus.relabel "services" {
 
 	rule {
 		source_labels = ["__name__"]
-		regex         = "up|http_request_duration_seconds_(bucket|sum|count)|process_cpu_seconds_total|process_resident_memory_bytes|process_start_time_seconds|nodejs_eventloop_lag_p99_seconds|nodejs_heap_size_used_bytes"
+		regex         = "up|http_request_duration_seconds_(bucket|sum|count)|process_cpu_seconds_total|process_resident_memory_bytes|process_start_time_seconds|nodejs_eventloop_lag_p99_seconds|nodejs_heap_size_used_bytes|vmenu_.+"
 		action        = "keep"
 	}
 }

@@ -28,16 +28,20 @@ const rateLimited = new prom.Counter({
     registers: [registry],
 });
 
-/** Where the gauge below reads the oldest pending order's time. Set by createApp. */
-let oldestPending: () => Promise<Date | null> = async () => null;
+/** An order pending for longer than this was forgotten (a test order, a closed shift). It stops
+ *  counting, so one such order can't keep the alert on for ever and hide a real one. */
+const PENDING_WINDOW_MS = 24 * 60 * 60_000;
 
-/** Read when /metrics is scraped: how long the oldest pending order has waited (0 when none). */
+/** Where the gauge below reads the oldest pending order's time. Set by createApp. */
+let oldestPending: (since: Date) => Promise<Date | null> = async () => null;
+
+/** Read when /metrics is scraped: how long the oldest pending order of the last day has waited (0 when none). */
 new prom.Gauge({
     name: "vmenu_orders_pending_oldest_seconds",
-    help: "Seconds the oldest order still pending has waited, 0 when none is pending",
+    help: "Seconds the oldest order still pending (placed in the last 24 hours) has waited, 0 when none is",
     registers: [registry],
     async collect() {
-        const at = await oldestPending().catch(() => null); // a slow or down database must not break /metrics
+        const at = await oldestPending(new Date(Date.now() - PENDING_WINDOW_MS)).catch(() => null); // a slow or down database must not break /metrics
         this.set(at ? Math.max(0, (Date.now() - at.getTime()) / 1000) : 0);
     },
 });
@@ -54,6 +58,6 @@ export function countRateLimitedOrder() {
     rateLimited.inc();
 }
 
-export function watchPendingOrders(source: () => Promise<Date | null>) {
+export function watchPendingOrders(source: (since: Date) => Promise<Date | null>) {
     oldestPending = source;
 }

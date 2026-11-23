@@ -56,8 +56,8 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[] } {
         async listServed(resIds) {
             return all.filter(inRes(resIds)).filter((o) => o.status === "served");
         },
-        async oldestPendingAt() {
-            const waiting = all.filter((o) => o.status === "pending").map((o) => o.orderedAt);
+        async oldestPendingAt(since) {
+            const waiting = all.filter((o) => o.status === "pending" && o.orderedAt >= since).map((o) => o.orderedAt);
             return waiting.length ? new Date(Math.min(...waiting.map(Number))) : null;
         },
     };

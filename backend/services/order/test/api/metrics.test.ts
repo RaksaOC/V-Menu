@@ -121,6 +121,12 @@ describe("order metrics (B10)", () => {
         expect(await metric("vmenu_orders_pending_oldest_seconds")).toBe(0);
     });
 
+    it("ignores an order left pending for over a day, so one forgotten order can't keep the alert on", async () => {
+        const { body: order } = await place();
+        await Order.updateOne({ _id: order._id }, { $set: { orderedAt: new Date(Date.now() - 25 * 60 * 60_000) } });
+        expect(await metric("vmenu_orders_pending_oldest_seconds")).toBe(0);
+    });
+
     it("has the rate-limited orders counter, starting at 0", async () => {
         const res = await request(app).get("/metrics");
         expect(res.text).toMatch(/^# TYPE vmenu_orders_rate_limited_total counter$/m);

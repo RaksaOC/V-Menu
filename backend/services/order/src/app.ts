@@ -45,7 +45,7 @@ export function createApp({
         restaurant: restaurantFrom(lookupRestaurant),
     };
 
-    watchPendingOrders(() => orders.oldestPendingAt()); // B10: read when /metrics is scraped
+    watchPendingOrders((since) => orders.oldestPendingAt(since)); // B10: read when /metrics is scraped
     const app = baseApp();
     // Mounted before "/:slug" so "owner" is never read as a restaurant slug.
     app.use("/api/orders/owner", ownerRoutes(ctx));
