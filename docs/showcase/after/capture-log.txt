@@ -209,3 +209,13 @@ ok   VM-26-cashier-menu-1280-dark
 ok   VM-26-customer-menu-360
 ok   VM-26-owner-item-form-360
 ok   VM-26-cashier-menu-360
+# ONLY=VM-26 (2026-11-23T17:41:43.610Z)
+ok   VM-26-customer-menu-1280
+ok   VM-26-owner-item-form-1280
+ok   VM-26-cashier-menu-1280
+ok   VM-26-customer-menu-1280-dark
+ok   VM-26-owner-item-form-1280-dark
+ok   VM-26-cashier-menu-1280-dark
+ok   VM-26-customer-menu-360
+ok   VM-26-owner-item-form-360
+ok   VM-26-cashier-menu-360
