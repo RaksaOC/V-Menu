@@ -47,4 +47,13 @@ describe("adding a table whose name is taken (VM-16)", () => {
             expect(within(dialog).getByRole("textbox", { name: "Table name" })).toHaveAccessibleDescription("Table name is taken."),
         );
     });
+
+    it("an automatic table that can't be added says so in the popup", async () => {
+        owner();
+        fireEvent.click(await screen.findByRole("button", { name: "Add Table" }));
+        const dialog = screen.getByRole("dialog");
+        answer("post", TABLES, { message: "Something went wrong" }, 500);
+        fireEvent.click(within(dialog).getByRole("button", { name: "Add Table" }));
+        expect(await within(dialog).findByRole("alert")).toHaveTextContent("Could not save the table. Please try again.");
+    });
 });

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
+import { prepareDatabase } from "../../src/db.js";
 import { Table } from "../../src/models/table.model.js";
 import { notFound, signAppToken } from "@vmenu/common";
 
@@ -13,7 +14,7 @@ process.env.INTERNAL_API_KEY = "internal-test-key";
 
 const SLUG = "mee-keav-abc123";
 const OTHER = "other-xyz789";
-const RESTAURANTS = {
+const RESTAURANTS: Record<string, { _id: string; name: string; slug: string; ownerId: string }> = {
     [SLUG]: { _id: "665f00000000000000000001", name: "Mee Keav", slug: SLUG, ownerId: "owner1" },
     [OTHER]: { _id: "665f00000000000000000002", name: "Other", slug: OTHER, ownerId: "owner1" },
 };
@@ -38,7 +39,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
-    await Table.createIndexes(); // dropping the database drops the indexes too; the service builds them at startup
+    expect(await prepareDatabase()).toBe(true); // dropping the database drops the indexes; the service builds them at startup
 });
 
 const create = (body: object, slug = SLUG) => request(app).post(`/api/menu/${slug}/tables`).set(owner).send(body);
@@ -78,5 +79,26 @@ describe("table names are unique per restaurant (VM-16)", () => {
     it("the database itself refuses a second table with the same name", async () => {
         await Table.create({ name: "7", resId: RESTAURANTS[SLUG]._id });
         await expect(Table.create({ name: "7", resId: RESTAURANTS[SLUG]._id })).rejects.toMatchObject({ code: 11000 });
+    });
+
+    it("the repository passes other database errors on unchanged", async () => {
+        const { mongoTablesRepo, TableNameTaken } = await import("../../src/repositories/tables.repo.js");
+        const resId = RESTAURANTS[SLUG]._id;
+        const t = await mongoTablesRepo.create(resId, { name: "1", isEnabled: false });
+        const tooLong = mongoTablesRepo.update(resId, String(t._id), { name: "x".repeat(41) });
+        await expect(tooLong).rejects.toBeInstanceOf(mongoose.Error.ValidationError);
+        await expect(mongoTablesRepo.create(resId, { name: "1", isEnabled: false })).rejects.toBeInstanceOf(TableNameTaken);
+    });
+
+    it("at startup, tables that already share a name are reported and the service keeps going", async () => {
+        await mongoose.connection.db!.dropDatabase();
+        const resId = RESTAURANTS[SLUG]._id;
+        await Table.collection.insertMany([
+            { name: "4", resId },
+            { name: "4", resId },
+        ]);
+        expect(await prepareDatabase()).toBe(false);
+        await Table.deleteOne({ name: "4" });
+        expect(await prepareDatabase()).toBe(true);
     });
 });

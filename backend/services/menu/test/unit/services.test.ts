@@ -96,7 +96,7 @@ describe("tables", () => {
         expect((await seating.create(A._id, { type: "manual", name: "Patio" })).name).toBe("Patio");
         expect((await seating.create(A._id, {})).name).toBe("3"); // "Patio" isn't a number
         expect((await seating.create(B._id, {})).name).toBe("1");
-        expect(await status(seating.create(A._id, { type: "manual", name: "Patio" }))).toBe(400);
+        expect(await status(seating.create(A._id, { type: "manual", name: "Patio" }))).toBe(409); // VM-16
         expect((await seating.list(A._id)).length).toBe(4);
     });
 
@@ -106,7 +106,7 @@ describe("tables", () => {
         await seating.create(A._id, {});
         expect((await seating.update(A._id, t1._id, { name: "Window", isEnabled: true })).name).toBe("Window");
         expect((await seating.update(A._id, t1._id, { name: "Window" })).isEnabled).toBe(true); // same name is fine
-        expect(await status(seating.update(A._id, t1._id, { name: "2" }))).toBe(400);
+        expect(await status(seating.update(A._id, t1._id, { name: "2" }))).toBe(409); // VM-16
         expect((await seating.update(A._id, t1._id, {})).name).toBe("Window");
         expect((await seating.setEnabled(A._id, t1._id, false)).isEnabled).toBe(false);
         expect((await seating.remove(A._id, t1._id)).name).toBe("Window");
@@ -123,6 +123,46 @@ describe("tables", () => {
         expect(await code(seating.check(A._id, "9"))).toBe("TABLE_NOT_FOUND");
         await seating.setEnabled(A._id, t._id, true);
         expect(await seating.check(A._id, "1")).toEqual({ message: "Table is available" });
+    });
+});
+
+describe("table names stay unique when requests race (VM-16)", () => {
+    it("5 automatic creates at the same time get 5 different names", async () => {
+        const { seating, tables } = setup();
+        await Promise.all(Array.from({ length: 5 }, () => seating.create(A._id, {})));
+        expect(tables.all.map((t) => t.name).sort()).toEqual(["1", "2", "3", "4", "5"]);
+    });
+
+    it("a manual name taken between the check and the write is 409 NAME_TAKEN, and a rename too", async () => {
+        const { seating, tables } = setup();
+        const answers = await Promise.allSettled([
+            seating.create(A._id, { type: "manual", name: "Patio" }),
+            seating.create(A._id, { type: "manual", name: "Patio" }),
+        ]);
+        expect(answers.map((a) => a.status).sort()).toEqual(["fulfilled", "rejected"]);
+        expect(answers.find((a) => a.status === "rejected")).toMatchObject({ reason: { status: 409, code: "NAME_TAKEN" } });
+        const window = await seating.create(A._id, { type: "manual", name: "Window" });
+        const findByName = tables.findByName;
+        tables.findByName = async () => null; // as if "Patio" was taken after the check
+        expect(await code(seating.update(A._id, window._id, { name: "Patio" }))).toBe("NAME_TAKEN");
+        tables.findByName = findByName;
+    });
+
+    it("gives up with 409 after 10 tries, and passes other errors on", async () => {
+        const { seating, tables } = setup();
+        const { TableNameTaken } = await import("../../src/repositories/tables.repo.js");
+        let tries = 0;
+        tables.create = async () => {
+            tries++;
+            throw new TableNameTaken("1");
+        };
+        expect(await status(seating.create(A._id, {}))).toBe(409);
+        expect(tries).toBe(10);
+        tables.create = async () => {
+            throw new Error("database down");
+        };
+        expect(await status(seating.create(A._id, {}))).toBe(500);
+        expect(await status(seating.create(A._id, { type: "manual", name: "Bar" }))).toBe(500);
     });
 });
 
