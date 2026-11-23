@@ -8,12 +8,11 @@ export const RestaurantRef = z.object({ _id: z.string(), name: z.string(), slug:
 export type RestaurantRef = z.infer<typeof RestaurantRef>;
 export const RestaurantRefList = z.array(RestaurantRef);
 
-/** SEC-04: an order names its table one way: by link token, or by name. Checked even when
- *  another field is wrong (`when`), so one answer lists everything to fix. */
+/** SEC-04: an order names its table one way: by link token, or by name. zod runs this once the
+ *  other fields are valid, so a body with other mistakes hears about the table after those. */
 export const withOneTable = <T extends z.ZodType<{ table?: unknown; qrToken?: unknown }>>(schema: T) =>
     schema.refine((body) => (body.table === undefined) !== (body.qrToken === undefined), {
         path: ["table"],
-        when: () => true,
         error: (issue) => ((issue.input as { table?: unknown }).table === undefined ? "Required" : "Send a table or a link, not both"),
     });
 

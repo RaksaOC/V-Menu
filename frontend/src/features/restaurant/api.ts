@@ -85,6 +85,12 @@ export async function uploadMenuPhoto(slug: string, file: File, onProgress?: (pe
     return data.url;
 }
 
+/** SEC-04: gives the table a new QR link; the old printed code stops working. Answers the table. */
+export async function resetTableQrToken(slug: string, tableId: string): Promise<Table> {
+    const { data } = await api.post<Table>(`/api/menu/${seg(slug)}/tables/${seg(tableId)}/qr-token`);
+    return data;
+}
+
 /** Opens (true) or closes (false) a table for orders. */
 export async function setTableAvailability(slug: string, tableId: string, isEnabled: boolean): Promise<void> {
     await api.patch(`/api/menu/${seg(slug)}/tables/${seg(tableId)}/availability`, { isEnabled });

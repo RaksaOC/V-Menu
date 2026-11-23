@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Trash2 } from "lucide-react";
+import { QrCode, Trash2 } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
 import type { CreateTableBody, Table } from "@vmenu/contracts";
 
@@ -17,15 +17,18 @@ interface Props {
     onCreate?: (table: CreateTableBody) => Promise<Result>;
     onRename?: (id: string, name: string) => Promise<Result>;
     onDelete?: (id: string) => void;
+    /** SEC-04: gives the table a new QR link. */
+    onResetQr?: (id: string) => void;
 }
 
 /** Add and edit a table, in the shared Modal (CL-09; was AddTablePopup and EditTablePopup). */
-export default function TableForm({ table, onClose, onCreate, onRename, onDelete }: Props) {
+export default function TableForm({ table, onClose, onCreate, onRename, onDelete, onResetQr }: Props) {
     const formId = useId();
     const [auto, setAuto] = useState(true);
     const [name, setName] = useState(table?.name ?? "");
     const [error, setError] = useState("");
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [confirmReset, setConfirmReset] = useState(false);
     const [saving, setSaving] = useState(false);
 
     async function submit(e: FormEvent) {
@@ -45,7 +48,19 @@ export default function TableForm({ table, onClose, onCreate, onRename, onDelete
         }
     }
 
-    const footer = confirmDelete ? (
+    const footer = confirmReset ? (
+        <>
+            <p className="mr-auto self-center text-sm">
+                Give table {table?.name} a new QR code? The old code stops working, so print the new one.
+            </p>
+            <Button variant="outline" onClick={() => setConfirmReset(false)}>
+                Cancel
+            </Button>
+            <Button variant="solid" onClick={() => table && onResetQr?.(table._id)}>
+                Yes, reset
+            </Button>
+        </>
+    ) : confirmDelete ? (
         <>
             <p className="mr-auto self-center text-sm text-[var(--bad)]">Delete table {table?.name}? This can&apos;t be undone.</p>
             <Button variant="outline" onClick={() => setConfirmDelete(false)}>
@@ -107,6 +122,14 @@ export default function TableForm({ table, onClose, onCreate, onRename, onDelete
                         }}
                         placeholder="e.g. patio-2"
                     />
+                )}
+                {table && onResetQr && (
+                    <div className="space-y-1.5 border-t border-[var(--line)] pt-4">
+                        <Button variant="outline" icon={<QrCode size={16} aria-hidden />} onClick={() => setConfirmReset(true)}>
+                            Reset QR code
+                        </Button>
+                        <p className="text-xs text-[var(--muted)]">If a printed code was taken, give the table a new one.</p>
+                    </div>
                 )}
             </form>
         </Modal>

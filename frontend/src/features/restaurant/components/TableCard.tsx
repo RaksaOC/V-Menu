@@ -52,7 +52,13 @@ export default function TableCard(props: Props) {
                 </Button>
             </div>
             {showQr && (
-                <TableQrModal slug={slug} tableName={table.name} restaurantName={props.restaurantName} onClose={() => setShowQr(false)} />
+                <TableQrModal
+                    slug={slug}
+                    tableName={table.name}
+                    qrToken={table.qrToken}
+                    restaurantName={props.restaurantName}
+                    onClose={() => setShowQr(false)}
+                />
             )}
         </Card>
     );

@@ -3,14 +3,14 @@
 import ItemCard from "@/features/customer/components/ItemCard";
 import { Search, ShoppingCart, Store, Utensils } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ToastHost } from "@/components/ui";
 import { Skeleton } from "@/components/ui";
 import { apiErrorCode } from "@/lib/api";
 import { useRestaurantName } from "@/lib/public-restaurant";
 import TableProblem, { type TableProblemKind } from "@/features/customer/components/TableProblem";
-import { checkTable, getMenu } from "@/features/customer/api";
+import { checkTable, getMenu, getTableByToken } from "@/features/customer/api";
+import { useTableLink } from "@/features/customer/table-link";
 import { reconcileCart } from "@/features/customer/cart";
 import { orderableDishes, searchMenu, sectionId } from "@/features/customer/menu";
 import { toast } from "@/lib/toast";
@@ -22,15 +22,16 @@ export default function CustomerPage() {
     const [current, setCurrent] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [problem, setProblem] = useState<TableProblemKind | null>(null);
-    const params = useParams();
-    const table = String(params.table ?? "");
-    const resSlug = String(params.res ?? "");
+    const link = useTableLink();
+    const { slug: resSlug, token, cartId } = link;
+    // SEC-04: with a link token, the server says which table it is
+    const [table, setTable] = useState(link.name);
     // VM-21: the real name. While it loads the heading keeps its space; the slug is never shown.
     const restaurantName = useRestaurantName(resSlug);
     const heading = restaurantName ?? "Menu";
 
     useEffect(() => {
-        if (restaurantName !== undefined) document.title = `${heading} · Table ${table}`;
+        if (restaurantName !== undefined && table) document.title = `${heading} · Table ${table}`;
     }, [restaurantName, heading, table]);
 
     // VM-04: check the table, then load the menu. Every failure is explained on this page
@@ -39,11 +40,15 @@ export default function CustomerPage() {
         setIsLoading(true);
         setProblem(null);
         try {
-            await checkTable(resSlug, table);
+            if (token) {
+                const found = await getTableByToken(resSlug, token);
+                setTable(found.table);
+                if (!found.isOpen) return setProblem("closed");
+            } else await checkTable(resSlug, link.name);
             const menu = await getMenu(resSlug);
             setSections(menu.categories);
             // VM-05: dishes taken off the menu since they were added leave the cart.
-            const dropped = reconcileCart(resSlug, table, orderableDishes(menu));
+            const dropped = reconcileCart(resSlug, cartId, orderableDishes(menu));
             if (dropped)
                 toast.info(
                     `${dropped} ${dropped === 1 ? "item is" : "items are"} no longer available and ${dropped === 1 ? "was" : "were"} removed from your cart.`,
@@ -57,12 +62,14 @@ export default function CustomerPage() {
                       ? "no-restaurant"
                       : code === "TABLE_NOT_FOUND"
                         ? "no-table"
-                        : "error",
+                        : code === "TABLE_LINK_INVALID"
+                          ? "invalid-link"
+                          : "error",
             );
         } finally {
             setIsLoading(false);
         }
-    }, [resSlug, table]);
+    }, [resSlug, token, link.name, cartId]);
 
     useEffect(() => {
         load();
@@ -78,7 +85,7 @@ export default function CustomerPage() {
         <ItemCard
             key={item._id}
             slug={resSlug}
-            table={table}
+            table={cartId}
             _id={item._id}
             name={item.name}
             image={item.image}
@@ -111,7 +118,7 @@ export default function CustomerPage() {
                                     {heading}
                                 </h1>
                             </div>
-                            <p className="text-emerald-100 text-lg font-medium">Table {table}</p>
+                            <p className={`text-emerald-100 text-lg font-medium ${table ? "" : "invisible"}`}>Table {table}</p>
                             <p className="text-emerald-50/80 text-sm mt-1">Browse our delicious menu and order with ease</p>
                         </div>
                     </div>
@@ -238,7 +245,7 @@ export default function CustomerPage() {
                                     <span className="text-gray-700 font-medium">Your Order</span>
                                 </div>
 
-                                <Link href={`/${resSlug}/customer/${table}/cart`}>
+                                <Link href={`${link.base}/cart`}>
                                     <button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
                                         View Cart
                                     </button>

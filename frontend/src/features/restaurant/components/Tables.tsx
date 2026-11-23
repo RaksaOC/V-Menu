@@ -7,7 +7,7 @@ import { printQrCards } from "@/components/qr/print";
 import { tableUrl } from "@/lib/table-url";
 import { apiErrorCode, apiStatus } from "@/lib/api";
 import { useRestaurantName } from "@/lib/public-restaurant";
-import { createTable, deleteTable, getTables, setTableAvailability, updateTable } from "@/features/restaurant/api";
+import { createTable, deleteTable, getTables, resetTableQrToken, setTableAvailability, updateTable } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 import TableCard from "./TableCard";
 import TableForm from "./TableForm";
@@ -74,6 +74,18 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
         }
     }
 
+    // SEC-04: a new QR link for the table, e.g. when a printed code was taken
+    async function resetQr(id: string) {
+        try {
+            const table = await resetTableQrToken(slug, id);
+            setEditing(null);
+            await load();
+            toast.info(`Table ${table.name} has a new QR code. Print it and replace the old one.`);
+        } catch {
+            toast.error("Could not reset the QR code");
+        }
+    }
+
     async function remove(id: string) {
         try {
             await deleteTable(slug, id);
@@ -104,7 +116,7 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                             variant="outline"
                             icon={<Printer size={16} aria-hidden />}
                             onClick={() =>
-                                printQrCards(tables.map((t) => ({ restaurantName, tableName: t.name, url: tableUrl(slug, t.name) })))
+                                printQrCards(tables.map((t) => ({ restaurantName, tableName: t.name, url: tableUrl(slug, t.qrToken) })))
                             }
                         >
                             Print all QR codes
@@ -144,6 +156,7 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                     onClose={() => setEditing(null)}
                     onCreate={create}
                     onRename={rename}
+                    onResetQr={resetQr}
                     onDelete={remove}
                 />
             )}

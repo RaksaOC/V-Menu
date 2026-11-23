@@ -188,7 +188,8 @@ describe("internal calls", () => {
             "items.0._id",
             "items.0.quantity",
         ]);
-        expect(fieldsOf(C.OrderCheckRequest, { items: [{ _id: ID, quantity: 1.5 }] }).sort()).toEqual(["items.0.quantity", "table"]);
+        expect(fieldsOf(C.OrderCheckRequest, { table: "1", items: [{ _id: ID, quantity: 1.5 }] })).toEqual(["items.0.quantity"]);
+        expect(fieldsOf(C.OrderCheckRequest, { items: [{ _id: ID, quantity: 1 }] })).toEqual(["table"]); // SEC-04: or a qrToken
         fieldsOf(C.OrderCheckRequest, { table: "1", items: Array(101).fill({ _id: ID, quantity: 1 }) });
     });
 

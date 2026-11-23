@@ -25,8 +25,13 @@ describe("frontend fixtures match @vmenu/contracts", () => {
 
     it("what the cart sends is a valid PlaceOrderBody (and no isDone)", async () => {
         const { toOrderBody } = await import("@/features/customer/cart");
-        const body = toOrderBody("T1", [{ item: F.dish, quantity: 2 }]);
-        expect(C.PlaceOrderBody.parse(body)).toEqual({ table: "T1", orderedItems: [{ item: { _id: F.dish._id }, quantity: 2 }] });
+        const lines = [{ item: F.dish, quantity: 2 }];
+        const orderedItems = [{ item: { _id: F.dish._id }, quantity: 2 }];
+        const body = toOrderBody({ token: null, name: "T1" }, lines);
+        expect(C.PlaceOrderBody.parse(body)).toEqual({ table: "T1", orderedItems });
         expect(body).not.toHaveProperty("isDone");
+        // SEC-04: through a table's link, the token goes and the name doesn't
+        const QR = "AbCdEfGhIjKlMnOpQrSt_-";
+        expect(C.PlaceOrderBody.parse(toOrderBody({ token: QR, name: "" }, lines))).toEqual({ qrToken: QR, orderedItems });
     });
 });
