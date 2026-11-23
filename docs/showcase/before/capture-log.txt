@@ -193,3 +193,11 @@ ok   SEC-04-qr-popup-1280-dark
 ok   SEC-04-edit-table-1280-dark
 ok   SEC-04-qr-popup-360
 ok   SEC-04-edit-table-360
+# ONLY=VM-15 (2026-11-23T19:21:12.445Z)
+FAIL VM-15 1280 light: Unexpected token 'I', "Internal S"... is not valid JSON
+FAIL VM-15 1280 dark: Unexpected token 'I', "Internal S"... is not valid JSON
+FAIL VM-15 360 light: Unexpected token 'I', "Internal S"... is not valid JSON
+# ONLY=VM-15 (2026-11-23T19:22:04.198Z)
+ok   VM-15-rename-1280
+ok   VM-15-rename-1280-dark
+ok   VM-15-rename-360

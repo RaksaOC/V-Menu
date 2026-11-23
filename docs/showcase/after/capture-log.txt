@@ -237,3 +237,10 @@ ok   SEC-04-qr-popup-360
 ok   SEC-04-edit-table-360
 ok   SEC-04-reset-confirm-360
 ok   SEC-04-invalid-link-360
+# ONLY=VM-15 (2026-11-23T19:23:42.094Z)
+ok   VM-15-rename-1280
+ok   VM-15-delete-1280
+ok   VM-15-rename-1280-dark
+ok   VM-15-delete-1280-dark
+ok   VM-15-rename-360
+ok   VM-15-delete-360
