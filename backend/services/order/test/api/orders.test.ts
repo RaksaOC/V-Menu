@@ -204,7 +204,7 @@ describe("kitchen queue and history (VM-10)", () => {
 
     it("the queue has unfinished orders only, oldest first (the default, and ?status=active)", async () => {
         const a = (await place("1")).body;
-        const b = (await place("2")).body;
+        const b = (await place("1")).body; // (the fake menu check only accepts table "1")
         const c = (await place("1")).body;
         await done(b._id);
         for (const path of ["?status=active", ""]) {
@@ -267,13 +267,14 @@ describe("cashier bills: open ones by default, paid history a page at a time (VM
 
     it("open bills only, with their orders: the default, and ?status=open", async () => {
         await place("1");
-        await place("2");
-        const table2 = (await list()).body.find((b: { table: string }) => b.table === "2");
-        await pay(table2._id);
+        const [earlier] = (await list()).body;
+        await pay(earlier._id); // the table's earlier visit, paid
+        await place("1"); // its next visit
         for (const query of ["", "?status=open"]) {
             const res = await list(query);
             expect(res.status).toBe(200);
-            expect(res.body.map((b: { table: string }) => b.table)).toEqual(["1"]);
+            expect(res.body).toHaveLength(1);
+            expect(res.body[0]._id).not.toBe(earlier._id);
             expect(res.body[0].orders[0].orderedItems[0].item.name).toBe("Kuy Teav");
         }
         expect((await list("?status=everything")).status).toBe(400);
