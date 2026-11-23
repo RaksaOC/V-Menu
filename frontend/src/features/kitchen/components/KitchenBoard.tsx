@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Card from "./OrderCard";
+import KitchenSignOut from "./KitchenSignOut";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
@@ -99,6 +100,7 @@ export default function KitchenPage({ pollMs = 5000 }: { pollMs?: number } = {})
                 </div>
                 <div className="relative px-6 py-8">
                     <div className="max-w-6xl mx-auto">
+                        <KitchenSignOut slug={String(params.res)} />
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center gap-4 mb-4">
                                 <div className="p-3 bg-white/15 rounded-full backdrop-blur-sm">
