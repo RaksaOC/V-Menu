@@ -37,7 +37,8 @@ services:
   restaurant-service:
     <<: *service
     build:
-      context: ../../backend/services/restaurant
+      context: ../../backend
+      dockerfile: services/restaurant/Dockerfile
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
     env_file: ../../backend/services/restaurant/.env
@@ -50,7 +51,8 @@ services:
   menu-service:
     <<: *service
     build:
-      context: ../../backend/services/menu
+      context: ../../backend
+      dockerfile: services/menu/Dockerfile
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
     env_file: ../../backend/services/menu/.env
@@ -64,7 +66,8 @@ services:
   order-service:
     <<: *service
     build:
-      context: ../../backend/services/order
+      context: ../../backend
+      dockerfile: services/order/Dockerfile
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
     env_file: ../../backend/services/order/.env

@@ -4,9 +4,8 @@ version: 2
 updates:
   - package-ecosystem: npm
     directories:
-      - /backend/services/restaurant
-      - /backend/services/menu
-      - /backend/services/order
+      # backend/ is one workspace (CL-02): the services and packages/common share its lockfile.
+      - /backend
       - /frontend
       - /e2e
       - /

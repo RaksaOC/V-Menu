@@ -46,9 +46,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: restaurant-service, context: backend/services/restaurant }
-          - { name: menu-service, context: backend/services/menu }
-          - { name: order-service, context: backend/services/order }
+          - { name: restaurant-service, context: backend, file: backend/services/restaurant/Dockerfile }
+          - { name: menu-service, context: backend, file: backend/services/menu/Dockerfile }
+          - { name: order-service, context: backend, file: backend/services/order/Dockerfile }
           - { name: frontend, context: frontend }
     env:
       # Same names infra/compose/docker-compose.prod.yml pulls (unchanged by the CL-01 move).
@@ -77,6 +77,9 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
+          # The services build from backend/ (shared @vmenu/common) with their own Dockerfile;
+          # the frontend has no `file`, so its Dockerfile in the context is used.
+          file: ${{ matrix.file || format('{0}/Dockerfile', matrix.context) }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

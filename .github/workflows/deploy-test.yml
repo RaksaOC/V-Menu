@@ -59,8 +59,9 @@ jobs:
           # Image names keep the -service suffix; the folders are backend/services/<name>.
           for name in restaurant menu order; do
             svc="$name-service"
-            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V1" --build-arg "GIT_SHA=$SHA1" "backend/services/$name"
-            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V2" --build-arg "GIT_SHA=$SHA2" "backend/services/$name"
+            # Built from backend/ so the shared @vmenu/common package is in the context.
+            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V1" --build-arg "GIT_SHA=$SHA1" -f "backend/services/$name/Dockerfile" backend
+            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V2" --build-arg "GIT_SHA=$SHA2" -f "backend/services/$name/Dockerfile" backend
           done
           # A small stand-in frontend: the real one is built and tested by M3's CI. This test is
           # about deploying, and only needs something healthy on port 3400.

@@ -1,0 +1,11 @@
+# Build context for the service images is backend/ (CL-02). Keep it small and secret-free.
+**/node_modules
+**/dist
+**/coverage
+**/test
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+**/Dockerfile
+**/.dockerignore
