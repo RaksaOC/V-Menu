@@ -231,3 +231,19 @@ ok   VM-12-owner-staff-360
 ok   VM-12-add-staff-form-360
 ok   VM-12-login-360
 ok   VM-12-login-create-account-360
+# ONLY=VM-14 (2026-11-23T17:30:19.973Z)
+ok   VM-14-owner-login-1280
+ok   VM-14-cashier-login-1280
+ok   VM-14-kitchen-login-1280
+ok   VM-14-reset-form-1280
+ok   VM-14-reset-sent-1280
+ok   VM-14-owner-login-1280-dark
+ok   VM-14-cashier-login-1280-dark
+ok   VM-14-kitchen-login-1280-dark
+ok   VM-14-reset-form-1280-dark
+ok   VM-14-reset-sent-1280-dark
+ok   VM-14-owner-login-360
+ok   VM-14-cashier-login-360
+ok   VM-14-kitchen-login-360
+ok   VM-14-reset-form-360
+ok   VM-14-reset-sent-360
