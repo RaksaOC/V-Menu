@@ -95,7 +95,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
 
                                 {cancelling?.id === subOrder._id && (
                                     <form
-                                        className="mb-3 flex flex-wrap items-end gap-2 rounded-xl bg-red-50 p-3 dark:bg-red-950/40"
+                                        className="mb-3 flex flex-wrap items-end gap-2 rounded-xl bg-red-50 p-3 text-left dark:bg-red-950/40"
                                         onSubmit={(e) => {
                                             e.preventDefault();
                                             if (!cancelling.reason.trim()) return setCancelling({ ...cancelling, error: "Give a reason" });
@@ -126,7 +126,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                                 {cancelled ? (
                                     <>
                                         <del className="block opacity-60">{lines}</del>
-                                        <p className="pb-2 text-sm text-red-600 dark:text-red-400">
+                                        <p className="pb-2 text-left text-sm text-red-600 dark:text-red-400">
                                             Cancelled{subOrder.cancelReason ? `: ${subOrder.cancelReason}` : ""} (not charged)
                                         </p>
                                     </>
