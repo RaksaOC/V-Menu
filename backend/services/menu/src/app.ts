@@ -1,18 +1,25 @@
 import { Router, type Request } from "express";
 import mongoose from "mongoose";
 import { assertRestaurantAccess, requireRole, type Role, assertId, badRequest, HttpError, notFound, requireInternal, lookupRestaurant as defaultLookup, type LookupRestaurant, baseApp, finish } from "@vmenu/common";
+import { rateLimit } from "express-rate-limit";
 import { Item, Table } from "./models.js";
+import { PLACEHOLDER, imageUrl, isOwnImage, receivePhoto, reencode, removeImage, saveImage, sendImage } from "./images.js";
 
 const str = (v: unknown, max = 200) => (typeof v === "string" && v.trim() && v.length <= max ? v.trim() : null);
 
 // Only these fields can be set from a request body (no resId or _id smuggling).
-function itemFields(body: Record<string, unknown>, partial: boolean) {
+// The image must be one of this restaurant's uploaded photos (SEC-05), so an item can't point
+// customers' browsers at an outside server. An item's existing image may be sent back unchanged.
+function itemFields(body: Record<string, unknown>, partial: boolean, slug: string, currentImage?: string) {
     const out: Record<string, unknown> = {};
     const name = str(body.name, 120);
     const image = str(body.image, 2000);
     const price = Number(body.price);
     if (name) out.name = name;
-    if (image) out.image = image;
+    if (image && image !== currentImage) {
+        if (image !== PLACEHOLDER && !isOwnImage(image, slug)) throw badRequest("Upload the photo first; the image must be this restaurant's own photo");
+        out.image = image;
+    }
     if (body.price !== undefined && Number.isFinite(price) && price >= 0) out.price = price;
     if (typeof body.isEnabled === "boolean") out.isEnabled = body.isEnabled;
     if (!partial && (!out.name || !out.image || out.price === undefined)) throw badRequest("Name, price and image are required");
@@ -24,8 +31,21 @@ function flag(body: Record<string, unknown>) {
     return body.isEnabled;
 }
 
-export function createApp({ lookupRestaurant = defaultLookup }: { lookupRestaurant?: LookupRestaurant } = {}) {
+export function createApp({
+    lookupRestaurant = defaultLookup,
+    uploadsPerHour = Number(process.env.UPLOADS_PER_HOUR ?? 30),
+}: { lookupRestaurant?: LookupRestaurant; uploadsPerHour?: number } = {}) {
     const app = baseApp();
+
+    // SEC-05: photo uploads per restaurant per hour (keyed by restaurant, not by IP).
+    const uploadLimit = rateLimit({
+        windowMs: 60 * 60_000,
+        limit: uploadsPerHour,
+        standardHeaders: "draft-8",
+        legacyHeaders: false,
+        keyGenerator: (_req, res) => String(res.locals.restaurant._id),
+        handler: (_req, _res, next) => next(new HttpError(429, "Too many photo uploads for this restaurant. Please try again later.")),
+    });
 
     // Resolves :slug and checks the caller may act on that restaurant.
     async function restaurantFor(req: Request) {
@@ -74,19 +94,49 @@ export function createApp({ lookupRestaurant = defaultLookup }: { lookupRestaura
 
     menu.post("/items", requireRole("owner"), async (req, res) => {
         const restaurant = await restaurantFor(req);
-        res.status(201).json(await Item.create({ ...itemFields(req.body ?? {}, false), resId: restaurant._id }));
+        res.status(201).json(await Item.create({ ...itemFields(req.body ?? {}, false, restaurant.slug), resId: restaurant._id }));
     });
 
     menu.put("/items/:id", requireRole("owner"), async (req, res) => {
         const item = await ownItem(req);
-        item.set(itemFields(req.body ?? {}, true));
-        res.json(await item.save());
+        const slug = String(req.params.slug);
+        const before = item.image;
+        item.set(itemFields(req.body ?? {}, true, slug, before));
+        const saved = await item.save();
+        if (saved.image !== before) await removeImage(before, slug, item.resId);
+        res.json(saved);
     });
 
     menu.delete("/items/:id", requireRole("owner"), async (req, res) => {
         const item = await ownItem(req);
         await item.deleteOne();
+        await removeImage(item.image, String(req.params.slug), item.resId);
         res.json(item);
+    });
+
+    // ---------------- photos (VM-02, SEC-05) ----------------
+    // Owner uploads a photo; the answer is the short URL to save on the item.
+    menu.post(
+        "/images",
+        requireRole("owner"),
+        async (req, res, next) => {
+            res.locals.restaurant = await restaurantFor(req);
+            next();
+        },
+        uploadLimit,
+        receivePhoto,
+        async (req, res) => {
+            const restaurant = res.locals.restaurant;
+            const id = await saveImage(await reencode(req.file!.buffer), String(restaurant._id));
+            res.status(201).json({ url: imageUrl(restaurant.slug, id) });
+        },
+    );
+
+    // Public: customers' browsers load the photos.
+    menu.get("/images/:id", async (req, res) => {
+        const restaurant = await restaurantFor(req);
+        assertId(String(req.params.id), "image id");
+        await sendImage(res, String(req.params.id), String(restaurant._id));
     });
 
     // Cashier or owner switches a dish on or off.

@@ -22,6 +22,8 @@ const app = createApp({
 });
 const SLUG = "mee-keav-abc123";
 const RES_ID = RESTAURANTS[SLUG]._id;
+// SEC-05: an item's image must be one of the restaurant's uploaded photos.
+const PHOTO = `/api/menu/${SLUG}/images/${"a".repeat(24)}`;
 
 let mongo: MongoMemoryServer;
 let owner: Record<string, string>, cashier: Record<string, string>, otherOwner: Record<string, string>;
@@ -44,20 +46,20 @@ const addItem = (body: object) => request(app).post(`/api/menu/${SLUG}/items`).s
 
 describe("menu items", () => {
     it("owner adds an item; customers only see enabled ones", async () => {
-        await addItem({ name: "Kuy Teav", price: 2.5, image: "/images/kuy-teav.jpg" });
-        const hidden = await addItem({ name: "Lok Lak", price: 4, image: "/images/lok-lak.jpg", isEnabled: false });
+        await addItem({ name: "Kuy Teav", price: 2.5, image: PHOTO });
+        const hidden = await addItem({ name: "Lok Lak", price: 4, image: PHOTO, isEnabled: false });
         expect(hidden.status).toBe(201);
         const pub = await request(app).get(`/api/menu/${SLUG}/public/items`);
         expect(pub.body.map((i: { name: string }) => i.name)).toEqual(["Kuy Teav"]);
     });
 
     it("ignores a resId in the body", async () => {
-        const res = await addItem({ name: "Nom Banh Chok", price: 2, image: "x.jpg", resId: "665f00000000000000000002" });
+        const res = await addItem({ name: "Nom Banh Chok", price: 2, image: PHOTO, resId: "665f00000000000000000002" });
         expect(res.body.resId).toBe(RES_ID);
     });
 
     it("lets a cashier switch an item off, but not delete it", async () => {
-        const { body: item } = await addItem({ name: "Amok", price: 5, image: "a.jpg" });
+        const { body: item } = await addItem({ name: "Amok", price: 5, image: PHOTO });
         const off = await request(app).patch(`/api/menu/${SLUG}/items/${item._id}/availability`).set(cashier).send({ isEnabled: false });
         expect(off.body.isEnabled).toBe(false);
         expect((await request(app).delete(`/api/menu/${SLUG}/items/${item._id}`).set(cashier)).status).toBe(403);
@@ -82,7 +84,7 @@ describe("tables", () => {
 
 describe("order check (internal)", () => {
     it("returns server prices and rejects closed tables", async () => {
-        const { body: item } = await addItem({ name: "Bai Sach Chrouk", price: 3, image: "b.jpg" });
+        const { body: item } = await addItem({ name: "Bai Sach Chrouk", price: 3, image: PHOTO });
         const { body: table } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "A1" });
         const check = (t: string) =>
             request(app).post(`/internal/restaurants/${RES_ID}/order-check`).set("x-internal-key", "internal-test-key").send({ table: t, items: [{ _id: item._id, quantity: 2 }] });
