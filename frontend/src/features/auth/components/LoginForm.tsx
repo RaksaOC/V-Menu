@@ -47,6 +47,8 @@ function FieldError({ id, text }: { id: string; text?: string }) {
     );
 }
 
+const ROOM_FOR_EYE = "pr-10"; // the show/hide button sits inside the field
+
 const fieldClass = (bad: boolean, right: string) =>
     `w-full pl-10 ${right} py-3 rounded-xl bg-zinc-50/50 dark:bg-black/20 border focus:outline-none focus:ring-2 transition duration-200 text-zinc-800 dark:text-white ${
         bad ? "border-red-500 focus:ring-red-500" : "border-zinc-300 dark:border-zinc-700 focus:border-blue-500 focus:ring-blue-500"
@@ -123,6 +125,7 @@ export function LoginForm({
         setProblems({});
     }
 
+    const passwordBad = Boolean(problems.password);
     const notice = problems.notice && (
         <p role="alert" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
             {problems.notice}
@@ -246,7 +249,7 @@ export function LoginForm({
                                         setPassword(e.target.value);
                                         setProblems((p) => ({ ...p, password: undefined }));
                                     }}
-                                    className={fieldClass(Boolean(problems.password), "pr-10")}
+                                    className={fieldClass(passwordBad, ROOM_FOR_EYE)}
                                 />
                                 <button
                                     type="button"
