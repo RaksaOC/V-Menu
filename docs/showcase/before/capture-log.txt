@@ -191,3 +191,10 @@ ok   VM-19-other-restaurant-1280-dark
 ok   VM-19-kitchen-360
 ok   VM-19-kitchen-history-360
 ok   VM-19-other-restaurant-360
+# ONLY=VM-20 (2026-11-23T17:59:24.487Z)
+ok   VM-20-owner-header-1280
+ok   VM-20-cashier-1280
+ok   VM-20-owner-header-1280-dark
+ok   VM-20-cashier-1280-dark
+ok   VM-20-owner-header-360
+ok   VM-20-cashier-360

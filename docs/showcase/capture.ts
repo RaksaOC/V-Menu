@@ -940,6 +940,29 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-20: the header shows who is really signed in, and the cashier page has no render error.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-20 ${vp.width} ${theme}`, async () => {
+        const owner = await newPage(browser, vp, theme, "owner");
+        await owner.page.goto(`${BASE}/owner`);
+        await settle(owner.page);
+        await owner.page.locator("header button").first().click({ timeout: 5000 });
+        await owner.page.getByRole("menu").waitFor({ timeout: 5000 });
+        await shot({ page: owner.page, theme, width: vp.width }, "VM-20-owner-header", false);
+        await owner.context.close();
+
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-20-cashier", false);
+        await cashier.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
