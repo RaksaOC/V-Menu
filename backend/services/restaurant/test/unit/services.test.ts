@@ -6,6 +6,7 @@ import { staffService } from "../../src/services/staff.service.js";
 import { fakeRestaurants, fakeTenants, newId } from "./fakes.js";
 
 // CL-04: restaurant-service's business rules, with in-memory repositories (no MongoDB, no HTTP).
+process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123"; // login signs app tokens
 const status = (p: Promise<unknown>) => p.then(() => 200).catch((e: { status?: number }) => e.status ?? 500);
 const ALICE = { uid: "alice", email: "alice@x.test" };
 const owner = (uid = ALICE.uid) => ({ uid, email: `${uid}@x.test`, role: "owner" as const });

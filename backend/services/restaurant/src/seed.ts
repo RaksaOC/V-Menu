@@ -3,7 +3,8 @@
 
 import mongoose from "mongoose";
 import { requireEnv } from "@vmenu/common";
-import { Restaurant, Tenant } from "./models.js";
+import { Restaurant } from "./models/restaurant.model.js";
+import { Tenant } from "./models/tenant.model.js";
 
 const DEMO_RES_ID = "64b000000000000000000001";
 const DEMO_SLUG = "demo-bistro";
