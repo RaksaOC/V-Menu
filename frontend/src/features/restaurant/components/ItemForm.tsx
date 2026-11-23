@@ -93,7 +93,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
 
     return (
         <Modal title={item ? "Edit Menu Item" : "Add Menu Item"} onClose={onClose} footer={footer}>
-            <form id={formId} onSubmit={submit} className="space-y-5">
+            <form id={formId} onSubmit={submit} noValidate className="space-y-5">
                 <div className="space-y-2">
                     <span className="block text-sm font-semibold">Item Image</span>
                     <div className="flex items-start gap-4">

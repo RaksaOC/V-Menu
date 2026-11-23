@@ -11,7 +11,8 @@ const Price = z.preprocess(
         .number({
             error: ({ input }) => (input === undefined || (typeof input === "string" && !input.trim()) ? "Required" : "Must be a number"),
         })
-        .min(0, "Must be 0 or more"),
+        .min(0, "Must be 0 or more")
+        .refine((v) => Number(v.toFixed(2)) === v, "At most 2 decimal places"),
 );
 
 export const CreateItemBody = z.object({

@@ -15,5 +15,6 @@ export function checkItem({ name, price }: { name: string; price: string }): Ite
     if (!price.trim()) errors.price = "Required";
     else if (!Number.isFinite(Number(price))) errors.price = "Must be a number";
     else if (Number(price) < 0) errors.price = "Must be 0 or more";
+    else if (Number(Number(price).toFixed(2)) !== Number(price)) errors.price = "At most 2 decimal places";
     return errors;
 }
