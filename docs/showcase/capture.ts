@@ -989,7 +989,11 @@ for (const [vp, theme] of [
             await owner.page.getByRole("button", { name: "Save settings" }).click();
             await owner.page.getByText("Saved").waitFor({ timeout: 10_000 });
         }
-        await shot({ page: owner.page, theme, width: vp.width }, "VM-24-preferences");
+        // a viewport shot: a full-page one paints the owner's sticky header halfway down
+        await owner.page.getByRole("heading", { name: "Preferences" }).scrollIntoViewIfNeeded();
+        await owner.page.mouse.wheel(0, vp === PHONE ? 0 : 280);
+        await settle(owner.page);
+        await shot({ page: owner.page, theme, width: vp.width }, "VM-24-preferences", false);
         await owner.context.close();
 
         const cashier = await newPage(browser, vp, theme, "cashier");
@@ -1021,6 +1025,9 @@ for (const [vp, theme] of [
 
         const customer = await newPage(browser, vp, theme);
         await customer.page.goto(`${BASE}/${SLUG}/customer/T1`);
+        await settle(customer.page);
+        await customer.page.getByText(/^\$\d/).first().scrollIntoViewIfNeeded();
+        await customer.page.mouse.wheel(0, 120);
         await settle(customer.page);
         await shot({ page: customer.page, theme, width: vp.width }, "VM-24-customer-menu", false);
         await customer.context.close();

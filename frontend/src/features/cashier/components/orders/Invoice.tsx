@@ -59,19 +59,20 @@ function Invoice({ slug, table, billNumber, date, lines, subtotalCents, totalCen
                 <table className="mb-6 w-full border-t border-b border-black text-sm">
                     <thead>
                         <tr className="border-b border-black text-left">
-                            <th className="py-2">Item</th>
-                            <th className="py-2">Qty</th>
-                            <th className="py-2">Price</th>
+                            <th className="py-2 pr-3">Item</th>
+                            <th className="py-2 pr-3">Qty</th>
+                            {/* narrow screens and receipt paper: name, quantity and amount only */}
+                            <th className="hidden py-2 pr-3 sm:table-cell">Price</th>
                             <th className="py-2 text-right">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         {lines.map((line) => (
                             <tr key={`${line._id}:${line.priceCents}`} className="border-b border-dashed">
-                                <td className="py-2 pr-2 text-left">{line.name}</td>
-                                <td className="py-2 pr-2 text-left">{line.quantity}</td>
-                                <td className="py-2 pr-2 text-left">{money(line.priceCents)}</td>
-                                <td className="py-2 text-right">{money(line.totalCents)}</td>
+                                <td className="py-2 pr-3 text-left">{line.name}</td>
+                                <td className="py-2 pr-3 text-left">{line.quantity}</td>
+                                <td className="hidden whitespace-nowrap py-2 pr-3 text-left sm:table-cell">{money(line.priceCents)}</td>
+                                <td className="whitespace-nowrap py-2 text-right">{money(line.totalCents)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -81,13 +82,13 @@ function Invoice({ slug, table, billNumber, date, lines, subtotalCents, totalCen
                     <div className="w-full sm:w-2/3">
                         <div className="flex justify-between gap-4 border-t border-black py-2">
                             <span>Subtotal</span>
-                            <span>{money(subtotalCents)}</span>
+                            <span className="whitespace-nowrap">{money(subtotalCents)}</span>
                         </div>
                         <div className="flex justify-between gap-4 border-t border-black py-2">
                             <span>
                                 <strong>Total</strong>
                             </span>
-                            <span>
+                            <span className="whitespace-nowrap">
                                 <strong>{money(totalCents)}</strong>
                             </span>
                         </div>
