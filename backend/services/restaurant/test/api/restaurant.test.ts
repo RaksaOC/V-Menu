@@ -115,6 +115,24 @@ describe("owner routes", () => {
         expect(removed.status).toBe(200);
     });
 
+    it("invites a cashier by email; their first verified sign-in links the account (VM-12)", async () => {
+        const slug = await signUp();
+        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
+        const invited = await request(app)
+            .post(`/api/restaurants/${slug}/staff`)
+            .set(auth)
+            .send({ name: "Dara", email: "dara@x.com", role: "cashier" });
+        expect(invited.status).toBe(201);
+        expect(invited.body.tenantId).toBeNull();
+        expect((await request(app).post("/api/auth/memberships").send({ idToken: "dara-uid:dara@x.com:unverified" })).body).toEqual({});
+        const roles = await request(app).post("/api/auth/memberships").send({ idToken: "dara-uid:dara@x.com" });
+        expect(roles.body).toEqual({ [`Mee Keav - ${slug}`]: ["cashier"] });
+        const [linked] = (await request(app).get(`/api/restaurants/${slug}/staff`).set(auth)).body.filter(
+            (m: { email: string }) => m.email === "dara@x.com",
+        );
+        expect(linked.tenantId).toBe("dara-uid");
+    });
+
     it("rejects a cashier token on owner routes", async () => {
         const token = await signAppToken({ uid: "u9", email: "v@x.com", role: "cashier" });
         const res = await request(app).get("/api/restaurants").set("authorization", `Bearer ${token}`);

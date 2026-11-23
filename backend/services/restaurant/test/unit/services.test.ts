@@ -200,3 +200,69 @@ describe("staff roles matched by email need a verified email (VM-13)", () => {
         expect((await auth.login({ idToken: "unverified:owner:owner@x.test", role: "chef", resSlug: slug })).role).toBe("chef");
     });
 });
+
+describe("staff invites (VM-12)", () => {
+    async function twoRestaurants() {
+        const s = setup();
+        const r = await s.places.createForOwner("Mee Keav", { ...ALICE, name: "Alice" });
+        const other = await s.places.createForOwner("Other", { uid: "zed", email: "zed@x.test", name: "Zed" });
+        return { ...s, r, other };
+    }
+    const row = (s: { memberships: { all: { email: string; resId: string; tenantId: string | null }[] } }, email: string, resId: string) =>
+        s.memberships.all.find((t) => t.email === email && t.resId === resId)!;
+
+    it("the owner invites by name, email and role; there's no account to link yet", async () => {
+        const s = await twoRestaurants();
+        const added = await s.staff.add(owner(), s.r.slug, { name: "Bob", email: "BOB@x.test", role: "cashier" });
+        expect(added).toMatchObject({ name: "Bob", email: "bob@x.test", role: "cashier", tenantId: null });
+        // an account id in the body is ignored: the owner can't attach the role to someone's account
+        const sneaky = await s.staff.add(owner(), s.r.slug, { name: "Eve", email: "eve@x.test", role: "chef", tenantId: "someone-else" });
+        expect(sneaky.tenantId).toBeNull();
+        expect(await status(s.staff.add(owner(), s.r.slug, { name: "Bob again", email: "bob@X.test", role: "cashier" }))).toBe(409);
+    });
+
+    it("the first verified sign-in links the invite to that account", async () => {
+        const s = await twoRestaurants();
+        await s.staff.add(owner(), s.r.slug, { name: "Bob", email: "bob@x.test", role: "cashier" });
+        expect(await s.auth.memberships({ idToken: "id:bob-uid:bob@x.test" })).toEqual({ [`Mee Keav - ${s.r.slug}`]: ["cashier"] });
+        expect(row(s, "bob@x.test", String(s.r._id)).tenantId).toBe("bob-uid");
+        expect((await s.auth.login({ idToken: "id:bob-uid:bob@x.test", role: "cashier", resSlug: s.r.slug })).role).toBe("cashier");
+    });
+
+    it("signing straight in (without the roles list first) links it too", async () => {
+        const s = await twoRestaurants();
+        await s.staff.add(owner(), s.r.slug, { name: "Bob", email: "bob@x.test", role: "chef" });
+        expect((await s.auth.login({ idToken: "id:bob-uid:bob@x.test", role: "chef", resSlug: s.r.slug })).role).toBe("chef");
+        expect(row(s, "bob@x.test", String(s.r._id)).tenantId).toBe("bob-uid");
+    });
+
+    it("an unverified sign-in doesn't link it, and doesn't get in", async () => {
+        const s = await twoRestaurants();
+        await s.staff.add(owner(), s.r.slug, { name: "Bob", email: "bob@x.test", role: "cashier" });
+        expect(await s.auth.memberships({ idToken: "unverified:mallory:bob@x.test" })).toEqual({});
+        expect(await status(s.auth.login({ idToken: "unverified:mallory:bob@x.test", role: "cashier", resSlug: s.r.slug }))).toBe(401);
+        expect(row(s, "bob@x.test", String(s.r._id)).tenantId).toBeNull();
+    });
+
+    it("once linked, the invite belongs to that account", async () => {
+        const s = await twoRestaurants();
+        await s.staff.add(owner(), s.r.slug, { name: "Bob", email: "bob@x.test", role: "cashier" });
+        await s.auth.memberships({ idToken: "id:bob-uid:bob@x.test" });
+        // a later account with that email (say Bob deleted his and made a new one) gets nothing
+        expect(await s.auth.memberships({ idToken: "id:another-uid:bob@x.test" })).toEqual({});
+        expect(await status(s.auth.login({ idToken: "id:another-uid:bob@x.test", role: "cashier", resSlug: s.r.slug }))).toBe(401);
+        expect(row(s, "bob@x.test", String(s.r._id)).tenantId).toBe("bob-uid");
+    });
+
+    it("the same email can be staff at two restaurants", async () => {
+        const s = await twoRestaurants();
+        const zed = { uid: "zed", email: "zed@x.test", role: "owner" as const };
+        await s.staff.add(owner(), s.r.slug, { name: "Bob", email: "bob@x.test", role: "cashier" });
+        await s.staff.add(zed, s.other.slug, { name: "Bob", email: "bob@x.test", role: "chef" });
+        expect(await s.auth.memberships({ idToken: "id:bob-uid:bob@x.test" })).toEqual({
+            [`Mee Keav - ${s.r.slug}`]: ["cashier"],
+            [`Other - ${s.other.slug}`]: ["chef"],
+        });
+        expect(row(s, "bob@x.test", String(s.other._id)).tenantId).toBe("bob-uid");
+    });
+});
