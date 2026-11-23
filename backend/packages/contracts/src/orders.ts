@@ -65,6 +65,10 @@ export const Order = z.object({
 });
 export type Order = z.infer<typeof Order>;
 
+/** VM-31: one line of a bill: the same dish at the same price, merged across the bill's orders. */
+export const BillLine = z.object({ _id: z.string(), name: z.string(), priceCents: Cents, quantity: z.number().int(), totalCents: Cents });
+export type BillLine = z.infer<typeof BillLine>;
+
 /** A table's bill: the orders of one visit, open until the cashier marks it paid. */
 export const Bill = z.object({
     _id: z.string(),
@@ -73,6 +77,10 @@ export const Bill = z.object({
     /** @deprecated CL-06: the same as isPaid, for clients not yet updated; gone in the next release. */
     isPayed: z.boolean().optional(),
     orders: z.array(Order),
+    /** VM-31: worked out by the server, in cents; cancelled orders left out */
+    lines: z.array(BillLine),
+    subtotalCents: Cents,
+    totalCents: Cents,
     resId: z.string().optional(),
     createdAt: IsoDate,
     updatedAt: IsoDate.optional(),
@@ -122,6 +130,9 @@ export type TableOrderView = z.infer<typeof TableOrderView>;
 export const TableBill = z.object({
     table: z.string(),
     orders: z.array(TableOrderView),
+    /** VM-31: the same lines and totals the cashier sees */
+    lines: z.array(BillLine),
+    subtotalCents: Cents,
     totalCents: Cents,
     /** @deprecated CL-07: in dollars, for pages opened before the deploy; gone in the next release. */
     total: z.number().optional(),

@@ -17,6 +17,9 @@ export const bill: Bill = {
     isPaid: false,
     createdAt: "2026-11-23T10:00:00.000Z",
     orders: [order],
+    lines: [{ _id: dish._id, name: dish.name, priceCents: dish.priceCents, quantity: 2, totalCents: 500 }],
+    subtotalCents: 500,
+    totalCents: 500,
 };
 export const overview: Overview = {
     activeTableCount: 1,

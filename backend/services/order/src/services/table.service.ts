@@ -1,6 +1,7 @@
 import { assertId, notFound } from "@vmenu/common";
 import type { BillsRepo } from "../repositories/bills.repo.js";
 import type { OrderRecord, OrdersRepo } from "../repositories/orders.repo.js";
+import { billTotals } from "./bill-totals.js";
 
 // VM-07: what a customer at a table may see: their table's orders as the server saved them
 // (dishes, the menu's prices, totals). Nothing internal: no restaurant id, no other table.
@@ -48,11 +49,10 @@ export function tableService({ orders, bills }: { orders: OrdersRepo; bills: Bil
         /** The table's open bill: its orders so far and the running total (empty once paid). */
         async openBill(resId: string, table: string) {
             const bill = await bills.findOpen(resId, table);
-            const list = (bill?.orders ?? []).map(view);
-            // VM-27: a cancelled order stays on the bill but isn't charged
-            const charged = list.filter((o) => o.status !== "cancelled");
-            const totalCents = charged.reduce((sum, o) => sum + o.totalCents, 0);
-            return { table, orders: list, totalCents, total: totalCents / 100 };
+            const orders = bill?.orders ?? [];
+            // VM-27: a cancelled order stays on the bill but isn't charged. VM-31: the same totals as the cashier's.
+            const totals = billTotals(orders);
+            return { table, orders: orders.map(view), ...totals, total: totals.totalCents / 100 };
         },
     };
 }

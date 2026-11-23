@@ -100,7 +100,7 @@ describe("prices in the API are whole cents (CL-07)", () => {
                 totalCents: 705,
             }).success,
         ).toBe(true);
-        expect(C.TableBill.safeParse({ table: "1", orders: [], totalCents: 0 }).success).toBe(true);
+        expect(C.TableBill.safeParse({ table: "1", orders: [], lines: [], subtotalCents: 0, totalCents: 0 }).success).toBe(true);
         const overview = {
             tableCount: 1,
             activeTableCount: 1,

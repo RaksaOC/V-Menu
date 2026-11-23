@@ -2,7 +2,7 @@ import { Printer, X } from "lucide-react";
 import { useRef } from "react";
 import { Button, Modal } from "@/components/ui";
 import { formatMoney } from "@/lib/money";
-import type { MenuItem, OrderLine } from "@vmenu/contracts";
+import type { BillLine } from "@vmenu/contracts";
 
 interface Props {
     businessName: string;
@@ -10,29 +10,19 @@ interface Props {
     phone: string;
     invoiceId: string;
     date: string;
-    items: OrderLine[];
+    /** VM-31: the server's merged lines and totals */
+    lines: BillLine[];
+    subtotalCents: number;
+    totalCents: number;
     onClose: () => void;
 }
 
-function Invoice({ businessName, address, phone, invoiceId, date, items, onClose }: Props) {
-    // Combine duplicate items by id
-    const mergedItems: OrderLine[] = [];
+function Invoice({ businessName, address, phone, invoiceId, date, lines, subtotalCents, totalCents, onClose }: Props) {
     const invoiceRef = useRef<HTMLDivElement>(null);
     const printInvoice = () => {
         if (!invoiceRef.current) return;
         window.print();
     };
-
-    items.forEach((item) => {
-        const existing = mergedItems.find((i) => i.item._id === item.item._id);
-        if (existing) {
-            existing.quantity += item.quantity;
-        } else {
-            mergedItems.push({ ...item });
-        }
-    });
-
-    const totalCents = mergedItems.reduce((sum, item) => sum + item.item.priceCents * item.quantity, 0);
 
     return (
         <Modal
@@ -71,16 +61,16 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, onClose
                             <th className="py-2">Item</th>
                             <th className="py-2">Qty</th>
                             <th className="py-2">Price</th>
-                            <th className="py-2 text-right">Subtotal</th>
+                            <th className="py-2 text-right">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {mergedItems.map((item, index) => (
-                            <tr key={index} className="border-b border-dashed">
-                                <td className="py-2 text-left">{item.item.name}</td>
-                                <td className="py-2 text-left">{item.quantity}</td>
-                                <td className="py-2 text-left">{formatMoney(item.item.priceCents)}</td>
-                                <td className="py-2 text-right">{formatMoney(item.item.priceCents * item.quantity)}</td>
+                        {lines.map((line) => (
+                            <tr key={`${line._id}:${line.priceCents}`} className="border-b border-dashed">
+                                <td className="py-2 text-left">{line.name}</td>
+                                <td className="py-2 text-left">{line.quantity}</td>
+                                <td className="py-2 text-left">{formatMoney(line.priceCents)}</td>
+                                <td className="py-2 text-right">{formatMoney(line.totalCents)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -88,6 +78,10 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, onClose
 
                 <div className="flex justify-end text-sm">
                     <div className="w-full sm:w-1/2">
+                        <div className="flex justify-between py-2 border-t border-black">
+                            <span>Subtotal</span>
+                            <span>{formatMoney(subtotalCents)}</span>
+                        </div>
                         <div className="flex justify-between py-2 border-t border-black">
                             <span>
                                 <strong>Total</strong>

@@ -329,7 +329,7 @@ describe("what the customer sees after ordering (VM-07)", () => {
         const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
         await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
         const res = await tableApi("1", "/open-bill");
-        expect(res.body).toEqual({ table: "1", orders: [], totalCents: 0, total: 0 });
+        expect(res.body).toEqual({ table: "1", orders: [], lines: [], subtotalCents: 0, totalCents: 0, total: 0 });
     });
 });
 

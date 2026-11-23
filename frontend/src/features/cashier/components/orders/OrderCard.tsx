@@ -142,6 +142,16 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                 ) : (
                     <p className="text-zinc-500 dark:text-zinc-400">No orders found.</p>
                 )}
+                {subOrders.length > 0 && (
+                    <div
+                        role="group"
+                        aria-label="Bill total"
+                        className="mx-4 mt-2 flex items-center justify-between border-t border-zinc-300 pt-3 dark:border-zinc-600"
+                    >
+                        <span className="font-semibold text-zinc-700 dark:text-zinc-200">Bill total</span>
+                        <span className="text-lg font-bold text-zinc-900 dark:text-white">{formatMoney(order.totalCents)}</span>
+                    </div>
+                )}
             </div>
 
             {showInvoice && (
@@ -151,7 +161,9 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                     phone={"(123) 456-7890"}
                     invoiceId={`${order._id}`}
                     date={formatDateTime(new Date())}
-                    items={subOrders.filter((sub) => sub.status !== "cancelled").flatMap((sub) => sub.orderedItems)}
+                    lines={order.lines}
+                    subtotalCents={order.subtotalCents}
+                    totalCents={order.totalCents}
                     onClose={() => setShowInvoice(false)}
                 />
             )}

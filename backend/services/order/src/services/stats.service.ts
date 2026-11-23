@@ -3,6 +3,7 @@ import { DateRangeQuery, type MenuCounts, type TopSeller } from "@vmenu/contract
 import type { BoundClients } from "../clients/index.js";
 import type { BillRecord, BillsRepo } from "../repositories/bills.repo.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
+import { billTotals } from "./bill-totals.js";
 
 /** VM-09: ?from=&to= (both optional), checked: a 400 names a bad date. */
 function period(query: unknown) {
@@ -14,22 +15,22 @@ function period(query: unknown) {
 const tableCounts = (c: MenuCounts) => ({ tableCount: c.numOfTables, activeTableCount: c.numOfActiveTables, itemCount: c.numOfItems });
 
 /**
- * VM-09: what was sold, from paid bills only. Cancelled orders count nowhere (VM-27). Money is in
- * whole cents (CL-07). Top sellers are grouped by dish id, shown with the dish's most recent name.
+ * VM-09: what was sold, from paid bills only. Cancelled orders count nowhere (VM-27). Revenue is
+ * the sum of the same bill totals the cashier sees (VM-31). Top sellers are grouped by dish id, shown with the dish's most recent name.
  */
 export function sales(paid: BillRecord[]) {
-    let revenueCents = 0;
     let itemsSoldCount = 0;
     let orderCount = 0;
     const sold = new Map<string, TopSeller & { at: number }>();
+    let revenueCents = 0;
     for (const bill of paid) {
+        revenueCents += billTotals(bill.orders).totalCents;
         for (const order of bill.orders) {
             if (!order || order.status === "cancelled") continue;
             orderCount++;
             const at = new Date(order.createdAt).getTime();
             for (const { item, quantity } of order.orderedItems) {
                 if (!item) continue;
-                revenueCents += (item.priceCents ?? 0) * quantity;
                 itemsSoldCount += quantity;
                 const id = String(item._id);
                 const seen = sold.get(id) ?? { _id: id, name: item.name, quantity: 0, at };

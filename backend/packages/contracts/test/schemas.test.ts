@@ -155,8 +155,26 @@ describe("orders", () => {
         expect(C.UpdateBillBody.parse({ isPaid: true, isPayed: false })).toEqual({ isPaid: true });
         expect(fieldsOf(C.UpdateBillBody, {})).toEqual(["isPaid"]);
         expect(fieldsOf(C.UpdateBillBody, { isPayed: "yes" })).toEqual(["isPaid"]);
-        ok(C.Bill, { _id: ID, table: "1", isPaid: true, orders: [], createdAt: "2026-11-23T10:00:00.000Z" });
-        fieldsOf(C.Bill, { _id: ID, table: "1", isPayed: true, orders: [], createdAt: "2026-11-23T10:00:00.000Z" });
+        ok(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPaid: true,
+            orders: [],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: "2026-11-23T10:00:00.000Z",
+        });
+        fieldsOf(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPayed: true,
+            orders: [],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: "2026-11-23T10:00:00.000Z",
+        });
     });
 
     it("UpdateBillBody, Order, Bill and the pages", () => {
@@ -164,7 +182,16 @@ describe("orders", () => {
         expect(fieldsOf(C.UpdateBillBody, { isPaid: "yes" })).toEqual(["isPaid"]);
         ok(C.Order, order);
         fieldsOf(C.Order, { ...order, status: "done" });
-        ok(C.Bill, { _id: ID, table: "1", isPaid: false, orders: [order], createdAt: order.createdAt });
+        ok(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPaid: false,
+            orders: [order],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: order.createdAt,
+        });
         ok(C.KitchenHistoryPage, { orders: [order], page: 1, limit: 20, total: 1, pages: 1 });
         fieldsOf(C.PaidBillsPage, { bills: [], page: 1, limit: 20, total: 1 });
     });
@@ -180,7 +207,7 @@ describe("orders", () => {
             totalCents: 500,
         };
         ok(C.TableOrderView, view);
-        ok(C.TableBill, { table: "1", orders: [view], totalCents: 500 });
+        ok(C.TableBill, { table: "1", orders: [view], lines: [], subtotalCents: 500, totalCents: 500 });
         // VM-09: the counts are named xCount, and the revenue comes with the range it covers
         const six = {
             tableCount: 1,

@@ -49,7 +49,7 @@ describe("the server's totals (VM-31)", () => {
         expect(within(row).getByText("3")).toBeTruthy();
         expect(within(row).getByText("$2.35")).toBeTruthy();
         expect(within(row).getByText("$7.77")).toBeTruthy();
-        expect(within(invoice.getByText("Subtotal", { selector: "div *" }).closest("div")!).getByText("$8.88")).toBeTruthy();
+        expect(within(invoice.getByText("Subtotal").closest("div")!).getByText("$8.88")).toBeTruthy();
         expect(within(invoice.getByText("Total").closest("div")!).getByText("$9.99")).toBeTruthy();
     });
 });

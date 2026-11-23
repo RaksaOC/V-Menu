@@ -365,8 +365,22 @@ describe("what the customer sees (VM-07)", () => {
         expect(bill.orders.map((o) => o.totalCents)).toEqual([250, 500]);
         expect(bill.totalCents).toBe(750);
         await billing.setPaid(R1._id, bills.all[0]._id, true);
-        expect(await tableView.openBill(R1._id, "1")).toEqual({ table: "1", orders: [], totalCents: 0, total: 0 });
-        expect(await tableView.openBill(R1._id, "x".repeat(41))).toEqual({ table: "x".repeat(41), orders: [], totalCents: 0, total: 0 });
+        expect(await tableView.openBill(R1._id, "1")).toEqual({
+            table: "1",
+            orders: [],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            total: 0,
+        });
+        expect(await tableView.openBill(R1._id, "x".repeat(41))).toEqual({
+            table: "x".repeat(41),
+            orders: [],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            total: 0,
+        });
     });
 
     it("rounds money to cents", async () => {

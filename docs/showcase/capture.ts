@@ -918,6 +918,44 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-31: the cashier's bill and invoice for a table with the same dish on two orders. The bill's
+// total and the invoice's merged lines come from the server.
+const VM31 = { ready: false };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-31 ${vp.width} ${theme}`, async () => {
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM31.ready) {
+            VM31.ready = true;
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open) await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            for (const lines of [
+                [{ item: { _id: menu[0]._id }, quantity: 2 }],
+                [
+                    { item: { _id: menu[0]._id }, quantity: 1 },
+                    { item: { _id: menu[3]._id }, quantity: 3 },
+                ],
+            ])
+                await cashier.page.request.post(api(""), { data: { table: "T3", orderedItems: lines } });
+        }
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T3" }) });
+        await card.getByRole("button", { name: "View Invoice" }).scrollIntoViewIfNeeded();
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-31-cashier-bill", false);
+        await card.getByRole("button", { name: "View Invoice" }).click();
+        await cashier.page.getByRole("dialog").waitFor();
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-31-invoice", false);
+        await cashier.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
