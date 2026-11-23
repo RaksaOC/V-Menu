@@ -32,7 +32,8 @@ describe("one way to call the API and to show a toast (CL-10)", () => {
         readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? files(join(dir, n)) : [join(dir, n)]));
     const code = files(src)
         .filter((f) => /\.tsx?$/.test(f))
-        .map((f) => ({ f: f.slice(src.length + 1), text: readFileSync(f, "utf8") }));
+        // Forward slashes on every OS, so the path checks below also work on Windows.
+        .map((f) => ({ f: f.slice(src.length + 1).replace(/\\/g, "/"), text: readFileSync(f, "utf8") }));
 
     it("only lib/api.ts imports axios", () => {
         const users = code.filter(({ text }) => /from ["']axios["']/.test(text)).map(({ f }) => f);
@@ -41,7 +42,7 @@ describe("one way to call the API and to show a toast (CL-10)", () => {
 
     it("components call typed functions, never the API client directly", () => {
         const direct = code
-            .filter(({ f }) => f.includes("/components/") && /\bapi\.(get|post|put|patch|delete)\b/.test(code.find((c) => c.f === f)!.text))
+            .filter(({ f, text }) => f.includes("/components/") && /\bapi\.(get|post|put|patch|delete)\b/.test(text))
             .map(({ f }) => f);
         expect(direct).toEqual([]);
     });
