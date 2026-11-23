@@ -176,3 +176,42 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
         expect(Object.keys(res.body.fields).sort()).toEqual(["email", "role"]);
     });
 });
+
+describe("failed sign-ins are counted (SEC-10)", () => {
+    const failures = async (reason: string) => {
+        const { text } = await request(app).get("/metrics");
+        const line = text.split("\n").find((l) => l.startsWith("vmenu_auth_failures_total{") && l.includes(`reason="${reason}"`));
+        return line ? Number(line.split(" ").pop()) : 0;
+    };
+
+    it("no Firebase token", async () => {
+        const before = await failures("no_token");
+        expect((await request(app).post("/api/auth/login").send({ role: "owner" })).status).toBe(401);
+        expect(await failures("no_token")).toBe(before + 1);
+    });
+
+    it("a token Firebase doesn't confirm", async () => {
+        const before = await failures("bad_token");
+        expect((await request(app).post("/api/auth/login").send({ idToken: "nonsense", role: "owner" })).status).toBe(401);
+        expect(await failures("bad_token")).toBe(before + 1);
+    });
+
+    it("a real account without that role", async () => {
+        const slug = await signUp();
+        const before = await failures("wrong_role");
+        const asOwner = await request(app).post("/api/auth/login").send({ idToken: "someone:someone@x.com", role: "owner" });
+        const asChef = await request(app).post("/api/auth/login").send({ idToken: "someone:someone@x.com", role: "chef", resSlug: slug });
+        expect([asOwner.status, asChef.status]).toEqual([401, 401]);
+        expect(await failures("wrong_role")).toBe(before + 2);
+    });
+
+    it("the sign-in rate limit counts, and its answer stays the same", async () => {
+        const limited = createApp({ verifyIdToken: async () => ({ uid: "u", email: "u@x.com", emailVerified: true }) });
+        const before = await failures("rate_limited");
+        let last: request.Response | undefined;
+        for (let i = 0; i < 31; i++) last = await request(limited).post("/api/auth/logout");
+        expect(last!.status).toBe(429);
+        expect(last!.text).toBe("Too many requests, please try again later.");
+        expect(await failures("rate_limited")).toBe(before + 1);
+    });
+});
