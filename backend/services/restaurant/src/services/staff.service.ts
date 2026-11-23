@@ -36,7 +36,8 @@ export function staffService({ restaurants, memberships }: { restaurants: Restau
         async add(user: AppUser, slug: string, body: unknown) {
             const resId = await owned(user, slug); // access first: 403 before 400
             const { name, email, tenantId, role } = parse(AddStaffBody, body);
-            if (await memberships.hasRole(resId, role, { uid: tenantId, email }))
+            // not a sign-in: the same email already listed for that role is a duplicate (VM-13 aside)
+            if (await memberships.hasRole(resId, role, { uid: tenantId, email, emailVerified: true }))
                 throw new HttpError(409, "This person already has that role here");
             const [created] = await memberships.createMany([{ name, email, tenantId, role, resId }]);
             return created;

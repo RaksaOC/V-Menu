@@ -756,6 +756,32 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-13: after sign-up, "Check your inbox" until the email is verified. Needs an E2E build and
+// the Firebase Auth emulator (B6); real Firebase is blocked, so it never makes a real account.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-13 ${vp.width} ${theme}`, async () => {
+        const { page, context } = await newPage(browser, vp, theme);
+        await context.route(/^https:\/\/[a-z0-9-]+\.googleapis\.com\//, (route) => route.abort("blockedbyclient"));
+        await page.goto(`${BASE}/signup`);
+        await settle(page);
+        await page.locator("form input[type=text]").nth(0).fill("Riverside Noodles");
+        await page.locator("form input[type=text]").nth(1).fill("Dara");
+        await page.locator("form input[type=email]").fill(`dara-${Date.now()}-${vp.width}-${theme}@e2e.test`);
+        await page.locator("form input[type=password]").fill("e2e-password-1");
+        await page.locator("form [type=submit]").click();
+        await page.getByRole("heading", { name: "Check your inbox" }).waitFor({ timeout: 15_000 });
+        await shot({ page, theme, width: vp.width }, "VM-13-check-inbox", false);
+        await page.getByRole("button", { name: "I've verified my email" }).click();
+        await page.getByText(/not verified yet/i).waitFor();
+        await shot({ page, theme, width: vp.width }, "VM-13-not-verified-yet", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

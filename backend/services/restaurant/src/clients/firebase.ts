@@ -3,6 +3,8 @@ import { createRemoteJWKSet, decodeJwt, jwtVerify, type JWTPayload } from "jose"
 export interface FirebaseIdentity {
     uid: string;
     email: string;
+    /** VM-13: Firebase checked that this person reads that inbox. Email/password accounts start unverified. */
+    emailVerified: boolean;
 }
 export type VerifyIdToken = (idToken: string) => Promise<FirebaseIdentity>;
 type Env = Record<string, string | undefined>;
@@ -14,7 +16,7 @@ const JWKS = createRemoteJWKSet(new URL("https://www.googleapis.com/service_acco
 
 function identityFrom(payload: JWTPayload): FirebaseIdentity {
     if (!payload.sub || typeof payload.email !== "string") throw new Error("Token has no user or email");
-    return { uid: payload.sub, email: payload.email.toLowerCase() };
+    return { uid: payload.sub, email: payload.email.toLowerCase(), emailVerified: payload.email_verified === true };
 }
 
 export const verifyFirebaseIdToken: VerifyIdToken = async (idToken) => {
