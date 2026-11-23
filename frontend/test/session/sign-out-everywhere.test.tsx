@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -27,7 +27,19 @@ async function pressIt() {
 }
 
 describe("Sign out everywhere (SEC-03)", () => {
-    beforeEach(() => firebaseSignOut.mockClear());
+    beforeEach(() => {
+        firebaseSignOut.mockClear();
+        // the dropdown measures itself; jsdom has no ResizeObserver
+        vi.stubGlobal(
+            "ResizeObserver",
+            class {
+                observe() {}
+                unobserve() {}
+                disconnect() {}
+            },
+        );
+    });
+    afterEach(() => vi.unstubAllGlobals());
 
     it("asks the server, signs out here, and goes to the login page", async () => {
         const go = vi.spyOn(navigation, "to").mockImplementation(() => {});

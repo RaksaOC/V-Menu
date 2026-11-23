@@ -251,3 +251,7 @@ ok   VM-14-reset-sent-360
 ok   VM-18-change-to-a-role-they-have-1280
 ok   VM-18-change-to-a-role-they-have-1280-dark
 ok   VM-18-change-to-a-role-they-have-360
+# ONLY=SEC-03 (2026-11-23T17:47:53.262Z)
+ok   SEC-03-account-menu-1280
+ok   SEC-03-account-menu-1280-dark
+ok   SEC-03-account-menu-360
