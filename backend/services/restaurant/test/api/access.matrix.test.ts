@@ -21,7 +21,8 @@ process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 process.env.INTERNAL_API_KEY = "internal-test-key";
 trackRoutes();
 const { createApp } = await import("../../src/app.js");
-const { Restaurant, Tenant } = await import("../../src/models.js");
+const { Restaurant } = await import("../../src/models/restaurant.model.js");
+const { Tenant } = await import("../../src/models/tenant.model.js");
 
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
