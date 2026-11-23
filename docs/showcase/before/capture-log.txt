@@ -186,3 +186,10 @@ ok   VM-32-restaurant-page-1280
 ok   VM-32-restaurant-page-1280-dark
 ok   VM-32-restaurant-page-360
 ok   VM-32-restaurant-page-360-dark
+# ONLY=SEC-04 (2026-11-23T17:58:48.697Z)
+ok   SEC-04-qr-popup-1280
+ok   SEC-04-edit-table-1280
+ok   SEC-04-qr-popup-1280-dark
+ok   SEC-04-edit-table-1280-dark
+ok   SEC-04-qr-popup-360
+ok   SEC-04-edit-table-360

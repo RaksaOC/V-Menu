@@ -939,6 +939,49 @@ for (const [vp, theme] of [
     });
 }
 
+// SEC-04: the QR popup shows the table's own link, the owner's edit popup can reset it, and a link
+// that's no longer valid says what to do. The last two don't exist before.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`SEC-04 ${vp.width} ${theme}`, async () => {
+        const after = PHASE === "after";
+        {
+            const { context, page } = await newPage(browser, vp, theme, "cashier");
+            await context.addInitScript(() => localStorage.setItem("dashboardSection", "tables"));
+            await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+            await settle(page);
+            await page.getByRole("button", { name: "View QR Code" }).first().click({ timeout: 5000 });
+            await page.getByRole("img", { name: /^QR code for table / }).waitFor({ timeout: 5000 });
+            await shot({ page, theme, width: vp.width }, "SEC-04-qr-popup", false);
+            await context.close();
+        }
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page
+            .getByRole("button", { name: /^\s*Tables\s*$/i })
+            .first()
+            .click({ timeout: 5000 });
+        await settle(page);
+        await page.getByRole("button", { name: "Edit Table" }).first().click({ timeout: 5000 });
+        await page.waitForTimeout(400);
+        await shot(c, "SEC-04-edit-table", false);
+        if (after) {
+            await page.getByRole("dialog").getByRole("button", { name: "Reset QR code" }).click();
+            await page.waitForTimeout(300);
+            await shot(c, "SEC-04-reset-confirm", false); // not confirmed: the seeded table keeps its link
+            await page.goto(`${BASE}/${SLUG}/t/AAAAAAAAAAAAAAAAAAAAAA`);
+            await settle(page);
+            await shot(c, "SEC-04-invalid-link", false);
+        }
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
