@@ -8,7 +8,8 @@ import {useParams} from "next/navigation";
 import {useCallback, useEffect, useState} from "react";
 import {ToastHost} from "@/components/ui";
 import {Skeleton} from "@/components/ui";
-import {apiErrorCode} from "@/lib/api";
+import {apiErrorCode, seg} from "@/lib/api";
+import {routeParam} from "@/lib/routeParam";
 import TableProblem, {type TableProblemKind} from "@/features/customer/components/TableProblem";
 import {checkTable, getMenu} from "@/features/customer/api";
 import {reconcileCart} from "@/features/customer/cart";
@@ -19,8 +20,8 @@ export default function CustomerPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [problem, setProblem] = useState<TableProblemKind | null>(null);
     const params = useParams();
-    const table = String(params.table ?? "");
-    const resSlug = String(params.res ?? "");
+    const table = routeParam(params.table); // VM-01: "Patio%202" from a QR code is table "Patio 2"
+    const resSlug = routeParam(params.res);
 
     // VM-04: check the table, then load the menu. Every failure is explained on this page
     // (closed table, unknown restaurant or table, or a server error with Try again).
@@ -147,7 +148,7 @@ export default function CustomerPage() {
                                 <span className="text-gray-700 font-medium">Your Order</span>
                             </div>
 
-                            <Link href={`/${resSlug}/customer/${table}/cart`}>
+                            <Link href={`/${seg(resSlug)}/customer/${seg(table)}/cart`}>
                                 <button
                                     className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
                                     View Cart

@@ -12,6 +12,7 @@ import {useParams, useRouter} from "next/navigation";
 import {ArrowLeft, ShoppingBag, Receipt, Plus} from "lucide-react";
 import {ItemOutput} from "@/lib/types/Item";
 import {addToCart} from "@/features/customer/cart";
+import {routeParam} from "@/lib/routeParam";
 
 export default function CartPage() {
     const router = useRouter();
@@ -20,8 +21,9 @@ export default function CartPage() {
     const params = useParams();
 
     // VM-05: this restaurant's and table's own cart; the order goes to the table in the URL.
-    const slug = String(params.res ?? "");
-    const table = String(params.table ?? "");
+    // VM-01: decoded, so a QR code for "Patio 2" (Next gives "Patio%202") orders for "Patio 2".
+    const slug = routeParam(params.res);
+    const table = routeParam(params.table);
 
     useEffect(() => {
         setCartItems(readCart(slug, table));
