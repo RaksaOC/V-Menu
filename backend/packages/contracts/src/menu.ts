@@ -3,7 +3,16 @@ import { IsoDate, ObjectId, text } from "./common.js";
 
 // menu-service: dishes and tables (CL-05).
 
-const Price = z.coerce.number("Must be a number").refine(Number.isFinite, "Must be a number").pipe(z.number().min(0, "Can't be negative"));
+// VM-17: a number from 0, or numeric text (a form field). Anything else is refused, never quietly
+// turned into a number: "", null and true used to become 0 or 1.
+const Price = z.preprocess(
+    (v) => (typeof v === "string" && v.trim() !== "" ? Number(v) : v),
+    z
+        .number({
+            error: ({ input }) => (input === undefined || (typeof input === "string" && !input.trim()) ? "Required" : "Must be a number"),
+        })
+        .min(0, "Must be 0 or more"),
+);
 
 export const CreateItemBody = z.object({
     name: text(120),

@@ -12,6 +12,7 @@ import {
     updateMenuItem,
 } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
+import { apiErrorFields, apiErrorMessage } from "@/lib/api";
 import MenuCard from "./MenuCard";
 import ItemForm from "./ItemForm";
 import CategoriesManager from "./CategoriesManager";
@@ -63,14 +64,17 @@ export default function Menu({ role }: { role: "owner" | "cashier" }) {
         }
     }
 
+    /** Answers the server's per-field reasons when it refused the dish (VM-17), for the popup to show. */
     async function save(item: CreateItemBody | MenuItem) {
         try {
             if ("_id" in item) await updateMenuItem(slug, item);
             else await createMenuItem(slug, item);
             setEditing(null);
             await load();
-        } catch {
-            toast.error("Could not save the dish");
+        } catch (err) {
+            const fields = apiErrorFields(err);
+            if (fields) return fields;
+            toast.error(apiErrorMessage(err, "Could not save the dish"));
         }
     }
 

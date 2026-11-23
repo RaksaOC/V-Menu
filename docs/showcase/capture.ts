@@ -817,6 +817,36 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-17: the owner's item popups. Add Item with no name and a negative price, then Edit a dish
+// with a name that's too long (121 characters): before, the server refused it and only a toast
+// said "Could not save the dish"; now the reason is shown under the field. Nothing is saved.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-17 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page.getByRole("button", { name: "Menu", exact: true }).click({ timeout: 5000 });
+        await settle(page);
+        await page.getByRole("button", { name: "Add Item" }).click({ timeout: 5000 });
+        await page.getByLabel("Price ($)").fill("-1");
+        await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+        await page.waitForTimeout(500);
+        await shot(c, "VM-17-add-item-errors", false);
+        await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
+        await page.getByRole("button", { name: "Edit Fried Rice" }).click({ timeout: 5000 });
+        await page.getByLabel("Item Name").fill("Fried Rice ".repeat(11) + "x"); // 122 characters; the limit is 120
+        await page.getByRole("dialog").getByRole("button", { name: "Save Changes" }).click();
+        await page.waitForTimeout(1200);
+        await shot(c, "VM-17-edit-item-too-long", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

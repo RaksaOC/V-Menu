@@ -8,6 +8,8 @@ vi.mock("next/navigation", () => ({ useParams: () => ({}), useRouter: () => ({ p
 const { ResContext } = await import("@/lib/restaurant-context");
 const { default: ItemForm } = await import("@/features/restaurant/components/ItemForm");
 const { default: Menu } = await import("@/features/restaurant/components/Menu");
+const { checkItem } = await import("@/features/restaurant/item-rules");
+const { CreateItemBody } = await import("@vmenu/contracts");
 
 const field = (name: string) => screen.getByLabelText(name);
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
@@ -37,6 +39,22 @@ describe("checks in the browser, the same as the server's (VM-17)", () => {
         submit();
         await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: "B", price: 0 })));
     });
+});
+
+describe("the browser's checks are the server's rules (VM-17)", () => {
+    // The bundle takes only types from @vmenu/contracts, so the rules are written out twice.
+    // This keeps the copy honest: same verdict, same message, for each field.
+    const names = ["Amok", "B", "", "   ", "  Amok  ", "x".repeat(120), "x".repeat(121)];
+    const prices = ["5", "0", "2.35", "", " ", "-1", "-0.01", "abc", "1e999", "0x10", " 7 "];
+    it.each(names.flatMap((name) => prices.map((price) => [name.length > 20 ? `${name.length} characters` : name, price, name])))(
+        "name %j, price %j",
+        (_label, price, name) => {
+            const server = CreateItemBody.safeParse({ name, price, image: "/images/img.png" });
+            const fields: Record<string, string> = {};
+            for (const issue of server.error?.issues ?? []) fields[String(issue.path[0])] ??= issue.message;
+            expect(checkItem({ name, price })).toEqual(fields);
+        },
+    );
 });
 
 describe("the server's answer is shown next to the field (VM-17)", () => {

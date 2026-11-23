@@ -178,3 +178,10 @@ ok   VM-13-not-verified-yet-360
 ok   VM-16-add-taken-name-1280
 ok   VM-16-add-taken-name-1280-dark
 ok   VM-16-add-taken-name-360
+# ONLY=VM-17 (2026-11-23T17:13:57.201Z)
+ok   VM-17-add-item-errors-1280
+ok   VM-17-edit-item-too-long-1280
+ok   VM-17-add-item-errors-1280-dark
+ok   VM-17-edit-item-too-long-1280-dark
+ok   VM-17-add-item-errors-360
+ok   VM-17-edit-item-too-long-360

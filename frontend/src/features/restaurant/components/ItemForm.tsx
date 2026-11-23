@@ -4,9 +4,12 @@ import { useId, useState, type FormEvent } from "react";
 import { ImageIcon, Trash2, Upload, X } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
 import { PHOTO_TYPES, usePhoto } from "./use-photo";
+import { checkItem, type ItemFieldErrors } from "../item-rules";
 import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
 
 const PLACEHOLDER = "/images/img.png";
+
+const NO_ERRORS: ItemFieldErrors = {};
 
 interface Props {
     /** Without an item the form adds one; with an item it edits or deletes it. */
@@ -14,7 +17,8 @@ interface Props {
     /** VM-25: when given, the form has a category select ("Other" is none). */
     categories?: Category[];
     onClose: () => void;
-    onSave: (item: CreateItemBody | MenuItem) => void;
+    /** May answer the server's reasons per field (VM-17); they are shown next to the fields. */
+    onSave: (item: CreateItemBody | MenuItem) => Promise<ItemFieldErrors | void> | void;
     onDelete?: (id: string) => void;
 }
 
@@ -27,35 +31,28 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
     const [name, setName] = useState(item?.name ?? "");
     const [price, setPrice] = useState(item ? String(item.price) : "");
     const [categoryId, setCategoryId] = useState(item?.categoryId ?? "");
-    const [errors, setErrors] = useState({ name: "", price: "" });
+    const [errors, setErrors] = useState<ItemFieldErrors>(NO_ERRORS);
     const [saving, setSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
-    function validate() {
-        const next = { name: "", price: "" };
-        if (!name.trim()) next.name = "Item name is required";
-        else if (name.trim().length < 2) next.name = "Item name must be at least 2 characters";
-        if (!price) next.price = "Price is required";
-        else if (!(parseFloat(price) > 0)) next.price = "Price must be greater than 0";
-        setErrors(next);
-        return !next.name && !next.price;
-    }
-
     async function submit(e: FormEvent) {
         e.preventDefault();
-        if (!validate()) return;
+        const found = checkItem({ name, price }); // VM-17: the server's rules, before sending
+        setErrors(found);
+        if (Object.keys(found).length) return;
         setSaving(true);
         try {
             // VM-02: a new photo is uploaded first; the item stores its short URL.
             const uploaded = await photo.upload();
             const fields = {
                 name: name.trim(),
-                price: parseFloat(price),
+                price: Number(price),
                 image: uploaded ?? item?.image ?? PLACEHOLDER,
                 isEnabled: item?.isEnabled ?? true,
                 ...(categories && { categoryId: categoryId || null }),
             };
-            onSave(item ? { _id: item._id, ...fields } : fields);
+            const refused = await onSave(item ? { _id: item._id, ...fields } : fields);
+            if (refused) setErrors(refused); // VM-17: the server's reasons, next to the fields
         } catch {
             // the photo field says why the upload failed
         } finally {
@@ -131,9 +128,9 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                                     Uploading… {photo.progress}%
                                 </p>
                             )}
-                            {photo.error && (
+                            {(photo.error || errors.image) && (
                                 <p role="alert" className="text-xs text-[var(--bad)]">
-                                    {photo.error}
+                                    {photo.error || errors.image}
                                 </p>
                             )}
                         </div>
@@ -146,7 +143,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                     error={errors.name || undefined}
                     onChange={(e) => {
                         setName(e.target.value);
-                        setErrors((x) => ({ ...x, name: "" }));
+                        setErrors(({ name: _, ...rest }) => rest);
                     }}
                 />
                 <Input
@@ -159,7 +156,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                     error={errors.price || undefined}
                     onChange={(e) => {
                         setPrice(e.target.value);
-                        setErrors((x) => ({ ...x, price: "" }));
+                        setErrors(({ price: _, ...rest }) => rest);
                     }}
                 />
                 {categories && (
@@ -170,7 +167,12 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                         <select
                             id={categoryFieldId}
                             value={categoryId}
-                            onChange={(e) => setCategoryId(e.target.value)}
+                            aria-invalid={errors.categoryId ? true : undefined}
+                            aria-describedby={errors.categoryId ? `${categoryFieldId}-note` : undefined}
+                            onChange={(e) => {
+                                setCategoryId(e.target.value);
+                                setErrors(({ categoryId: _, ...rest }) => rest);
+                            }}
                             className="w-full rounded-[var(--r-in)] border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                         >
                             <option value="">Other (no category)</option>
@@ -180,6 +182,11 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                                 </option>
                             ))}
                         </select>
+                        {errors.categoryId && (
+                            <p id={`${categoryFieldId}-note`} className="text-xs text-[var(--bad)]">
+                                {errors.categoryId}
+                            </p>
+                        )}
                     </div>
                 )}
             </form>
