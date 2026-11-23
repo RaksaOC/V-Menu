@@ -19,6 +19,17 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "warn",
     },
   },
+  {
+    // CL-10: one HTTP client. Components call the typed functions in features/<area>/api.ts,
+    // which use the shared client in lib/api.ts (token, error messages).
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/api.ts"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [{ name: "axios", message: "Use the typed functions in features/<area>/api.ts (they use lib/api.ts)." }],
+      }],
+    },
+  },
 ];
 
 export default eslintConfig;
