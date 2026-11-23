@@ -1,20 +1,36 @@
-import axios from 'axios';
-import {auth} from './firebase';
+import axios from "axios";
 
-// Create an Axios instance
+// The one HTTP client of the app. Components never use it directly: each feature wraps the
+// calls it needs in typed functions in features/<area>/api.ts. Only this file imports axios.
 const api = axios.create({
-    baseURL: '/', // default to same origin
+    baseURL: "/", // same origin; Next.js forwards /api/* to the services
 });
 
-// Add a request interceptor
+// Sends the app token of the signed-in staff member, if any.
 api.interceptors.request.use(async (config) => {
-    const token = localStorage.getItem('token');
-
+    const token = localStorage.getItem("token");
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
 });
+
+/** The HTTP status of a failed call, or undefined when the server could not be reached. */
+export function apiStatus(err: unknown): number | undefined {
+    return axios.isAxiosError(err) ? err.response?.status : undefined;
+}
+
+/** Text to show for a failed call: the server's own message, or the fallback. */
+export function apiErrorMessage(err: unknown, fallback = "Something went wrong. Please try again."): string {
+    if (axios.isAxiosError(err)) {
+        if (!err.response) return "Can't reach the server. Check your connection and try again.";
+        const message = (err.response.data as { message?: unknown } | undefined)?.message;
+        if (typeof message === "string" && message.trim()) return message;
+    }
+    return fallback;
+}
+
+/** Encodes one path segment (a slug, an id or a table name). */
+export const seg = (value: string) => encodeURIComponent(value);
 
 export default api;
