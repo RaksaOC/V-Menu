@@ -19,14 +19,19 @@ function jwtSecret(): string {
     return line.slice("JWT_SECRET=".length).trim();
 }
 
-export async function signInAs(context: BrowserContext, baseURL: string, role: "owner" | "cashier" | "chef") {
+/** An app token for the demo restaurant's owner or staff, for API calls made by a test. */
+export async function tokenFor(role: "owner" | "cashier" | "chef"): Promise<string> {
     const user = { uid: "demo-owner", email: "owner@demo.local", role, ...(role === "owner" ? {} : { resId: RES_ID, resSlug: SLUG }) };
-    const token = await new SignJWT(user)
+    return new SignJWT(user)
         .setProtectedHeader({ alg: "HS256" })
         .setIssuer("v-menu")
         .setIssuedAt()
         .setExpirationTime("15m")
         .sign(new TextEncoder().encode(jwtSecret()));
+}
+
+export async function signInAs(context: BrowserContext, baseURL: string, role: "owner" | "cashier" | "chef") {
+    const token = await tokenFor(role);
     await context.addCookies([{ name: "token", value: token, url: baseURL, httpOnly: true, sameSite: "Lax" }]);
     await context.addInitScript((t) => localStorage.setItem("token", t), token);
 }
