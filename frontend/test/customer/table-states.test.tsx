@@ -10,6 +10,8 @@ const params = vi.hoisted(() => ({ res: "demo-bistro", table: "4" }));
 vi.mock("next/navigation", () => ({ useParams: () => params, useRouter: () => router }));
 vi.mock("@/lib/firebase", () => ({ auth: {} }));
 vi.mock("react-toastify/dist/ReactToastify.css", () => ({}));
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
+vi.mock("@/lib/toast", () => ({ toast }));
 const { default: CustomerMenu } = await import("@/features/customer/components/CustomerMenu");
 
 const dish = { _id: "i1", name: "Fish Amok", price: 5.5, image: "/images/img.png", isEnabled: true };
@@ -62,5 +64,15 @@ describe("customer table page states", () => {
         api(() => HttpResponse.json({}), () => HttpResponse.json({ message: "boom" }, { status: 500 }));
         render(<CustomerMenu />);
         expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();
+    });
+
+    it("removes cart lines whose dish left the menu, and says so (VM-05)", async () => {
+        const gone = { ...dish, _id: "i9", name: "Old Special" };
+        localStorage.setItem("cart:demo-bistro:4", JSON.stringify([{ item: dish, quantity: 1 }, { item: gone, quantity: 2 }]));
+        api(() => HttpResponse.json({}));
+        render(<CustomerMenu />);
+        await screen.findByText("Fish Amok");
+        expect(toast.info).toHaveBeenCalledWith("1 item is no longer available and was removed from your cart.");
+        expect(JSON.parse(localStorage.getItem("cart:demo-bistro:4")!)).toEqual([{ item: dish, quantity: 1 }]);
     });
 });
