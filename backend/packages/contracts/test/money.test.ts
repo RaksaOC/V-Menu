@@ -1,0 +1,92 @@
+import { describe, expect, it } from "vitest";
+import * as C from "../src/index.js";
+
+// CL-07: money is whole cents; toCents and formatMoney are the only converters.
+describe("toCents", () => {
+    it.each([
+        [2.35, 235],
+        [2.35 * 3, 705], // 7.050000000000001 as a float
+        [0.1 + 0.2, 30], // 0.30000000000000004 as a float
+        [1.005, 101], // 100.49999... if multiplied by 100
+        [19.99, 1999],
+        [5, 500],
+        [0, 0],
+        [0.0000001, 0], // a number JavaScript prints with an exponent
+    ])("%d dollars is %d cents", (dollars, cents) => {
+        expect(C.toCents(dollars)).toBe(cents);
+    });
+
+    it("adding in cents has no floating-point dust", () => {
+        expect(C.toCents(0.1) + C.toCents(0.2)).toBe(30);
+        expect(C.toCents(2.35) * 3).toBe(705);
+    });
+});
+
+describe("formatMoney", () => {
+    it.each([
+        [122525, "$1,225.25"],
+        [705, "$7.05"],
+        [5, "$0.05"],
+        [0, "$0.00"],
+    ])("%d cents is %s", (cents, shown) => {
+        expect(C.formatMoney(cents)).toBe(shown);
+    });
+});
+
+describe("prices in the API are whole cents (CL-07)", () => {
+    const dish = { name: "Amok", image: "/a.jpg" };
+    const fieldsOf = (schema: { safeParse(v: unknown): { success: boolean; error?: { issues: { path: PropertyKey[] }[] } } }, v: unknown) =>
+        schema.safeParse(v).error?.issues.map((i) => i.path.join(".")) ?? [];
+
+    it("a new dish has priceCents, a whole number from 0", () => {
+        expect(C.CreateItemBody.parse({ ...dish, priceCents: 235 })).toMatchObject({ priceCents: 235 });
+        expect(fieldsOf(C.CreateItemBody, { ...dish, priceCents: 2.5 })).toEqual(["priceCents"]);
+        expect(fieldsOf(C.CreateItemBody, { ...dish, priceCents: -1 })).toEqual(["priceCents"]);
+        expect(fieldsOf(C.CreateItemBody, dish)).toEqual(["priceCents"]);
+    });
+
+    it("the old `price` in dollars still works for one release", () => {
+        expect(C.CreateItemBody.parse({ ...dish, price: 2.35 })).toMatchObject({ priceCents: 235 });
+        expect(C.CreateItemBody.parse({ ...dish, price: "2.35" })).toMatchObject({ priceCents: 235 });
+        expect(C.UpdateItemBody.parse({ price: 3 })).toEqual({ priceCents: 300 });
+        expect(fieldsOf(C.CreateItemBody, { ...dish, price: "free" })).toEqual(["priceCents"]);
+        expect(C.CreateItemBody.parse({ ...dish, price: 9, priceCents: 235 })).toMatchObject({ priceCents: 235 }); // cents win
+    });
+
+    it("an update can leave the price alone", () => {
+        expect(C.UpdateItemBody.parse({ name: "New name" })).toEqual({ name: "New name" });
+    });
+
+    it("every money field in an answer is in cents", () => {
+        const item = { _id: "1", name: "Amok", priceCents: 235, image: "/a.jpg", isEnabled: true };
+        expect(C.MenuItem.safeParse(item).success).toBe(true);
+        expect(C.OrderedDish.safeParse(item).success).toBe(true);
+        expect(C.OrderedDish.safeParse({ ...item, priceCents: 2.35 }).success).toBe(false);
+        const line = { name: "Amok", priceCents: 235, quantity: 3, totalCents: 705 };
+        expect(
+            C.TableOrderView.safeParse({
+                _id: "1",
+                number: "000001",
+                status: "pending",
+                table: "1",
+                placedAt: "2026-11-24T00:00:00.000Z",
+                lines: [line],
+                totalCents: 705,
+            }).success,
+        ).toBe(true);
+        expect(C.TableBill.safeParse({ table: "1", orders: [], totalCents: 0 }).success).toBe(true);
+        const overview = {
+            tableCount: 1,
+            activeTableCount: 1,
+            itemCount: 1,
+            orderCount: 1,
+            unpaidBillCount: 0,
+            paymentCount: 1,
+            revenueCents: 705,
+            from: null,
+            to: null,
+        };
+        expect(C.Overview.safeParse(overview).success).toBe(true);
+        expect(C.Overview.safeParse({ ...overview, revenueCents: 7.05 }).success).toBe(false);
+    });
+});
