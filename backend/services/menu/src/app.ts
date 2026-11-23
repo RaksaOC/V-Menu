@@ -54,6 +54,17 @@ export function createApp({
         return restaurant;
     }
 
+    // For customers: an unknown restaurant gets a code the page can explain (VM-04). Other
+    // failures (restaurant-service down: 503) pass through, so the page can offer Try again.
+    async function publicRestaurant(req: Request) {
+        try {
+            return await restaurantFor(req);
+        } catch (err) {
+            if (err instanceof HttpError && err.status === 404) throw new HttpError(404, "We couldn't find this restaurant.", "RESTAURANT_NOT_FOUND");
+            throw err;
+        }
+    }
+
     async function ownItem(req: Request) {
         const restaurant = await restaurantFor(req);
         assertId(String(req.params.id), "item id");
@@ -75,14 +86,16 @@ export function createApp({
 
     // ---------------- public: what a customer at a table sees ----------------
     menu.get("/public/items", async (req, res) => {
-        const restaurant = await restaurantFor(req);
+        const restaurant = await publicRestaurant(req);
         res.json(await Item.find({ resId: restaurant._id, isEnabled: true }).lean());
     });
 
     menu.get("/public/tables/:name", async (req, res) => {
-        const restaurant = await restaurantFor(req);
-        const open = await Table.exists({ name: String(req.params.name), resId: restaurant._id, isEnabled: true });
-        if (!open) throw new HttpError(404, "Table is not available");
+        const restaurant = await publicRestaurant(req);
+        const name = String(req.params.name);
+        const table = await Table.findOne({ name, resId: restaurant._id }, { isEnabled: 1 }).lean();
+        if (!table) throw new HttpError(404, `We couldn't find table ${name}.`, "TABLE_NOT_FOUND");
+        if (!table.isEnabled) throw new HttpError(404, `Table ${name} isn't open yet. Please ask a staff member to open it.`, "TABLE_CLOSED");
         res.json({ message: "Table is available" });
     });
 
@@ -165,7 +178,9 @@ export function createApp({
             const numbers = (await Table.find({ resId: restaurant._id }, { name: 1 }).lean()).map((t) => parseInt(t.name)).filter((n) => !isNaN(n));
             name = String(numbers.length ? Math.max(...numbers) + 1 : 1);
         }
-        res.status(201).json(await Table.create({ name, isEnabled: false, resId: restaurant._id }));
+        // Open by default (VM-04): a table's QR code works as soon as it is printed. The
+        // cashier closes tables that aren't in use.
+        res.status(201).json(await Table.create({ name, isEnabled: true, resId: restaurant._id }));
     });
 
     menu.put("/tables/:id", requireRole("owner"), async (req, res) => {
