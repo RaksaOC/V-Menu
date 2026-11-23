@@ -97,12 +97,12 @@ function urlFor(route: string) {
         .replace(/images\/:id/, `images/${"b".repeat(24)}`);
 }
 
-function send(method: string, url: string, caller: Caller, extra: Record<string, string> = {}) {
+function send(method: string, url: string, caller: Caller, extra: Record<string, string> = {}, body: object = {}) {
     const m = method.toLowerCase() as "get" | "post" | "put" | "patch" | "delete";
     return request(app)
         [m](url)
         .set({ ...headers[caller], ...extra })
-        .send(method === "GET" || method === "DELETE" ? undefined : {});
+        .send(method === "GET" || method === "DELETE" ? undefined : body);
 }
 
 describe("menu-service access matrix (SEC-07)", () => {
@@ -137,7 +137,9 @@ describe("another restaurant's ids, through your own restaurant (SEC-07)", () =>
         ["GET", "image", () => `/api/menu/${A.slug}/images/${ids.imageB}`, "guest"],
     ];
     it.each(cases)("%s B's %s through A is 404, and B's data is unchanged", async (method, _what, url, caller) => {
-        const res = await send(method, url(), caller);
+        // a valid body, so only the restaurant check stands in the way
+        const body = url().endsWith("/availability") ? { isEnabled: false } : method === "PUT" ? { name: "Renamed" } : {};
+        const res = await send(method, url(), caller, {}, body);
         expect(res.status).toBe(404);
         expect(await Item.findById(ids.itemB).lean()).toMatchObject({ name: "B dish", price: 3, isEnabled: true });
         expect(await Table.findById(ids.tableB).lean()).toMatchObject({ name: "B1", isEnabled: true });

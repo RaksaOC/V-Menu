@@ -1,10 +1,7 @@
-import { assertId, assertRestaurantAccess, badRequest, HttpError, notFound, type AppUser } from "@vmenu/common";
+import { assertId, assertRestaurantAccess, badRequest, HttpError, notFound, parse, type AppUser } from "@vmenu/common";
+import { AddStaffBody, UpdateStaffBody } from "@vmenu/contracts";
 import type { RestaurantsRepo } from "../repositories/restaurants.repo.js";
 import type { TenantsRepo } from "../repositories/tenants.repo.js";
-import { str, type Body } from "./input.js";
-
-const STAFF_ROLES = ["cashier", "chef"] as const;
-const isStaffRole = (r: unknown): r is (typeof STAFF_ROLES)[number] => STAFF_ROLES.includes(r as never);
 
 /** An owner's staff: cashiers and chefs per restaurant (CL-04). */
 export function staffService({ restaurants, tenants }: { restaurants: RestaurantsRepo; tenants: TenantsRepo }) {
@@ -36,31 +33,18 @@ export function staffService({ restaurants, tenants }: { restaurants: Restaurant
             return tenants.inRestaurants([await owned(user, slug)]);
         },
 
-        async add(user: AppUser, slug: string, body: Body) {
-            const resId = await owned(user, slug);
-            const name = str(body?.name, 120);
-            const email = str(body?.email, 200)?.toLowerCase();
-            const tenantId = str(body?.tenantId, 128);
-            const role = body?.role;
-            if (!name || !email || !tenantId || !isStaffRole(role))
-                throw badRequest("Name, email, account id and a cashier or chef role are required");
+        async add(user: AppUser, slug: string, body: unknown) {
+            const resId = await owned(user, slug); // access first: 403 before 400
+            const { name, email, tenantId, role } = parse(AddStaffBody, body);
             if (await tenants.hasRole(resId, role, { uid: tenantId, email }))
                 throw new HttpError(409, "This person already has that role here");
             const [created] = await tenants.createMany([{ name, email, tenantId, role, resId }]);
             return created;
         },
 
-        async update(user: AppUser, slug: string, id: string, body: Body) {
+        async update(user: AppUser, slug: string, id: string, body: unknown) {
             const { resId, member: m } = await member(user, slug, id);
-            const fields: { name?: string; email?: string; role?: "cashier" | "chef" } = {};
-            const name = str(body?.name, 120);
-            const email = str(body?.email, 200)?.toLowerCase();
-            if (name) fields.name = name;
-            if (email) fields.email = email;
-            if (body?.role !== undefined) {
-                if (!isStaffRole(body.role)) throw badRequest("Role must be cashier or chef");
-                fields.role = body.role;
-            }
+            const fields = parse(UpdateStaffBody, body);
             return (await tenants.update(resId, id, fields)) ?? m;
         },
 

@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { badRequest, requireRole } from "@vmenu/common";
+import { badRequest, parse, requireRole } from "@vmenu/common";
+import { UpdateBillBody } from "@vmenu/contracts";
 import type { RouteContext } from "./context.js";
 
 /** /api/orders/:slug/bills: the cashier's bills. */
@@ -15,7 +16,9 @@ export function billsRoutes({ services, restaurant }: RouteContext) {
         throw badRequest("status must be open or paid");
     });
     r.patch("/:id", async (req, res) => {
-        res.json(await services(req).bills.setPaid((await restaurant(req))._id, String(req.params.id), req.body?.isPayed));
+        const resId = (await restaurant(req))._id; // access first: 403 before 400
+        const { isPayed } = parse(UpdateBillBody, req.body ?? {});
+        res.json(await services(req).bills.setPaid(resId, String(req.params.id), isPayed));
     });
     return r;
 }

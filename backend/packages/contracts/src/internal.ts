@@ -6,6 +6,7 @@ import { ObjectId, label } from "./common.js";
 /** restaurant-service → everyone: what other services may know about a restaurant. */
 export const RestaurantRef = z.object({ _id: z.string(), name: z.string(), slug: z.string(), ownerId: z.string() });
 export type RestaurantRef = z.infer<typeof RestaurantRef>;
+export const RestaurantRefList = z.array(RestaurantRef);
 
 /** order-service → menu-service: is the table open, and what do these dishes cost? */
 export const OrderCheckRequest = z.object({

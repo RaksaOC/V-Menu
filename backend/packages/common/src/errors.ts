@@ -2,11 +2,13 @@ import type { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 
 export class HttpError extends Error {
-    /** `code` is a stable, machine-readable reason the frontend can switch on (e.g. TABLE_CLOSED). */
+    /** `code` is a stable, machine-readable reason the frontend can switch on (e.g. TABLE_CLOSED).
+     *  `fields` names what to fix in a form: { price: "Must be a number" } (CL-05, VM-17). */
     constructor(
         public status: number,
         message: string,
         public code?: string,
+        public fields?: Record<string, string>,
     ) {
         super(message);
     }
@@ -24,7 +26,11 @@ export function assertId(id: string, what = "id") {
 // Last middleware: known errors keep their status, anything else is logged and hidden.
 export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
     if (err instanceof HttpError) {
-        res.status(err.status).json(err.code ? { code: err.code, message: err.message } : { message: err.message });
+        res.status(err.status).json({
+            ...(err.code && { code: err.code }),
+            message: err.message,
+            ...(err.fields && { fields: err.fields }),
+        });
         return;
     }
     if (err instanceof mongoose.Error.ValidationError) {

@@ -52,7 +52,6 @@ describe("restaurants", () => {
         const fresh = await places.create(owner("bob"), { name: "Bob's" }); // no earlier sign-up: email as name
         expect(fresh.ownerId).toBe("bob");
         expect((await places.listOwned("alice")).map((r) => r.name)).toEqual(["First", "Second"]);
-        expect(await status(places.create(owner(), {}))).toBe(400);
     });
 
     it("lookups for other services: by slug (404 if unknown) and by owner (ownerId required)", async () => {
@@ -60,8 +59,8 @@ describe("restaurants", () => {
         const r = await places.createForOwner("Mee Keav", { ...ALICE, name: "Alice" });
         expect(await places.bySlug(r.slug)).toEqual({ _id: String(r._id), name: "Mee Keav", slug: r.slug, ownerId: "alice" });
         expect(await status(places.bySlug("nope"))).toBe(404);
-        expect((await places.forOwner("alice")).map((x) => x.slug)).toEqual([r.slug]);
-        expect(await status(places.forOwner(undefined))).toBe(400);
+        expect((await places.forOwner({ ownerId: "alice" })).map((x) => x.slug)).toEqual([r.slug]);
+        expect(await status(places.forOwner({}))).toBe(400);
     });
 });
 

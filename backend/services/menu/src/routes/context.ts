@@ -1,4 +1,4 @@
-import type { Request } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { assertRestaurantAccess, HttpError, type LookupRestaurant, type RestaurantRef } from "@vmenu/common";
 import type { imagesService } from "../services/images.service.js";
 import type { internalService } from "../services/internal.service.js";
@@ -36,4 +36,13 @@ export function restaurantFrom(lookupRestaurant: LookupRestaurant) {
         }
     };
     return { restaurant, publicRestaurant };
+}
+
+/** Route middleware: checks access to the restaurant in the URL before the body is validated,
+ *  so a caller without access gets 403, never a 400 about the body (SEC-07, CL-05). */
+export function withRestaurant({ restaurant }: Pick<RouteContext, "restaurant">) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        res.locals.restaurant = await restaurant(req);
+        next();
+    };
 }

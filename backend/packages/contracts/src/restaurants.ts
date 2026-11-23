@@ -4,6 +4,12 @@ import { Email, IsoDate, Role, StaffRole, text } from "./common.js";
 // restaurant-service: sign-in, restaurants and staff (CL-05). The Firebase ID token is checked
 // first (401 without one), so these bodies describe the rest of each request.
 
+/** Every sign-in call carries the Firebase ID token; without a valid one the answer is 401. */
+export const IdTokenBody = z.object({ idToken: text(4096) });
+
+/** Internal: an owner's restaurants. */
+export const OwnerIdQuery = z.object({ ownerId: text(128) });
+
 export const SignupBody = z.object({ ownerName: text(120), resName: text(120) });
 export type SignupBody = z.infer<typeof SignupBody>;
 

@@ -6,14 +6,14 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "predev": "npm --prefix ../../packages/common run build",
+    "predev": "npm --prefix ../../packages/contracts run build && npm --prefix ../../packages/common run build",
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
-    "prebuild": "npm --prefix ../../packages/common run build",
+    "prebuild": "npm --prefix ../../packages/contracts run build && npm --prefix ../../packages/common run build",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
-    "pretypecheck": "npm --prefix ../../packages/common run build",
+    "pretypecheck": "npm --prefix ../../packages/contracts run build && npm --prefix ../../packages/common run build",
     "typecheck": "tsc --noEmit",
-    "pretest": "npm --prefix ../../packages/common run build",
+    "pretest": "npm --prefix ../../packages/contracts run build && npm --prefix ../../packages/common run build",
     "test": "vitest run"
   },
   "engines": {
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@vmenu/common": "^1.0.0",
+    "@vmenu/contracts": "^1.0.0",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.4",
     "helmet": "^8.3.0",

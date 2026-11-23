@@ -96,6 +96,7 @@ describe("internal calls", () => {
         fieldsOf(C.MenuCounts, { numOfTables: -1, numOfActiveTables: 2, numOfItems: 10 });
         ok(C.RestaurantRef, { _id: ID, name: "A", slug: "a", ownerId: "o" });
         fieldsOf(C.RestaurantRef, { _id: ID, name: "A" });
+        ok(C.RestaurantRefList, [{ _id: ID, name: "A", slug: "a", ownerId: "o" }]);
     });
 });
 
@@ -158,6 +159,10 @@ describe("orders", () => {
 
 describe("restaurants", () => {
     it("sign-up and login bodies", () => {
+        ok(C.IdTokenBody, { idToken: "eyJ..." });
+        expect(fieldsOf(C.IdTokenBody, {})).toEqual(["idToken"]);
+        ok(C.OwnerIdQuery, { ownerId: "owner1" });
+        expect(fieldsOf(C.OwnerIdQuery, {})).toEqual(["ownerId"]);
         ok(C.SignupBody, { ownerName: "Alice", resName: "Mee Keav" });
         expect(fieldsOf(C.SignupBody, { ownerName: "Alice" })).toEqual(["resName"]);
         ok(C.LoginBody, { role: "owner" });

@@ -1,7 +1,7 @@
-import { badRequest, notFound, type AppUser } from "@vmenu/common";
+import { notFound, parse, type AppUser } from "@vmenu/common";
+import { OwnerIdQuery, type CreateRestaurantBody } from "@vmenu/contracts";
 import type { RestaurantRecord, RestaurantsRepo } from "../repositories/restaurants.repo.js";
 import type { TenantsRepo } from "../repositories/tenants.repo.js";
-import { str, type Body } from "./input.js";
 
 function slugify(name: string) {
     return name
@@ -41,9 +41,7 @@ export function restaurantsService({ restaurants, tenants }: { restaurants: Rest
         createForOwner,
 
         /** An owner adds another restaurant. */
-        async create(user: AppUser, body: Body) {
-            const name = str(body?.name, 120);
-            if (!name) throw badRequest("Restaurant name is required");
+        async create(user: AppUser, { name }: CreateRestaurantBody) {
             const me = await tenants.firstFor(user.uid);
             return createForOwner(name, { uid: user.uid, email: user.email, name: me?.name ?? user.email });
         },
@@ -65,10 +63,9 @@ export function restaurantsService({ restaurants, tenants }: { restaurants: Rest
         },
 
         /** For other services: an owner's restaurants, oldest first. */
-        async forOwner(ownerId: unknown) {
-            const id = str(ownerId, 128);
-            if (!id) throw badRequest("ownerId is required");
-            return (await restaurants.ownedBy(id)).map(publicShape);
+        async forOwner(query: unknown) {
+            const { ownerId } = parse(OwnerIdQuery, query);
+            return (await restaurants.ownedBy(ownerId)).map(publicShape);
         },
     };
 }
