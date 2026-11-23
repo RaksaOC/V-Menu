@@ -196,6 +196,32 @@ describe("orders", () => {
     });
 });
 
+describe("order status (VM-27)", () => {
+    it("five statuses, and the one step after each", () => {
+        expect(C.ORDER_STATUSES).toEqual(["pending", "preparing", "ready", "served", "cancelled"]);
+        expect(C.NEXT_STATUS).toEqual({ pending: "preparing", preparing: "ready", ready: "served" });
+        ok(C.UpdateOrderStatusBody, { status: "ready" });
+        expect(fieldsOf(C.UpdateOrderStatusBody, { status: "done" })).toEqual(["status"]);
+        expect(C.CancelOrderBody.parse({ reason: " Wrong dish " })).toEqual({ reason: "Wrong dish" });
+        expect(fieldsOf(C.CancelOrderBody, { reason: "" })).toEqual(["reason"]);
+        expect(fieldsOf(C.CancelOrderBody, { reason: "x".repeat(201) })).toEqual(["reason"]);
+    });
+
+    it("an order has a status and its history; no isDone", () => {
+        const order = {
+            _id: ID,
+            table: "1",
+            status: "cancelled",
+            statusHistory: [{ status: "pending", at: "2026-11-23T10:00:00.000Z", by: "customer" }],
+            cancelReason: "Wrong dish",
+            createdAt: "2026-11-23T10:00:00.000Z",
+            orderedItems: [],
+        };
+        ok(C.Order, order);
+        expect(fieldsOf(C.Order, { ...order, status: "done" })).toEqual(["status"]);
+    });
+});
+
 describe("restaurants", () => {
     it("sign-up and login bodies", () => {
         ok(C.IdTokenBody, { idToken: "eyJ..." });

@@ -66,10 +66,40 @@ describe("prepareDatabase: the isPayed → isPaid migration (CL-06)", () => {
     });
 
     it("is safe to run again, and on a new, empty database", async () => {
-        expect(await prepareDatabase()).toEqual({ renamed: 0, droppedIndexes: [] });
+        expect((await prepareDatabase()).bills).toEqual({ renamed: 0, droppedIndexes: [] });
         await mongoose.connection.db!.dropDatabase();
         await seedLikeProduction();
         await prepareDatabase();
-        expect(await prepareDatabase()).toEqual({ renamed: 0, droppedIndexes: [] });
+        expect((await prepareDatabase()).bills).toEqual({ renamed: 0, droppedIndexes: [] });
+    });
+});
+
+describe("prepareDatabase: isDone → status (VM-27)", () => {
+    const orders = () => mongoose.connection.db!.collection("orders");
+    const at = new Date("2026-11-20T10:00:00Z");
+    async function seedOrders() {
+        await orders().insertMany([
+            { table: "1", resId: RES, isDone: true, orderedItems: [], orderedAt: at, createdAt: at, updatedAt: at },
+            { table: "2", resId: RES, isDone: false, orderedItems: [], orderedAt: at, createdAt: at, updatedAt: at },
+        ]);
+        await orders().createIndex({ resId: 1, isDone: 1, createdAt: 1 }); // VM-10's queue index
+    }
+
+    it("done orders are served, the rest pending, each with one history entry; the queue index is rebuilt", async () => {
+        await seedOrders();
+        expect((await prepareDatabase()).orders).toEqual({ migrated: 2, droppedIndexes: ["resId_1_isDone_1_createdAt_1"] });
+        expect(await orders().countDocuments({ isDone: { $exists: true } })).toBe(0);
+        const byTable = Object.fromEntries((await orders().find().toArray()).map((o) => [o.table, o]));
+        expect(byTable["1"]).toMatchObject({ status: "served", statusHistory: [{ status: "served", at, by: "migration" }] });
+        expect(byTable["2"]).toMatchObject({ status: "pending", statusHistory: [{ status: "pending", at, by: "migration" }] });
+        const names = (await orders().indexes()).map((i) => i.name);
+        expect(names).toContain("resId_1_status_1_createdAt_1");
+        expect(names.join()).not.toContain("isDone");
+    });
+
+    it("is safe to run again", async () => {
+        await seedOrders();
+        await prepareDatabase();
+        expect((await prepareDatabase()).orders).toEqual({ migrated: 0, droppedIndexes: [] });
     });
 });

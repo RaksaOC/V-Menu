@@ -358,3 +358,39 @@ describe("isPayed is now isPaid; both work for one release (CL-06)", () => {
         expect(res.body.fields).toEqual({ isPaid: "Must be true or false" });
     });
 });
+
+describe("order status over HTTP (VM-27)", () => {
+    const step = (id: string, status: string, who = chef) =>
+        request(app).patch(`/api/orders/${R.slug}/kitchen/${id}/status`).set(who).send({ status });
+
+    it("the chef steps an order along; a skipped step is 409; the customer's page shows each status", async () => {
+        const { body: order } = await place();
+        expect(order.status).toBe("pending");
+        expect((await step(order._id, "ready")).status).toBe(409);
+        expect((await step(order._id, "preparing")).body.status).toBe("preparing");
+        expect((await step(order._id, "ready")).body.status).toBe("ready");
+        const view = await request(app).get(`/api/orders/${R.slug}/tables/1/orders/${order._id}`);
+        expect(view.body.status).toBe("ready");
+        expect((await step(order._id, "bogus")).body.fields).toEqual({ status: expect.any(String) });
+        expect((await step(order._id, "served", cashier)).status).toBe(403);
+    });
+
+    it("the cashier cancels with a reason; the order leaves the kitchen's queue and the bill's total", async () => {
+        const { body: kept } = await place("1", 2);
+        const { body: dropped } = await place("1", 3);
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        const cancel = (id: string, body: object, who = cashier) =>
+            request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}/orders/${id}/cancel`).set(who).send(body);
+
+        expect((await cancel(dropped._id, {})).body.fields).toEqual({ reason: "Required" });
+        expect((await cancel(dropped._id, { reason: "x" }, chef)).status).toBe(403);
+        const res = await cancel(dropped._id, { reason: "Guest changed their mind" });
+        expect(res.body).toMatchObject({ status: "cancelled", cancelReason: "Guest changed their mind" });
+        expect((await cancel(dropped._id, { reason: "again" })).status).toBe(409);
+
+        const queue = await request(app).get(`/api/orders/${R.slug}/kitchen`).set(chef);
+        expect(queue.body.map((o: { _id: string }) => o._id)).toEqual([kept._id]);
+        const open = await request(app).get(`/api/orders/${R.slug}/tables/1/open-bill`);
+        expect(open.body.total).toBe(5); // 2 × 2.50; the cancelled 3 aren't charged
+    });
+});
