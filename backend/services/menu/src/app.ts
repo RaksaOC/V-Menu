@@ -178,9 +178,9 @@ export function createApp({
             const numbers = (await Table.find({ resId: restaurant._id }, { name: 1 }).lean()).map((t) => parseInt(t.name)).filter((n) => !isNaN(n));
             name = String(numbers.length ? Math.max(...numbers) + 1 : 1);
         }
-        // Open by default (VM-04): a table's QR code works as soon as it is printed. The
-        // cashier closes tables that aren't in use.
-        res.status(201).json(await Table.create({ name, isEnabled: true, resId: restaurant._id }));
+        // New tables start closed (decided for VM-04): the cashier opens a table when guests sit
+        // down. Scanning a closed table's QR code says so instead of showing the menu.
+        res.status(201).json(await Table.create({ name, isEnabled: false, resId: restaurant._id }));
     });
 
     menu.put("/tables/:id", requireRole("owner"), async (req, res) => {
