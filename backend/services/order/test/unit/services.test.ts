@@ -123,6 +123,27 @@ describe("bills", () => {
     });
 });
 
+describe("one open bill per table (VM-08)", () => {
+    it("won't re-open a paid bill while the table has another open bill", async () => {
+        const { placing, billing, bills } = setup();
+        await placing.place(R1._id, { table: "1", orderedItems: [line()] });
+        const first = bills.all[0]._id;
+        await billing.setPaid(R1._id, first, true);
+        await placing.place(R1._id, { table: "1", orderedItems: [line()] });
+        expect(await status(billing.setPaid(R1._id, first, false))).toBe(409);
+        expect(bills.all.filter((b) => !b.isPayed)).toHaveLength(1);
+    });
+
+    it("re-opens it when the table has no other open bill, and marking an open bill unpaid again is harmless", async () => {
+        const { placing, billing, bills } = setup();
+        await placing.place(R1._id, { table: "1", orderedItems: [line()] });
+        const first = bills.all[0]._id;
+        expect((await billing.setPaid(R1._id, first, false)).isPayed).toBe(false); // already open
+        await billing.setPaid(R1._id, first, true);
+        expect((await billing.setPaid(R1._id, first, false)).isPayed).toBe(false);
+    });
+});
+
 describe("dashboard numbers", () => {
     async function busyDay() {
         const s = setup();
