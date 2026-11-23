@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in V-Menu is broken or gives wrong data.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please describe one problem per issue.
+        **Security problem?** Don't post the details here: this repository is public. Contact the maintainer (@RaksaOC) privately instead.
+  - type: input
+    id: ticket
+    attributes:
+      label: Ticket ID
+      description: If this bug belongs to a ticket in the task document, for example VM-08. Leave empty otherwise.
+      placeholder: VM-08
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, starting from a page URL. Include the restaurant slug and table if they matter.
+      placeholder: |
+        1. Open https://staging-v-menu.chanraksa.com/demo-bistro/customer/T1
+        2. Add a dish to the cart
+        3. Click Place order
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      description: What should happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+      description: What happens instead. Paste error messages, the HTTP status, or the response body if you have them.
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where did you see it?
+      options:
+        - staging
+        - production
+        - local
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Drag an image or a short screen recording here. Hide any personal data first.
+    validations:
+      required: false
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How bad is it? The maintainer may change it.
+      options:
+        - P0 - blocks a real restaurant from using the app
+        - P1 - wrong data, security hole, or a broken step in a main journey
+        - P2 - usability and polish
+    validations:
+      required: true
