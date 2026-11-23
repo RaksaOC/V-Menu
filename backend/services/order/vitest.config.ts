@@ -3,7 +3,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
     test: {
         // SEC-01: the API tests sign in with a Bearer header; browsers only ever use the cookie.
-        env: { AUTH_ALLOW_BEARER: "true" },
+        // VM-22: the suite places many orders from one address; order-limits.test.ts sets its own limits.
+        env: { AUTH_ALLOW_BEARER: "true", ORDERS_PER_MINUTE: "100000", ORDERS_PER_TABLE: "100000" },
         coverage: {
             provider: "v8",
             // Every source file counts, even ones no test imports. The entry points only wire

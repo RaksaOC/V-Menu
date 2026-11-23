@@ -219,6 +219,15 @@ describe("orders", () => {
     });
 });
 
+describe("the size of one order (VM-22)", () => {
+    const lines = (n: number) => Array.from({ length: n }, () => ({ item: { _id: ID }, quantity: 1 }));
+    it("is at most 50 lines", () => {
+        expect(C.MAX_ORDER_LINES).toBe(50);
+        ok(C.PlaceOrderBody, { table: "1", orderedItems: lines(50) });
+        expect(fieldsOf(C.PlaceOrderBody, { table: "1", orderedItems: lines(51) })).toEqual(["orderedItems"]);
+    });
+});
+
 describe("order status (VM-27)", () => {
     it("five statuses, and the one step after each", () => {
         expect(C.ORDER_STATUSES).toEqual(["pending", "preparing", "ready", "served", "cancelled"]);
