@@ -174,3 +174,34 @@ ok   VM-13-check-inbox-1280-dark
 ok   VM-13-not-verified-yet-1280-dark
 ok   VM-13-check-inbox-360
 ok   VM-13-not-verified-yet-360
+# ONLY=VM-12 (2026-11-23T17:11:40.109Z)
+ok   VM-12-owner-staff-1280
+ok   VM-12-add-staff-form-1280
+ok   VM-12-login-1280
+ok   VM-12-login-create-account-1280
+ok   VM-12-owner-staff-1280-dark
+ok   VM-12-add-staff-form-1280-dark
+ok   VM-12-login-1280-dark
+ok   VM-12-login-create-account-1280-dark
+ok   VM-12-owner-staff-360
+ok   VM-12-add-staff-form-360
+ok   VM-12-login-360
+ok   VM-12-login-create-account-360
+# ONLY=VM-12 (2026-11-23T17:12:18.980Z)
+ok   VM-12-owner-staff-1280
+ok   VM-12-add-staff-form-1280
+ok   VM-12-login-1280
+ok   VM-12-login-create-account-1280
+ok   VM-12-owner-staff-1280-dark
+ok   VM-12-add-staff-form-1280-dark
+ok   VM-12-login-1280-dark
+ok   VM-12-login-create-account-1280-dark
+ok   VM-12-owner-staff-360
+ok   VM-12-add-staff-form-360
+ok   VM-12-login-360
+ok   VM-12-login-create-account-360
+# ONLY=VM-12 360 (2026-11-23T17:12:49.594Z)
+ok   VM-12-owner-staff-360
+ok   VM-12-add-staff-form-360
+ok   VM-12-login-360
+ok   VM-12-login-create-account-360

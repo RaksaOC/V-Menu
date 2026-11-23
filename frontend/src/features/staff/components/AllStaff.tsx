@@ -423,9 +423,9 @@ export default function AllStaff() {
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between py-4">
-                                            <div className="flex flex-col gap-1 items-start justify-center">
-                                                <div className="flex items-center gap-2">
-                                                    <Mail size={16} className="text-gray-400" />
+                                            <div className="flex flex-col gap-1 items-start justify-center min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 min-w-0 max-w-full">
+                                                    <Mail size={16} className="text-gray-400 shrink-0" />
                                                     <span className="text-gray-900 text-sm truncate">{member.email}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
