@@ -9,7 +9,7 @@
     "dev:services": "concurrently -k -n restaurant,menu,order -c magenta,yellow,cyan \"npm --prefix services/restaurant-service run dev\" \"npm --prefix services/menu-service run dev\" \"npm --prefix services/order-service run dev\"",
     "test": "npm --prefix services/restaurant-service test && npm --prefix services/menu-service test && npm --prefix services/order-service test",
     "test:repo": "node --test scripts/*.test.mjs",
-    "typecheck":"npm --prefix services/restaurant-service run typecheck && npm --prefix services/menu-service run typecheck && npm --prefix services/order-service run typecheck && npm --prefix frontend run typecheck",
+    "typecheck": "npm --prefix services/restaurant-service run typecheck && npm --prefix services/menu-service run typecheck && npm --prefix services/order-service run typecheck && npm --prefix frontend run typecheck",
     "seed": "npm --prefix services/restaurant-service run seed && npm --prefix services/menu-service run seed",
     "docker:up": "GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo local) docker compose up --build -d",
     "docker:down": "docker compose down",
