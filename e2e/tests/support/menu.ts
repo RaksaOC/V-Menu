@@ -3,7 +3,7 @@
 export interface Dish {
     _id: string;
     name: string;
-    price: number;
+    priceCents: number;
 }
 type Menu = Dish[] | { categories: { _id: string | null; name: string; items: Dish[] }[] };
 

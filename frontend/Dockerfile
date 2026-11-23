@@ -47,7 +47,7 @@ ENV ORDER_SERVICE_URL=$ORDER_SERVICE_URL
 # Copy dependencies from the previous stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY frontend/ .
-# type-only imports: tsconfig maps @vmenu/contracts here (../backend from /app), nothing reaches the bundle
+# tsconfig maps @vmenu/contracts here (../backend from /app). Types only, except money.ts (CL-07), which imports nothing
 COPY backend/packages/contracts/src /backend/packages/contracts/src
 RUN mkdir -p public && npm run build
 

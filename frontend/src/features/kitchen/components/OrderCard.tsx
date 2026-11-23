@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { prettyDate } from "@/lib/dates";
+import { formatDateTime } from "@/lib/dates";
+import { formatMoney } from "@/lib/money";
 import { Clock, ArrowRight, Users, Hash } from "lucide-react";
 import { Chip } from "@/components/ui";
 import { NEXT_ACTION, STATUS_LABEL, STATUS_TONE } from "@/lib/order-status";
@@ -71,7 +72,7 @@ const Card = ({ order, onAdvance }: CardProps) => {
                     <div className="text-right">
                         <div className="flex items-center gap-2 mb-1">
                             <Clock size={16} className="text-slate-300" />
-                            <span className="text-sm text-slate-200">{prettyDate(orderedAt)}</span>
+                            <span className="text-sm text-slate-200">{formatDateTime(orderedAt)}</span>
                         </div>
                         <div
                             className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
@@ -125,7 +126,7 @@ const Card = ({ order, onAdvance }: CardProps) => {
 
                             <div className="flex-1 min-w-0">
                                 <h5 className="font-semibold text-gray-800 truncate mb-1">{orderedItem.item.name}</h5>
-                                <p className="text-sm text-gray-500">${orderedItem.item.price.toFixed(2)} each</p>
+                                <p className="text-sm text-gray-500">{formatMoney(orderedItem.item.priceCents)} each</p>
                             </div>
 
                             <div className="flex items-center gap-2">

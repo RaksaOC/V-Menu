@@ -2,7 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { Users, Table, UtensilsCrossed, CheckCircle, CreditCard, TrendingUp, AlertTriangle, Plus, Settings } from "lucide-react";
 import { getRestaurantSummaries, type RestaurantSummary } from "@/features/owner/api";
-import { formatDollars } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 
 interface Props {
     onManage: (id: string) => void;
@@ -235,7 +235,7 @@ export default function AllRestaurants({ onManage }: Props) {
                                     </div>
                                     <div className="text-center">
                                         <p className="text-gray-600">Revenue (paid bills)</p>
-                                        <p className="text-lg font-bold text-amber-600">{formatDollars(restaurant.revenue)}</p>
+                                        <p className="text-lg font-bold text-amber-600">{formatMoney(restaurant.revenueCents)}</p>
                                     </div>
                                 </div>
                             </div>

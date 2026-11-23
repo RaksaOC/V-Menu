@@ -1,6 +1,7 @@
 import { Printer, X } from "lucide-react";
 import { useRef } from "react";
 import { Button, Modal } from "@/components/ui";
+import { formatMoney } from "@/lib/money";
 import type { MenuItem, OrderLine } from "@vmenu/contracts";
 
 interface Props {
@@ -31,7 +32,7 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, onClose
         }
     });
 
-    const total = mergedItems.reduce((sum, item) => sum + item.item.price * item.quantity, 0);
+    const totalCents = mergedItems.reduce((sum, item) => sum + item.item.priceCents * item.quantity, 0);
 
     return (
         <Modal
@@ -78,8 +79,8 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, onClose
                             <tr key={index} className="border-b border-dashed">
                                 <td className="py-2 text-left">{item.item.name}</td>
                                 <td className="py-2 text-left">{item.quantity}</td>
-                                <td className="py-2 text-left">${item.item.price.toFixed(2)}</td>
-                                <td className="py-2 text-right">${(item.item.price * item.quantity).toFixed(2)}</td>
+                                <td className="py-2 text-left">{formatMoney(item.item.priceCents)}</td>
+                                <td className="py-2 text-right">{formatMoney(item.item.priceCents * item.quantity)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -92,7 +93,7 @@ function Invoice({ businessName, address, phone, invoiceId, date, items, onClose
                                 <strong>Total</strong>
                             </span>
                             <span>
-                                <strong>${total.toFixed(2)}</strong>
+                                <strong>{formatMoney(totalCents)}</strong>
                             </span>
                         </div>
                     </div>

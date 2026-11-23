@@ -13,6 +13,7 @@ import { AlertCircle, ArrowLeft, ShoppingBag, Receipt, Plus, RotateCcw } from "l
 import { addToCart } from "@/features/customer/cart";
 import type { MenuItem } from "@vmenu/contracts";
 import type { CartItem } from "@/features/customer/cart";
+import { formatMoney } from "@/lib/money";
 
 export default function CartPage() {
     const router = useRouter();
@@ -57,7 +58,7 @@ export default function CartPage() {
         toast.info("Item removed from cart");
     };
 
-    const total = cartItems.reduce((sum, item) => sum + item.item.price * item.quantity, 0);
+    const totalCents = cartItems.reduce((sum, item) => sum + item.item.priceCents * item.quantity, 0);
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
     /** Reloads the menu, removes the dishes that are no longer on it, and says which. */
@@ -170,7 +171,7 @@ export default function CartPage() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+                                            <p className="text-2xl font-bold text-emerald-600">{formatMoney(totalCents)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -250,7 +251,7 @@ export default function CartPage() {
                                 {cartItems.length > 0 && (
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <p className="text-lg font-bold text-gray-800">Total: ${total.toFixed(2)}</p>
+                                            <p className="text-lg font-bold text-gray-800">Total: {formatMoney(totalCents)}</p>
                                             <p className="text-sm text-gray-500">
                                                 {itemCount} item{itemCount !== 1 ? "s" : ""}
                                             </p>

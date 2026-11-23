@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getAllStaff, type RestaurantStaff } from "@/features/staff/api";
 import { Calendar, ChevronsUpDown, CreditCard, Crown, Mail, Pencil, Search, Users, Utensils, Building2, House } from "lucide-react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
-import { prettyDate } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
 import type { StaffMember } from "@vmenu/contracts";
 
 const getRoleBadge = (role: string) => {
@@ -378,7 +378,7 @@ export default function AllStaff() {
                                                         <div className="flex items-center gap-2 justify-center">
                                                             <Calendar size={16} className="text-gray-400" />
                                                             <span className="text-gray-900">
-                                                                {prettyDate(member.createdAt.toString(), false)}
+                                                                {formatDate(member.createdAt)}
                                                             </span>
                                                         </div>
                                                     </td>
@@ -424,7 +424,7 @@ export default function AllStaff() {
                                                 <div className="flex items-center gap-2">
                                                     <Calendar size={16} className="text-gray-400" />
                                                     <span className="text-gray-900 text-sm">
-                                                        {prettyDate(member.createdAt.toString(), false)}
+                                                        {formatDate(member.createdAt)}
                                                     </span>
                                                 </div>
                                             </div>

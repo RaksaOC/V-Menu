@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Invoice from "./Invoice";
-import { prettyDate } from "@/lib/dates";
+import { formatDateTime } from "@/lib/dates";
+import { formatMoney } from "@/lib/money";
 import { useParams } from "next/navigation";
 import { DollarSign, Eye, EyeOff, XCircle } from "lucide-react";
 import { Button, Chip, Input } from "@/components/ui";
@@ -62,11 +63,11 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                                     <div>
                                         <p className="text-zinc-800 dark:text-white font-semibold">{item.item.name}</p>
                                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                            ${item.item.price.toFixed(2)} × {item.quantity}
+                                            {formatMoney(item.item.priceCents)} × {item.quantity}
                                         </p>
                                     </div>
                                 </div>
-                                <p className="font-bold text-zinc-700 dark:text-white">${(item.item.price * item.quantity).toFixed(2)}</p>
+                                <p className="font-bold text-zinc-700 dark:text-white">{formatMoney(item.item.priceCents * item.quantity)}</p>
                             </div>
                         ));
                         return (
@@ -79,7 +80,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <p className={"text-gray-400"}>{prettyDate(subOrder.createdAt)}</p>
+                                        <p className={"text-gray-400"}>{formatDateTime(subOrder.createdAt)}</p>
                                         {!order.isPaid && !cancelled && onCancelOrder && cancelling?.id !== subOrder._id && (
                                             <button
                                                 type="button"
@@ -147,7 +148,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                     address={"Address will be supported soon"}
                     phone={"(123) 456-7890"}
                     invoiceId={`${order._id}`}
-                    date={prettyDate(new Date().toLocaleString())}
+                    date={formatDateTime(new Date())}
                     items={subOrders.filter((sub) => sub.status !== "cancelled").flatMap((sub) => sub.orderedItems)}
                     onClose={() => setShowInvoice(false)}
                 />

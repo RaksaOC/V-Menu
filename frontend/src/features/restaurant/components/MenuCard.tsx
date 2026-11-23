@@ -1,5 +1,6 @@
 import { CheckCircle, Pencil, XCircle } from "lucide-react";
 import { Card, Chip } from "@/components/ui";
+import { formatMoney } from "@/lib/money";
 import type { MenuItem } from "@vmenu/contracts";
 
 type Props = { item: MenuItem } & (
@@ -23,7 +24,7 @@ export default function MenuCard(props: Props) {
             <div className="flex flex-1 items-end justify-between gap-3 p-4">
                 <div className="min-w-0">
                     <h3 className="line-clamp-2 font-semibold leading-snug">{item.name}</h3>
-                    <p className="text-lg font-bold text-[var(--ok)]">${item.price.toFixed(2)}</p>
+                    <p className="text-lg font-bold text-[var(--ok)]">{formatMoney(item.priceCents)}</p>
                 </div>
                 {props.role === "owner" ? (
                     <button

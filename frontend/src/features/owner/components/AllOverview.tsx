@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line } from "recharts";
 import { DollarSign, ShoppingCart, Users, TrendingUp, Package, CreditCard, AlertTriangle, Trophy, Target, Activity } from "lucide-react";
 import { getOwnerOverview, PERIODS, type OwnerOverview, type Period, type TopSeller } from "@/features/owner/api";
-import { formatDollars } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 
 interface StatCardProps {
     title: string;
@@ -48,7 +48,7 @@ const StatCard = ({ title, value, icon: Icon, color, bgColor, textColor, subtitl
             <div>
                 <h3 className={`text-sm font-semibold ${textColor} uppercase tracking-wide mb-2`}>{title}</h3>
                 <div className="flex items-baseline space-x-2">
-                    <span className="text-3xl font-bold text-gray-800">{typeof value === "number" ? value.toLocaleString() : value}</span>
+                    <span className="text-3xl font-bold text-gray-800">{typeof value === "number" ? value.toLocaleString("en-US") : value}</span>
                     {subtitle && <span className="text-sm text-gray-500">{subtitle}</span>}
                 </div>
             </div>
@@ -279,7 +279,7 @@ export default function AllOverview() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <StatCard
                         title="Revenue"
-                        value={formatDollars(data.revenue)}
+                        value={formatMoney(data.revenueCents)}
                         icon={DollarSign}
                         color="from-green-500 to-emerald-600"
                         bgColor="bg-green-50"

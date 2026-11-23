@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle, CreditCard, Table as TableIcon, TrendingUp,
 import { Card, Skeleton } from "@/components/ui";
 import { getOverview } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
-import { formatDollars } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 import type { Overview as OverviewData } from "@vmenu/contracts";
 
 const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
@@ -95,7 +95,7 @@ export default function Overview() {
                 </div>
                 <div>
                     <p className="text-sm text-[var(--muted)]">Revenue (paid bills)</p>
-                    <p className="text-lg font-bold">{formatDollars(data.revenue ?? 0)}</p>
+                    <p className="text-lg font-bold">{formatMoney(data.revenueCents ?? 0)}</p>
                 </div>
             </Card>
         </div>

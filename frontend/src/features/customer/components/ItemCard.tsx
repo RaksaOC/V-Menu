@@ -1,6 +1,7 @@
 import { addToCart } from "../cart";
 import { Plus } from "lucide-react";
 import type { MenuItem } from "@vmenu/contracts";
+import { formatMoney } from "@/lib/money";
 
 interface CardProps {
     /** The restaurant and table whose cart the dish goes into (VM-05). */
@@ -8,11 +9,11 @@ interface CardProps {
     table: string;
     _id: string;
     name: string;
-    price: number;
+    priceCents: number;
     image: string;
 }
 
-export default function Card({ slug, table, _id, name, price, image }: CardProps) {
+export default function Card({ slug, table, _id, name, priceCents, image }: CardProps) {
     return (
         <div className="bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:scale-[1.02] hover:border-emerald-200">
             {/* Image Container */}
@@ -29,7 +30,7 @@ export default function Card({ slug, table, _id, name, price, image }: CardProps
                         {name}
                     </h4>
                     <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-emerald-600">${price.toFixed(2)}</span>
+                        <span className="text-2xl font-bold text-emerald-600">{formatMoney(priceCents)}</span>
                     </div>
                 </div>
 
@@ -40,7 +41,7 @@ export default function Card({ slug, table, _id, name, price, image }: CardProps
                             _id,
                             image,
                             name,
-                            price, // was parseInt(price.toFixed(2)), which dropped the cents
+                            priceCents,
                             isEnabled: true,
                         };
 

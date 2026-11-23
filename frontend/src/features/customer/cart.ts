@@ -1,6 +1,7 @@
 import { toast } from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
 import type { MenuItem, PlaceOrderBody } from "@vmenu/contracts";
+import { toCents } from "@/lib/money";
 
 /** A line in the cart: a dish as the menu showed it, and how many. */
 export type CartItem = { item: MenuItem; quantity: number };
@@ -25,11 +26,17 @@ function dropLegacyCart() {
     localStorage.removeItem("table");
 }
 
+/** CL-07: a cart saved before prices were in cents has `price` in dollars. */
+function inCents(line: CartItem & { item: { price?: number } }): CartItem {
+    if (line.item?.priceCents !== undefined) return line;
+    return { ...line, item: { ...line.item, priceCents: toCents(line.item?.price ?? 0) } };
+}
+
 export function readCart(slug: string, table: string): CartItem[] {
     dropLegacyCart();
     try {
         const saved = JSON.parse(localStorage.getItem(cartKey(slug, table)) ?? "[]");
-        return Array.isArray(saved) ? saved : [];
+        return Array.isArray(saved) ? saved.map(inCents) : [];
     } catch {
         return [];
     }

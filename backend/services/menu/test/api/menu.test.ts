@@ -132,7 +132,7 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
     });
 
     it("a page opened before CL-07 can still send `price` in dollars; the answer has both", async () => {
-        const res = await addItem({ price: 2.35, priceCents: undefined });
+        const res = await addItem({ name: "Old page", price: 2.35, image: PHOTO });
         expect(res.status).toBe(201);
         expect(res.body).toMatchObject({ priceCents: 235, price: 2.35 });
     });

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { formatMoney } from "@/lib/money";
 import { toast } from "@/lib/toast";
 import type { MenuItem } from "@vmenu/contracts";
 import type { CartItem } from "@/features/customer/cart";
@@ -14,7 +15,7 @@ type CartItemProps = {
 
 const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, removeItem }: CartItemProps) => {
     const [isRemoving, setIsRemoving] = useState(false);
-    const menuItem: Pick<MenuItem, "name" | "image" | "price"> = cartItem.item;
+    const menuItem: Pick<MenuItem, "name" | "image" | "priceCents"> = cartItem.item;
 
     const handleRemove = () => {
         setIsRemoving(true);
@@ -41,11 +42,7 @@ const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, rem
                     <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-lg text-gray-800 mb-1 truncate">{menuItem.name}</h3>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">${menuItem.price.toFixed(2)} each</span>
-                            {/*<span className="text-xs text-gray-400">•</span>*/}
-                            {/*<span className="text-sm font-medium text-emerald-600">*/}
-                            {/*    ${(menuItem.price * cartItem.quantity).toFixed(2)} total*/}
-                            {/*</span>*/}
+                            <span className="text-sm text-gray-500">{formatMoney(menuItem.priceCents)} each</span>
                         </div>
                     </div>
 
