@@ -226,7 +226,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ui-kit-screenshots
-          path: e2e/test-results/**/CL-09-ui-kit-*.png
+          path: |
+            e2e/test-results/**/CL-09-ui-kit-*.png
+            !e2e/test-results/**/attachments/**
           if-no-files-found: warn
           retention-days: 14
 
