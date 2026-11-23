@@ -3,7 +3,7 @@
 - **Priority:** P1
 - **Status:** not started
 - **Issue:** [#119](https://github.com/RaksaOC/V-Menu/issues/119)
-- **Branch to create:** `test/SEC-07-access-matrix`
+- **Branch to create:** `tests/SEC-07-access-matrix`
 
 ## What to do
 

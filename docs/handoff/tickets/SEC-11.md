@@ -3,7 +3,7 @@
 - **Priority:** P2
 - **Status:** not started
 - **Issue:** [#123](https://github.com/RaksaOC/V-Menu/issues/123)
-- **Branch to create:** `test/SEC-11-db-user-isolation`
+- **Branch to create:** `tests/SEC-11-db-user-isolation`
 
 ## What to do
 
