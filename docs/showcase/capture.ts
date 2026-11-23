@@ -1168,6 +1168,49 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-30: the customer's "Request bill" and "Call staff" buttons, and the badge on the cashier's card.
+const VM30 = { ready: false, asked: false };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-30 ${vp.width} ${theme}`, async () => {
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM30.ready) {
+            VM30.ready = true;
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open.filter((b) => b.table === "T4")) await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            await cashier.page.request.post(api(""), { data: { table: "T4", orderedItems: [{ item: { _id: menu[0]._id }, quantity: 2 }] } });
+        }
+
+        const customer = await newPage(browser, vp, theme);
+        await customer.page.goto(`${BASE}/${SLUG}/customer/T4`);
+        await settle(customer.page);
+        const requestBill = customer.page.getByRole("button", { name: "Request bill" });
+        if (!VM30.asked && (await requestBill.count())) {
+            VM30.asked = true;
+            await requestBill.click();
+            await customer.page.getByText(/We've told the staff/).waitFor({ timeout: 10_000 });
+            await customer.page.getByRole("button", { name: "Call staff" }).click();
+            await settle(customer.page);
+        }
+        await shot({ page: customer.page, theme, width: vp.width }, "VM-30-customer-menu", false);
+        await customer.context.close();
+
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T4" }) });
+        await card.scrollIntoViewIfNeeded();
+        await settle(cashier.page);
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-30-cashier-card", false);
+        await cashier.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

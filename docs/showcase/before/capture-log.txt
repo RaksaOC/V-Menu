@@ -219,3 +219,10 @@ ok   VM-28-kitchen-card-360
 ok   VM-29-kitchen-board-1280
 ok   VM-29-kitchen-board-1280-dark
 ok   VM-29-kitchen-board-360
+# ONLY=VM-30 (2026-11-23T19:44:28.931Z)
+ok   VM-30-customer-menu-1280
+ok   VM-30-cashier-card-1280
+ok   VM-30-customer-menu-1280-dark
+ok   VM-30-cashier-card-1280-dark
+ok   VM-30-customer-menu-360
+ok   VM-30-cashier-card-360
