@@ -42,9 +42,9 @@ On the test laptop the agent and its helpers use about 130 MB of memory in total
 You need Docker and the five `GRAFANA_*` values in the root `.env` (see `.env.example`). The token only needs the `metrics:write` and `logs:write` scopes. Run these in Git Bash from the repo root:
 
 ```bash
-docker compose -p vmenu-local up --build -d --wait
-mkdir -p monitoring/.local && touch monitoring/.local/deploy-history.log
-docker compose --env-file .env -f monitoring/compose.yml -f monitoring/compose.local.yml up -d --wait
+docker compose -p vmenu-local --env-file .env -f infra/compose/docker-compose.yml up --build -d --wait
+mkdir -p infra/monitoring/.local && touch infra/monitoring/.local/deploy-history.log
+docker compose --env-file .env -f infra/monitoring/compose.yml -f infra/monitoring/compose.local.yml up -d --wait
 ```
 
 Data appears in Grafana within two minutes, labelled `env="local"`. Alerts ignore that environment.
@@ -52,8 +52,8 @@ Data appears in Grafana within two minutes, labelled `env="local"`. Alerts ignor
 To stop everything:
 
 ```bash
-docker compose --env-file .env -f monitoring/compose.yml -f monitoring/compose.local.yml down
-docker compose -p vmenu-local down
+docker compose --env-file .env -f infra/monitoring/compose.yml -f infra/monitoring/compose.local.yml down
+docker compose -p vmenu-local -f infra/compose/docker-compose.yml down
 ```
 
 ## Deploy it to the server
@@ -75,7 +75,7 @@ After that, every merge into `staging` that changes this folder redeploys the ag
 Create a service account with the **Editor** role in Grafana (**Administration > Users and access > Service accounts**), add a token, then run:
 
 ```bash
-GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=<token> node monitoring/import-grafana.mjs
+GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=<token> node infra/monitoring/import-grafana.mjs
 ```
 
 It is safe to run again. Alerts go to the stack's default contact point.

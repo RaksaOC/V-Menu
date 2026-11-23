@@ -141,9 +141,18 @@ test("root scripts and helper scripts use the new paths", () => {
     "scripts/smoke.mjs",
     "scripts/place-order.mjs",
     "docs/showcase/capture.ts",
-    ".github/actions/start-stack/action.yml",
   ]) {
     const m = read(f).match(stale);
     assert.equal(m, null, `${f} still uses the old path ${m?.[0]?.trim()}`);
   }
+});
+
+test("the CI stack action builds and runs infra/compose/docker-compose.yml", () => {
+  const action = read(".github/actions/start-stack/action.yml");
+  // Bake runs from its local source folder, so `files: docker-compose.yml` is that file.
+  assert.match(action, /^ {8}source: infra\/compose$/m);
+  assert.match(action, /^ {8}files: docker-compose\.yml$/m);
+  // ...and every later `docker compose` call in the job uses the same file.
+  assert.match(action, /COMPOSE_FILE=\$GITHUB_WORKSPACE\/infra\/compose\/docker-compose\.yml/);
+  assert.doesNotMatch(action, /services\/[a-z]+-service/);
 });

@@ -1,13 +1,20 @@
 # Local full stack: MongoDB, the three services and the frontend.
-#   docker compose up --build -d     build and start (http://localhost:3400)
-#   docker compose ps                status; all 5 should show (healthy)
-#   docker compose logs -f           follow every container's logs
-#   docker compose down              stop (the mongo-data volume keeps the data)
-#   docker compose exec restaurant-service node dist/seed.js   demo restaurant
-#   docker compose exec menu-service node dist/seed.js         demo tables and dishes
+# Run from the repo root. Paths below are relative to this file (infra/compose/), and
+# --env-file .env passes the root .env (Firebase web config) to the frontend build.
+# With `export COMPOSE_FILE=infra/compose/docker-compose.yml` the -f part can be left out.
+#   docker compose --env-file .env -f infra/compose/docker-compose.yml up --build -d   build and start (http://localhost:3400)
+#   docker compose -f infra/compose/docker-compose.yml ps           status; all 5 should show (healthy)
+#   docker compose -f infra/compose/docker-compose.yml logs -f      follow every container's logs
+#   docker compose -f infra/compose/docker-compose.yml down         stop (the mongo-data volume keeps the data)
+#   docker compose -f infra/compose/docker-compose.yml exec restaurant-service node dist/seed.js   demo restaurant
+#   docker compose -f infra/compose/docker-compose.yml exec menu-service node dist/seed.js         demo tables and dishes
 # The npm scripts (npm run docker:up / docker:down / docker:logs / docker:seed) are shortcuts
 # for the same commands.
 
+# The project name used to come from the repo folder; keep it, so containers, networks and
+# the mongo-data volume keep their names now that this file lives in infra/compose/.
+# COMPOSE_PROJECT_NAME or -p still override it (CI uses vmenu).
+name: v-menu
 
 x-service: &service
   restart: unless-stopped
@@ -30,10 +37,10 @@ services:
   restaurant-service:
     <<: *service
     build:
-      context: ./services/restaurant-service
+      context: ../../backend/services/restaurant
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
-    env_file: ./services/restaurant-service/.env
+    env_file: ../../backend/services/restaurant/.env
     environment: # replaces the 127.0.0.1 addresses in .env
       MONGODB_URI: mongodb://mongo:27017/vmenu_restaurants
     depends_on:
@@ -43,10 +50,10 @@ services:
   menu-service:
     <<: *service
     build:
-      context: ./services/menu-service
+      context: ../../backend/services/menu
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
-    env_file: ./services/menu-service/.env
+    env_file: ../../backend/services/menu/.env
     environment:
       MONGODB_URI: mongodb://mongo:27017/vmenu_menu
       RESTAURANT_SERVICE_URL: http://restaurant-service:4101
@@ -57,10 +64,10 @@ services:
   order-service:
     <<: *service
     build:
-      context: ./services/order-service
+      context: ../../backend/services/order
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
-    env_file: ./services/order-service/.env
+    env_file: ../../backend/services/order/.env
     environment:
       MONGODB_URI: mongodb://mongo:27017/vmenu_orders
       RESTAURANT_SERVICE_URL: http://restaurant-service:4101
@@ -71,7 +78,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ../../frontend
       args:
         NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-}

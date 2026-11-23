@@ -56,14 +56,14 @@ Needs Docker with Compose v2 and Node 22+ (only to run the npm scripts below; no
 
 ```bash
 # 1. env files (once)
-cp services/restaurant-service/.env.example services/restaurant-service/.env
-cp services/menu-service/.env.example       services/menu-service/.env
-cp services/order-service/.env.example      services/order-service/.env
+cp backend/services/restaurant/.env.example backend/services/restaurant/.env
+cp backend/services/menu/.env.example       backend/services/menu/.env
+cp backend/services/order/.env.example      backend/services/order/.env
 cp .env.example .env   # then fill in your Firebase web config (read by docker compose)
-# set FIREBASE_PROJECT_ID in services/restaurant-service/.env to the same project
+# set FIREBASE_PROJECT_ID in backend/services/restaurant/.env to the same project
 
 # 2. build and start
-docker compose up --build -d   # mongo + 3 services + frontend (or: npm run docker:up)
+docker compose --env-file .env -f infra/compose/docker-compose.yml up --build -d   # mongo + 3 services + frontend (or: npm run docker:up)
 
 # 3. demo data, then one order end to end
 npm run docker:seed    # restaurant "demo-bistro", tables T1-T4, four dishes
@@ -74,25 +74,26 @@ Open http://localhost:3400. The customer page for the demo is http://localhost:3
 
 | Script | Does |
 | --- | --- |
-| `npm run docker:up` | `docker compose up --build -d`, plus the commit hash as `GIT_SHA` for `/version` |
+| `npm run docker:up` | `docker compose --env-file .env -f infra/compose/docker-compose.yml up --build -d`, plus the commit hash as `GIT_SHA` for `/version` |
 | `npm run docker:down` | stops and removes the containers; the `mongo-data` volume keeps the data |
 | `npm run docker:logs` | follows the logs of every container |
 | `npm run docker:seed` | runs each service's own seed inside its container |
 | `npm run docker:order` | places a test order through the frontend |
 
-How the containers are wired (`docker-compose.yml`):
+How the containers are wired (`infra/compose/docker-compose.yml`). Run `docker compose` from the repo root with `-f infra/compose/docker-compose.yml` (or `export COMPOSE_FILE=infra/compose/docker-compose.yml`), and add `--env-file .env` when building so the frontend gets the root `.env`:
 
 - **One database per service on one MongoDB server** (`mongo:7`): `vmenu_restaurants`, `vmenu_menu`, `vmenu_orders`. Data lives in the `mongo-data` volume, so it survives restarts.
 - **Two networks.** `backend` joins MongoDB and the services; `frontend` joins the frontend and the services. The frontend is not on `backend`, so it cannot reach MongoDB.
 - **Only the frontend publishes a port** (`3400`). The services are reachable only inside Docker, by their Compose names (`http://restaurant-service:4101`).
 - **Images.** Each service is a multi-stage build on `node:22-alpine` with production deps and `dist/` only. It runs as `node` and has a `HEALTHCHECK` on `/health`; `/version` returns the `GIT_SHA` it was built from.
 - The root `.env` holds the Firebase web config for the frontend build. It has the same values as `frontend/.env.local`, which `npm run dev` uses, so update both if a key changes.
-- The `services/*/.env.example` secrets are placeholders that work locally. Run `npm run setup` (below) to generate real ones.
-- To sign in as the demo owner, set `SEED_OWNER_UID` and `SEED_OWNER_EMAIL` in `services/restaurant-service/.env` to your Firebase user, then run `npm run docker:seed` again.
+- The `backend/services/*/.env.example` secrets are placeholders that work locally. Run `npm run setup` (below) to generate real ones.
+- To sign in as the demo owner, set `SEED_OWNER_UID` and `SEED_OWNER_EMAIL` in `backend/services/restaurant/.env` to your Firebase user, then run `npm run docker:seed` again.
 
-**Production** (`docker-compose.prod.yml`, for M4) runs the same services from `ghcr.io/raksaoc/vmenu-<service>:${TAG}` images, with `restart: unless-stopped` and memory and CPU limits. MongoDB is off by default (Atlas); add `--profile mongo` to run it as a container.
+**Production** (`infra/compose/docker-compose.prod.yml`, for M4) runs the same services from `ghcr.io/raksaoc/vmenu-<service>:${TAG}` images, with `restart: unless-stopped` and memory and CPU limits. MongoDB is off by default (Atlas); add `--profile mongo` to run it as a container.
 
 ```bash
+# on the server, in /srv/vmenu/<env>/ (infra/deploy/ci-deploy.sh copies the file there)
 TAG=<image tag> docker compose -f docker-compose.prod.yml up -d
 ```
 
@@ -102,20 +103,20 @@ Requires Node 22+.
 
 ```bash
 npm install            # root tools (concurrently, local MongoDB)
-npm run setup          # installs every package, writes services/*/.env with fresh shared secrets
+npm run setup          # installs every package, writes backend/services/*/.env with fresh shared secrets
 cp frontend/.env.example frontend/.env.local   # then fill in your Firebase web config
 npm run dev            # MongoDB + 3 services + frontend
 npm run seed           # demo data (in another terminal)
 ```
 
-- `npm run dev` starts a local MongoDB on `127.0.0.1:27017`, with data in `.data/mongo`. To use Atlas instead, set `MONGODB_URI` in each `services/*/.env`, using a separate database name per service, and run `npm run dev:services` plus `npm --prefix frontend run dev`.
+- `npm run dev` starts a local MongoDB on `127.0.0.1:27017`, with data in `.data/mongo`. To use Atlas instead, set `MONGODB_URI` in each `backend/services/*/.env`, using a separate database name per service, and run `npm run dev:services` plus `npm --prefix frontend run dev`.
 - `npm test` runs each service's tests (Vitest, Supertest and an in-memory MongoDB).
 - `npm run typecheck` type-checks all four packages.
 - `npm run test:repo` checks the issue forms (`.github/ISSUE_TEMPLATE/`) and the PR template (`.github/pull_request_template.md`) still have their required fields.
 
 ### Environment
 
-Each service reads its own `services/<name>/.env` (see its `.env.example`):
+Each service reads its own `backend/services/<name>/.env` (see its `.env.example`):
 
 | Variable | Used by | Notes |
 | --- | --- | --- |
@@ -146,11 +147,17 @@ The frontend only needs the public Firebase web config, plus the three service U
 frontend/                    Next.js app (pages only, no database access)
   src/components/tour/       landing-page tour
   src/theme/deep-lab.css     design tokens
-services/
-  restaurant-service/        src/app.ts routes, src/models.ts, src/lib/ shared helpers
-  menu-service/
-  order-service/
-scripts/                     setup and local MongoDB
+backend/
+  services/
+    restaurant/              restaurant-service: src/app.ts routes, src/models.ts, src/lib/ shared helpers
+    menu/                    menu-service
+    order/                   order-service
+e2e/                         Playwright end-to-end tests (frontend and services together)
+infra/
+  compose/                   docker-compose.yml (local stack), docker-compose.prod.yml (server)
+  deploy/                    server setup and deploy scripts (see infra/deploy/README.md)
+  monitoring/                Grafana Alloy agent, dashboards and alerts (see infra/monitoring/README.md)
+scripts/                     setup, local MongoDB, smoke test and repo checks
 ```
 
 Photo credits for the tour images are in `frontend/public/images/tour/CREDITS.md`.

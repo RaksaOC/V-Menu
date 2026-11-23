@@ -5,7 +5,7 @@
 //   PHASE=before node capture.ts        (or PHASE=after)
 //
 // Staff screens need an app token. The script signs one with the JWT_SECRET from
-// services/restaurant-service/.env, so it only works against a stack you run yourself.
+// backend/services/restaurant/.env, so it only works against a stack you run yourself.
 // Every shot is taken with the same viewport, data and theme in both phases.
 // Node 22.18+ runs this file directly (type stripping), so there is no build step.
 
@@ -31,9 +31,9 @@ mkdirSync(OUT, { recursive: true });
 
 function jwtSecret(): string {
     if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
-    const env = readFileSync(join(root, "services/restaurant-service/.env"), "utf8");
+    const env = readFileSync(join(root, "backend/services/restaurant/.env"), "utf8");
     const line = env.split(/\r?\n/).find((l) => l.startsWith("JWT_SECRET="));
-    if (!line) throw new Error("JWT_SECRET not found; set it or create services/restaurant-service/.env");
+    if (!line) throw new Error("JWT_SECRET not found; set it or create backend/services/restaurant/.env");
     return line.slice("JWT_SECRET=".length).trim();
 }
 

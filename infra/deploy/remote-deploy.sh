@@ -30,7 +30,7 @@ die() { log "ERROR: $*" >&2; exit 1; }
 
 case $ENV_NAME in staging | prod) ;; *) die "environment must be staging or prod" ;; esac
 [[ -n $ACTION ]] || die "missing tag (or --rollback / --seed)"
-cd "$DIR" 2>/dev/null || die "$DIR does not exist; run deploy/setup-server.sh first"
+cd "$DIR" 2>/dev/null || die "$DIR does not exist; run infra/deploy/setup-server.sh first"
 [[ -f .env ]] || die "$DIR/.env is missing; the deploy workflow writes it"
 
 # One deploy per environment at a time.

@@ -15,6 +15,6 @@ Every picture is taken by `capture.ts`, never by hand, with the same viewport, d
    PHASE=after node capture.ts      # PHASE=before for the baseline
    ```
 
-Staff screens need an app token, so the script signs one with the `JWT_SECRET` in `services/restaurant-service/.env`. It only works against a stack you run yourself.
+Staff screens need an app token, so the script signs one with the `JWT_SECRET` in `backend/services/restaurant/.env`. It only works against a stack you run yourself.
 
 File names are `<ticket>-<screen>-<width>[-dark].png`. `capture-log.txt` lists every shot and any step that failed.
