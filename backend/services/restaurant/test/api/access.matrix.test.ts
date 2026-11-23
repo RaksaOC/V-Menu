@@ -45,6 +45,7 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/auth/login", NO_APP_TOKEN], // Firebase ID token only
     ["POST /api/auth/signup", NO_APP_TOKEN],
     ["POST /api/auth/memberships", NO_APP_TOKEN],
+    ["POST /api/auth/sign-out-everywhere", only(["owner", "cashier", "chef"], { ownData: true })],
     ["GET /api/restaurants", ownersOwnData],
     ["POST /api/restaurants", ownersOwnData],
     ["GET /api/staff", ownersOwnData],
@@ -54,6 +55,7 @@ const MATRIX: [string, AccessRow][] = [
     ["DELETE /api/restaurants/:slug/staff/:id", owner],
     ["GET /internal/restaurants", NO_APP_TOKEN],
     ["GET /internal/restaurants/by-slug/:slug", NO_APP_TOKEN],
+    ["GET /internal/sessions/version", NO_APP_TOKEN],
 ];
 
 let mongo: MongoMemoryServer;

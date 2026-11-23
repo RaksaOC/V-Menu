@@ -1,3 +1,4 @@
+import { decodeJwt } from "jose";
 import { describe, expect, it } from "vitest";
 import { authService } from "../../src/services/auth.service.js";
 import { generateSlug, restaurantsService } from "../../src/services/restaurants.service.js";
@@ -326,5 +327,79 @@ describe("changing a staff role can't duplicate it (VM-18)", () => {
         const { staff, memberships, r, resId, cashier, by } = await bistro();
         await memberships.createMany([{ name: "Bob", tenantId: "bob", email: "bob@x.test", role: "cashier", resId }]); // from before this fix
         expect((await staff.update(by, r.slug, cashier._id, { name: "Robert", role: "cashier", email: "bob@x.test" })).name).toBe("Robert");
+    });
+});
+
+describe("session versions (SEC-03)", () => {
+    const versionOf = (token: string) => decodeJwt(token).tv;
+    async function bistro() {
+        const s = setup();
+        const r = await s.places.createForOwner("Bistro", { uid: "owner", email: "owner@x.test", name: "Ory" });
+        const resId = String(r._id);
+        const [cashier] = await s.memberships.createMany([{ name: "Bob", tenantId: "bob", email: "bob@x.test", role: "cashier", resId }]);
+        const by = { uid: "owner", email: "owner@x.test", role: "owner" as const };
+        const version = (uid = "bob", role = "cashier") => s.auth.sessionVersion({ uid, role, resId });
+        return { ...s, r, resId, cashier, by, version };
+    }
+
+    it("a new membership starts at 0, and the token carries the version", async () => {
+        const { auth, r, version } = await bistro();
+        expect(await version()).toEqual({ version: 0 });
+        const { token } = await auth.login({ idToken: "id:bob:bob@x.test", role: "cashier", resSlug: r.slug });
+        expect(versionOf(token)).toBe(0);
+    });
+
+    it("removing someone ends their session", async () => {
+        const { staff, r, cashier, by, version } = await bistro();
+        await staff.remove(by, r.slug, cashier._id);
+        expect(await version()).toEqual({ version: null });
+    });
+
+    it("a role change raises the version, so the old token stops working even if the role comes back", async () => {
+        const { staff, r, cashier, by, version } = await bistro();
+        await staff.update(by, r.slug, cashier._id, { role: "chef" });
+        expect(await version("bob", "cashier")).toEqual({ version: null });
+        expect(await version("bob", "chef")).toEqual({ version: 1 });
+        await staff.update(by, r.slug, cashier._id, { role: "cashier" });
+        expect(await version("bob", "cashier")).toEqual({ version: 2 });
+    });
+
+    it("an edit that keeps the role doesn't sign them out", async () => {
+        const { staff, r, cashier, by, version } = await bistro();
+        await staff.update(by, r.slug, cashier._id, { name: "Robert", role: "cashier" });
+        expect(await version()).toEqual({ version: 0 });
+    });
+
+    it("a new login after a change carries the new version", async () => {
+        const { auth, staff, r, cashier, by } = await bistro();
+        await staff.update(by, r.slug, cashier._id, { role: "chef" });
+        const { token } = await auth.login({ idToken: "id:bob:bob@x.test", role: "chef", resSlug: r.slug });
+        expect(versionOf(token)).toBe(1);
+    });
+
+    it("signing out everywhere raises every role of that person, and nobody else's", async () => {
+        const { auth, memberships, resId, version } = await bistro();
+        await memberships.createMany([{ name: "Bob", tenantId: "bob", email: "bob@x.test", role: "chef", resId }]);
+        await auth.signOutEverywhere("bob");
+        expect(await version("bob", "cashier")).toEqual({ version: 1 });
+        expect(await version("bob", "chef")).toEqual({ version: 1 });
+        expect(await version("owner", "cashier")).toEqual({ version: 0 });
+    });
+
+    it("an owner's version covers all their restaurants", async () => {
+        const { auth, places } = await bistro();
+        await places.create({ uid: "owner", email: "owner@x.test", role: "owner" }, { name: "Second" });
+        expect(await auth.sessionVersion({ uid: "owner", role: "owner" })).toEqual({ version: 0 });
+        await auth.signOutEverywhere("owner");
+        expect(await auth.sessionVersion({ uid: "owner", role: "owner" })).toEqual({ version: 1 });
+        const { token } = await auth.login({ idToken: "id:owner:owner@x.test", role: "owner" });
+        expect(versionOf(token)).toBe(1);
+    });
+
+    it("a staff check needs a restaurant, and odd input is refused", async () => {
+        const { auth } = await bistro();
+        expect(await auth.sessionVersion({ uid: "bob", role: "cashier" })).toEqual({ version: null });
+        expect(await status(auth.sessionVersion({ uid: "bob", role: "admin" }))).toBe(400);
+        expect(await status(auth.sessionVersion({ role: "cashier" }))).toBe(400);
     });
 });
