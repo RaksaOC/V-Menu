@@ -60,8 +60,10 @@ function where(req: Request) {
 
 export function recordAccessFailure(req: Request, status: number, reason: AccessFailure, caller?: Caller) {
     failures.inc({ service: serviceName(), reason });
-    (req.log ?? logger).warn(
+    // The plain logger on purpose: req.log would add the request's full URL and headers.
+    logger.warn(
         {
+            requestId: req.id,
             status,
             reason,
             method: req.method,
