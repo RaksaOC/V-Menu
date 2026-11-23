@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CheckCircle2, ChefHat, Clock, Plus, Receipt } from "lucide-react";
@@ -24,24 +24,25 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
     const [error, setError] = useState<string | null>(null);
 
     const finished = order ? isFinal(order.status) : false;
+    const load = useCallback(() => {
+        getTableOrder(slug, table, String(params.orderId))
+            .then(setOrder)
+            .catch((err) => setError(apiErrorMessage(err, "Couldn't load this order.")));
+        getTableBill(slug, table)
+            .then(setBill)
+            .catch(() => setBill(null)); // the list is a bonus; the order above is what matters
+    }, [slug, table, params.orderId]);
+
+    // once when the page opens
+    useEffect(load, [load]);
+
+    // VM-27: then every pollMs, until the status can't change any more. Its own effect, so
+    // reaching a final status only stops the timer and doesn't load once more.
     useEffect(() => {
-        let stopped = false;
-        const load = () => {
-            getTableOrder(slug, table, String(params.orderId))
-                .then((o) => !stopped && setOrder(o))
-                .catch((err) => !stopped && setError(apiErrorMessage(err, "Couldn't load this order.")));
-            getTableBill(slug, table)
-                .then((b) => !stopped && setBill(b))
-                .catch(() => !stopped && setBill(null)); // the list is a bonus; the order above is what matters
-        };
-        load();
-        // VM-27: keep the status fresh until it can't change any more
-        const timer = finished ? undefined : setInterval(load, pollMs);
-        return () => {
-            stopped = true;
-            clearInterval(timer);
-        };
-    }, [slug, table, params.orderId, pollMs, finished]);
+        if (finished) return;
+        const timer = setInterval(load, pollMs);
+        return () => clearInterval(timer);
+    }, [load, pollMs, finished]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 pb-28">

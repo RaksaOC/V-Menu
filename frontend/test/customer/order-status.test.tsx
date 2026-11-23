@@ -52,8 +52,7 @@ describe("order status on the confirmation page", () => {
         const box = await screen.findByRole("status", { name: "Order status" });
         expect(within(box).getByText("Cancelled")).toBeTruthy();
         expect(within(box).getByText(/Out of fish/)).toBeTruthy();
-        const before = asked.length;
         await act(() => vi.advanceTimersByTimeAsync(30_000));
-        expect(asked.length).toBe(before);
+        expect(asked.length).toBe(1); // asked once: a final status isn't asked for again, not even once more
     });
 });
