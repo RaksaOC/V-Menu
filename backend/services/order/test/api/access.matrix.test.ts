@@ -51,12 +51,14 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/orders/:slug", PUBLIC], // customers order without signing in
     ["GET /api/orders/:slug/tables/:table/orders/:id", PUBLIC], // only that table's order (VM-07)
     ["GET /api/orders/:slug/tables/:table/open-bill", PUBLIC],
+    ["POST /api/orders/:slug/tables/:table/requests", PUBLIC], // VM-30: Request bill, Call staff (no sign-in, like ordering)
     ["GET /api/orders/:slug/kitchen", only(["chef"])],
     ["GET /api/orders/:slug/kitchen/history", only(["chef"])],
     ["PATCH /api/orders/:slug/kitchen/:id/status", only(["chef"])],
     ["GET /api/orders/:slug/bills", only(["cashier"])],
     ["PATCH /api/orders/:slug/bills/:id", only(["cashier"])],
     ["PATCH /api/orders/:slug/bills/:id/orders/:orderId/cancel", only(["cashier"])],
+    ["DELETE /api/orders/:slug/bills/:id/requests/:kind", only(["cashier"])], // VM-30: dismiss
     ["GET /api/orders/:slug/overview", only(["owner", "cashier"])],
     ["GET /api/orders/owner/restaurants", only(["owner"], { ownData: true })],
     ["GET /api/orders/owner/overview", only(["owner"], { ownData: true })],
@@ -92,6 +94,7 @@ function urlFor(route: string) {
         .replace(":slug", A.slug)
         .replace(":table", "1")
         .replace(":orderId", ids.orderA)
+        .replace(":kind", "bill")
         .replace(/orders\/:id/, `orders/${ids.orderA}`)
         .replace(/kitchen\/:id/, `kitchen/${ids.orderA}`)
         .replace(/bills\/:id/, `bills/${ids.billA}`);

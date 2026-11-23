@@ -161,6 +161,30 @@ describe("an order is never left off its bill (VM-23)", () => {
     });
 });
 
+describe("table requests (VM-30)", () => {
+    const ask = (kind: string, table = "1") => request(app).post(`/api/orders/${R.slug}/tables/${table}/requests`).send({ kind });
+
+    it("the customer requests the bill; the cashier sees it, then dismisses it", async () => {
+        expect((await ask("bill")).status).toBe(409); // nothing ordered yet
+        await place("1", 1);
+        const asked = await ask("bill");
+        expect(asked.status).toBe(200);
+        expect(asked.body.kind).toBe("bill");
+        expect((await ask("bill")).status).toBe(429);
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        expect(bill.billRequestedAt).toBe(asked.body.at);
+        expect(bill.requestLog).toBeUndefined();
+        const dismissed = await request(app).delete(`/api/orders/${R.slug}/bills/${bill._id}/requests/bill`).set(cashier);
+        expect(dismissed.status).toBe(200);
+        expect(dismissed.body.billRequestedAt).toBeUndefined();
+    });
+
+    it("refuses a bad kind", async () => {
+        await place("1", 1);
+        expect((await ask("dance")).status).toBe(400);
+    });
+});
+
 describe("order notes (VM-28)", () => {
     const send = (lineNote: string, note: string) =>
         request(app)
