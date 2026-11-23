@@ -17,13 +17,37 @@ const { default: CartPage } = await import("@/features/customer/components/CartP
 const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
 const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", price: 4, image: "/l.jpg", isEnabled: true };
 
+// VM-05: the cart of this restaurant and table (the URL above is demo-bistro, table 1).
+const KEY = "cart:demo-bistro:1";
 function seedCart() {
-    localStorage.setItem("cartItems", JSON.stringify([{ item: kuyTeav, quantity: 2 }, { item: lokLak, quantity: 1 }]));
-    localStorage.setItem("table", JSON.stringify("1"));
+    localStorage.setItem(KEY, JSON.stringify([{ item: kuyTeav, quantity: 2 }, { item: lokLak, quantity: 1 }]));
 }
 const placeOrder = () => fireEvent.click(screen.getByRole("button", { name: /place order/i }));
 
 describe("cart page", () => {
+    it("sends the order to the table in the URL, never a table saved earlier (VM-05)", async () => {
+        seedCart();
+        localStorage.setItem("table", JSON.stringify("7")); // left over from another tab or visit
+        let table: string | undefined;
+        server.use(
+            http.post("*/api/orders/demo-bistro", async ({ request }) => {
+                table = ((await request.json()) as { table: string }).table;
+                return HttpResponse.json({ _id: "o1" }, { status: 201 });
+            }),
+        );
+        render(<CartPage />);
+        await screen.findByText("Kuy Teav");
+        placeOrder();
+        await waitFor(() => expect(table).toBe("1"));
+    });
+
+    it("doesn't show another table's or restaurant's cart", () => {
+        localStorage.setItem("cart:demo-bistro:2", JSON.stringify([{ item: lokLak, quantity: 1 }]));
+        localStorage.setItem("cart:other-place:1", JSON.stringify([{ item: kuyTeav, quantity: 1 }]));
+        render(<CartPage />);
+        expect(screen.getByText("Your cart is empty")).toBeInTheDocument();
+    });
+
     it("shows the saved cart with its total", async () => {
         seedCart();
         render(<CartPage />);
@@ -52,6 +76,7 @@ describe("cart page", () => {
         placeOrder();
         await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Order placed successfully!", expect.any(Object)));
         expect(body.table).toBe("1");
+        expect(localStorage.getItem(KEY)).toBeNull(); // emptied after the order
         expect(body.orderedItems?.map((l) => l.quantity)).toEqual([2, 1]);
     });
 
@@ -65,16 +90,16 @@ describe("cart page", () => {
         placeOrder();
         await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to place order. Please try again.", expect.any(Object)));
         expect(toast.success).not.toHaveBeenCalled();
-        expect(JSON.parse(localStorage.getItem("cartItems")!)).toHaveLength(2); // the cart is kept
+        expect(JSON.parse(localStorage.getItem(KEY)!)).toHaveLength(2); // the cart is kept
     });
 
     it("updates the total when a quantity changes", async () => {
-        localStorage.setItem("cartItems", JSON.stringify([{ item: lokLak, quantity: 1 }]));
+        localStorage.setItem(KEY, JSON.stringify([{ item: lokLak, quantity: 1 }]));
         render(<CartPage />);
         await screen.findByText("Lok Lak");
         const plus = screen.getAllByRole("button").find((b) => b.textContent === "" && b.querySelector("svg.lucide-plus"));
         fireEvent.click(plus!);
         expect(screen.getByText("Total: $8.00")).toBeInTheDocument();
-        expect(JSON.parse(localStorage.getItem("cartItems")!)[0].quantity).toBe(2);
+        expect(JSON.parse(localStorage.getItem(KEY)!)[0].quantity).toBe(2);
     });
 });
