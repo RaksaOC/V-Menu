@@ -253,6 +253,37 @@ for (const theme of ["light", "dark"] as const) {
     });
 }
 
+// VM-10: the kitchen history. Before: every finished order ever, in one long list.
+// After: 20 a page, newest first, with page controls at the bottom.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-10 kitchen history ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "chef");
+        if (PHASE === "before" && vp === DESKTOP && theme === "light") {
+            // enough finished orders for more than one page (both phases share the database)
+            const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as { _id: string }[];
+            for (let i = 0; i < 25; i++) {
+                const placed = await page.request.post(`${BASE}/api/orders/${SLUG}`, {
+                    data: { table: "T1", isDone: false, orderedItems: [{ item: menu[i % menu.length], quantity: 1 + (i % 3) }] },
+                });
+                const { _id } = (await placed.json()) as { _id: string };
+                await page.request.patch(`${BASE}/api/orders/${SLUG}/kitchen/${_id}/done`);
+            }
+        }
+        await page.goto(`${BASE}/${SLUG}/kitchen/history`);
+        await settle(page);
+        await page.waitForTimeout(800);
+        await shot({ page, theme, width: vp.width }, "VM-10-kitchen-history");
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await page.waitForTimeout(400);
+        await shot({ page, theme, width: vp.width }, "VM-10-kitchen-history-end");
+        await context.close();
+    });
+}
+
 // VM-03: the kitchen when its sign-in ends, and when it can't reach the server.
 for (const theme of ["light", "dark"] as const) {
     await step(`VM-03 kitchen ${theme}`, async () => {
