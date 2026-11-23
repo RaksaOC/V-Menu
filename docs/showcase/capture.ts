@@ -470,6 +470,41 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-07: right after ordering. Before: a toast, then back to the menu. After: the confirmation.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-07 after ordering ${vp.width} ${theme}`, async () => {
+        // start from a settled table, so the list shows this visit only
+        const staff = await newPage(browser, vp, theme, "cashier");
+        const bills = (await (await staff.page.request.get(`${BASE}/api/orders/${SLUG}/bills`)).json()) as {
+            _id: string;
+            table: string;
+            isPayed: boolean;
+        }[];
+        for (const b of bills.filter((b) => b.table === "T2" && !b.isPayed))
+            await staff.page.request.patch(`${BASE}/api/orders/${SLUG}/bills/${b._id}`, { data: { isPayed: true } });
+        await staff.context.close();
+
+        const { context, page } = await newPage(browser, vp, theme);
+        const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as { _id: string }[];
+        const lines = menu.slice(0, 2).map((item, i) => ({ item, quantity: i + 1 }));
+        await context.addInitScript(([key, value]) => localStorage.setItem(key, value), [`cart:${SLUG}:T2`, JSON.stringify(lines)]);
+        await page.goto(`${BASE}/${SLUG}/customer/T2`); // like a customer: menu, then cart
+        await settle(page);
+        await page.goto(`${BASE}/${SLUG}/customer/T2/cart`);
+        await settle(page);
+        await page.getByRole("button", { name: /place order/i }).click();
+        await page.waitForTimeout(1000);
+        await shot({ page, theme, width: vp.width }, "VM-07-after-order", vp === PHONE);
+        await page.waitForTimeout(2500); // before: back on the menu by now, nothing to show for the order
+        await shot({ page, theme, width: vp.width }, "VM-07-after-order-3s", false);
+        await context.close();
+    });
+}
+
 // ---------------------------------------------------------------- owner
 for (const theme of ["light", "dark"] as const) {
     await step(`owner ${theme}`, async () => {
