@@ -18,7 +18,18 @@ for (const theme of ["light", "dark"] as const) {
         const bg = await page.locator("main").evaluate((el) => getComputedStyle(el).backgroundColor);
         expect(bg).not.toBe(theme === "dark" ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)");
 
-        await testInfo.attach(`ui-kit-${theme}.png`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+        // Saved as files too: CI uploads them as the "ui-kit-screenshots" artifact on every run.
+        const shot = async (name: string, fullPage: boolean) => {
+            const path = testInfo.outputPath(name);
+            await page.screenshot({ path, fullPage });
+            await testInfo.attach(name, { path, contentType: "image/png" });
+        };
+        await shot(`CL-09-ui-kit-1280${theme === "dark" ? "-dark" : ""}.png`, true);
+        if (theme === "light") {
+            await page.setViewportSize({ width: 360, height: 800 });
+            await shot("CL-09-ui-kit-360.png", true);
+            await page.setViewportSize({ width: 1280, height: 720 });
+        }
 
         // the modal: focus inside, Tab stays inside, Escape closes and returns focus
         const opener = page.getByRole("button", { name: "Open modal" });
@@ -29,7 +40,7 @@ for (const theme of ["light", "dark"] as const) {
             await page.keyboard.press("Tab");
             expect(await dialog.evaluate((d) => d.contains(document.activeElement))).toBe(true);
         }
-        await testInfo.attach(`ui-kit-modal-${theme}.png`, { body: await page.screenshot(), contentType: "image/png" });
+        await shot(`CL-09-ui-kit-modal-1280${theme === "dark" ? "-dark" : ""}.png`, false);
         await page.keyboard.press("Escape");
         await expect(dialog).toBeHidden();
         await expect(opener).toBeFocused();

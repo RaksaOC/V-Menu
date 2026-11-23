@@ -220,6 +220,16 @@ jobs:
         run: npx playwright test
         working-directory: e2e
 
+      # CL-09: the UI kit page in light, dark and at 360 px, kept from every run (green ones too)
+      - name: Upload UI kit screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-kit-screenshots
+          path: e2e/test-results/**/CL-09-ui-kit-*.png
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v7
