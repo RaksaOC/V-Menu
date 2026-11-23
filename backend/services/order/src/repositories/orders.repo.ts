@@ -21,11 +21,23 @@ export interface OrderRecord {
     createdAt: Date;
 }
 
+/** VM-09: a period for the dashboards: from is included, to is not. */
+export interface DateRange {
+    from?: Date;
+    to?: Date;
+}
+
+/** { field: { $gte: from, $lt: to } } for the sides that are set, or nothing. */
+export function inRange(field: string, { from, to }: DateRange = {}) {
+    if (!from && !to) return {};
+    return { [field]: mongoose.trusted({ ...(from && { $gte: from }), ...(to && { $lt: to }) }) }; // dates parsed by DateRangeQuery
+}
+
 /** Every MongoDB query on orders (CL-04). The services only see this interface. */
 export interface OrdersRepo {
     create(order: { table: string; orderedItems: OrderLine[]; resId: string }): Promise<OrderRecord>;
-    /** orders that count: everything but cancelled (VM-27) */
-    countFor(resIds: string[]): Promise<number>;
+    /** orders that count: everything but cancelled (VM-27), placed in the range when one is given (VM-09) */
+    countFor(resIds: string[], range?: DateRange): Promise<number>;
     /** pending, preparing and ready, oldest first (VM-10, VM-27) */
     listActive(resId: string): Promise<OrderRecord[]>;
     /** served and cancelled orders, newest first, one page, and how many in all */
@@ -40,7 +52,6 @@ export interface OrdersRepo {
         change: { at: Date; by: string },
         extra?: { cancelReason?: string },
     ): Promise<OrderRecord | null>;
-    listServed(resIds: string[]): Promise<OrderRecord[]>;
     /** null when there's no such order in this restaurant */
     get(resId: string, id: string): Promise<OrderRecord | null>;
 }
@@ -55,7 +66,8 @@ export const mongoOrdersRepo: OrdersRepo = {
         const created = await Order.create({ ...order, status: "pending", statusHistory: [{ status: "pending", at, by: "customer" }] });
         return created.toObject() as unknown as OrderRecord;
     },
-    countFor: (resIds) => Order.countDocuments({ ...inRestaurants(resIds), status: mongoose.trusted({ $ne: "cancelled" }) }),
+    countFor: (resIds, range) =>
+        Order.countDocuments({ ...inRestaurants(resIds), status: mongoose.trusted({ $ne: "cancelled" }), ...inRange("createdAt", range) }),
     listActive: (resId) =>
         Order.find({ resId, status: mongoose.trusted({ $in: ACTIVE_STATUSES }) })
             .sort({ createdAt: 1 })
@@ -74,6 +86,5 @@ export const mongoOrdersRepo: OrdersRepo = {
             { $set: { status: to, ...extra }, $push: { statusHistory: { status: to, ...change } } },
             { new: true },
         ).lean<OrderRecord>(),
-    listServed: (resIds) => Order.find({ ...inRestaurants(resIds), status: "served" }).lean<OrderRecord[]>(),
     get: (resId, id) => Order.findOne({ _id: id, resId }).lean<OrderRecord>(),
 };

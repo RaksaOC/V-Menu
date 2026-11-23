@@ -782,6 +782,54 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-09: the owner's numbers. Table T4 gets one bill that's paid but whose order the kitchen never
+// marked served (revenue after the fix, nothing before) and one served order on an open bill (revenue
+// before the fix, not after). Then the owner's overview, the restaurants list and one restaurant.
+const VM09 = { ready: false };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-09 ${vp.width} ${theme}`, async () => {
+        const shots: [string, string][] = [
+            ["overview", "VM-09-owner-overview"],
+            ["restaurants", "VM-09-owner-restaurants"],
+            ["management", "VM-09-restaurant-overview"],
+        ];
+        if (!VM09.ready) {
+            VM09.ready = true;
+            const cashier = await newPage(browser, DESKTOP, "light", "cashier");
+            const chef = await newPage(browser, DESKTOP, "light", "chef");
+            const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+            const openT4 = async () =>
+                ((await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[]).filter(
+                    (b) => b.table === "T4",
+                );
+            for (const b of await openT4()) await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            const place = (quantity: number) =>
+                cashier.page.request.post(api(""), { data: { table: "T4", orderedItems: [{ item: { _id: menu[1]._id }, quantity }] } });
+            await place(2); // paid below, never served
+            for (const b of await openT4()) await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const served = (await (await place(3)).json()) as { _id: string }; // served, bill left open
+            for (const status of ["preparing", "ready", "served"])
+                await chef.page.request.patch(api(`/kitchen/${served._id}/status`), { data: { status } });
+            await cashier.context.close();
+            await chef.context.close();
+        }
+        for (const [tab, name] of shots) {
+            const { context, page } = await newPage(browser, vp, theme, "owner");
+            await context.addInitScript((t) => localStorage.setItem("activeTab", t), tab);
+            await page.goto(`${BASE}/owner`);
+            await settle(page);
+            await page.waitForTimeout(1200); // the cards fade in
+            await shot({ page, theme, width: vp.width }, name, vp === PHONE);
+            await context.close();
+        }
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

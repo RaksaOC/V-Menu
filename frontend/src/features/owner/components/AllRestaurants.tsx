@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { Users, Table, UtensilsCrossed, CheckCircle, CreditCard, TrendingUp, AlertTriangle, Plus, Settings } from "lucide-react";
 import { getRestaurantSummaries, type RestaurantSummary } from "@/features/owner/api";
+import { formatDollars } from "@/lib/money";
 
 interface Props {
     onManage: (id: string) => void;
@@ -28,7 +29,7 @@ export default function AllRestaurants({ onManage }: Props) {
         return [
             {
                 label: "Active Tables",
-                value: restaurantData.numOfActiveTables,
+                value: restaurantData.activeTableCount,
                 icon: Users,
                 color: "from-emerald-500 to-teal-600",
                 bgColor: "bg-emerald-50",
@@ -36,8 +37,8 @@ export default function AllRestaurants({ onManage }: Props) {
                 priority: "high",
             },
             {
-                label: "Unpaid Orders",
-                value: restaurantData.numOfUnpaidOrders,
+                label: "Unpaid Bills",
+                value: restaurantData.unpaidBillCount,
                 icon: AlertTriangle,
                 color: "from-amber-500 to-orange-600",
                 bgColor: "bg-amber-50",
@@ -46,7 +47,7 @@ export default function AllRestaurants({ onManage }: Props) {
             },
             {
                 label: "Total Tables",
-                value: restaurantData.numOfTables,
+                value: restaurantData.tableCount,
                 icon: Table,
                 color: "from-blue-500 to-indigo-600",
                 bgColor: "bg-blue-50",
@@ -55,7 +56,7 @@ export default function AllRestaurants({ onManage }: Props) {
             },
             {
                 label: "Menu Items",
-                value: restaurantData.numOfItems,
+                value: restaurantData.itemCount,
                 icon: UtensilsCrossed,
                 color: "from-purple-500 to-violet-600",
                 bgColor: "bg-purple-50",
@@ -63,8 +64,8 @@ export default function AllRestaurants({ onManage }: Props) {
                 priority: "normal",
             },
             {
-                label: "Orders Completed",
-                value: restaurantData.numOfOrders,
+                label: "Orders",
+                value: restaurantData.orderCount,
                 icon: CheckCircle,
                 color: "from-green-500 to-emerald-600",
                 bgColor: "bg-green-50",
@@ -73,7 +74,7 @@ export default function AllRestaurants({ onManage }: Props) {
             },
             {
                 label: "Payments Completed",
-                value: restaurantData.numOfPayments,
+                value: restaurantData.paymentCount,
                 icon: CreditCard,
                 color: "from-cyan-500 to-blue-600",
                 bgColor: "bg-cyan-50",
@@ -187,14 +188,14 @@ export default function AllRestaurants({ onManage }: Props) {
                                                     <div className="flex justify-between text-xs text-gray-500 mb-1">
                                                         <span>Current</span>
                                                         <span>
-                                                            {card.value} / {restaurant.numOfTables || 0}
+                                                            {card.value} / {restaurant.tableCount || 0}
                                                         </span>
                                                     </div>
                                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                                         <div
                                                             className={`bg-gradient-to-r ${card.color} h-2 rounded-full transition-all duration-500`}
                                                             style={{
-                                                                width: `${Math.min(((card.value || 0) / (restaurant.numOfTables || 1)) * 100, 100)}%`,
+                                                                width: `${Math.min(((card.value || 0) / (restaurant.tableCount || 1)) * 100, 100)}%`,
                                                             }}
                                                         ></div>
                                                     </div>
@@ -217,8 +218,8 @@ export default function AllRestaurants({ onManage }: Props) {
                                     <div className="text-center">
                                         <p className="text-gray-600">Table Occupancy</p>
                                         <p className="text-lg font-bold text-blue-600">
-                                            {restaurant.numOfTables > 0
-                                                ? Math.round((restaurant.numOfActiveTables / restaurant.numOfTables) * 100)
+                                            {restaurant.tableCount > 0
+                                                ? Math.round((restaurant.activeTableCount / restaurant.tableCount) * 100)
                                                 : 0}
                                             %
                                         </p>
@@ -226,15 +227,15 @@ export default function AllRestaurants({ onManage }: Props) {
                                     <div className="text-center">
                                         <p className="text-gray-600">Payment Completion</p>
                                         <p className="text-lg font-bold text-green-600">
-                                            {restaurant.numOfOrders > 0
-                                                ? Math.round((restaurant.numOfPayments / restaurant.numOfOrders) * 100)
+                                            {restaurant.orderCount > 0
+                                                ? Math.round((restaurant.paymentCount / restaurant.orderCount) * 100)
                                                 : 0}
                                             %
                                         </p>
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-gray-600">Pending Actions</p>
-                                        <p className="text-lg font-bold text-amber-600">{restaurant.numOfUnpaidOrders}</p>
+                                        <p className="text-gray-600">Revenue (paid bills)</p>
+                                        <p className="text-lg font-bold text-amber-600">{formatDollars(restaurant.revenue)}</p>
                                     </div>
                                 </div>
                             </div>

@@ -1,27 +1,26 @@
 import api, { seg } from "@/lib/api";
-import type { Overview, Restaurant } from "@vmenu/contracts";
+import type { OwnerOverview, OwnerRestaurantOverview, Restaurant } from "@vmenu/contracts";
 
-export interface TopItem {
-    name: string;
-    quantity: number;
-}
-
-/** Totals across all of the owner's restaurants. */
-export interface OwnerOverview {
-    numOfUnpaidOrders: number;
-    numOfItems: number;
-    numOfOrders: number;
-    numOfPayments: number;
-    numOfMoneyEarned: number;
-    totalItemsSold: number;
-    avgItemsPerOrder: number;
-    topSellingItems: TopItem[];
-}
+export type { OwnerOverview, TopSeller } from "@vmenu/contracts";
 
 /** One restaurant's numbers, for the "All restaurants" list. */
-export interface RestaurantSummary extends Overview {
-    resId: string;
-    resName: string;
+export type RestaurantSummary = OwnerRestaurantOverview;
+
+/** VM-09: the periods the owner can pick. "all" asks for no range. */
+export const PERIODS = [
+    { id: "today", label: "Today", days: 1 },
+    { id: "7d", label: "7 days", days: 7 },
+    { id: "30d", label: "30 days", days: 30 },
+    { id: "all", label: "All time", days: 0 },
+] as const;
+export type Period = (typeof PERIODS)[number]["id"];
+
+/** ?from= for a period: midnight (the browser's time) at the start of its first day; nothing for "all". */
+export function periodQuery(period: Period, now = new Date()): { from?: string } {
+    const days = PERIODS.find((p) => p.id === period)!.days;
+    if (!days) return {};
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1));
+    return { from: start.toISOString() };
 }
 
 export async function getRestaurants(): Promise<Restaurant[]> {
@@ -35,8 +34,8 @@ export async function createRestaurant(name: string): Promise<Restaurant[]> {
     return data;
 }
 
-export async function getOwnerOverview(): Promise<OwnerOverview> {
-    const { data } = await api.get<OwnerOverview>("/api/orders/owner/overview");
+export async function getOwnerOverview(period: Period = "all"): Promise<OwnerOverview> {
+    const { data } = await api.get<OwnerOverview>("/api/orders/owner/overview", { params: periodQuery(period) });
     return data;
 }
 

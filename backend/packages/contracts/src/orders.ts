@@ -94,14 +94,33 @@ export type TableOrderView = z.infer<typeof TableOrderView>;
 export const TableBill = z.object({ table: z.string(), orders: z.array(TableOrderView), total: z.number() });
 export type TableBill = z.infer<typeof TableBill>;
 
-/** The six numbers on a restaurant's dashboard. */
+/** VM-09: an optional period for the dashboards, as ?from=&to= (ISO dates; `to` itself is not included). */
+const QueryDate = z
+    .string("Must be a date")
+    .refine((s) => !Number.isNaN(Date.parse(s)), "Must be a date")
+    .transform((s) => new Date(s));
+export const DateRangeQuery = z
+    .object({ from: QueryDate.optional(), to: QueryDate.optional() })
+    .refine((r) => !r.from || !r.to || r.from <= r.to, { path: ["to"], message: "Must be after from" });
+export type DateRangeQuery = z.infer<typeof DateRangeQuery>;
+
+/** The period the numbers cover, as asked; null means no limit on that side. */
+const Period = { from: IsoDate.nullable(), to: IsoDate.nullable() };
+
+/** A restaurant's dashboard (VM-09: the counts are named xCount; was numOfX). */
 export const Overview = z.object({
-    numOfTables: z.number(),
-    numOfActiveTables: z.number(),
-    numOfItems: z.number(),
-    numOfOrders: z.number(),
-    numOfUnpaidOrders: z.number(),
-    numOfPayments: z.number(),
+    tableCount: z.number(),
+    activeTableCount: z.number(),
+    itemCount: z.number(),
+    /** orders placed in the period, cancelled ones left out */
+    orderCount: z.number(),
+    /** open bills now, whatever the period */
+    unpaidBillCount: z.number(),
+    /** bills paid in the period */
+    paymentCount: z.number(),
+    /** the lines on the bills paid in the period, cancelled orders left out */
+    revenue: z.number(),
+    ...Period,
 });
 export type Overview = z.infer<typeof Overview>;
 
@@ -109,15 +128,22 @@ export type Overview = z.infer<typeof Overview>;
 export const OwnerRestaurantOverview = Overview.extend({ resId: z.string(), resName: z.string() });
 export type OwnerRestaurantOverview = z.infer<typeof OwnerRestaurantOverview>;
 
+/** A dish by its id, with the name it had most recently. */
+export const TopSeller = z.object({ _id: z.string(), name: z.string(), quantity: z.number() });
+export type TopSeller = z.infer<typeof TopSeller>;
+
 /** Totals across all of an owner's restaurants. */
 export const OwnerOverview = z.object({
-    numOfUnpaidOrders: z.number(),
-    numOfItems: z.number(),
-    numOfOrders: z.number(),
-    numOfPayments: z.number(),
-    numOfMoneyEarned: z.number(),
-    totalItemsSold: z.number(),
+    unpaidBillCount: z.number(),
+    itemCount: z.number(),
+    orderCount: z.number(),
+    paymentCount: z.number(),
+    revenue: z.number(),
+    /** items on the bills paid in the period */
+    itemsSoldCount: z.number(),
+    /** items per order, over the same paid orders */
     avgItemsPerOrder: z.number(),
-    topSellingItems: z.array(z.object({ name: z.string(), quantity: z.number() })),
+    topSellingItems: z.array(TopSeller),
+    ...Period,
 });
 export type OwnerOverview = z.infer<typeof OwnerOverview>;

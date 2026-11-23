@@ -8,6 +8,12 @@ import { server } from "../msw";
 // VM-09: the owner's numbers are named xCount, revenue comes from paid bills, and the owner picks
 // the period: today, 7 days, 30 days or all time.
 vi.mock("@/lib/firebase", () => ({ auth: {} }));
+// recharts' ResponsiveContainer measures itself; jsdom has no ResizeObserver
+globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+};
 vi.mock("next/navigation", () => ({ useParams: () => ({ res: "demo-bistro" }), useRouter: () => ({ push: vi.fn() }) }));
 const { default: AllOverview } = await import("@/features/owner/components/AllOverview");
 const { default: Overview } = await import("@/features/restaurant/components/Overview");
@@ -81,6 +87,6 @@ describe("one restaurant's overview (VM-09)", () => {
         );
         expect(await screen.findByText("$6.25")).toBeTruthy();
         expect(screen.getByText("Unpaid Bills")).toBeTruthy();
-        expect(screen.getByText(String(overview.tableCount))).toBeTruthy();
+        expect(screen.getByText("Total Tables").parentElement).toHaveTextContent(String(overview.tableCount));
     });
 });

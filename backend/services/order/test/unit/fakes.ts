@@ -55,9 +55,6 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[] } {
             const o = all.find((x) => x._id === id && x.resId === resId);
             return o ? { ...o } : null;
         },
-        async listServed(resIds) {
-            return all.filter(inRes(resIds)).filter((o) => o.status === "served");
-        },
     };
 }
 
@@ -78,8 +75,8 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
             }
             bill.orders.push(orderId);
         },
-        async countFor(resIds, isPaid, range = {}) {
-            return all.filter((b) => resIds.includes(b.resId) && b.isPaid === isPaid && (!isPaid || within(range, b.updatedAt!))).length;
+        async countOpen(resIds) {
+            return all.filter((b) => resIds.includes(b.resId) && !b.isPaid).length;
         },
         async listPaid(resIds, range = {}) {
             return all.filter((b) => resIds.includes(b.resId) && b.isPaid && within(range, b.updatedAt!)).map(withOrders);

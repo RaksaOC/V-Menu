@@ -248,4 +248,4 @@ One style, checked by `scripts/naming.test.mjs` (CL-06):
 - **Data:**
   - A bill is `isPaid`. It used to be `isPayed`. order-service renames the stored field at startup (`src/migrations/is-paid.ts`). For one release the API also accepts `isPayed` and sends it alongside `isPaid`.
   - A person's role at one restaurant is a `Membership` (it used to be `Tenant`). The collection keeps its name, `tenants`, and `tenantId` is still the person's Firebase uid.
-  - The dashboard counts move from `numOfX` to `xCount` with VM-09.
+  - Counts are `xCount`: `orderCount`, `paymentCount`, `unpaidBillCount`, `tableCount` (VM-09; they were `numOfX`). An amount of money is named for what it is, such as `revenue`, not a count. Only the internal call from order-service to menu-service still says `numOfX`; order-service renames them for the dashboards.

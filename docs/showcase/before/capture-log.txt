@@ -153,3 +153,13 @@ ok   VM-27-cashier-bill-1280-dark
 ok   VM-27-kitchen-360
 ok   VM-27-customer-status-360
 ok   VM-27-cashier-bill-360
+# ONLY=VM-09 (2026-11-23T17:01:47.002Z)
+ok   VM-09-owner-overview-1280
+ok   VM-09-owner-restaurants-1280
+ok   VM-09-restaurant-overview-1280
+ok   VM-09-owner-overview-1280-dark
+ok   VM-09-owner-restaurants-1280-dark
+ok   VM-09-restaurant-overview-1280-dark
+ok   VM-09-owner-overview-360
+ok   VM-09-owner-restaurants-360
+ok   VM-09-restaurant-overview-360
