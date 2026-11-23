@@ -115,7 +115,7 @@ export default function OrderConfirmation() {
                             <p className="text-sm font-semibold text-slate-700">Bill so far</p>
                             <p className="font-bold text-slate-900">{money(bill.total)}</p>
                         </div>
-                        <p className="mt-2 text-xs text-slate-500">Pay at the counter when you're done.</p>
+                        <p className="mt-2 text-xs text-slate-500">Pay at the counter when you&apos;re done.</p>
                     </section>
                 )}
             </main>
