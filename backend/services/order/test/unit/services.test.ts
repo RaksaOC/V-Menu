@@ -131,12 +131,38 @@ describe("kitchen history (VM-10)", () => {
     });
 });
 
+describe("cashier bills (VM-11)", () => {
+    it("open: open bills only, newest first", async () => {
+        const { placing, billing, bills } = setup();
+        await placing.place(R1._id, { table: "1", orderedItems: [line()] });
+        await placing.place(R1._id, { table: "2", orderedItems: [line()] });
+        await placing.place(R1._id, { table: "3", orderedItems: [line()] });
+        await billing.setPaid(R1._id, bills.all[1]._id, true);
+        expect((await billing.open(R1._id)).map((b) => b.table)).toEqual(["3", "1"]);
+        expect(await billing.open(R2._id)).toEqual([]);
+    });
+
+    it("paid: most recently paid first, a page at a time", async () => {
+        const { placing, billing, bills } = setup();
+        for (let i = 0; i < 23; i++) await placing.place(R1._id, { table: String(i), orderedItems: [line()] });
+        for (const b of [...bills.all]) await billing.setPaid(R1._id, b._id, true);
+        await placing.place(R1._id, { table: "open", orderedItems: [line()] });
+        const first = await billing.paid(R1._id, {});
+        expect(first).toMatchObject({ page: 1, limit: 20, total: 23, pages: 2 });
+        expect(first.bills[0].table).toBe("22");
+        expect((await billing.paid(R1._id, { page: "2" })).bills.map((b) => b.table)).toEqual(["2", "1", "0"]);
+        expect((await billing.paid(R1._id, { limit: "999" })).limit).toBe(100);
+        expect(await status(billing.paid(R1._id, { page: "0" }))).toBe(400);
+        expect(await status(billing.paid(R1._id, { limit: "x" }))).toBe(400);
+    });
+});
+
 describe("bills", () => {
     it("lists newest first with their orders, and marks paid or unpaid", async () => {
         const { placing, billing } = setup();
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         await placing.place(R1._id, { table: "2", orderedItems: [line()] });
-        const list = await billing.list(R1._id);
+        const list = await billing.open(R1._id);
         expect(list.map((b) => b.table)).toEqual(["2", "1"]);
         expect(list[0].orders[0].orderedItems[0].item.name).toBe(DISH.name);
         const paid = await billing.setPaid(R1._id, list[0]._id, true);

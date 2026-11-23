@@ -260,3 +260,51 @@ describe("kitchen queue and history (VM-10)", () => {
         expect(performance.now() - started).toBeLessThan(200);
     }, 30_000);
 });
+
+describe("cashier bills: open ones by default, paid history a page at a time (VM-11)", () => {
+    const list = (query = "") => request(app).get(`/api/orders/${R.slug}/bills${query}`).set(cashier);
+    const pay = (id: string) => request(app).patch(`/api/orders/${R.slug}/bills/${id}`).set(cashier).send({ isPayed: true });
+
+    it("open bills only, with their orders: the default, and ?status=open", async () => {
+        await place("1");
+        await place("2");
+        const table2 = (await list()).body.find((b: { table: string }) => b.table === "2");
+        await pay(table2._id);
+        for (const query of ["", "?status=open"]) {
+            const res = await list(query);
+            expect(res.status).toBe(200);
+            expect(res.body.map((b: { table: string }) => b.table)).toEqual(["1"]);
+            expect(res.body[0].orders[0].orderedItems[0].item.name).toBe("Kuy Teav");
+        }
+        expect((await list("?status=everything")).status).toBe(400);
+    });
+
+    it("paid bills: most recently paid first, 20 a page, with the total", async () => {
+        await Bill.collection.insertMany(
+            Array.from({ length: 23 }, (_, i) => ({
+                table: `t${i}`,
+                resId: R._id,
+                isPayed: true,
+                orders: [],
+                createdAt: new Date(Date.UTC(2026, 0, 1)),
+                updatedAt: new Date(Date.UTC(2026, 0, 1, 0, i)), // when it was paid
+            })),
+        );
+        await place("1"); // one still open
+        const first = await list("?status=paid&page=1");
+        expect(first.status).toBe(200);
+        expect(first.body).toMatchObject({ page: 1, limit: 20, total: 23, pages: 2 });
+        expect(first.body.bills).toHaveLength(20);
+        expect(first.body.bills[0].table).toBe("t22");
+        expect(first.body.bills.every((b: { isPayed: boolean }) => b.isPayed)).toBe(true);
+        const second = await list("?status=paid&page=2");
+        expect(second.body.bills.map((b: { table: string }) => b.table)).toEqual(["t2", "t1", "t0"]);
+        expect((await list("?status=paid&limit=500")).body.limit).toBe(100);
+        expect((await list("?status=paid&page=0")).status).toBe(400);
+    });
+
+    it("is backed by an index", async () => {
+        const names = (await Bill.listIndexes()).map((i: { name: string }) => i.name);
+        expect(names).toContain("resId_1_isPayed_1_updatedAt_-1");
+    });
+});
