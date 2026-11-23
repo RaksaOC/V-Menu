@@ -37,6 +37,7 @@ Nobody logs into the server to deploy. The workflow writes the env files from Gi
 | `remote-deploy.sh` | Runs on the server: pull, start, wait for healthy, smoke test, auto-rollback on failure |
 | `ci-deploy.sh` | Runs in GitHub Actions: writes env files from secrets, copies them, calls `remote-deploy.sh` |
 | `backup-mongo.sh` | Daily `mongodump`, installed by `setup-server.sh` |
+| `mongo-users.js` | The database users and their roles, and a read-only check of them (SEC-11) |
 | `staging.env.example`, `prod.env.example` | Every secret and variable, and where it goes |
 | `../../.github/workflows/deploy.yml` | The deploy job (called by M3's release workflow, or run by hand), then the post-deploy checks of staging |
 | `../../.github/workflows/rollback.yml` | One-click rollback |
@@ -81,6 +82,33 @@ db.createUser({ user: "vmenu_prod", pwd: passwordPrompt(), roles: [
   { role: "readWrite", db: "vmenu_prod_orders" } ] })
 db.createUser({ user: "vmenu_backup", pwd: passwordPrompt(), roles: ["backup"] })
 ```
+
+#### Check the database users (SEC-11)
+
+Each environment's user must reach **only its own** databases. `mongo-users.js` holds the expected users and roles, and compares them with the real ones. It only reads: it doesn't change a user, and it doesn't print passwords.
+
+Run it on the server, as a Mongo admin, once now and after any change to the users:
+
+```bash
+scp infra/deploy/mongo-users.js <server>:/tmp/mongo-users.js    # from your machine
+# on the server:
+mongosh "mongodb://127.0.0.1:27017/admin" -u <admin> -p --quiet --file /tmp/mongo-users.js
+rm /tmp/mongo-users.js
+```
+
+- **Use the real database names.** The script expects the names in the table at the top of this file. Compare them with the database in each `MONGODB_URI_*` secret. If an environment uses other names, pass them for this run, and don't commit them:
+  ```bash
+  VMENU_STAGING_DBS=name1,name2,name3 VMENU_PROD_DBS=name4,name5,name6 mongosh ... --file /tmp/mongo-users.js
+  ```
+- **`ok` on every line:** nothing to do.
+- **`WRONG ...`:** it names the user and the role. Remove a role that shouldn't be there, or add a missing one, then run the check again:
+  ```js
+  db.getSiblingDB("admin").revokeRolesFromUser("<user>", [{ role: "<role>", db: "<database>" }])
+  db.getSiblingDB("admin").grantRolesToUser("<user>", [{ role: "readWrite", db: "<database>" }])
+  ```
+- **If the names differ from the table,** update the table and the two `.env.example` files, so the docs say what's real.
+
+CI proves the rules on a real MongoDB: `scripts/check-db-isolation.sh`, in the `integration` job, starts a throwaway MongoDB with these users. It checks that staging can't read or write production's databases and the other way round, and that the check catches a user with one role too many. You can run it locally with Docker.
 
 ### 3. Run the setup script
 
