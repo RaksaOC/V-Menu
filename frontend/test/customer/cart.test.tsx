@@ -1,12 +1,13 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { CartItem } from "@/app/shared/types/CartItem";
+import type { CartItem } from "@/lib/types/CartItem";
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
 vi.mock("react-toastify", () => ({ toast, ToastContainer: () => null }));
 vi.mock("react-toastify/dist/ReactToastify.css", () => ({}));
 
-const { addToCart, default: Card } = await import("@/app/[res]/customer/[table]/ItemCard");
+const { addToCart } = await import("@/features/customer/cart");
+const { default: Card } = await import("@/features/customer/components/ItemCard");
 
 const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", price: 2.5, image: "/images/kuy-teav.jpg", isEnabled: true };
 const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", price: 4, image: "/images/lok-lak.jpg", isEnabled: true };
