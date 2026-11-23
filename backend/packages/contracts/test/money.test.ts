@@ -116,3 +116,40 @@ describe("prices in the API are whole cents (CL-07)", () => {
         expect(C.Overview.safeParse({ ...overview, revenueCents: 7.05 }).success).toBe(false);
     });
 });
+
+// VM-24: the restaurant picks how prices show: US dollars, riel, or both, at its own exchange rate.
+describe("formatMoney in the restaurant's currency (VM-24)", () => {
+    const usd = { currency: "USD", khrPerUsd: 4100 } as const;
+    const khr = { currency: "KHR", khrPerUsd: 4100 } as const;
+    const both = { currency: "both", khrPerUsd: 4000 } as const;
+
+    it("USD, as before, and the default", () => {
+        expect(C.formatMoney(250, usd)).toBe("$2.50");
+        expect(C.formatMoney(250)).toBe("$2.50");
+    });
+
+    it("KHR: whole riel, rounded to the nearest 100 like cash", () => {
+        expect(C.formatMoney(250, khr)).toBe("៛10,300"); // 10,250 riel
+        expect(C.formatMoney(100, khr)).toBe("៛4,100");
+        expect(C.formatMoney(0, khr)).toBe("៛0");
+        expect(C.formatMoney(122525, { currency: "KHR", khrPerUsd: 4000 })).toBe("៛4,901,000");
+    });
+
+    it("both: dollars first, then riel", () => {
+        expect(C.formatMoney(250, both)).toBe("$2.50 · ៛10,000");
+        expect(C.formatMoney(705, both)).toBe("$7.05 · ៛28,200");
+    });
+
+    it("the settings: defaults, limits, and a payment QR that is one of the restaurant's own photos", () => {
+        expect(C.DEFAULT_MONEY).toEqual({ currency: "USD", khrPerUsd: 4100 });
+        expect(C.UpdateSettingsBody.parse({ currency: "both", khrPerUsd: 4000 })).toEqual({ currency: "both", khrPerUsd: 4000 });
+        expect(C.UpdateSettingsBody.safeParse({ currency: "EUR" }).success).toBe(false);
+        expect(C.UpdateSettingsBody.safeParse({ khrPerUsd: 4100.5 }).success).toBe(false);
+        expect(C.UpdateSettingsBody.safeParse({ khrPerUsd: 99 }).success).toBe(false);
+        const qr = `/api/menu/demo-bistro/images/${"a".repeat(24)}`;
+        expect(C.UpdateSettingsBody.parse({ paymentQrUrl: qr })).toEqual({ paymentQrUrl: qr });
+        expect(C.UpdateSettingsBody.parse({ paymentQrUrl: null })).toEqual({ paymentQrUrl: null });
+        expect(C.UpdateSettingsBody.safeParse({ paymentQrUrl: "https://example.com/qr.png" }).success).toBe(false);
+        expect(C.UpdateSettingsBody.safeParse({ paymentQrUrl: "javascript:alert(1)" }).success).toBe(false);
+    });
+});

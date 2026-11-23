@@ -89,6 +89,38 @@ describe("sign-up and sign-in", () => {
     });
 });
 
+describe("restaurant settings (VM-24)", () => {
+    it("anyone reads them; the owner changes them; they're kept", async () => {
+        const slug = await signUp();
+        const read = await request(app).get(`/api/restaurants/${slug}/settings`);
+        expect(read.status).toBe(200);
+        expect(read.body).toEqual({ name: "Mee Keav", currency: "USD", khrPerUsd: 4100, paymentQrUrl: null });
+        const token = await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" });
+        const qr = `/api/menu/${slug}/images/${"c".repeat(24)}`;
+        const saved = await request(app)
+            .put(`/api/restaurants/${slug}/settings`)
+            .set("authorization", `Bearer ${token}`)
+            .send({ currency: "KHR", khrPerUsd: 4050, paymentQrUrl: qr });
+        expect(saved.status).toBe(200);
+        expect((await request(app).get(`/api/restaurants/${slug}/settings`)).body).toEqual({
+            name: "Mee Keav",
+            currency: "KHR",
+            khrPerUsd: 4050,
+            paymentQrUrl: qr,
+        });
+    });
+
+    it("refuses another owner and a bad currency", async () => {
+        const slug = await signUp("owner1", "a@x.com");
+        const other = await signAppToken({ uid: "owner2", email: "b@x.com", role: "owner" });
+        const mine = await signAppToken({ uid: "owner1", email: "a@x.com", role: "owner" });
+        const put = (t: string, body: object) =>
+            request(app).put(`/api/restaurants/${slug}/settings`).set("authorization", `Bearer ${t}`).send(body);
+        expect((await put(other, { currency: "KHR" })).status).toBe(403);
+        expect((await put(mine, { currency: "EUR" })).status).toBe(400);
+    });
+});
+
 describe("owner routes", () => {
     it("keeps owners out of restaurants they do not own", async () => {
         const slug = await signUp("owner1", "a@x.com");

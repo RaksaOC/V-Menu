@@ -52,6 +52,8 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/restaurants/:slug/staff", owner],
     ["PUT /api/restaurants/:slug/staff/:id", owner],
     ["DELETE /api/restaurants/:slug/staff/:id", owner],
+    ["GET /api/restaurants/:slug/settings", PUBLIC], // VM-24: customers' pages show prices in the restaurant's currency
+    ["PUT /api/restaurants/:slug/settings", owner],
     ["GET /internal/restaurants", NO_APP_TOKEN],
     ["GET /internal/restaurants/by-slug/:slug", NO_APP_TOKEN],
 ];
