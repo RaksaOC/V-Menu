@@ -89,7 +89,7 @@ describe("photo upload (VM-02)", () => {
         const item = await request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", price: 5, image: body.url });
         expect(item.status).toBe(201);
         const menu = await request(app).get(`/api/menu/${SLUG}/public/items`);
-        expect(menu.body[0].image).toBe(body.url);
+        expect(menu.body.categories[0].items[0].image).toBe(body.url); // VM-25: grouped
     });
 
     it("refuses a file over 5 MB with 413", async () => {

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { assertRestaurantAccess, HttpError, type LookupRestaurant, type RestaurantRef } from "@vmenu/common";
+import type { categoriesService } from "../services/categories.service.js";
 import type { imagesService } from "../services/images.service.js";
 import type { internalService } from "../services/internal.service.js";
 import type { itemsService } from "../services/items.service.js";
@@ -9,6 +10,7 @@ import type { tablesService } from "../services/tables.service.js";
 export interface RouteContext {
     services: {
         items: ReturnType<typeof itemsService>;
+        categories: ReturnType<typeof categoriesService>;
         tables: ReturnType<typeof tablesService>;
         images: ReturnType<typeof imagesService>;
         internal: ReturnType<typeof internalService>;

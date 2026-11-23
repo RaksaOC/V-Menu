@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IsoDate, text } from "./common.js";
+import { IsoDate, ObjectId, text } from "./common.js";
 
 // menu-service: dishes and tables (CL-05).
 
@@ -10,6 +10,8 @@ export const CreateItemBody = z.object({
     price: Price,
     image: text(2000),
     isEnabled: z.boolean("Must be true or false").optional(),
+    /** VM-25: one of this restaurant's categories, or null for "Other". */
+    categoryId: ObjectId.nullable().optional(),
 });
 export type CreateItemBody = z.infer<typeof CreateItemBody>;
 
@@ -40,6 +42,7 @@ export const MenuItem = z.object({
     price: z.number(),
     image: z.string(),
     isEnabled: z.boolean(),
+    categoryId: z.string().nullable().optional(),
     resId: z.string().optional(),
     createdAt: IsoDate.optional(),
     updatedAt: IsoDate.optional(),
@@ -59,3 +62,25 @@ export type Table = z.infer<typeof Table>;
 /** The answer to a photo upload: the URL to save on the item. */
 export const UploadedPhoto = z.object({ url: z.string() });
 export type UploadedPhoto = z.infer<typeof UploadedPhoto>;
+
+// VM-25: menu categories. Dishes with no category are shown last, under "Other".
+export const OTHER_CATEGORY = "Other";
+
+export const Category = z.object({ _id: z.string(), name: z.string(), sortOrder: z.number(), resId: z.string().optional() });
+export type Category = z.infer<typeof Category>;
+
+/** Creating or renaming a category. */
+export const CategoryBody = z.object({ name: text(40) });
+export type CategoryBody = z.infer<typeof CategoryBody>;
+
+/** A new order: every one of the restaurant's category ids, once. */
+export const ReorderCategoriesBody = z.object({ ids: z.array(ObjectId).max(100, "At most 100 categories") });
+export type ReorderCategoriesBody = z.infer<typeof ReorderCategoriesBody>;
+
+/** One section of the customer's menu; "Other" has no id. */
+export const MenuSection = z.object({ _id: z.string().nullable(), name: z.string(), items: z.array(MenuItem) });
+export type MenuSection = z.infer<typeof MenuSection>;
+
+/** GET /api/menu/:slug/public/items: the dishes that are on, by category, in the owner's order. */
+export const PublicMenu = z.object({ categories: z.array(MenuSection) });
+export type PublicMenu = z.infer<typeof PublicMenu>;

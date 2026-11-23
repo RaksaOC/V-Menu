@@ -50,8 +50,8 @@ beforeEach(() => {
 describe("customer menu categories", () => {
     it("shows a section per category, in the menu's order, with a heading", async () => {
         render(<CustomerMenu />);
-        const sections = await screen.findAllByRole("region");
-        expect(sections.map((s) => within(s).getByRole("heading").textContent)).toEqual(["Mains", "Drinks", "Other"]);
+        const sections = within(await screen.findByRole("main")).getAllByRole("region");
+        expect(sections.map((s) => within(s).getByRole("heading", { level: 3 }).textContent)).toEqual(["Mains", "Drinks", "Other"]);
         expect(within(screen.getByRole("region", { name: "Drinks" })).getByText("Iced Coffee")).toBeInTheDocument();
     });
 
@@ -71,7 +71,9 @@ describe("customer menu categories", () => {
         expect(screen.getByText("Iced Coffee")).toBeInTheDocument();
         expect(screen.queryByText("Fish Amok")).not.toBeInTheDocument();
         expect(
-            screen.getAllByRole("region").map((s) => s.getAttribute("aria-label") ?? within(s).getByRole("heading").textContent),
+            within(screen.getByRole("main"))
+                .getAllByRole("region")
+                .map((s) => within(s).getByRole("heading", { level: 3 }).textContent),
         ).toEqual(["Drinks"]);
         fireEvent.change(search, { target: { value: "pizza" } });
         expect(screen.getByText(/No dishes match “pizza”/)).toBeInTheDocument();

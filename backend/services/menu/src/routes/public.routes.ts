@@ -5,7 +5,7 @@ import type { RouteContext } from "./context.js";
 export function publicRoutes({ services, publicRestaurant }: RouteContext) {
     const r = Router({ mergeParams: true });
     r.get("/public/items", async (req, res) => {
-        res.json(await services.items.publicList((await publicRestaurant(req))._id));
+        res.json(await services.items.publicMenu((await publicRestaurant(req))._id)); // VM-25: by category
     });
     r.get("/public/tables/:name", async (req, res) => {
         res.json(await services.tables.check((await publicRestaurant(req))._id, String(req.params.name)));

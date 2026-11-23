@@ -5,6 +5,7 @@ import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import { getMenu, placeOrder as sendOrder } from "@/features/customer/api";
 import { clearCart, readCart, reconcileCart, saveCart, toOrderBody } from "@/features/customer/cart";
+import { dishesOf } from "@/features/customer/menu";
 import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
 import { useParams, useRouter } from "next/navigation";
@@ -63,7 +64,7 @@ export default function CartPage() {
     const dropUnavailable = async () => {
         const before = readCart(slug, table);
         try {
-            reconcileCart(slug, table, await getMenu(slug));
+            reconcileCart(slug, table, dishesOf(await getMenu(slug)));
         } catch {
             return "Check your cart and try again.";
         }

@@ -8,8 +8,9 @@ export interface ItemRecord {
     image: string;
     isEnabled: boolean;
     resId: string;
+    categoryId?: string | null;
 }
-export type ItemFields = Partial<Pick<ItemRecord, "name" | "price" | "image" | "isEnabled">>;
+export type ItemFields = Partial<Pick<ItemRecord, "name" | "price" | "image" | "isEnabled" | "categoryId">>;
 
 /** Every MongoDB query on menu items (CL-04). Ids are checked by the services first. */
 export interface ItemsRepo {
@@ -22,6 +23,8 @@ export interface ItemsRepo {
     count(resId: string): Promise<number>;
     /** the enabled items among these ids */
     findEnabled(resId: string, ids: string[]): Promise<ItemRecord[]>;
+    /** VM-25: a deleted category's dishes go to "Other"; answers how many moved */
+    clearCategory(resId: string, categoryId: string): Promise<number>;
 }
 
 const plain = <T>(doc: T) => doc as unknown as ItemRecord;
@@ -37,4 +40,7 @@ export const mongoItemsRepo: ItemsRepo = {
     count: (resId) => Item.countDocuments({ resId }),
     // ids were checked to be ObjectIds; sanitizeFilter would strip the $in otherwise
     findEnabled: (resId, ids) => Item.find({ _id: mongoose.trusted({ $in: ids }), resId, isEnabled: true }).lean<ItemRecord[]>(),
+    async clearCategory(resId, categoryId) {
+        return (await Item.updateMany({ resId, categoryId }, { categoryId: null })).modifiedCount;
+    },
 };

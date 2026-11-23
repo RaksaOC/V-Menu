@@ -27,7 +27,7 @@ describe("managing categories", () => {
         fireEvent.click(screen.getByRole("button", { name: "Move Drinks up" }));
         await waitFor(() => expect(seen[0]?.body).toEqual({ ids: [DRINKS._id, MAINS._id] }));
         await waitFor(() => expect(changed).toHaveBeenCalled());
-        expect(screen.getByRole("button", { name: "Move Mains up" })).toBeDisabled(); // already first
+        expect(screen.getByRole("button", { name: "Move Drinks up" })).toBeDisabled(); // now first
     });
 
     it("adds and renames categories", async () => {

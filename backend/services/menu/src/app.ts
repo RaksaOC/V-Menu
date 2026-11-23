@@ -1,12 +1,15 @@
 import { baseApp, finish, lookupRestaurant as defaultLookup, type LookupRestaurant } from "@vmenu/common";
+import { mongoCategoriesRepo, type CategoriesRepo } from "./repositories/categories.repo.js";
 import { mongoImagesRepo, type ImagesRepo } from "./repositories/images.repo.js";
 import { mongoItemsRepo, type ItemsRepo } from "./repositories/items.repo.js";
 import { mongoTablesRepo, type TablesRepo } from "./repositories/tables.repo.js";
+import { categoriesService } from "./services/categories.service.js";
 import { imagesService } from "./services/images.service.js";
 import { internalService } from "./services/internal.service.js";
 import { itemsService } from "./services/items.service.js";
 import { tablesService } from "./services/tables.service.js";
 import { restaurantFrom, type RouteContext } from "./routes/context.js";
+import { categoriesRoutes } from "./routes/categories.routes.js";
 import { imagesRoutes } from "./routes/images.routes.js";
 import { internalRoutes } from "./routes/internal.routes.js";
 import { itemsRoutes } from "./routes/items.routes.js";
@@ -19,6 +22,7 @@ interface Deps {
     items?: ItemsRepo;
     tables?: TablesRepo;
     images?: ImagesRepo;
+    categories?: CategoriesRepo;
 }
 
 /** Builds the Express app: wires the repositories into the services, and mounts the routers (CL-04). */
@@ -28,10 +32,12 @@ export function createApp({
     items = mongoItemsRepo,
     tables = mongoTablesRepo,
     images = mongoImagesRepo,
+    categories = mongoCategoriesRepo,
 }: Deps = {}) {
     const ctx: RouteContext = {
         services: {
-            items: itemsService({ items, images }),
+            items: itemsService({ items, images, categories }),
+            categories: categoriesService({ categories, items }),
             tables: tablesService({ tables }),
             images: imagesService({ images }),
             internal: internalService({ items, tables }),
@@ -40,7 +46,14 @@ export function createApp({
     };
 
     const app = baseApp();
-    app.use("/api/menu/:slug", publicRoutes(ctx), itemsRoutes(ctx), imagesRoutes(ctx, { uploadsPerHour }), tablesRoutes(ctx));
+    app.use(
+        "/api/menu/:slug",
+        publicRoutes(ctx),
+        itemsRoutes(ctx),
+        imagesRoutes(ctx, { uploadsPerHour }),
+        tablesRoutes(ctx),
+        categoriesRoutes(ctx),
+    );
     app.use("/internal", internalRoutes(ctx));
     return finish(app);
 }

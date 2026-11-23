@@ -25,9 +25,9 @@ export default function Card({ slug, table, _id, name, price, image }: CardProps
             {/* Content */}
             <div className="p-5 flex flex-col justify-between h-[140px]">
                 <div className="space-y-2">
-                    <h3 className="text-lg font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors duration-200">
+                    <h4 className="text-lg font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors duration-200">
                         {name}
-                    </h3>
+                    </h4>
                     <div className="flex items-center gap-2">
                         <span className="text-2xl font-bold text-emerald-600">${price.toFixed(2)}</span>
                     </div>

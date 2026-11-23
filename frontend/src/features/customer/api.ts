@@ -1,9 +1,9 @@
 import api, { seg } from "@/lib/api";
-import type { MenuItem, PlaceOrderBody } from "@vmenu/contracts";
+import type { PlaceOrderBody, PublicMenu } from "@vmenu/contracts";
 
-/** The dishes a customer can order (public, no sign-in). */
-export async function getMenu(slug: string): Promise<MenuItem[]> {
-    const { data } = await api.get<MenuItem[]>(`/api/menu/${seg(slug)}/public/items`);
+/** The dishes a customer can order, by category (public, no sign-in; VM-25). */
+export async function getMenu(slug: string): Promise<PublicMenu> {
+    const { data } = await api.get<PublicMenu>(`/api/menu/${seg(slug)}/public/items`);
     return data;
 }
 

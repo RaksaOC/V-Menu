@@ -18,8 +18,9 @@ const order = { _id: "o1", table: "T1", isDone: false, createdAt: "2026-11-23T10
 
 describe("customer api", () => {
     it("loads the public menu", async () => {
-        const seen = answer("get", "/api/menu/demo-bistro/public/items", [dish]);
-        expect(await customer.getMenu("demo-bistro")).toEqual([dish]);
+        const menu = { categories: [{ _id: null, name: "Other", items: [dish] }] }; // VM-25: by category
+        const seen = answer("get", "/api/menu/demo-bistro/public/items", menu);
+        expect(await customer.getMenu("demo-bistro")).toEqual(menu);
         expect(seen[0].method).toBe("GET");
     });
 

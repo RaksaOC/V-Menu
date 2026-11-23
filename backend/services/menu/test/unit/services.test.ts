@@ -5,7 +5,7 @@ import { internalService } from "../../src/services/internal.service.js";
 import { itemsService } from "../../src/services/items.service.js";
 import { imageUrl, isOwnImage, PLACEHOLDER, sniff } from "../../src/services/photos.js";
 import { tablesService } from "../../src/services/tables.service.js";
-import { fakeImages, fakeItems, fakeTables, newId } from "./fakes.js";
+import { fakeCategories, fakeImages, fakeItems, fakeTables, newId } from "./fakes.js";
 
 // CL-04: menu-service's business rules, with in-memory repositories (no MongoDB, no HTTP).
 const A = { _id: "665f00000000000000000001", slug: "rest-a" };
@@ -21,7 +21,7 @@ function setup() {
         items,
         tables,
         images,
-        menu: itemsService({ items, images }),
+        menu: itemsService({ items, images, categories: fakeCategories() }),
         seating: tablesService({ tables }),
         photos: imagesService({ images }),
         internal: internalService({ items, tables }),
@@ -36,7 +36,7 @@ describe("items", () => {
         expect(item).toMatchObject({ name: "Amok", price: 5, image: photo, resId: A._id, isEnabled: true });
         await menu.create(A, { name: "Hidden", price: 1, image: PLACEHOLDER, isEnabled: false });
         expect((await menu.list(A._id)).map((i) => i.name)).toEqual(["Amok", "Hidden"]);
-        expect((await menu.publicList(A._id)).map((i) => i.name)).toEqual(["Amok"]);
+        expect((await menu.publicMenu(A._id)).categories.flatMap((c) => c.items.map((i) => i.name))).toEqual(["Amok"]);
         expect(await menu.list(B._id)).toEqual([]);
     });
 

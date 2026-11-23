@@ -49,7 +49,11 @@ describe("order errors", () => {
     it("dishes no longer available: reloads the menu and takes those dishes out of the cart", async () => {
         seed();
         order(409, { message: "Some items are no longer available", code: "ITEMS_UNAVAILABLE" });
-        server.use(http.get("*/api/menu/demo-bistro/public/items", () => HttpResponse.json([kuyTeav]))); // Lok Lak is off
+        server.use(
+            http.get("*/api/menu/demo-bistro/public/items", () =>
+                HttpResponse.json({ categories: [{ _id: null, name: "Other", items: [kuyTeav] }] }),
+            ),
+        ); // Lok Lak is off (VM-25: grouped)
         const alert = await placeOrder();
         await waitFor(() => expect(alert).toHaveTextContent(/Some items are no longer available/));
         await waitFor(() => expect(alert).toHaveTextContent(/Lok Lak/));

@@ -4,25 +4,29 @@ import { useId, useState, type FormEvent } from "react";
 import { ImageIcon, Trash2, Upload, X } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
 import { PHOTO_TYPES, usePhoto } from "./use-photo";
-import type { CreateItemBody, MenuItem } from "@vmenu/contracts";
+import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
 
 const PLACEHOLDER = "/images/img.png";
 
 interface Props {
     /** Without an item the form adds one; with an item it edits or deletes it. */
     item?: MenuItem;
+    /** VM-25: when given, the form has a category select ("Other" is none). */
+    categories?: Category[];
     onClose: () => void;
     onSave: (item: CreateItemBody | MenuItem) => void;
     onDelete?: (id: string) => void;
 }
 
 /** Add and edit a dish, in the shared Modal (CL-09; was AddItemPopup and EditItemPopup). */
-export default function ItemForm({ item, onClose, onSave, onDelete }: Props) {
+export default function ItemForm({ item, categories, onClose, onSave, onDelete }: Props) {
+    const categoryFieldId = useId();
     const formId = useId();
     const fileId = useId();
     const photo = usePhoto(item?.image ?? "");
     const [name, setName] = useState(item?.name ?? "");
     const [price, setPrice] = useState(item ? String(item.price) : "");
+    const [categoryId, setCategoryId] = useState(item?.categoryId ?? "");
     const [errors, setErrors] = useState({ name: "", price: "" });
     const [saving, setSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -49,6 +53,7 @@ export default function ItemForm({ item, onClose, onSave, onDelete }: Props) {
                 price: parseFloat(price),
                 image: uploaded ?? item?.image ?? PLACEHOLDER,
                 isEnabled: item?.isEnabled ?? true,
+                ...(categories && { categoryId: categoryId || null }),
             };
             onSave(item ? { _id: item._id, ...fields } : fields);
         } catch {
@@ -157,6 +162,26 @@ export default function ItemForm({ item, onClose, onSave, onDelete }: Props) {
                         setErrors((x) => ({ ...x, price: "" }));
                     }}
                 />
+                {categories && (
+                    <div className="space-y-1.5">
+                        <label htmlFor={categoryFieldId} className="block text-sm font-semibold text-[var(--ink)]">
+                            Category
+                        </label>
+                        <select
+                            id={categoryFieldId}
+                            value={categoryId}
+                            onChange={(e) => setCategoryId(e.target.value)}
+                            className="w-full rounded-[var(--r-in)] border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                        >
+                            <option value="">Other (no category)</option>
+                            {categories.map((c) => (
+                                <option key={c._id} value={c._id}>
+                                    {c.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </form>
         </Modal>
     );

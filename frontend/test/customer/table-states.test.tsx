@@ -15,7 +15,9 @@ vi.mock("@/lib/toast", () => ({ toast }));
 const { default: CustomerMenu } = await import("@/features/customer/components/CustomerMenu");
 
 const dish = { _id: "i1", name: "Fish Amok", price: 5.5, image: "/images/img.png", isEnabled: true };
-function api(table: () => Response, items: () => Response = () => HttpResponse.json([dish])) {
+// VM-25: the public menu comes grouped by category
+const menu = (...items: object[]) => ({ categories: [{ _id: null, name: "Other", items }] });
+function api(table: () => Response, items: () => Response = () => HttpResponse.json(menu(dish))) {
     server.use(http.get("*/api/menu/demo-bistro/public/tables/:t", table), http.get("*/api/menu/demo-bistro/public/items", items));
 }
 

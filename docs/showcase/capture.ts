@@ -14,6 +14,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, type Browser, type Page } from "playwright";
 import { SignJWT } from "jose";
+import { dishesOf, withoutDishes } from "../../e2e/tests/support/menu.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..");
@@ -264,7 +265,7 @@ for (const [vp, theme] of [
         const { context, page } = await newPage(browser, vp, theme, "chef");
         if (PHASE === "before" && vp === DESKTOP && theme === "light") {
             // enough finished orders for more than one page (both phases share the database)
-            const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as { _id: string }[];
+            const menu = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
             for (let i = 0; i < 25; i++) {
                 const placed = await page.request.post(`${BASE}/api/orders/${SLUG}`, {
                     data: { table: "T1", isDone: false, orderedItems: [{ item: menu[i % menu.length], quantity: 1 + (i % 3) }] },
@@ -303,7 +304,7 @@ for (const [vp, theme] of [
         await context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
         await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
         await settle(page);
-        const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as object[];
+        const menu = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
         await page.request.post(`${BASE}/api/orders/${SLUG}`, {
             data: { table: "T2", isDone: false, orderedItems: [{ item: menu[0], quantity: 2 }] },
         });
@@ -512,16 +513,14 @@ for (const [vp, theme] of [
     await step(`VM-06 order errors ${vp.width} ${theme}`, async () => {
         for (const [name, status, body] of ORDER_ERRORS) {
             const { context, page } = await newPage(browser, vp, theme);
-            const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as {
-                _id: string;
-                name: string;
-            }[];
+            const raw = await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json();
+            const menu = dishesOf(raw);
             const lines = menu.slice(0, 2).map((item) => ({ item, quantity: 1 }));
             await context.addInitScript(([key, value]) => localStorage.setItem(key, value), [`cart:${SLUG}:T1`, JSON.stringify(lines)]);
             await page.route(`**/api/orders/${SLUG}`, (route) => route.fulfill({ status, json: body }));
             if (name === "sold-out")
                 await page.route(`**/api/menu/${SLUG}/public/items`, (route) =>
-                    route.fulfill({ json: menu.filter((i) => i._id !== lines[1].item._id) }),
+                    route.fulfill({ json: withoutDishes(raw, (dish) => dish._id !== lines[1].item._id) }),
                 );
             await page.goto(`${BASE}/${SLUG}/customer/T1/cart`);
             await settle(page);
@@ -552,7 +551,7 @@ for (const [vp, theme] of [
         await staff.context.close();
 
         const { context, page } = await newPage(browser, vp, theme);
-        const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as { _id: string }[];
+        const menu = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
         const lines = menu.slice(0, 2).map((item, i) => ({ item, quantity: i + 1 }));
         await context.addInitScript(([key, value]) => localStorage.setItem(key, value), [`cart:${SLUG}:T2`, JSON.stringify(lines)]);
         await page.goto(`${BASE}/${SLUG}/customer/T2`); // like a customer: menu, then cart
@@ -619,6 +618,65 @@ for (const theme of ["light", "dark"] as const) {
             }
         }
         await context.close();
+    });
+}
+
+// VM-25: menu categories. The customer's sections, tabs and search; the owner's Categories popup and
+// the category select; the cashier's filter. Shots of things that don't exist before are after-only.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-25 ${vp.width} ${theme}`, async () => {
+        const after = PHASE === "after";
+        {
+            const { context, page } = await newPage(browser, vp, theme);
+            const c = { page, theme, width: vp.width };
+            await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
+            await settle(page);
+            await shot(c, "VM-25-customer-menu", false);
+            if (after) await page.getByRole("navigation", { name: "Menu categories" }).getByRole("button", { name: "Drinks" }).click();
+            else await page.getByText("Iced Coffee").scrollIntoViewIfNeeded();
+            await page.waitForTimeout(900);
+            await shot(c, "VM-25-customer-drinks", false);
+            if (after) {
+                await page.evaluate(() => window.scrollTo(0, 0));
+                await page.getByRole("searchbox", { name: "Search dishes" }).fill("amok");
+                await page.waitForTimeout(400);
+                await shot(c, "VM-25-customer-search", false);
+            }
+            await context.close();
+        }
+        {
+            const { context, page } = await newPage(browser, vp, theme, "owner");
+            const c = { page, theme, width: vp.width };
+            await page.goto(`${BASE}/owner`);
+            await settle(page);
+            await page.getByRole("button", { name: "Menu", exact: true }).click({ timeout: 5000 });
+            await settle(page);
+            await shot(c, "VM-25-owner-menu", false);
+            if (after) {
+                await page.getByRole("button", { name: "Categories" }).click();
+                await page.waitForTimeout(500);
+                await shot(c, "VM-25-owner-categories", false);
+                await page.getByRole("button", { name: "Done" }).click();
+            }
+            await page.getByRole("button", { name: "Add Item" }).click({ timeout: 5000 });
+            await page.waitForTimeout(500);
+            await shot(c, "VM-25-owner-item-form", false);
+            await context.close();
+        }
+        {
+            const { context, page } = await newPage(browser, vp, theme, "cashier");
+            await context.addInitScript(() => localStorage.setItem("dashboardSection", "menu"));
+            await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+            await settle(page);
+            if (after) await page.getByRole("group", { name: "Filter by category" }).getByRole("button", { name: "Drinks" }).click();
+            await page.waitForTimeout(400);
+            await shot({ page, theme, width: vp.width }, "VM-25-cashier-menu", false);
+            await context.close();
+        }
     });
 }
 
