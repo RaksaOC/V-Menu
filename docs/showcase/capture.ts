@@ -923,6 +923,22 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-32: /<slug> was a template with invented dishes and reviews; now it's the real restaurant.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+    [PHONE, "dark"],
+] as const) {
+    await step(`VM-32 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme);
+        await page.goto(`${BASE}/${SLUG}`);
+        await settle(page);
+        await shot({ page, theme, width: vp.width }, "VM-32-restaurant-page", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

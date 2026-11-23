@@ -1,5 +1,5 @@
-import RestaurantLanding from "@/components/marketing/RestaurantLanding";
+import RestaurantHome from "@/features/restaurant/components/RestaurantHome";
 
 export default function Page() {
-    return <RestaurantLanding />;
+    return <RestaurantHome />;
 }
