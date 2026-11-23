@@ -153,3 +153,7 @@ ok   VM-27-cashier-bill-1280-dark
 ok   VM-27-kitchen-360
 ok   VM-27-customer-status-360
 ok   VM-27-cashier-bill-360
+# ONLY=VM-16 (2026-11-23T16:59:56.587Z)
+ok   VM-16-add-taken-name-1280
+ok   VM-16-add-taken-name-1280-dark
+ok   VM-16-add-taken-name-360

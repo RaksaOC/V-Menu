@@ -782,6 +782,41 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-16: the owner adds a table with a name that's already used ("patio"). Before, a second
+// "patio" was created; now the popup says the name is taken. The test tables are removed after.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-16 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        const api = `${BASE}/api/menu/${SLUG}/tables`;
+        const patios = async () =>
+            ((await (await page.request.get(api)).json()) as { _id: string; name: string }[]).filter((t) => t.name === "patio");
+        try {
+            if ((await patios()).length === 0) await page.request.post(api, { data: { type: "manual", name: "patio" } });
+            await page.goto(`${BASE}/owner`);
+            await settle(page);
+            await page
+                .getByRole("button", { name: /^\s*Tables\s*$/i })
+                .first()
+                .click({ timeout: 5000 });
+            await settle(page);
+            await page.getByRole("button", { name: "Add Table" }).first().click({ timeout: 5000 });
+            await page.getByRole("radio", { name: "Choose a name" }).check();
+            await page.getByRole("textbox", { name: "Table name" }).fill("patio");
+            await page.getByRole("dialog").getByRole("button", { name: "Add Table" }).click();
+            await page.waitForTimeout(1200);
+            await shot(c, "VM-16-add-taken-name", false);
+        } finally {
+            for (const t of await patios()) await page.request.delete(`${api}/${t._id}`);
+            await context.close();
+        }
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
