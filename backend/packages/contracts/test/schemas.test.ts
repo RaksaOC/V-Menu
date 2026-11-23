@@ -50,6 +50,10 @@ describe("menu", () => {
         expect(price(-5).error?.issues[0].message).toBe("Must be 0 or more");
         expect(price("").error?.issues[0].message).toBe("Required");
         expect(price("abc").error?.issues[0].message).toBe("Must be a number");
+        // money has cents: the form's old step="0.01" stopped this only in the browser
+        expect(price(2.35).success).toBe(true);
+        expect(price(1e300).success).toBe(true);
+        expect(price(2.555).error?.issues[0].message).toBe("At most 2 decimal places");
     });
 
     it("UpdateItemBody: any subset, each still checked", () => {

@@ -45,7 +45,7 @@ describe("the browser's checks are the server's rules (VM-17)", () => {
     // The bundle takes only types from @vmenu/contracts, so the rules are written out twice.
     // This keeps the copy honest: same verdict, same message, for each field.
     const names = ["Amok", "B", "", "   ", "  Amok  ", "x".repeat(120), "x".repeat(121)];
-    const prices = ["5", "0", "2.35", "", " ", "-1", "-0.01", "abc", "1e999", "0x10", " 7 "];
+    const prices = ["5", "0", "2.35", "", " ", "-1", "-0.01", "-1.555", "2.555", "0.001", "1e300", "abc", "1e999", "0x10", " 7 "];
     it.each(names.flatMap((name) => prices.map((price) => [name.length > 20 ? `${name.length} characters` : name, price, name])))(
         "name %j, price %j",
         (_label, price, name) => {
