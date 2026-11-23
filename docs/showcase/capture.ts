@@ -963,6 +963,28 @@ for (const [vp, theme] of [
     });
 }
 
+// SEC-08: new passwords need 8 characters with a letter and a number (real Firebase is blocked).
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`SEC-08 ${vp.width} ${theme}`, async () => {
+        const { page, context } = await newPage(browser, vp, theme);
+        await context.route(/^https:\/\/[a-z0-9-]+\.googleapis\.com\//, (route) => route.abort("blockedbyclient"));
+        await page.goto(`${BASE}/signup`);
+        await settle(page);
+        await page.locator("form input[type=text]").nth(0).fill("Riverside Noodles");
+        await page.locator("form input[type=text]").nth(1).fill("Dara");
+        await page.locator("form input[type=email]").fill(`short-${vp.width}-${theme}@e2e.test`);
+        await page.locator("form input[type=password]").fill("abc1234");
+        await page.locator("form [type=submit]").click();
+        await page.waitForTimeout(1500);
+        await shot({ page, theme, width: vp.width }, "SEC-08-signup-short-password", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
