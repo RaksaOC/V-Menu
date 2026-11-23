@@ -1,0 +1,14 @@
+import { Router } from "express";
+import type { RouteContext } from "./context.js";
+
+/** /api/menu/:slug/public: what a customer at a table sees. No sign-in. */
+export function publicRoutes({ services, publicRestaurant }: RouteContext) {
+    const r = Router({ mergeParams: true });
+    r.get("/public/items", async (req, res) => {
+        res.json(await services.items.publicList((await publicRestaurant(req))._id));
+    });
+    r.get("/public/tables/:name", async (req, res) => {
+        res.json(await services.tables.check((await publicRestaurant(req))._id, String(req.params.name)));
+    });
+    return r;
+}

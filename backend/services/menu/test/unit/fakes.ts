@@ -1,4 +1,5 @@
-// In-memory repositories for the service unit tests (CL-04): no MongoDB.
+// In-memory repositories for the service unit tests (CL-04): no MongoDB. Like MongoDB, they
+// hand out copies, so a service can't change stored data without calling the repository.
 import { Readable } from "node:stream";
 import type { ImagesRepo } from "../../src/repositories/images.repo.js";
 import type { ItemRecord, ItemsRepo } from "../../src/repositories/items.repo.js";
@@ -16,7 +17,8 @@ export function fakeItems(): ItemsRepo & { all: ItemRecord[] } {
             return all.filter((i) => i.resId === resId && (!enabledOnly || i.isEnabled));
         },
         async get(resId, id) {
-            return find(resId, id) ?? null;
+            const found = find(resId, id);
+            return found ? { ...found } : null;
         },
         async create(resId, fields) {
             const item = { _id: newId(), isEnabled: true, ...fields, resId };
@@ -27,7 +29,7 @@ export function fakeItems(): ItemsRepo & { all: ItemRecord[] } {
             const item = find(resId, id);
             if (!item) return null;
             Object.assign(item, fields);
-            return item;
+            return { ...item };
         },
         async remove(resId, id) {
             const item = find(resId, id);
@@ -53,7 +55,8 @@ export function fakeTables(): TablesRepo & { all: TableRecord[] } {
             return all.filter((t) => t.resId === resId);
         },
         async get(resId, id) {
-            return find(resId, id) ?? null;
+            const found = find(resId, id);
+            return found ? { ...found } : null;
         },
         async findByName(resId, name) {
             return all.find((t) => t.resId === resId && t.name === name) ?? null;
@@ -67,7 +70,7 @@ export function fakeTables(): TablesRepo & { all: TableRecord[] } {
             const table = find(resId, id);
             if (!table) return null;
             Object.assign(table, fields);
-            return table;
+            return { ...table };
         },
         async remove(resId, id) {
             const table = find(resId, id);
