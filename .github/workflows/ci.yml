@@ -232,6 +232,18 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      # VM-01: the owner's and cashier's QR modal (1280 light and dark, 360 px), kept from every run
+      - name: Upload table QR screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vm-01-screenshots
+          path: |
+            e2e/test-results/**/VM-01-*.png
+            !e2e/test-results/**/attachments/**
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v7
