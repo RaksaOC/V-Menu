@@ -347,6 +347,51 @@ for (const [vp, theme] of [[DESKTOP, "light"], [DESKTOP, "dark"], [PHONE, "light
     });
 }
 
+// CL-09: the merged owner/cashier screens on the UI kit, an edit form in the shared Modal,
+// and the kit page itself.
+for (const theme of ["light", "dark"] as const) {
+    await step(`CL-09 screens ${theme}`, async () => {
+        for (const section of ["tables", "menu"]) {
+            const { context, page } = await newPage(browser, DESKTOP, theme, "cashier");
+            await context.addInitScript((s) => localStorage.setItem("dashboardSection", s as string), section);
+            await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+            await settle(page);
+            await shot({ page, theme, width: DESKTOP.width }, `CL-09-cashier-${section}`, false);
+            await context.close();
+        }
+        const { context, page } = await newPage(browser, DESKTOP, theme, "owner");
+        const c = { page, theme, width: DESKTOP.width };
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page.getByRole("button", { name: /^\s*Tables\s*$/i }).first().click({ timeout: 5000 });
+        await settle(page);
+        await shot(c, "CL-09-owner-tables", false);
+        await page.getByRole("button", { name: /edit table/i }).first().click({ timeout: 5000 });
+        await page.waitForTimeout(600);
+        await shot(c, "CL-09-owner-edit-table", false);
+        await page.goto(`${BASE}/owner`); // the old popups didn't close with Escape
+        await settle(page);
+        await page.getByRole("button", { name: "Menu", exact: true }).click({ timeout: 5000 });
+        await settle(page);
+        await shot(c, "CL-09-owner-menu", false);
+        await context.close();
+
+        const kit = await newPage(browser, DESKTOP, theme);
+        await kit.page.goto(`${BASE}/ui-kit`);
+        await settle(kit.page);
+        await shot({ page: kit.page, theme, width: DESKTOP.width }, "CL-09-ui-kit");
+        await kit.context.close();
+    });
+}
+await step("CL-09 phone", async () => {
+    const { context, page } = await newPage(browser, PHONE, "light", "cashier");
+    await context.addInitScript(() => localStorage.setItem("dashboardSection", "tables"));
+    await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+    await settle(page);
+    await shot({ page, theme: "light", width: PHONE.width }, "CL-09-cashier-tables", false);
+    await context.close();
+});
+
 // ---------------------------------------------------------------- owner
 for (const theme of ["light", "dark"] as const) {
     await step(`owner ${theme}`, async () => {

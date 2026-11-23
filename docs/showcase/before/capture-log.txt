@@ -66,3 +66,29 @@ ok   VM-03-session-ended-1280
 ok   VM-03-connection-lost-1280
 ok   VM-03-session-ended-1280-dark
 ok   VM-03-connection-lost-1280-dark
+# ONLY=CL-09 (2026-11-23T11:58:34.259Z)
+ok   CL-09-cashier-tables-1280
+ok   CL-09-cashier-menu-1280
+ok   CL-09-owner-tables-1280
+ok   CL-09-owner-edit-table-1280
+FAIL CL-09 screens light: locator.click: Timeout 5000ms exceeded.
+ok   CL-09-cashier-tables-1280-dark
+ok   CL-09-cashier-menu-1280-dark
+ok   CL-09-owner-tables-1280-dark
+ok   CL-09-owner-edit-table-1280-dark
+FAIL CL-09 screens dark: locator.click: Timeout 5000ms exceeded.
+ok   CL-09-cashier-tables-360
+# ONLY=CL-09 (2026-11-23T12:00:04.695Z)
+ok   CL-09-cashier-tables-1280
+ok   CL-09-cashier-menu-1280
+ok   CL-09-owner-tables-1280
+ok   CL-09-owner-edit-table-1280
+ok   CL-09-owner-menu-1280
+ok   CL-09-ui-kit-1280
+ok   CL-09-cashier-tables-1280-dark
+ok   CL-09-cashier-menu-1280-dark
+ok   CL-09-owner-tables-1280-dark
+ok   CL-09-owner-edit-table-1280-dark
+ok   CL-09-owner-menu-1280-dark
+ok   CL-09-ui-kit-1280-dark
+ok   CL-09-cashier-tables-360
