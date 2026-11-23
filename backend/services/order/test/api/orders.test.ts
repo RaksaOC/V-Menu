@@ -329,3 +329,33 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
         expect(res.body.fields).toEqual({ isPayed: "Must be true or false" });
     });
 });
+
+describe("isPayed is now isPaid; both work for one release (CL-06)", () => {
+    const patch = (id: string, body: object) => request(app).patch(`/api/orders/${R.slug}/bills/${id}`).set(cashier).send(body);
+    const openBill = async () => (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body[0];
+
+    it("bills answer with isPaid, and with isPayed for clients not yet updated", async () => {
+        await place();
+        const bill = await openBill();
+        expect(bill).toMatchObject({ isPaid: false, isPayed: false });
+    });
+
+    it("a bill is marked paid with the new name, and reopened with the old one", async () => {
+        await place();
+        const { _id } = await openBill();
+        const paid = await patch(_id, { isPaid: true });
+        expect(paid.status).toBe(200);
+        expect(paid.body).toMatchObject({ isPaid: true, isPayed: true });
+        const reopened = await patch(_id, { isPayed: false });
+        expect(reopened.status).toBe(200);
+        expect(reopened.body.isPaid).toBe(false);
+        expect((await Bill.findById(_id).lean())?.isPaid).toBe(false);
+    });
+
+    it("a bad value names the new field", async () => {
+        await place();
+        const res = await patch((await openBill())._id, { isPaid: "yes" });
+        expect(res.status).toBe(400);
+        expect(res.body.fields).toEqual({ isPaid: "Must be true or false" });
+    });
+});
