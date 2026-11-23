@@ -52,7 +52,8 @@ describe("menu items", () => {
         const hidden = await addItem({ name: "Lok Lak", price: 4, image: PHOTO, isEnabled: false });
         expect(hidden.status).toBe(201);
         const pub = await request(app).get(`/api/menu/${SLUG}/public/items`);
-        expect(pub.body.map((i: { name: string }) => i.name)).toEqual(["Kuy Teav"]);
+        // VM-25: grouped by category; with none set, everything is under Other
+        expect(pub.body).toMatchObject({ categories: [{ _id: null, name: "Other", items: [{ name: "Kuy Teav" }] }] });
     });
 
     it("ignores a resId in the body", async () => {
@@ -149,5 +150,52 @@ describe("contract: menu-service's real order-check answer (CL-05)", () => {
             .send({ table: table.name, items: [{ _id: dish._id, quantity: 2 }] });
         expect(res.status).toBe(200);
         expect(OrderCheckResponse.parse(res.body)).toEqual(res.body);
+    });
+});
+
+describe("menu categories over HTTP (VM-25)", () => {
+    const categories = () => request(app).get(`/api/menu/${SLUG}/categories`).set(cashier);
+    const add = (name: string) => request(app).post(`/api/menu/${SLUG}/categories`).set(owner).send({ name });
+
+    it("the owner creates, renames, reorders and deletes; the cashier can read them", async () => {
+        const { body: mains, status } = await add("Mains");
+        expect(status).toBe(201);
+        const { body: drinks } = await add("Drinks");
+        expect((await categories()).body.map((c: { name: string }) => c.name)).toEqual(["Mains", "Drinks"]);
+
+        const renamed = await request(app).put(`/api/menu/${SLUG}/categories/${drinks._id}`).set(owner).send({ name: "Cold drinks" });
+        expect(renamed.body.name).toBe("Cold drinks");
+        const order = await request(app)
+            .put(`/api/menu/${SLUG}/categories/order`)
+            .set(owner)
+            .send({ ids: [drinks._id, mains._id] });
+        expect(order.body.map((c: { name: string }) => c.name)).toEqual(["Cold drinks", "Mains"]);
+
+        expect((await request(app).post(`/api/menu/${SLUG}/categories`).set(cashier).send({ name: "Nope" })).status).toBe(403);
+        expect((await request(app).delete(`/api/menu/${SLUG}/categories/${mains._id}`).set(owner)).status).toBe(200);
+        expect((await categories()).body.map((c: { name: string }) => c.name)).toEqual(["Cold drinks"]);
+    });
+
+    it("the public menu groups dishes, and a deleted category's dishes move to Other", async () => {
+        const { body: drinks } = await add("Drinks");
+        await addItem({ name: "Iced Coffee", price: 1.5, image: PHOTO, categoryId: drinks._id });
+        await addItem({ name: "Bread", price: 1, image: PHOTO });
+        const grouped = await request(app).get(`/api/menu/${SLUG}/public/items`);
+        expect(
+            grouped.body.categories.map((c: { name: string; items: { name: string }[] }) => [c.name, c.items.map((i) => i.name)]),
+        ).toEqual([
+            ["Drinks", ["Iced Coffee"]],
+            ["Other", ["Bread"]],
+        ]);
+        await request(app).delete(`/api/menu/${SLUG}/categories/${drinks._id}`).set(owner);
+        const after = await request(app).get(`/api/menu/${SLUG}/public/items`);
+        expect(after.body.categories).toMatchObject([{ name: "Other", items: [{ name: "Bread" }, { name: "Iced Coffee" }] }]);
+    });
+
+    it("a bad name, or a dish in an unknown category, is a 400 naming the field", async () => {
+        expect((await add("")).body.fields).toEqual({ name: "Required" });
+        const res = await addItem({ name: "Tea", price: 1, image: PHOTO, categoryId: "665f0000000000000000ffff" });
+        expect(res.status).toBe(400);
+        expect(res.body.fields).toEqual({ categoryId: "Unknown category" });
     });
 });

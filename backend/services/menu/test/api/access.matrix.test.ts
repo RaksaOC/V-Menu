@@ -24,6 +24,7 @@ trackRoutes();
 const { createApp } = await import("../../src/app.js");
 const { Item } = await import("../../src/models/item.model.js");
 const { Table } = await import("../../src/models/table.model.js");
+const { Category } = await import("../../src/models/category.model.js");
 const { mongoImagesRepo } = await import("../../src/repositories/images.repo.js");
 
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
@@ -59,6 +60,11 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/menu/:slug/tables", owner],
     ["PUT /api/menu/:slug/tables/:id", owner],
     ["DELETE /api/menu/:slug/tables/:id", owner],
+    ["GET /api/menu/:slug/categories", staff],
+    ["POST /api/menu/:slug/categories", owner],
+    ["PUT /api/menu/:slug/categories/order", owner],
+    ["PUT /api/menu/:slug/categories/:id", owner],
+    ["DELETE /api/menu/:slug/categories/:id", owner],
     ["GET /internal/restaurants/:resId/counts", NO_APP_TOKEN],
     ["POST /internal/restaurants/:resId/order-check", NO_APP_TOKEN],
 ];
@@ -83,6 +89,8 @@ beforeEach(async () => {
     ids.itemB = String((await Item.create({ name: "B dish", price: 3, image: img, resId: B._id }))._id);
     ids.tableB = String((await Table.create({ name: "B1", resId: B._id, isEnabled: true }))._id);
     ids.imageB = await mongoImagesRepo.save(Buffer.from("RIFF0000WEBPVP8 "), B._id);
+    ids.categoryA = String((await Category.create({ name: "Mains", sortOrder: 0, resId: A._id }))._id);
+    ids.categoryB = String((await Category.create({ name: "B drinks", sortOrder: 0, resId: B._id }))._id);
 });
 
 /** The route with A's slug and A's real ids filled in. */
@@ -94,6 +102,7 @@ function urlFor(route: string) {
         .replace(":name", "T1")
         .replace(/items\/:id/, `items/${ids.itemA}`)
         .replace(/tables\/:id/, `tables/${ids.tableA}`)
+        .replace(/categories\/:id/, `categories/${ids.categoryA}`)
         .replace(/images\/:id/, `images/${"b".repeat(24)}`);
 }
 
@@ -135,6 +144,8 @@ describe("another restaurant's ids, through your own restaurant (SEC-07)", () =>
         ["DELETE", "table", () => `/api/menu/${A.slug}/tables/${ids.tableB}`, "owner"],
         ["PATCH", "table", () => `/api/menu/${A.slug}/tables/${ids.tableB}/availability`, "cashier"],
         ["GET", "image", () => `/api/menu/${A.slug}/images/${ids.imageB}`, "guest"],
+        ["PUT", "category", () => `/api/menu/${A.slug}/categories/${ids.categoryB}`, "owner"],
+        ["DELETE", "category", () => `/api/menu/${A.slug}/categories/${ids.categoryB}`, "owner"],
     ];
     it.each(cases)("%s B's %s through A is 404, and B's data is unchanged", async (method, _what, url, caller) => {
         // a valid body, so only the restaurant check stands in the way
@@ -143,5 +154,15 @@ describe("another restaurant's ids, through your own restaurant (SEC-07)", () =>
         expect(res.status).toBe(404);
         expect(await Item.findById(ids.itemB).lean()).toMatchObject({ name: "B dish", price: 3, isEnabled: true });
         expect(await Table.findById(ids.tableB).lean()).toMatchObject({ name: "B1", isEnabled: true });
+        expect(await Category.findById(ids.categoryB).lean()).toMatchObject({ name: "B drinks" });
+    });
+
+    it("B's category can't be put in A's order, or on A's dish (VM-25)", async () => {
+        const order = await send("PUT", `/api/menu/${A.slug}/categories/order`, "owner", {}, { ids: [ids.categoryA, ids.categoryB] });
+        expect(order.status).toBe(400);
+        const dish = await send("PUT", `/api/menu/${A.slug}/items/${ids.itemA}`, "owner", {}, { categoryId: ids.categoryB });
+        expect(dish.status).toBe(400);
+        expect(await Item.findById(ids.itemA).lean()).not.toHaveProperty("categoryId", ids.categoryB);
+        expect(await Category.findById(ids.categoryB).lean()).toMatchObject({ sortOrder: 0 });
     });
 });
