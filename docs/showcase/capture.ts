@@ -782,6 +782,56 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-12: the owner invites staff by name, email and role (no password), the list marks invites
+// nobody has accepted yet, and /login lets the invited person create their own account.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-12 ${vp.width} ${theme}`, async () => {
+        const invite = `showcase-invite-${vp.width}-${theme}@e2e.test`;
+        const owner = await newPage(browser, vp, theme, "owner");
+        const c = { page: owner.page, theme, width: vp.width };
+        const removeInvite = async () => {
+            const list = (await (await c.page.request.get(`${BASE}/api/restaurants/${SLUG}/staff`)).json()) as {
+                _id: string;
+                email: string;
+            }[];
+            for (const m of list.filter((m) => m.email === invite))
+                await c.page.request.delete(`${BASE}/api/restaurants/${SLUG}/staff/${m._id}`);
+        };
+        try {
+            // an invite nobody has accepted yet (the old API refuses it: it wants an account id)
+            await c.page.request.post(`${BASE}/api/restaurants/${SLUG}/staff`, {
+                data: { name: "Dara Invited", email: invite, role: "cashier" },
+            });
+            await c.page.goto(`${BASE}/owner`);
+            await settle(c.page);
+            await c.page.getByRole("button", { name: "Staff", exact: true }).click({ timeout: 5000 });
+            await settle(c.page);
+            await shot(c, "VM-12-owner-staff");
+            await c.page.getByRole("button", { name: /add staff/i }).click({ timeout: 5000 });
+            await c.page.waitForTimeout(500);
+            await shot(c, "VM-12-add-staff-form", false);
+        } finally {
+            await removeInvite();
+            await owner.context.close();
+        }
+
+        const { page, context } = await newPage(browser, vp, theme);
+        await context.route(/^https:\/\/[a-z0-9-]+\.googleapis\.com\//, (route) => route.abort("blockedbyclient"));
+        await page.goto(`${BASE}/login`);
+        await settle(page);
+        await shot({ page, theme, width: vp.width }, "VM-12-login", false);
+        if (PHASE === "after") {
+            await page.getByRole("button", { name: /create an account/i }).click({ timeout: 5000 });
+            await shot({ page, theme, width: vp.width }, "VM-12-login-create-account", false);
+        }
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
