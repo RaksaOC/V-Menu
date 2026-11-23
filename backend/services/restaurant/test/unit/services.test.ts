@@ -266,3 +266,65 @@ describe("staff invites (VM-12)", () => {
         expect(row(s, "bob@x.test", String(s.other._id)).tenantId).toBe("bob-uid");
     });
 });
+
+describe("changing a staff role can't duplicate it (VM-18)", () => {
+    async function bistro() {
+        const s = setup();
+        const r = await s.places.createForOwner("Bistro", { uid: "owner", email: "owner@x.test", name: "Ory" });
+        const other = await s.places.createForOwner("Other", { uid: "zed", email: "zed@x.test", name: "Zed" });
+        const resId = String(r._id);
+        const [cashier, chef] = await s.memberships.createMany([
+            { name: "Bob", tenantId: "bob", email: "bob@x.test", role: "cashier", resId },
+            { name: "Bob", tenantId: "bob", email: "bob@x.test", role: "chef", resId },
+        ]);
+        const by = { uid: "owner", email: "owner@x.test", role: "owner" as const };
+        return { ...s, r, other, resId, cashier, chef, by };
+    }
+
+    it("changing Bob's chef row to cashier is a 409, and nothing changes", async () => {
+        const { staff, memberships, r, chef, by } = await bistro();
+        expect(await status(staff.update(by, r.slug, chef._id, { role: "cashier" }))).toBe(409);
+        expect(memberships.all.find((m) => m._id === chef._id)?.role).toBe("chef");
+    });
+
+    it("the same account under another email counts as the same person", async () => {
+        const { staff, memberships, r, resId, by } = await bistro();
+        const [other] = await memberships.createMany([{ name: "Bob", tenantId: "bob2", email: "bob2@x.test", role: "chef", resId }]);
+        await memberships.createMany([{ name: "Bob", tenantId: "bob2", email: "bob-work@x.test", role: "cashier", resId }]);
+        expect(await status(staff.update(by, r.slug, other._id, { role: "cashier" }))).toBe(409);
+    });
+
+    it("changing an email to someone who already has that role is a 409", async () => {
+        const { staff, memberships, r, resId, by } = await bistro();
+        const [dara] = await memberships.createMany([{ name: "Dara", tenantId: null, email: "dara@x.test", role: "cashier", resId }]);
+        expect(await status(staff.update(by, r.slug, dara._id, { email: "BOB@x.test" }))).toBe(409);
+    });
+
+    it("a role the person doesn't have yet is fine", async () => {
+        const { staff, memberships, r, resId, by } = await bistro();
+        const [dara] = await memberships.createMany([{ name: "Dara", tenantId: "dara", email: "dara@x.test", role: "chef", resId }]);
+        expect((await staff.update(by, r.slug, dara._id, { role: "cashier" })).role).toBe("cashier");
+    });
+
+    it("two different pending invites aren't the same person just because neither has an account", async () => {
+        const { staff, memberships, r, resId, by } = await bistro();
+        const [a] = await memberships.createMany([
+            { name: "A", tenantId: null, email: "a@x.test", role: "chef", resId },
+            { name: "B", tenantId: null, email: "b@x.test", role: "cashier", resId },
+        ]);
+        expect((await staff.update(by, r.slug, a._id, { role: "cashier" })).role).toBe("cashier");
+    });
+
+    it("the same role at another restaurant doesn't count", async () => {
+        const { staff, memberships, r, other, resId, by } = await bistro();
+        await memberships.createMany([{ name: "Dara", tenantId: "dara", email: "dara@x.test", role: "cashier", resId: String(other._id) }]);
+        const [dara] = await memberships.createMany([{ name: "Dara", tenantId: "dara", email: "dara@x.test", role: "chef", resId }]);
+        expect((await staff.update(by, r.slug, dara._id, { role: "cashier" })).role).toBe("cashier");
+    });
+
+    it("saving a row without changing its role still works, even if old data already has a duplicate", async () => {
+        const { staff, memberships, r, resId, cashier, by } = await bistro();
+        await memberships.createMany([{ name: "Bob", tenantId: "bob", email: "bob@x.test", role: "cashier", resId }]); // from before this fix
+        expect((await staff.update(by, r.slug, cashier._id, { name: "Robert", role: "cashier", email: "bob@x.test" })).name).toBe("Robert");
+    });
+});

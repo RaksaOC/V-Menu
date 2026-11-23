@@ -111,3 +111,31 @@ describe("staff invites (VM-12)", () => {
         for (const label of pending) expect(label.closest("tr, [data-member]")?.textContent).toContain("Dara");
     });
 });
+
+describe("changing a role the person already has (VM-18)", () => {
+    it("shows the server's answer next to the role and keeps the form open", async () => {
+        const chef = { ...member("Dara", "uid-dara"), role: "chef" };
+        server.use(
+            http.get("*/api/restaurants/demo-bistro/staff", () => HttpResponse.json([chef])),
+            http.put("*/api/restaurants/demo-bistro/staff/id-Dara", () =>
+                HttpResponse.json({ message: "This person already has that role here" }, { status: 409 }),
+            ),
+        );
+        const { container } = render(
+            <ResContext.Provider value="demo-bistro">
+                <Staff />
+            </ResContext.Provider>,
+        );
+        const ui = userEvent.setup();
+        await screen.findAllByText("Dara");
+        await ui.click(container.querySelector("tr .cursor-pointer")!);
+        await ui.selectOptions(screen.getByLabelText("Role"), "cashier");
+        await ui.click(screen.getByRole("button", { name: "Save Changes" }));
+        expect(await screen.findByText("This person already has that role here")).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Save Changes" })).toBeTruthy();
+
+        // picking another role clears it
+        await ui.selectOptions(screen.getByLabelText("Role"), "chef");
+        expect(screen.queryByText("This person already has that role here")).toBeNull();
+    });
+});

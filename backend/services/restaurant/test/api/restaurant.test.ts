@@ -133,6 +133,22 @@ describe("owner routes", () => {
         expect(linked.tenantId).toBe("dara-uid");
     });
 
+    it("changing a role into one the person already has here is a 409 (VM-18)", async () => {
+        const slug = await signUp();
+        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
+        const add = (role: string) =>
+            request(app).post(`/api/restaurants/${slug}/staff`).set(auth).send({ name: "Sok", email: "sok@x.com", role });
+        await add("cashier");
+        const chef = await add("chef");
+        const res = await request(app).put(`/api/restaurants/${slug}/staff/${chef.body._id}`).set(auth).send({ role: "cashier" });
+        expect(res.status).toBe(409);
+        expect(res.body.message).toBe("This person already has that role here");
+        const rows = (await request(app).get(`/api/restaurants/${slug}/staff`).set(auth)).body.filter(
+            (m: { email: string }) => m.email === "sok@x.com",
+        );
+        expect(rows.map((m: { role: string }) => m.role).sort()).toEqual(["cashier", "chef"]);
+    });
+
     it("rejects a cashier token on owner routes", async () => {
         const token = await signAppToken({ uid: "u9", email: "v@x.com", role: "cashier" });
         const res = await request(app).get("/api/restaurants").set("authorization", `Bearer ${token}`);
