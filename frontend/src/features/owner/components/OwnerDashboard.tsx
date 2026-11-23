@@ -22,7 +22,7 @@ import MobileSidebar from "@/components/layout/MobileSidebar";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { createRestaurant, getRestaurants } from "@/features/owner/api";
 import Overview from "@/features/restaurant/components/Overview";
-import { ResContext } from "@/lib/restaurantContext";
+import { ResContext } from "@/lib/restaurant-context";
 import Menu from "@/features/restaurant/components/Menu";
 import Tables from "@/features/restaurant/components/Tables";
 import Staff from "@/features/staff/components/Staff";

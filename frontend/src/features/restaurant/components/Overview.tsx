@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle, CreditCard, Table as TableIcon, TrendingUp, Users, UtensilsCrossed } from "lucide-react";
 import { Card, Skeleton } from "@/components/ui";
 import { getOverview } from "@/features/restaurant/api";
-import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
+import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 import type { Overview as OverviewData } from "@vmenu/contracts";
 
 const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);

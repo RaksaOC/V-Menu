@@ -87,7 +87,7 @@ describe("cashier api", () => {
     });
 
     it("loads tables, dishes, bills and the overview", async () => {
-        const bill = { _id: "b1", table: "T1", isPayed: false, createdAt: "x", orders: [] };
+        const bill = { _id: "b1", table: "T1", isPaid: false, createdAt: "x", orders: [] };
         const overview = { numOfActiveTables: 1, numOfUnpaidOrders: 0, numOfTables: 4, numOfItems: 4, numOfOrders: 2, numOfPayments: 1 };
         answer("get", "/api/menu/demo-bistro/tables", [table]);
         answer("get", "/api/menu/demo-bistro/items", [dish]);
@@ -108,7 +108,7 @@ describe("cashier api", () => {
         await cashier.setBillPaid("demo-bistro", "b1", true);
         expect(t[0].body).toEqual({ isEnabled: false });
         expect(i[0].body).toEqual({ isEnabled: true });
-        expect(b[0].body).toEqual({ isPayed: true });
+        expect(b[0].body).toEqual({ isPaid: true });
     });
 });
 

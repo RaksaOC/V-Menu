@@ -53,28 +53,28 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
     return {
         all,
         async addToOpenBill(resId, table, orderId) {
-            let bill = all.find((b) => b.resId === resId && b.table === table && !b.isPayed);
+            let bill = all.find((b) => b.resId === resId && b.table === table && !b.isPaid);
             if (!bill) {
-                bill = { _id: newId(), resId, table, isPayed: false, orders: [], createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, clock++)) };
+                bill = { _id: newId(), resId, table, isPaid: false, orders: [], createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, clock++)) };
                 all.push(bill);
             }
             bill.orders.push(orderId);
         },
-        async countFor(resIds, isPayed) {
-            return all.filter((b) => resIds.includes(b.resId) && b.isPayed === isPayed).length;
+        async countFor(resIds, isPaid) {
+            return all.filter((b) => resIds.includes(b.resId) && b.isPaid === isPaid).length;
         },
         async listOpen(resId) {
             return all
-                .filter((b) => b.resId === resId && !b.isPayed)
+                .filter((b) => b.resId === resId && !b.isPaid)
                 .sort((a, b) => +b.createdAt - +a.createdAt)
                 .map(withOrders);
         },
         async pagePaid(resId, skip, limit) {
-            const paid = all.filter((b) => b.resId === resId && b.isPayed).sort((a, b) => +b.updatedAt! - +a.updatedAt!);
+            const paid = all.filter((b) => b.resId === resId && b.isPaid).sort((a, b) => +b.updatedAt! - +a.updatedAt!);
             return { bills: paid.slice(skip, skip + limit).map(withOrders), total: paid.length };
         },
         async findOpen(resId, table) {
-            const b = all.find((x) => x.resId === resId && x.table === table && !x.isPayed);
+            const b = all.find((x) => x.resId === resId && x.table === table && !x.isPaid);
             return b ? withOrders(b) : null;
         },
         async get(resId, id) {
@@ -82,12 +82,12 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
             return b ? withOrders(b) : null;
         },
         async hasOtherOpenBill(resId, table, exceptId) {
-            return all.some((b) => b.resId === resId && b.table === table && !b.isPayed && b._id !== exceptId);
+            return all.some((b) => b.resId === resId && b.table === table && !b.isPaid && b._id !== exceptId);
         },
-        async setPaid(resId, id, isPayed) {
+        async setPaid(resId, id, isPaid) {
             const b = all.find((x) => x._id === id && x.resId === resId);
             if (!b) return null;
-            b.isPayed = isPayed;
+            b.isPaid = isPaid;
             b.updatedAt = new Date(Date.UTC(2026, 0, 1, 0, 0, clock++));
             return withOrders(b);
         },

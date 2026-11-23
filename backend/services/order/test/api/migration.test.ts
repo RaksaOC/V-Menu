@@ -12,7 +12,7 @@ const bills = () => mongoose.connection.db!.collection("table_orders");
 
 beforeAll(async () => {
     mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("orders"));
+    await mongoose.connect(mongo.getUri("orders"), { autoIndex: false }); // as index.ts does
 });
 afterAll(async () => {
     await mongoose.disconnect();
@@ -67,6 +67,7 @@ describe("prepareDatabase: the isPayed → isPaid migration (CL-06)", () => {
 
     it("is safe to run again, and on a new, empty database", async () => {
         expect(await prepareDatabase()).toEqual({ renamed: 0, droppedIndexes: [] });
+        await mongoose.connection.db!.dropDatabase();
         await seedLikeProduction();
         await prepareDatabase();
         expect(await prepareDatabase()).toEqual({ renamed: 0, droppedIndexes: [] });

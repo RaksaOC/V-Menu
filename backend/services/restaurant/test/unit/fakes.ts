@@ -1,7 +1,7 @@
 // In-memory repositories for the service unit tests (CL-04): no MongoDB. Like MongoDB, they hand
 // out copies, so a service can't change stored data without calling the repository.
 import type { RestaurantRecord, RestaurantsRepo } from "../../src/repositories/restaurants.repo.js";
-import type { TenantRecord, TenantsRepo } from "../../src/repositories/tenants.repo.js";
+import type { MembershipRecord, MembershipsRepo } from "../../src/repositories/memberships.repo.js";
 
 let seq = 0;
 export const newId = () => (++seq).toString(16).padStart(24, "0");
@@ -32,8 +32,8 @@ export function fakeRestaurants(): RestaurantsRepo & { all: RestaurantRecord[] }
     };
 }
 
-export function fakeTenants(): TenantsRepo & { all: TenantRecord[] } {
-    const all: TenantRecord[] = [];
+export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] } {
+    const all: MembershipRecord[] = [];
     const find = (resId: string, id: string) => all.find((t) => t._id === id && t.resId === resId);
     return {
         all,

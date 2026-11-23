@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { ImageIcon, Trash2, Upload, X } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
-import { PHOTO_TYPES, usePhoto } from "./usePhoto";
+import { PHOTO_TYPES, usePhoto } from "./use-photo";
 import type { CreateItemBody, MenuItem } from "@vmenu/contracts";
 
 const PLACEHOLDER = "/images/img.png";

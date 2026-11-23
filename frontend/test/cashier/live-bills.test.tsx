@@ -18,10 +18,10 @@ const order = (id: string) => ({
     createdAt: "2026-11-23T10:00:00Z",
     orderedItems: [{ item: dish, quantity: 1 }],
 });
-const bill = (id: string, table: string, orders = [order(`${id}-o1`)], isPayed = false) => ({
+const bill = (id: string, table: string, orders = [order(`${id}-o1`)], isPaid = false) => ({
     _id: id,
     table,
-    isPayed,
+    isPaid,
     createdAt: "2026-11-23T10:00:00Z",
     orders,
 });

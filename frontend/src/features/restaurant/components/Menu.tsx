@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Plus, Store } from "lucide-react";
 import { Button, Skeleton, toast } from "@/components/ui";
 import { createMenuItem, deleteMenuItem, getMenuItems, setItemAvailability, updateMenuItem } from "@/features/restaurant/api";
-import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
+import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 import MenuCard from "./MenuCard";
 import ItemForm from "./ItemForm";
 import type { CreateItemBody, MenuItem } from "@vmenu/contracts";

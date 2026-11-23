@@ -130,11 +130,11 @@ describe("orders", () => {
     });
 
     it("UpdateBillBody, Order, Bill and the pages", () => {
-        ok(C.UpdateBillBody, { isPayed: true });
-        expect(fieldsOf(C.UpdateBillBody, { isPayed: "yes" })).toEqual(["isPayed"]);
+        ok(C.UpdateBillBody, { isPaid: true });
+        expect(fieldsOf(C.UpdateBillBody, { isPaid: "yes" })).toEqual(["isPaid"]);
         ok(C.Order, order);
         fieldsOf(C.Order, { ...order, isDone: "no" });
-        ok(C.Bill, { _id: ID, table: "1", isPayed: false, orders: [order], createdAt: order.createdAt });
+        ok(C.Bill, { _id: ID, table: "1", isPaid: false, orders: [order], createdAt: order.createdAt });
         ok(C.KitchenHistoryPage, { orders: [order], page: 1, limit: 20, total: 1, pages: 1 });
         fieldsOf(C.PaidBillsPage, { bills: [], page: 1, limit: 20, total: 1 });
     });

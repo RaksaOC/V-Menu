@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
-// One role of one person at one restaurant (an owner has all three).
-const tenantSchema = new mongoose.Schema(
+// A membership: one role of one person at one restaurant (an owner has all three). CL-06: it was
+// called Tenant; the collection keeps its old name, "tenants", so no data moves.
+const membershipSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true, maxlength: 120 },
         tenantId: { type: String, required: true, index: true }, // Firebase uid
@@ -12,4 +13,4 @@ const tenantSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
-export const Tenant = mongoose.model("Tenant", tenantSchema, "tenants");
+export const Membership = mongoose.model("Membership", membershipSchema, "tenants");

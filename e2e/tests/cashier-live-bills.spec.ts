@@ -9,7 +9,7 @@ test("a customer's new order shows up on the cashier's Orders within 15 s, marke
     // start with the table settled, so this visit opens a new bill
     const open = (await (await page.request.get(`/api/orders/${SLUG}/bills?status=open`)).json()) as { _id: string; table: string }[];
     for (const b of open.filter((b) => b.table === TABLE))
-        await page.request.patch(`/api/orders/${SLUG}/bills/${b._id}`, { data: { isPayed: true } });
+        await page.request.patch(`/api/orders/${SLUG}/bills/${b._id}`, { data: { isPaid: true } });
 
     await context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
     await page.goto(`/${SLUG}/cashier/dashboard`);

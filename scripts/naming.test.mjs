@@ -44,6 +44,8 @@ test("a bill is paid (isPaid); the old isPayed is only read for the switch-over"
         "backend/packages/contracts/src/orders.ts", // accepts the old name in a request, and answers with both, for one release
         "backend/services/order/src/migrations/is-paid.ts", // renames the stored field
         "backend/services/order/src/routes/bills.routes.ts", // adds the old name to answers, for one release
+        "backend/services/order/src/index.ts", // logs the migration
+        "scripts/naming.test.mjs", // this test
     ];
     const left = grep(
         "isPayed",

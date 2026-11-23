@@ -101,7 +101,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen }: Props) {
                     <span>{showInvoice ? "Hide Invoice" : "View Invoice"}</span>
                 </button>
 
-                {!order.isPayed && (
+                {!order.isPaid && (
                     <button
                         onClick={() => onMarkPaid(order._id)}
                         className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-green-500/25"

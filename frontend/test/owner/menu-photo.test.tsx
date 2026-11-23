@@ -5,7 +5,7 @@ import { server } from "../msw";
 
 // VM-02: the owner's photo is uploaded as a file first; the item is saved with the short URL.
 vi.mock("@/lib/firebase", () => ({ auth: {} }));
-const { ResContext } = await import("@/lib/restaurantContext");
+const { ResContext } = await import("@/lib/restaurant-context");
 const { default: ItemForm } = await import("@/features/restaurant/components/ItemForm");
 // CL-09: Add and Edit are one ItemForm; without an item it adds, with one it edits.
 const AddItemPopup = (p: { onClose: () => void; onSave: (i: unknown) => void }) => <ItemForm {...p} />;

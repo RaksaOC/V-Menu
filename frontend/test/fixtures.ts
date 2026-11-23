@@ -14,7 +14,7 @@ export const order: Order = {
 export const bill: Bill = {
     _id: "665f00000000000000000041",
     table: "T1",
-    isPayed: false,
+    isPaid: false,
     createdAt: "2026-11-23T10:00:00.000Z",
     orders: [order],
 };

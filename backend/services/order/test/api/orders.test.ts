@@ -88,8 +88,8 @@ describe("kitchen and cashier", () => {
         const done = await request(app).patch(`/api/orders/${R.slug}/kitchen/${order._id}/done`).set(chef);
         expect(done.body.isDone).toBe(true);
         const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
-        const paid = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPayed: true });
-        expect(paid.body.isPayed).toBe(true);
+        const paid = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
+        expect(paid.body.isPaid).toBe(true);
         const overview = await request(app).get(`/api/orders/${R.slug}/overview`).set(owner);
         expect(overview.body).toMatchObject({ numOfOrders: 1, numOfPayments: 1, numOfUnpaidOrders: 0, numOfTables: 4 });
     });
@@ -107,18 +107,17 @@ describe("one open bill per table (VM-08)", () => {
         (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body as {
             _id: string;
             table: string;
-            isPayed: boolean;
+            isPaid: boolean;
             orders: unknown[];
         }[];
-    const setPaid = (id: string, isPayed: boolean) =>
-        request(app).patch(`/api/orders/${R.slug}/bills/${id}`).set(cashier).send({ isPayed });
+    const setPaid = (id: string, isPaid: boolean) => request(app).patch(`/api/orders/${R.slug}/bills/${id}`).set(cashier).send({ isPaid });
 
     it("10 orders joining a table's bill at the same moment make exactly 1 open bill", async () => {
         // The bill upsert itself, as placing an order does it, 10 at once: without the unique
         // index, every run made several open bills.
         const orderIds = Array.from({ length: 10 }, () => new mongoose.Types.ObjectId().toString());
         await Promise.all(orderIds.map((id) => mongoBillsRepo.addToOpenBill(R._id, "1", id)));
-        const open = await Bill.find({ resId: R._id, table: "1", isPayed: false }).lean();
+        const open = await Bill.find({ resId: R._id, table: "1", isPaid: false }).lean();
         expect(open).toHaveLength(1);
         expect(open[0].orders.map(String).sort()).toEqual([...orderIds].sort());
     });
@@ -126,7 +125,7 @@ describe("one open bill per table (VM-08)", () => {
     it("10 orders placed at the same moment end up on exactly 1 open bill", async () => {
         const results = await Promise.all(Array.from({ length: 10 }, () => place("1", 1)));
         expect(results.map((r) => r.status)).toEqual(Array(10).fill(201));
-        const open = (await bills()).filter((b) => b.table === "1" && !b.isPayed);
+        const open = (await bills()).filter((b) => b.table === "1" && !b.isPaid);
         expect(open).toHaveLength(1);
         expect(open[0].orders).toHaveLength(10);
     });
@@ -139,7 +138,7 @@ describe("one open bill per table (VM-08)", () => {
         const res = await setPaid(first._id, false);
         expect(res.status).toBe(409);
         expect(res.body.code).toBe("TABLE_HAS_OPEN_BILL");
-        expect((await bills()).filter((b) => !b.isPayed)).toHaveLength(1);
+        expect((await bills()).filter((b) => !b.isPaid)).toHaveLength(1);
     });
 
     it("re-opening a paid bill is fine when the table has no other open bill", async () => {
@@ -148,7 +147,7 @@ describe("one open bill per table (VM-08)", () => {
         await setPaid(first._id, true);
         const res = await setPaid(first._id, false);
         expect(res.status).toBe(200);
-        expect(res.body.isPayed).toBe(false);
+        expect(res.body.isPaid).toBe(false);
     });
 });
 
@@ -193,7 +192,7 @@ describe("what the customer sees after ordering (VM-07)", () => {
     it("once the bill is paid, the table's list is empty again", async () => {
         await place("1");
         const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
-        await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPayed: true });
+        await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
         const res = await tableApi("1", "/open-bill");
         expect(res.body).toEqual({ table: "1", orders: [], total: 0 });
     });
@@ -264,7 +263,7 @@ describe("kitchen queue and history (VM-10)", () => {
 
 describe("cashier bills: open ones by default, paid history a page at a time (VM-11)", () => {
     const list = (query = "") => request(app).get(`/api/orders/${R.slug}/bills${query}`).set(cashier);
-    const pay = (id: string) => request(app).patch(`/api/orders/${R.slug}/bills/${id}`).set(cashier).send({ isPayed: true });
+    const pay = (id: string) => request(app).patch(`/api/orders/${R.slug}/bills/${id}`).set(cashier).send({ isPaid: true });
 
     it("open bills only, with their orders: the default, and ?status=open", async () => {
         await place("1");
@@ -286,7 +285,7 @@ describe("cashier bills: open ones by default, paid history a page at a time (VM
             Array.from({ length: 23 }, (_, i) => ({
                 table: `t${i}`,
                 resId: R._id,
-                isPayed: true,
+                isPaid: true,
                 orders: [],
                 createdAt: new Date(Date.UTC(2026, 0, 1)),
                 updatedAt: new Date(Date.UTC(2026, 0, 1, 0, i)), // when it was paid
@@ -298,7 +297,7 @@ describe("cashier bills: open ones by default, paid history a page at a time (VM
         expect(first.body).toMatchObject({ page: 1, limit: 20, total: 23, pages: 2 });
         expect(first.body.bills).toHaveLength(20);
         expect(first.body.bills[0].table).toBe("t22");
-        expect(first.body.bills.every((b: { isPayed: boolean }) => b.isPayed)).toBe(true);
+        expect(first.body.bills.every((b: { isPaid: boolean }) => b.isPaid)).toBe(true);
         const second = await list("?status=paid&page=2");
         expect(second.body.bills.map((b: { table: string }) => b.table)).toEqual(["t2", "t1", "t0"]);
         expect((await list("?status=paid&limit=500")).body.limit).toBe(100);
@@ -307,7 +306,7 @@ describe("cashier bills: open ones by default, paid history a page at a time (VM
 
     it("is backed by an index", async () => {
         const names = (await Bill.listIndexes()).map((i: { name: string }) => i.name);
-        expect(names).toContain("resId_1_isPayed_1_updatedAt_-1");
+        expect(names).toContain("resId_1_isPaid_1_updatedAt_-1");
     });
 });
 
@@ -324,9 +323,9 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
     it("marking a bill needs true or false", async () => {
         await place("1");
         const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
-        const res = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPayed: "yes" });
+        const res = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: "yes" });
         expect(res.status).toBe(400);
-        expect(res.body.fields).toEqual({ isPayed: "Must be true or false" });
+        expect(res.body.fields).toEqual({ isPaid: "Must be true or false" });
     });
 });
 

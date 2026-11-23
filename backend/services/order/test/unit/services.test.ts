@@ -162,8 +162,8 @@ describe("bills", () => {
         expect(list.map((b) => b.table)).toEqual(["2", "1"]);
         expect(list[0].orders[0].orderedItems[0].item.name).toBe(DISH.name);
         const paid = await billing.setPaid(R1._id, list[0]._id, true);
-        expect(paid.isPayed).toBe(true);
-        expect((await billing.setPaid(R1._id, list[0]._id, false)).isPayed).toBe(false);
+        expect(paid.isPaid).toBe(true);
+        expect((await billing.setPaid(R1._id, list[0]._id, false)).isPaid).toBe(false);
     });
 
     it("needs true or false, a valid id, and this restaurant's bill", async () => {
@@ -184,16 +184,16 @@ describe("one open bill per table (VM-08)", () => {
         await billing.setPaid(R1._id, first, true);
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         expect(await status(billing.setPaid(R1._id, first, false))).toBe(409);
-        expect(bills.all.filter((b) => !b.isPayed)).toHaveLength(1);
+        expect(bills.all.filter((b) => !b.isPaid)).toHaveLength(1);
     });
 
     it("re-opens it when the table has no other open bill, and marking an open bill unpaid again is harmless", async () => {
         const { placing, billing, bills } = setup();
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         const first = bills.all[0]._id;
-        expect((await billing.setPaid(R1._id, first, false)).isPayed).toBe(false); // already open
+        expect((await billing.setPaid(R1._id, first, false)).isPaid).toBe(false); // already open
         await billing.setPaid(R1._id, first, true);
-        expect((await billing.setPaid(R1._id, first, false)).isPayed).toBe(false);
+        expect((await billing.setPaid(R1._id, first, false)).isPaid).toBe(false);
     });
 });
 

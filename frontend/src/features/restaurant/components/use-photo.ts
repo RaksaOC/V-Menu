@@ -3,7 +3,7 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 import { apiErrorMessage } from "@/lib/api";
 import { uploadMenuPhoto } from "@/features/restaurant/api";
-import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
+import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 
 export const PHOTO_TYPES = "image/jpeg,image/png,image/webp";
 const MAX_BYTES = 5 * 1024 * 1024;

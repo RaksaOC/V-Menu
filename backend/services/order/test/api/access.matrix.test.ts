@@ -78,8 +78,8 @@ beforeEach(async () => {
     const b = await order(B._id);
     ids.orderA = String(a._id);
     ids.orderB = String(b._id);
-    ids.billA = String((await Bill.create({ table: "1", resId: A._id, isPayed: false, orders: [a._id] }))._id);
-    ids.billB = String((await Bill.create({ table: "1", resId: B._id, isPayed: false, orders: [b._id] }))._id);
+    ids.billA = String((await Bill.create({ table: "1", resId: A._id, isPaid: false, orders: [a._id] }))._id);
+    ids.billB = String((await Bill.create({ table: "1", resId: B._id, isPaid: false, orders: [b._id] }))._id);
 });
 
 function urlFor(route: string) {
@@ -116,8 +116,8 @@ describe("order-service access matrix (SEC-07)", () => {
 
 describe("another restaurant's ids, through your own restaurant (SEC-07)", () => {
     it("a cashier can't settle B's bill through A", async () => {
-        expect((await send("PATCH", `/api/orders/${A.slug}/bills/${ids.billB}`, "cashier", { isPayed: true })).status).toBe(404);
-        expect(await Bill.findById(ids.billB).lean()).toMatchObject({ isPayed: false });
+        expect((await send("PATCH", `/api/orders/${A.slug}/bills/${ids.billB}`, "cashier", { isPaid: true })).status).toBe(404);
+        expect(await Bill.findById(ids.billB).lean()).toMatchObject({ isPaid: false });
     });
 
     it("a chef can't finish B's order through A", async () => {

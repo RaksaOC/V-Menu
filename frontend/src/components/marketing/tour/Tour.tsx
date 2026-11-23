@@ -4,7 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { STEPS } from "@/content/tour";
-import { SCENES } from "./scenes";
+import { SCENES } from "./Scenes";
 import styles from "./Tour.module.css";
 
 const ease = [0.22, 1, 0.36, 1] as const;

@@ -22,7 +22,7 @@ process.env.INTERNAL_API_KEY = "internal-test-key";
 trackRoutes();
 const { createApp } = await import("../../src/app.js");
 const { Restaurant } = await import("../../src/models/restaurant.model.js");
-const { Tenant } = await import("../../src/models/tenant.model.js");
+const { Membership } = await import("../../src/models/membership.model.js");
 
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
@@ -72,10 +72,10 @@ beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
     await Restaurant.create([A, B]);
     ids.staffA = String(
-        (await Tenant.create({ name: "Cash A", tenantId: "cashier-a", email: "c@a.test", role: "cashier", resId: A._id }))._id,
+        (await Membership.create({ name: "Cash A", tenantId: "cashier-a", email: "c@a.test", role: "cashier", resId: A._id }))._id,
     );
     ids.staffB = String(
-        (await Tenant.create({ name: "Cash B", tenantId: "cashier-b", email: "c@b.test", role: "cashier", resId: B._id }))._id,
+        (await Membership.create({ name: "Cash B", tenantId: "cashier-b", email: "c@b.test", role: "cashier", resId: B._id }))._id,
     );
 });
 
@@ -116,6 +116,6 @@ describe("another restaurant's ids, through your own restaurant (SEC-07)", () =>
     it.each(["PUT", "DELETE"])("%s B's staff member through A is 404, and they are unchanged", async (method) => {
         const res = await send(method, `/api/restaurants/${A.slug}/staff/${ids.staffB}`, "owner");
         expect(res.status).toBe(404);
-        expect(await Tenant.findById(ids.staffB).lean()).toMatchObject({ name: "Cash B", role: "cashier", resId: B._id });
+        expect(await Membership.findById(ids.staffB).lean()).toMatchObject({ name: "Cash B", role: "cashier", resId: B._id });
     });
 });
