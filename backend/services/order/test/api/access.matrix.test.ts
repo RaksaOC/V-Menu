@@ -3,6 +3,7 @@ import {
     callerHeaders,
     listRoutes,
     mismatches,
+    NO_APP_TOKEN,
     only,
     PUBLIC,
     trackRoutes,
@@ -19,6 +20,7 @@ import type { Clients } from "../../src/clients/index.js";
 // SEC-07: every order-service route, tried as every kind of caller. A new route fails the
 // inventory test until it's added here with its rule.
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
+process.env.INTERNAL_API_KEY = "internal-test-key";
 trackRoutes();
 const { createApp } = await import("../../src/app.js");
 const { Order } = await import("../../src/models/order.model.js");
@@ -58,6 +60,7 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /api/orders/:slug/overview", only(["owner", "cashier"])],
     ["GET /api/orders/owner/restaurants", only(["owner"], { ownData: true })],
     ["GET /api/orders/owner/overview", only(["owner"], { ownData: true })],
+    ["GET /internal/orders/without-bill", NO_APP_TOKEN], // VM-23: the internal key only
 ];
 
 let mongo: MongoMemoryServer;
@@ -113,6 +116,13 @@ describe("order-service access matrix (SEC-07)", () => {
         for (const caller of [...CALLERS].sort((x, y) => Number(row[x] === "ok") - Number(row[y] === "ok")))
             got[caller] = (await send(method, urlFor(route), caller)).status;
         expect(mismatches(row, got)).toEqual([]);
+    });
+});
+
+describe("internal routes (VM-23)", () => {
+    it("answers with the internal key", async () => {
+        const res = await request(app).get("/internal/orders/without-bill").set("x-internal-key", "internal-test-key");
+        expect(res.status).toBe(200);
     });
 });
 

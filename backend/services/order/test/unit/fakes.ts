@@ -8,19 +8,26 @@ let seq = 0;
 const within = (range: { from?: Date; to?: Date }, at: Date) => (!range.from || at >= range.from) && (!range.to || at < range.to);
 export const newId = () => (++seq).toString(16).padStart(24, "0");
 
-export function fakeOrders(): OrdersRepo & { all: OrderRecord[] } {
+export function fakeOrders(): OrdersRepo & { all: OrderRecord[]; onBill: (id: string) => boolean; failCreates: number } {
     const all: OrderRecord[] = [];
     let clock = 0;
     const inRes = (resIds: string[]) => (o: OrderRecord) => resIds.includes(o.resId);
-    return {
+    const repo: OrdersRepo & { all: OrderRecord[]; onBill: (id: string) => boolean; failCreates: number } = {
         all,
-        async create({ table, orderedItems, resId }) {
+        onBill: () => false, // fakeBills fills this in
+        failCreates: 0, // VM-23: the next N saves throw, like a database hiccup
+        async create({ table, orderedItems, resId, billId }) {
+            if (repo.failCreates > 0) {
+                repo.failCreates--;
+                throw new Error("database hiccup");
+            }
             const at = new Date(Date.UTC(2026, 0, 1, 0, 0, clock++));
             const order = {
                 _id: newId(),
                 table,
                 orderedItems,
                 resId,
+                ...(billId && { billId }),
                 status: "pending" as const,
                 statusHistory: [{ status: "pending" as const, at, by: "customer" }],
                 orderedAt: at,
@@ -55,19 +62,81 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[] } {
             const o = all.find((x) => x._id === id && x.resId === resId);
             return o ? { ...o } : null;
         },
+        async setBill(resId, id, billId) {
+            const o = all.find((x) => x._id === id && x.resId === resId);
+            if (o) o.billId = billId;
+        },
+        async remove(resId, id) {
+            const i = all.findIndex((x) => x._id === id && x.resId === resId);
+            if (i >= 0) all.splice(i, 1);
+        },
+        async listWithoutBill({ from, to }, limit) {
+            const found = all
+                .filter((o) => o.status !== "cancelled" && o.createdAt >= from && o.createdAt < to && !repo.onBill(o._id))
+                .sort((a, b) => +a.createdAt - +b.createdAt);
+            return {
+                total: found.length,
+                orders: found.slice(0, limit).map((o) => ({
+                    _id: o._id,
+                    resId: o.resId,
+                    table: o.table,
+                    createdAt: o.createdAt,
+                    ...(o.billId && { billId: o.billId }),
+                })),
+            };
+        },
     };
+    return repo;
 }
 
-export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (Omit<BillRecord, "orders"> & { orders: string[] })[] } {
-    const all: (Omit<BillRecord, "orders"> & { orders: string[] })[] = [];
+type FakeBill = Omit<BillRecord, "orders"> & { orders: string[] };
+
+export function fakeBills(orders: { all: OrderRecord[]; onBill?: (id: string) => boolean }): BillsRepo & {
+    all: FakeBill[];
+    failUpdates: number;
+} {
+    const all: FakeBill[] = [];
     let clock = 0;
+    orders.onBill = (id) => all.some((b) => b.orders.includes(id));
+    /** VM-23: the next N bill updates throw, like a database hiccup. */
+    const hiccup = () => {
+        if (repo.failUpdates > 0) {
+            repo.failUpdates--;
+            throw new Error("database hiccup");
+        }
+    };
     const withOrders = (b: (typeof all)[number]): BillRecord => ({
         ...b,
         orders: b.orders.map((id) => orders.all.find((o) => o._id === id)!),
     });
-    return {
+    const repo: BillsRepo & { all: FakeBill[]; failUpdates: number } = {
         all,
-        async addToOpenBill(resId, table, orderId) {
+        failUpdates: 0,
+        async openBillFor(resId, table) {
+            let bill = all.find((b) => b.resId === resId && b.table === table && !b.isPaid);
+            if (!bill) {
+                bill = { _id: newId(), resId, table, isPaid: false, orders: [], createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, clock++)) };
+                all.push(bill);
+            }
+            return bill._id;
+        },
+        async attachOrder(billId, orderId) {
+            hiccup();
+            const bill = all.find((b) => b._id === billId && !b.isPaid);
+            if (!bill) return false;
+            if (!bill.orders.includes(orderId)) bill.orders.push(orderId);
+            return true;
+        },
+        async detachOrder(resId, orderId) {
+            for (const b of all) if (b.resId === resId) b.orders = b.orders.filter((id) => id !== orderId);
+        },
+        async removeEmptyOpen(resId, table) {
+            const i = all.findIndex((b) => b.resId === resId && b.table === table && !b.isPaid && b.orders.length === 0);
+            if (i >= 0) all.splice(i, 1);
+        },
+        // the old way, kept only so the failing tests run against the old code
+        async addToOpenBill(resId: string, table: string, orderId: string) {
+            hiccup();
             let bill = all.find((b) => b.resId === resId && b.table === table && !b.isPaid);
             if (!bill) {
                 bill = { _id: newId(), resId, table, isPaid: false, orders: [], createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, clock++)) };
@@ -76,14 +145,14 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
             bill.orders.push(orderId);
         },
         async countOpen(resIds) {
-            return all.filter((b) => resIds.includes(b.resId) && !b.isPaid).length;
+            return all.filter((b) => resIds.includes(b.resId) && !b.isPaid && b.orders.length > 0).length;
         },
         async listPaid(resIds, range = {}) {
             return all.filter((b) => resIds.includes(b.resId) && b.isPaid && within(range, b.updatedAt!)).map(withOrders);
         },
         async listOpen(resId) {
             return all
-                .filter((b) => b.resId === resId && !b.isPaid)
+                .filter((b) => b.resId === resId && !b.isPaid && b.orders.length > 0)
                 .sort((a, b) => +b.createdAt - +a.createdAt)
                 .map(withOrders);
         },
@@ -109,7 +178,8 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
             b.updatedAt = new Date(Date.UTC(2026, 0, 1, 0, 0, clock++));
             return withOrders(b);
         },
-    };
+    } as BillsRepo & { all: FakeBill[]; failUpdates: number };
+    return repo;
 }
 
 export const R1 = { _id: "665f00000000000000000001", name: "Mee Keav", slug: "mee-keav", ownerId: "owner1" };

@@ -11,6 +11,7 @@ import { Order } from "../../src/models/order.model.js";
 import { mongoBillsRepo } from "../../src/repositories/bills.repo.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
+process.env.INTERNAL_API_KEY = "internal-test-key";
 
 const R = { _id: "665f00000000000000000001", name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1" };
 const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
@@ -86,6 +87,61 @@ describe("placing orders", () => {
     it("answers 503 when menu-service is down", async () => {
         menuUp = false;
         expect((await place()).status).toBe(503);
+    });
+});
+
+describe("an order is never left off its bill (VM-23)", () => {
+    /** The real repository, whose bill update throws the first `times` calls. */
+    function flakyApp(times: number) {
+        let left = times;
+        const fail = () => {
+            if (left-- > 0) throw new Error("database hiccup");
+        };
+        const bills = {
+            ...mongoBillsRepo,
+            attachOrder: async (billId: string, orderId: string) => {
+                fail();
+                return mongoBillsRepo.attachOrder(billId, orderId);
+            },
+            addToOpenBill: async (resId: string, table: string, orderId: string) => {
+                fail();
+                return (mongoBillsRepo as unknown as { addToOpenBill: typeof bills.addToOpenBill }).addToOpenBill(resId, table, orderId);
+            },
+        };
+        return createApp({ clients, bills, lookupRestaurant: async () => R });
+    }
+    const send = (target: ReturnType<typeof createApp>) =>
+        request(target)
+            .post(`/api/orders/${R.slug}`)
+            .send({ table: "1", orderedItems: [{ item: { _id: ITEM._id }, quantity: 1 }] });
+
+    it("the bill update fails once: 201, and the order is on the bill with its id", async () => {
+        const res = await send(flakyApp(1));
+        expect(res.status).toBe(201);
+        expect(res.body).not.toHaveProperty("billId");
+        const [bill] = await Bill.find({ resId: R._id }).lean();
+        expect(bill.orders.map(String)).toEqual([res.body._id]);
+        expect(String((await Order.findById(res.body._id).lean())!.billId)).toBe(String(bill._id));
+    });
+
+    it("the bill update keeps failing: 503, no order, and no empty bill", async () => {
+        expect((await send(flakyApp(99))).status).toBe(503);
+        expect(await Order.countDocuments()).toBe(0);
+        expect(await Bill.countDocuments()).toBe(0);
+    });
+
+    it("the internal check lists an order that's on no bill, and not one that is", async () => {
+        const old = new Date(Date.now() - 3_600_000);
+        const line = [{ item: ITEM, quantity: 1 }];
+        const lost = await Order.create({ table: "1", resId: R._id, orderedItems: line, createdAt: old });
+        const billed = await Order.create({ table: "2", resId: R._id, orderedItems: line, createdAt: old });
+        await Bill.create({ table: "2", resId: R._id, isPaid: false, orders: [billed._id] });
+        const url = "/internal/orders/without-bill";
+        expect((await request(app).get(url)).status).toBe(401);
+        const res = await request(app).get(url).set("x-internal-key", "internal-test-key");
+        expect(res.status).toBe(200);
+        expect(res.body.count).toBe(1);
+        expect(res.body.orders).toMatchObject([{ _id: String(lost._id), table: "1", resId: R._id }]);
     });
 });
 
