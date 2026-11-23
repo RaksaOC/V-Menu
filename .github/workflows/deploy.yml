@@ -150,7 +150,7 @@ jobs:
           echo "url=$URL" >> "$GITHUB_OUTPUT"
 
   # SEC-09: a passive OWASP ZAP baseline scan of staging after each staging deploy (and not
-  # after a rollback). Baseline = spider plus passive checks only: no attacks, no forms sent.
+  # after a rollback), after checking the pages send the security headers (SEC-02). Baseline = spider plus passive checks only: no attacks, no forms sent.
   # Fails on a High alert that isn't in .zap/known-high.txt. The HTML and JSON reports are kept
   # as the zap-baseline artifact. B7 will run this together with the other post-deploy checks.
   zap:
@@ -165,6 +165,12 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+
+      # SEC-02: the pages must send the security headers (landing, a customer page, staff logins).
+      - name: Security headers
+        env:
+          TARGET: ${{ needs.deploy.outputs.url }}
+        run: node scripts/check-headers.mjs "$TARGET" / /demo-bistro/customer/T1 /owner/login /demo-bistro/cashier/login
 
       - name: Scan (passive checks only)
         env:

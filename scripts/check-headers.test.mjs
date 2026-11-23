@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { spawnSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -26,10 +26,17 @@ async function withServer(headers, fn) {
     try {
         return await fn(`http://127.0.0.1:${server.address().port}`);
     } finally {
+        server.closeAllConnections(); // fetch keeps connections alive; close() would wait
         server.close();
     }
 }
-const check = (url) => spawnSync(process.execPath, [script, url, "/", "/menu"], { encoding: "utf8" });
+// Async on purpose: a synchronous spawn would block this process, so its test server couldn't answer.
+const check = (url) =>
+    new Promise((resolve) =>
+        execFile(process.execPath, [script, url, "/", "/menu"], { encoding: "utf8" }, (err, stdout, stderr) =>
+            resolve({ status: err ? err.code : 0, stdout, stderr }),
+        ),
+    );
 
 test("the check script exists", () => assert.ok(existsSync(script)));
 
