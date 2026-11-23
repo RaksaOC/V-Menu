@@ -4,6 +4,7 @@ import {useEffect, useState} from "react";
 import {ToastContainer} from "react-toastify";
 import {toast} from "@/lib/toast";
 import {placeOrder as sendOrder} from "@/features/customer/api";
+import {clearCart, readCart, saveCart} from "@/features/customer/cart";
 import CartItemCard from "@/features/customer/components/CartItemCard";
 import {CartItem} from "@/lib/types/CartItem";
 import {OrderInput} from "@/lib/types/Order";
@@ -18,16 +19,17 @@ export default function CartPage() {
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const params = useParams();
 
+    // VM-05: this restaurant's and table's own cart; the order goes to the table in the URL.
+    const slug = String(params.res ?? "");
+    const table = String(params.table ?? "");
+
     useEffect(() => {
-        const savedCart = localStorage.getItem("cartItems");
-        if (savedCart) {
-            setCartItems(JSON.parse(savedCart));
-        }
-    }, []);
+        setCartItems(readCart(slug, table));
+    }, [slug, table]);
 
     const updateCart = (updatedItems: CartItem[]) => {
         setCartItems(updatedItems);
-        localStorage.setItem("cartItems", JSON.stringify(updatedItems));
+        saveCart(slug, table, updatedItems);
     };
 
     const increaseQuantity = (index: number) => {
@@ -64,19 +66,18 @@ export default function CartPage() {
         setIsPlacingOrder(true);
 
         try {
-            const table: string = JSON.parse(localStorage.getItem("table") || "") || "";
             const orderToAdd: OrderInput = {
-                table: table,
+                table,
                 isDone: false,
                 orderedItems: cartItems,
             }
-            await sendOrder(String(params.res), orderToAdd);
+            await sendOrder(slug, orderToAdd);
+            clearCart(slug, table); // straight away, so the same cart can't be sent twice
 
             toast.success("Order placed successfully!");
 
             setTimeout(() => {
                 setCartItems([]);
-                localStorage.removeItem("cartItems");
                 router.back();
             }, 2000);
 

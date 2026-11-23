@@ -11,6 +11,8 @@ import SkeletonMenuCard from "@/components/ui/skeletons/SkeletonMenuCard";
 import {apiErrorCode} from "@/lib/api";
 import TableProblem, {type TableProblemKind} from "@/features/customer/components/TableProblem";
 import {checkTable, getMenu} from "@/features/customer/api";
+import {reconcileCart} from "@/features/customer/cart";
+import {toast} from "@/lib/toast";
 
 export default function CustomerPage() {
     const [items, setItems] = useState<ItemOutput[]>([]);
@@ -27,8 +29,11 @@ export default function CustomerPage() {
         setProblem(null);
         try {
             await checkTable(resSlug, table);
-            localStorage.setItem("table", JSON.stringify(table));
-            setItems(await getMenu(resSlug));
+            const menu = await getMenu(resSlug);
+            setItems(menu);
+            // VM-05: dishes taken off the menu since they were added leave the cart.
+            const dropped = reconcileCart(resSlug, table, menu);
+            if (dropped) toast.info(`${dropped} ${dropped === 1 ? "item is" : "items are"} no longer available and ${dropped === 1 ? "was" : "were"} removed from your cart.`);
         } catch (error) {
             const code = apiErrorCode(error);
             setProblem(code === "TABLE_CLOSED" ? "closed" : code === "RESTAURANT_NOT_FOUND" ? "no-restaurant" : code === "TABLE_NOT_FOUND" ? "no-table" : "error");
@@ -104,6 +109,8 @@ export default function CustomerPage() {
                                 items.map((item, index) => (
                                     <ItemCard
                                         key={index}
+                                        slug={resSlug}
+                                        table={table}
                                         _id={item._id}
                                         name={item.name}
                                         image={item.image}
