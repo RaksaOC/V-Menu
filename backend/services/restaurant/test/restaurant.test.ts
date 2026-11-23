@@ -58,6 +58,15 @@ describe("sign-up and sign-in", () => {
         expect(res.headers["set-cookie"][0]).toMatch(/^token=.*HttpOnly/);
     });
 
+    it("answers the sign-in with the httpOnly cookie only, never the token in the body (SEC-01)", async () => {
+        const slug = await signUp();
+        const res = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "cashier", resSlug: slug });
+        expect(res.status).toBe(200);
+        expect(res.headers["set-cookie"][0]).toMatch(/^token=[^;]+;.*HttpOnly.*SameSite=Lax/i);
+        expect(JSON.stringify(res.body)).not.toMatch(/eyJ/); // no JWT anywhere in the answer
+        expect(res.body.appToken).toBeUndefined();
+    });
+
     it("blocks a NoSQL-injection style email", async () => {
         await signUp();
         const res = await request(app)
