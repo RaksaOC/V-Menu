@@ -34,5 +34,5 @@ export function sameOrigin(req: Request, _res: Response, next: NextFunction) {
     );
     if (host && allowed.has(host)) return next();
     req.log?.warn({ origin, host: req.headers.host }, "cross-site write refused");
-    next(forbidden("Cross-site request refused"));
+    next(forbidden("Cross-site request refused", "cross_site"));
 }

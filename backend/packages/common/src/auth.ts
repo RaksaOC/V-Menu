@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { jwtVerify, SignJWT } from "jose";
+import { errors as joseErrors, jwtVerify, SignJWT } from "jose";
 import { forbidden, unauthorized } from "./errors.js";
 
 export type Role = "owner" | "cashier" | "chef";
@@ -51,15 +51,15 @@ function readToken(req: Request): string | null {
 export function requireRole(...roles: Role[]) {
     return async (req: Request, _res: Response, next: NextFunction) => {
         const token = readToken(req);
-        if (!token) return next(unauthorized());
+        if (!token) return next(unauthorized(undefined, "no_token"));
         try {
             const { payload } = await jwtVerify(token, secret(), { issuer: ISSUER, algorithms: ["HS256"] });
             const user = payload as unknown as AppUser;
-            if (!roles.includes(user.role)) return next(forbidden("Wrong role for this action"));
+            if (!roles.includes(user.role)) return next(forbidden("Wrong role for this action", "wrong_role", user));
             req.user = user;
             next();
-        } catch {
-            next(unauthorized("Invalid or expired token"));
+        } catch (err) {
+            next(unauthorized("Invalid or expired token", err instanceof joseErrors.JWTExpired ? "expired" : "bad_token"));
         }
     };
 }
@@ -67,5 +67,5 @@ export function requireRole(...roles: Role[]) {
 // The rule every service applies once it knows which restaurant a request is about.
 export function assertRestaurantAccess(user: AppUser, restaurant: { _id: string; ownerId: string }) {
     const ok = user.role === "owner" ? restaurant.ownerId === user.uid : String(user.resId) === String(restaurant._id);
-    if (!ok) throw forbidden("No access to this restaurant");
+    if (!ok) throw forbidden("No access to this restaurant", "other_restaurant", user);
 }

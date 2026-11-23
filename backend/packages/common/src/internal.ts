@@ -8,7 +8,7 @@ export function requireInternal(req: Request, _res: Response, next: NextFunction
     const given = Buffer.from(String(req.headers["x-internal-key"] ?? ""));
     const expected = Buffer.from(process.env.INTERNAL_API_KEY ?? "");
     if (expected.length === 0 || given.length !== expected.length || !timingSafeEqual(given, expected)) {
-        return next(unauthorized("Internal route"));
+        return next(unauthorized("Internal route", req.headers["x-internal-key"] ? "bad_token" : "no_token"));
     }
     next();
 }
@@ -35,7 +35,11 @@ export async function callService<T>(baseUrl: string, path: string, req: Request
     if (!res.ok) {
         // 4xx answers from the other service are passed on; 5xx become 502.
         // The code too (VM-06), so the browser can tell, say, a closed table from a sold-out dish.
-        if (res.status < 500) throw new HttpError(res.status, body.message ?? "Request rejected", body.code);
+        if (res.status < 500) {
+            const passedOn = new HttpError(res.status, body.message ?? "Request rejected", body.code);
+            passedOn.passedOn = true; // SEC-10: the service that refused has already counted it
+            throw passedOn;
+        }
         req.log?.error({ status: res.status, target: baseUrl + path }, "dependency failed");
         throw new HttpError(502, "A required service failed");
     }

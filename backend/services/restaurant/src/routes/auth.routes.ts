@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
+import { rateLimitHandler } from "@vmenu/common";
 import { sessionHours } from "../services/session.js";
 import type { RouteContext } from "./context.js";
 
@@ -17,7 +18,7 @@ function cookieOptions(hours = sessionHours()) {
 /** /api/auth: sign-up and sign-in with a Firebase ID token, and sign-out. */
 export function authRoutes({ services }: RouteContext) {
     const r = Router();
-    r.use(rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false }));
+    r.use(rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false, handler: rateLimitHandler }));
     r.post("/signup", async (req, res) => {
         res.status(201).json(await services.auth.signup(req.body));
     });

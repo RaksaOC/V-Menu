@@ -18,11 +18,11 @@ export function authService({ restaurants, memberships, verifyIdToken, places }:
     // The browser signs in with Firebase, then sends the Firebase ID token here.
     async function identity(body: unknown) {
         const given = IdTokenBody.safeParse(body ?? {});
-        if (!given.success) throw unauthorized("Missing Firebase ID token");
+        if (!given.success) throw unauthorized("Missing Firebase ID token", "no_token");
         try {
             return await verifyIdToken(given.data.idToken);
         } catch {
-            throw unauthorized("Firebase sign-in could not be verified");
+            throw unauthorized("Firebase sign-in could not be verified", "bad_token");
         }
     }
 
@@ -58,13 +58,18 @@ export function authService({ restaurants, memberships, verifyIdToken, places }:
             const { role, resSlug: slug } = parse(LoginBody, body);
             const hours = sessionHours();
             if (role === "owner") {
-                if (!(await memberships.isOwner(who.uid))) throw unauthorized("This account is not a restaurant owner");
+                if (!(await memberships.isOwner(who.uid)))
+                    throw unauthorized("This account is not a restaurant owner", "wrong_role", { role, email: who.email });
                 return { role, hours, token: await signAppToken({ uid: who.uid, email: who.email, role }, `${hours}h`) };
             }
             if (!slug) throw badRequest("Restaurant is required");
             const restaurant = await places.find(slug);
             if (!(await memberships.hasRole(String(restaurant._id), role, who)))
-                throw unauthorized("You do not have this role at this restaurant");
+                throw unauthorized("You do not have this role at this restaurant", "wrong_role", {
+                    role,
+                    email: who.email,
+                    resId: String(restaurant._id),
+                });
             const token = await signAppToken(
                 { uid: who.uid, email: who.email, role, resId: String(restaurant._id), resSlug: restaurant.slug },
                 `${hours}h`,
