@@ -26,6 +26,14 @@ export function authService({ restaurants, memberships, verifyIdToken, places }:
         }
     }
 
+    /** A staff sign-in. VM-12: a verified email takes up the invites waiting for it (VM-13: never an
+     *  unverified one, since anyone can sign up with someone else's email). */
+    async function staffIdentity(body: unknown) {
+        const who = await identity(body);
+        if (who.emailVerified) await memberships.linkInvites(who.email, who.uid);
+        return who;
+    }
+
     return {
         /** New owner: creates the restaurant and gives the owner all three roles. */
         async signup(body: unknown) {
@@ -38,7 +46,7 @@ export function authService({ restaurants, memberships, verifyIdToken, places }:
 
         /** Which restaurants and roles this person has: { "Name - slug": ["owner", "cashier"] } */
         async memberships(body: unknown) {
-            const who = await identity(body);
+            const who = await staffIdentity(body);
             const roles = await memberships.forPerson(who);
             const byId = new Map((await restaurants.byIds([...new Set(roles.map((t) => t.resId))])).map((r) => [String(r._id), r]));
             const map: Record<string, string[]> = {};
@@ -54,7 +62,7 @@ export function authService({ restaurants, memberships, verifyIdToken, places }:
 
         /** An app token with one role (and, for staff, one restaurant), lasting `hours`. */
         async login(body: unknown) {
-            const who = await identity(body);
+            const who = await staffIdentity(body);
             const { role, resSlug: slug } = parse(LoginBody, body);
             const hours = sessionHours();
             if (role === "owner") {

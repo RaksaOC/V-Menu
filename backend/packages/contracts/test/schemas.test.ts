@@ -242,8 +242,13 @@ describe("restaurants", () => {
     it("restaurant and staff bodies", () => {
         ok(C.CreateRestaurantBody, { name: "Second" });
         expect(fieldsOf(C.CreateRestaurantBody, {})).toEqual(["name"]);
-        expect(C.AddStaffBody.parse({ name: "Bob", email: "BOB@x.test", tenantId: "bob", role: "chef" }).email).toBe("bob@x.test");
-        expect(fieldsOf(C.AddStaffBody, { name: "Bob", email: "bob", tenantId: "bob", role: "owner" }).sort()).toEqual(["email", "role"]);
+        // VM-12: an invite is name, email and role; an account id sent with it is dropped
+        expect(C.AddStaffBody.parse({ name: "Bob", email: "BOB@x.test", tenantId: "bob", role: "chef" })).toEqual({
+            name: "Bob",
+            email: "bob@x.test",
+            role: "chef",
+        });
+        expect(fieldsOf(C.AddStaffBody, { name: "Bob", email: "bob", role: "owner" }).sort()).toEqual(["email", "role"]);
         ok(C.UpdateStaffBody, {});
         expect(fieldsOf(C.UpdateStaffBody, { role: "owner" })).toEqual(["role"]);
     });
@@ -262,6 +267,7 @@ describe("restaurants", () => {
         };
         fieldsOf(C.StaffMember, { ...member, createdAt: undefined });
         ok(C.StaffMember, member);
+        ok(C.StaffMember, { ...member, tenantId: null }); // an invite nobody has accepted yet (VM-12)
         ok(C.StaffOverview, [{ resName: "A", staff: [member] }]);
         ok(C.Memberships, { "Mee Keav - mee-keav-abc123": ["owner", "chef"] });
         fieldsOf(C.Memberships, { "A - a": ["admin"] });

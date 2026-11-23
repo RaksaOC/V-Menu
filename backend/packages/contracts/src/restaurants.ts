@@ -20,7 +20,9 @@ export type LoginBody = z.infer<typeof LoginBody>;
 export const CreateRestaurantBody = z.object({ name: text(120) });
 export type CreateRestaurantBody = z.infer<typeof CreateRestaurantBody>;
 
-export const AddStaffBody = z.object({ name: text(120), email: Email, tenantId: text(128), role: StaffRole });
+/** VM-12: an invite. The person's account is linked when they first sign in with that email,
+ *  verified; an account id sent here is ignored, so an owner can't attach a role to someone's account. */
+export const AddStaffBody = z.object({ name: text(120), email: Email, role: StaffRole });
 export type AddStaffBody = z.infer<typeof AddStaffBody>;
 
 export const UpdateStaffBody = z.object({ name: text(120).optional(), email: Email.optional(), role: StaffRole.optional() });
@@ -40,7 +42,8 @@ export type Restaurant = z.infer<typeof Restaurant>;
 export const StaffMember = z.object({
     _id: z.string(),
     name: z.string(),
-    tenantId: z.string(),
+    /** Their Firebase uid; null while the invite is pending (VM-12). */
+    tenantId: z.string().nullable(),
     email: z.string(),
     role: Role,
     resId: z.string(),

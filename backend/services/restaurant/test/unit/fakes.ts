@@ -32,8 +32,9 @@ export function fakeRestaurants(): RestaurantsRepo & { all: RestaurantRecord[] }
     };
 }
 
-// like the repo: by account, or by email only when it's verified (VM-13)
-const matches = (t: MembershipRecord, who: Person) => t.tenantId === who.uid || (who.emailVerified && t.email === who.email);
+// like the repo: by account, or an invite for their email when it's verified (VM-13, VM-12)
+const matches = (t: MembershipRecord, who: Person) =>
+    t.tenantId === who.uid || (who.emailVerified && t.tenantId === null && t.email === who.email);
 
 export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] } {
     const all: MembershipRecord[] = [];
@@ -51,6 +52,14 @@ export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] }
         },
         async hasRole(resId, role, who) {
             return all.some((t) => t.resId === resId && t.role === role && matches(t, who));
+        },
+        async emailHasRole(resId, role, email) {
+            return all.some((t) => t.resId === resId && t.role === role && t.email === email);
+        },
+        async linkInvites(email, uid) {
+            const invites = all.filter((t) => t.email === email && t.tenantId === null);
+            for (const t of invites) t.tenantId = uid;
+            return invites.length;
         },
         async inRestaurants(resIds) {
             return all.filter((t) => resIds.includes(t.resId)).map((t) => ({ ...t }));

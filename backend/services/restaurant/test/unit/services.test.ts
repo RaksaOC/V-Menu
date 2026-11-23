@@ -86,7 +86,7 @@ describe("sign-up and sign-in", () => {
         const { auth, places, memberships } = setup();
         const r = await places.createForOwner("Mee Keav", { ...ALICE, name: "Alice" });
         await memberships.createMany([
-            { name: "Bob", tenantId: "pending", email: "bob@x.test", role: "chef", resId: String(r._id) }, // invited by email
+            { name: "Bob", tenantId: null, email: "bob@x.test", role: "chef", resId: String(r._id) }, // invited by email
             { name: "Bob", tenantId: "bob", email: "bob@x.test", role: "chef", resId: String(r._id) }, // same role twice
             { name: "Bob", tenantId: "bob", email: "bob@x.test", role: "cashier", resId: "gone-restaurant" },
         ]);
@@ -173,7 +173,7 @@ describe("staff roles matched by email need a verified email (VM-13)", () => {
     async function bistroWithBob() {
         const s = setup();
         const r = await s.places.createForOwner("Bistro", { uid: "owner", email: "owner@x.test", name: "Ory" });
-        await s.memberships.createMany([{ name: "Bob", tenantId: "", email: "bob@x.test", role: "cashier", resId: String(r._id) }]);
+        await s.memberships.createMany([{ name: "Bob", tenantId: null, email: "bob@x.test", role: "cashier", resId: String(r._id) }]);
         return { ...s, slug: r.slug };
     }
 

@@ -5,7 +5,8 @@ export type TenantRole = "owner" | "cashier" | "chef";
 export interface MembershipRecord {
     _id: string;
     name: string;
-    tenantId: string;
+    /** the person's Firebase uid; null for an invite nobody has accepted yet (VM-12) */
+    tenantId: string | null;
     email: string;
     role: TenantRole;
     resId: string;
@@ -18,8 +19,12 @@ export interface Person {
     emailVerified: boolean;
 }
 
-/** Their account, and their email if it's verified: anyone can sign up with someone else's email. */
-const matching = ({ uid, email, emailVerified }: Person) => (emailVerified ? { $or: [{ tenantId: uid }, { email }] } : { tenantId: uid });
+/**
+ * Their account, and invites for their email if it's verified: anyone can sign up with someone
+ * else's email (VM-13). VM-12: an invite that an account has taken stays with that account.
+ */
+const matching = ({ uid, email, emailVerified }: Person) =>
+    emailVerified ? { $or: [{ tenantId: uid }, { email, tenantId: null }] } : { tenantId: uid };
 
 /** Every MongoDB query on memberships: who has which role where (CL-04). */
 export interface MembershipsRepo {
@@ -29,6 +34,11 @@ export interface MembershipsRepo {
     /** every role of this person, matched by account, or by verified email (VM-13) */
     forPerson(who: Person): Promise<MembershipRecord[]>;
     hasRole(resId: string, role: string, who: Person): Promise<boolean>;
+    /** is this email already listed with this role here, linked or not (VM-12: no duplicate invites) */
+    emailHasRole(resId: string, role: string, email: string): Promise<boolean>;
+    /** VM-12: gives this account every invite for its email that no account has taken yet. Call it
+     *  only with a verified email (VM-13). Returns how many were linked. */
+    linkInvites(email: string, uid: string): Promise<number>;
     inRestaurants(resIds: string[]): Promise<MembershipRecord[]>;
     createMany(list: NewTenant[]): Promise<MembershipRecord[]>;
     get(resId: string, id: string): Promise<MembershipRecord | null>;
@@ -45,6 +55,12 @@ export const mongoMembershipsRepo: MembershipsRepo = {
     forPerson: (who) => Membership.find(matching(who)).lean<MembershipRecord[]>(),
     async hasRole(resId, role, who) {
         return Boolean(await Membership.exists({ resId, role, ...matching(who) }));
+    },
+    async emailHasRole(resId, role, email) {
+        return Boolean(await Membership.exists({ resId, role, email }));
+    },
+    async linkInvites(email, uid) {
+        return (await Membership.updateMany({ email, tenantId: null }, { $set: { tenantId: uid } })).modifiedCount;
     },
     // the ids are restaurants this owner owns, not raw input; sanitizeFilter would strip the $in
     inRestaurants: (resIds) => Membership.find({ resId: mongoose.trusted({ $in: resIds }) }).lean<MembershipRecord[]>(),

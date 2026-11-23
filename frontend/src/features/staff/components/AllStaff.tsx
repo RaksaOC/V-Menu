@@ -5,6 +5,7 @@ import { getAllStaff, type RestaurantStaff } from "@/features/staff/api";
 import { Calendar, ChevronsUpDown, CreditCard, Crown, Mail, Pencil, Search, Users, Utensils, Building2, House } from "lucide-react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { prettyDate } from "@/lib/dates";
+import InvitePending from "@/features/staff/components/InvitePending";
 import type { StaffMember } from "@vmenu/contracts";
 
 const getRoleBadge = (role: string) => {
@@ -357,8 +358,9 @@ export default function AllStaff() {
                                                                         .toUpperCase()}
                                                                 </span>
                                                             </div>
-                                                            <div>
+                                                            <div className="flex flex-col items-start gap-1">
                                                                 <p className="font-medium text-gray-900">{member.name}</p>
+                                                                <InvitePending member={member} />
                                                             </div>
                                                         </div>
                                                     </td>
@@ -392,7 +394,11 @@ export default function AllStaff() {
                             {/* Mobile Cards */}
                             <div className="lg:hidden p-4 space-y-3">
                                 {restaurant.staff.map((member) => (
-                                    <div key={member._id} className="bg-gray-50 rounded-xl border border-gray-100 p-4">
+                                    <div
+                                        key={member._id}
+                                        data-member={member._id}
+                                        className="bg-gray-50 rounded-xl border border-gray-100 p-4"
+                                    >
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                                                 <span className="text-blue-600 font-semibold text-sm">
@@ -405,8 +411,9 @@ export default function AllStaff() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between gap-2 h-full">
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-col items-start gap-1 min-w-0">
                                                         <p className="font-medium text-gray-900 truncate">{member.name}</p>
+                                                        <InvitePending member={member} />
                                                     </div>
                                                     <span className={getRoleBadge(member.role)}>
                                                         {getRoleIcon(member.role)}

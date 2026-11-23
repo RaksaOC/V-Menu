@@ -35,11 +35,11 @@ export function staffService({ restaurants, memberships }: { restaurants: Restau
 
         async add(user: AppUser, slug: string, body: unknown) {
             const resId = await owned(user, slug); // access first: 403 before 400
-            const { name, email, tenantId, role } = parse(AddStaffBody, body);
-            // not a sign-in: the same email already listed for that role is a duplicate (VM-13 aside)
-            if (await memberships.hasRole(resId, role, { uid: tenantId, email, emailVerified: true }))
-                throw new HttpError(409, "This person already has that role here");
-            const [created] = await memberships.createMany([{ name, email, tenantId, role, resId }]);
+            const { name, email, role } = parse(AddStaffBody, body);
+            // VM-12: an invite. The email arrives lowercased, so this is a case-insensitive match.
+            if (await memberships.emailHasRole(resId, role, email)) throw new HttpError(409, "This person already has that role here");
+            // no account yet: the person's first verified sign-in links it (auth.service)
+            const [created] = await memberships.createMany([{ name, email, tenantId: null, role, resId }]);
             return created;
         },
 

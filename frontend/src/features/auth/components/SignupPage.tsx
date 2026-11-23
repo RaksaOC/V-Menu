@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { createUserWithEmailAndPassword, reload, sendEmailVerification, type User, UserCredential } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, type User, UserCredential } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { signup } from "@/features/auth/api";
 import { motion } from "framer-motion";
-import { Store, User as UserIcon, Mail, Lock, ArrowRight, MailCheck } from "lucide-react";
+import { Store, User as UserIcon, Mail, Lock, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { CheckInbox } from "@/features/auth/components/CheckInbox";
 
 const SignupPage = () => {
     const router = useRouter();
@@ -17,7 +18,6 @@ const SignupPage = () => {
     const [loading, setLoading] = useState(false);
     // VM-13: signed up, waiting for the email to be verified
     const [unverified, setUnverified] = useState<User | null>(null);
-    const [note, setNote] = useState("");
 
     const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -45,24 +45,6 @@ const SignupPage = () => {
         }
     };
 
-    async function checkVerified() {
-        if (!unverified) return;
-        setNote("");
-        await reload(unverified);
-        if (unverified.emailVerified) router.push("/login");
-        else setNote("Not verified yet. Open the link in the email, then try again.");
-    }
-
-    async function sendAgain() {
-        if (!unverified) return;
-        try {
-            await sendEmailVerification(unverified);
-            setNote("Sent again. It can take a minute to arrive.");
-        } catch {
-            setNote("Couldn't send it just now. Wait a minute and try again.");
-        }
-    }
-
     // Animation variants
     const formVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -81,35 +63,7 @@ const SignupPage = () => {
     if (unverified)
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--stage)] text-[var(--ink)] px-4">
-                <section className="w-full max-w-md space-y-5 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-8 text-center shadow-xl">
-                    <MailCheck size={40} aria-hidden className="mx-auto text-blue-600 dark:text-blue-400" />
-                    <h1 className="text-2xl font-bold">Check your inbox</h1>
-                    <p className="text-sm text-[var(--muted)]">
-                        We sent a link to <strong className="text-[var(--ink)]">{unverified.email}</strong>. Open it to verify your email,
-                        then come back here.
-                    </p>
-                    {note && (
-                        <p role="status" className="rounded-xl bg-[var(--card)] px-3 py-2 text-sm">
-                            {note}
-                        </p>
-                    )}
-                    <div className="flex flex-col gap-2">
-                        <button
-                            type="button"
-                            onClick={checkVerified}
-                            className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 font-medium text-white hover:from-blue-700 hover:to-indigo-700"
-                        >
-                            I&apos;ve verified my email
-                        </button>
-                        <button
-                            type="button"
-                            onClick={sendAgain}
-                            className="rounded-xl border border-[var(--line)] px-4 py-3 font-medium hover:bg-[var(--card)]"
-                        >
-                            Send it again
-                        </button>
-                    </div>
-                </section>
+                <CheckInbox user={unverified} onVerified={() => router.push("/login")} />
             </div>
         );
 

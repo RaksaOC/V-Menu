@@ -185,10 +185,10 @@ describe("staff api", () => {
         const add = answer("post", "/api/restaurants/demo-bistro/staff", member, 201);
         const edit = answer("put", "/api/restaurants/demo-bistro/staff/s1", member);
         const del = answer("delete", "/api/restaurants/demo-bistro/staff/s1");
-        await staff.addStaff("demo-bistro", { name: "Dara", email: "dara@x.com", role: "cashier", tenantId: "u2" });
+        await staff.addStaff("demo-bistro", { name: "Dara", email: "dara@x.com", role: "cashier" });
         await staff.updateStaff("demo-bistro", member as never);
         await staff.removeStaff("demo-bistro", "s1");
-        expect(add[0].body).toEqual({ name: "Dara", email: "dara@x.com", role: "cashier", tenantId: "u2" });
+        expect(add[0].body).toEqual({ name: "Dara", email: "dara@x.com", role: "cashier" });
         expect(edit[0].body).toEqual(member);
         expect(del).toHaveLength(1);
     });

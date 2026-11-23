@@ -1,14 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import { addStaff, getStaff, removeStaff, updateStaff } from "@/features/staff/api";
+import { apiErrorMessage, apiStatus } from "@/lib/api";
 import { ResContext } from "@/lib/restaurant-context";
 import { Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, ChevronsUpDown, Pencil } from "lucide-react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import StaffForm from "@/features/staff/components/StaffForm";
+import InvitePending from "@/features/staff/components/InvitePending";
 import { prettyDate } from "@/lib/dates";
-import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, UserCredential } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import type { StaffMember } from "@vmenu/contracts";
-import type { NewStaffMember } from "@/features/staff/components/StaffForm";
+import type { AddStaffBody, StaffMember } from "@vmenu/contracts";
 
 export default function Staff() {
     const resSlug = useContext(ResContext);
@@ -20,7 +19,7 @@ export default function Staff() {
     const [showEditStaff, setShowEditStaff] = useState(false);
     const [staffToEdit, setStaffToEdit] = useState<StaffMember>();
     const [refresh, setRefresh] = useState(false);
-    const [emailTaken, setEmailTaken] = useState(false);
+    const [emailError, setEmailError] = useState("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -39,37 +38,17 @@ export default function Staff() {
         }
     }, [refresh]);
 
-    async function handleAddStaff(newTenant: NewStaffMember) {
-        setEmailTaken(false);
+    // VM-12: an invite. No Firebase account is made here: creating one in this browser used to sign
+    // the owner out and in as the new person. They make their own at /login with this email.
+    async function handleAddStaff(invite: AddStaffBody) {
+        setEmailError("");
         try {
-            const signInMethods = await fetchSignInMethodsForEmail(auth, newTenant.email);
-
-            if (signInMethods.length > 0) {
-                console.log("email is taken");
-                setEmailTaken(true);
-                return;
-            }
-
-            const userCred: UserCredential = await createUserWithEmailAndPassword(auth, newTenant.email, newTenant.password);
-            const uid = userCred.user.uid;
-
-            // The password stays with Firebase; our API only gets the account id.
-            await addStaff(resSlug, {
-                name: newTenant.name,
-                email: newTenant.email,
-                role: newTenant.role,
-                tenantId: uid,
-            });
+            await addStaff(resSlug, invite);
             setShowAddStaff(false);
             setRefresh((prevState) => !prevState);
-        } catch (error: any) {
-            console.error("Firebase Error:", error);
-            if (error.code === "auth/email-already-in-use") {
-                console.log("Caught: email already in use");
-                setEmailTaken(true);
-                return;
-            }
-            console.error("Error adding staff:", error);
+        } catch (error) {
+            if (apiStatus(error) === 409) setEmailError(apiErrorMessage(error));
+            else console.error("Error adding staff:", error);
         }
     }
 
@@ -395,9 +374,9 @@ export default function Staff() {
                                                                 .toUpperCase()}
                                                         </span>
                                                     </div>
-                                                    <div>
+                                                    <div className="flex flex-col items-start gap-1">
                                                         <p className="font-medium text-gray-900">{member.name}</p>
-                                                        {/*<p className="text-sm text-gray-500">ID: {member.tenantId}</p>*/}
+                                                        <InvitePending member={member} />
                                                     </div>
                                                 </div>
                                             </td>
@@ -458,7 +437,7 @@ export default function Staff() {
                         </div>
                     ) : (
                         filteredStaff.map((member) => (
-                            <div key={member._id} className="bg-white rounded-xl border border-gray-200 p-4">
+                            <div key={member._id} data-member={member._id} className="bg-white rounded-xl border border-gray-200 p-4">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                                         <span className="text-blue-600 font-semibold text-sm">
@@ -471,9 +450,9 @@ export default function Staff() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2 h-full">
-                                            <div className={"flex items-center gap-2"}>
+                                            <div className="flex flex-col items-start gap-1 min-w-0">
                                                 <p className="font-medium text-gray-900 truncate">{member.name}</p>
-                                                {/*<p className="text-sm text-gray-500">ID: {member.tenantId}</p>*/}
+                                                <InvitePending member={member} />
                                             </div>
                                             <span className={getRoleBadge(member.role)}>
                                                 {getRoleIcon(member.role)}
@@ -513,11 +492,11 @@ export default function Staff() {
             </div>
             {showAddStaff && (
                 <StaffForm
-                    emailTaken={emailTaken}
+                    emailError={emailError}
                     onAdd={handleAddStaff}
                     onClose={() => {
                         setShowAddStaff(false);
-                        setEmailTaken(false);
+                        setEmailError("");
                     }}
                 />
             )}

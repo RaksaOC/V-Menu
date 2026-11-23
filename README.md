@@ -247,5 +247,5 @@ One style, checked by `scripts/naming.test.mjs` (CL-06):
 - **Every other file** is kebab-case, with dots for its role: `orders.service.ts`, `bills.repo.ts`, `use-photo.ts`, `table-url.ts`. What a file exports stays camelCase (`usePhoto`, `tableUrl`).
 - **Data:**
   - A bill is `isPaid`. It used to be `isPayed`. order-service renames the stored field at startup (`src/migrations/is-paid.ts`). For one release the API also accepts `isPayed` and sends it alongside `isPaid`.
-  - A person's role at one restaurant is a `Membership` (it used to be `Tenant`). The collection keeps its name, `tenants`, and `tenantId` is still the person's Firebase uid.
+  - A person's role at one restaurant is a `Membership` (it used to be `Tenant`). The collection keeps its name, `tenants`, and `tenantId` is still the person's Firebase uid. VM-12: it is `null` for an invite until the person signs in with that email, verified, and the invite is linked to their account.
   - The dashboard counts move from `numOfX` to `xCount` with VM-09.

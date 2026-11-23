@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 const membershipSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true, maxlength: 120 },
-        tenantId: { type: String, required: true, index: true }, // Firebase uid
+        tenantId: { type: String, default: null, index: true }, // Firebase uid; null until an invite is accepted (VM-12)
         email: { type: String, required: true, lowercase: true, trim: true, index: true },
         role: { type: String, required: true, enum: ["owner", "cashier", "chef"] },
         resId: { type: String, required: true, index: true },
