@@ -1103,7 +1103,9 @@ for (const [vp, theme] of [
 async function ageOrders(ages: Record<string, number>) {
     const envFile = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "backend", "services", "order", ".env");
     if (!existsSync(envFile)) return;
-    const uri = readFileSync(envFile, "utf8").match(/^MONGODB_URI=(.*)$/m)?.[1]?.trim();
+    const uri = readFileSync(envFile, "utf8")
+        .match(/^MONGODB_URI=(.*)$/m)?.[1]
+        ?.trim();
     if (!uri) return;
     const { createRequire } = await import("node:module");
     const mongoose = createRequire(import.meta.url)("../../backend/node_modules/mongoose");
@@ -1131,13 +1133,20 @@ for (const [vp, theme] of [
             // start from an empty board: serve what's there (this lane's demo data only)
             const next: Record<string, string> = { pending: "preparing", preparing: "ready", ready: "served" };
             for (const o of (await (await chef.page.request.get(api("/kitchen"))).json()) as { _id: string; status: string }[]) {
-                for (let s = next[o.status]; s; s = next[s]) await chef.page.request.patch(api(`/kitchen/${o._id}/status`), { data: { status: s } });
+                for (let s = next[o.status]; s; s = next[s])
+                    await chef.page.request.patch(api(`/kitchen/${o._id}/status`), { data: { status: s } });
             }
             const menu = dishesOf(await (await chef.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
             const ids: string[] = [];
             for (const [table, lines] of [
                 ["T3", [{ item: { _id: menu[1]._id }, quantity: 2 }]],
-                ["T1", [{ item: { _id: menu[0]._id }, quantity: 1 }, { item: { _id: menu[3]._id }, quantity: 2 }]],
+                [
+                    "T1",
+                    [
+                        { item: { _id: menu[0]._id }, quantity: 1 },
+                        { item: { _id: menu[3]._id }, quantity: 2 },
+                    ],
+                ],
                 ["T2", [{ item: { _id: menu[2]._id }, quantity: 1 }]],
             ] as const) {
                 const res = await chef.page.request.post(api(""), { data: { table, orderedItems: lines } });

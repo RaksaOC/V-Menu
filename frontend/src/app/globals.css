@@ -372,3 +372,24 @@ button {
         color: #000;
     }
 }
+
+/* VM-29: a new order's card flashes its border once. With reduced motion it gets a still ring instead. */
+@keyframes vm-flash {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+    20%,
+    60% {
+        box-shadow: 0 0 0 6px var(--accent);
+    }
+}
+.vm-flash {
+    animation: vm-flash 1.6s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+    .vm-flash {
+        animation: none;
+        box-shadow: 0 0 0 4px var(--accent);
+    }
+}

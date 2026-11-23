@@ -7,30 +7,21 @@ import { Clock, ArrowRight, Users, Hash } from "lucide-react";
 import { Chip } from "@/components/ui";
 import { NEXT_ACTION, STATUS_LABEL, STATUS_TONE } from "@/lib/order-status";
 import type { Order } from "@vmenu/contracts";
+import { AGE_CHIP_CLASS, ageLabel, ageTone } from "@/features/kitchen/kitchen-screen";
 
 interface CardProps {
     order: Order;
     /** VM-27: the one big button that moves the order a step on; without it (history) there's no button */
     onAdvance?: (order: Order) => Promise<void> | void;
+    /** VM-29: just arrived: the border flashes once */
+    isNew?: boolean;
+    /** VM-29: kiosk mode: large type, no photos */
+    kiosk?: boolean;
+    /** the time the age chip counts from; the board updates it */
+    now?: number;
 }
 
-function formatTimeAgo(orderTime: Date): string {
-    const diffMs = Date.now() - orderTime.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMinutes / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffDays > 0) {
-        return `${diffDays}d`;
-    } else if (diffHours > 0) {
-        const remainingMinutes = diffMinutes % 60;
-        return remainingMinutes > 0 ? `${diffHours}h ${remainingMinutes}m` : `${diffHours}h`;
-    } else {
-        return `${diffMinutes}m`;
-    }
-}
-
-const Card = ({ order, onAdvance }: CardProps) => {
+const Card = ({ order, onAdvance, isNew = false, kiosk = false, now }: CardProps) => {
     const money = useMoney(); // VM-24: prices in the restaurant's currency
     const { _id: orderId, table, orderedItems, createdAt: orderedAt, status } = order;
     const action = onAdvance && NEXT_ACTION[status];
@@ -46,12 +37,15 @@ const Card = ({ order, onAdvance }: CardProps) => {
     };
 
     const totalItems = orderedItems.reduce((sum, item) => sum + item.quantity, 0);
-    const orderTime = new Date(orderedAt);
-    const timeAgo = Math.floor((Date.now() - orderTime.getTime()) / (1000 * 60));
-    const timeAgoDisplay = formatTimeAgo(orderTime); // e.g., "2h 15m" or "3d"
+    // VM-29: a fixed age chip: green under 5 minutes, accent 5 to 15, red over 15
+    const age = (now ?? Date.now()) - new Date(orderedAt).getTime();
+    const tone = ageTone(age);
 
     return (
-        <article className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group w-full">
+        <article
+            data-new={isNew ? "true" : undefined}
+            className={`bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group w-full ${isNew ? "vm-flash" : ""}`}
+        >
             {/* Order Header */}
             <div className="bg-gradient-to-r from-slate-600 to-gray-600 text-white p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -60,7 +54,7 @@ const Card = ({ order, onAdvance }: CardProps) => {
                             <Users size={20} className="text-white" />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold">Table {table}</h3>
+                            <h3 className={`font-bold ${kiosk ? "text-5xl leading-tight" : "text-2xl"}`}>Table {table}</h3>
                             <p className="text-slate-200 text-sm">Order #{orderId.slice(-6).toUpperCase()}</p>
                             {!onAdvance && (
                                 <Chip tone={STATUS_TONE[status]} className="mt-1">
@@ -75,22 +69,19 @@ const Card = ({ order, onAdvance }: CardProps) => {
                             <Clock size={16} className="text-slate-300" />
                             <span className="text-sm text-slate-200">{formatDateTime(orderedAt)}</span>
                         </div>
-                        <div
-                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                                timeAgo < 5
-                                    ? "bg-green-500/20 text-green-200"
-                                    : timeAgo < 15
-                                      ? "bg-yellow-500/20 text-yellow-200"
-                                      : "bg-red-500/20 text-red-200"
-                            }`}
-                        >
-                            <div
-                                className={`w-2 h-2 rounded-full ${
-                                    timeAgo < 5 ? "bg-green-400" : timeAgo < 15 ? "bg-yellow-400" : "bg-red-400"
-                                } animate-pulse`}
-                            ></div>
-                            {timeAgo < 1 ? "Just now" : `${timeAgoDisplay} ago`}
-                        </div>
+                        {status !== "served" &&
+                            status !== "cancelled" && ( // still the kitchen's to do
+                                <span
+                                    data-testid="age-chip"
+                                    data-tone={tone}
+                                    className={`inline-flex items-center rounded-full font-bold ${kiosk ? "px-4 py-1.5 text-xl" : "px-3 py-1 text-sm"} ${AGE_CHIP_CLASS[tone]}`}
+                                >
+                                    {ageLabel(age)}
+                                    <span className="sr-only">
+                                        {tone === "late" ? ", waiting long" : tone === "waiting" ? ", waiting" : ""}
+                                    </span>
+                                </span>
+                            )}
                     </div>
                 </div>
 
@@ -125,7 +116,7 @@ const Card = ({ order, onAdvance }: CardProps) => {
                             key={index}
                             className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors duration-200 border border-gray-100"
                         >
-                            <div className="flex-shrink-0">
+                            <div className={`flex-shrink-0 ${kiosk ? "hidden" : ""}`}>
                                 <img
                                     src={orderedItem.item.image}
                                     alt={orderedItem.item.name}
@@ -134,7 +125,9 @@ const Card = ({ order, onAdvance }: CardProps) => {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <h5 className="font-semibold text-gray-800 truncate mb-1">{orderedItem.item.name}</h5>
+                                <h5 className={`font-semibold text-gray-800 mb-1 ${kiosk ? "text-2xl" : "truncate"}`}>
+                                    {orderedItem.item.name}
+                                </h5>
                                 <p className="text-sm text-gray-500">{money(orderedItem.item.priceCents)} each</p>
                                 {/* VM-28: "no chilli", under the dish, in the accent colour */}
                                 {orderedItem.note && (
@@ -145,7 +138,9 @@ const Card = ({ order, onAdvance }: CardProps) => {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="bg-slate-600 text-white px-3 py-1.5 rounded-full font-bold text-sm min-w-[3rem] text-center">
+                                <div
+                                    className={`bg-slate-600 text-white rounded-full font-bold min-w-[3rem] text-center ${kiosk ? "px-4 py-2 text-2xl" : "px-3 py-1.5 text-sm"}`}
+                                >
                                     ×{orderedItem.quantity}
                                 </div>
                             </div>

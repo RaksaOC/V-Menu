@@ -18,7 +18,7 @@ const { default: Card } = await import("@/features/kitchen/components/OrderCard"
 
 const MIN = 60_000;
 const dish = { _id: "665f00000000000000000aaa", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
-const order = (n: number, minutesAgo: number, status = "pending") => ({
+const order = (n: number, minutesAgo: number, status: "pending" | "preparing" | "ready" = "pending") => ({
     _id: `665f00000000000000000${n}0${n}`,
     table: `T${n}`,
     status,
