@@ -43,7 +43,7 @@ const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, rem
 
                     {/* Item Details */}
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-lg text-gray-800 mb-1 truncate">{menuItem.name}</h3>
+                        <h3 className="font-bold text-lg leading-snug text-gray-800 mb-1 line-clamp-2 break-words">{menuItem.name}</h3>
                         <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-500">{money(menuItem.priceCents)} each</span>
                         </div>

@@ -225,3 +225,17 @@ ok   VM-24-customer-menu-1280-dark
 ok   VM-24-preferences-360
 ok   VM-24-invoice-360
 ok   VM-24-customer-menu-360
+# ONLY=VM-28 (2026-11-23T19:27:14.046Z)
+ok   VM-28-cart-1280
+ok   VM-28-kitchen-card-1280
+ok   VM-28-cart-1280-dark
+ok   VM-28-kitchen-card-1280-dark
+ok   VM-28-cart-360
+ok   VM-28-kitchen-card-360
+# ONLY=VM-28 (2026-11-23T19:27:38.459Z)
+ok   VM-28-cart-1280
+ok   VM-28-kitchen-card-1280
+ok   VM-28-cart-1280-dark
+ok   VM-28-kitchen-card-1280-dark
+ok   VM-28-cart-360
+ok   VM-28-kitchen-card-360
