@@ -2,7 +2,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../src/app.js";
+import { createApp } from "../../src/app.js";
 import { HttpError, notFound, signAppToken } from "@vmenu/common";
 
 // VM-04: the customer's table check says *why* a table can't be used, so the page can say so.

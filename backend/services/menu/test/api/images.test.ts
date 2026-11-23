@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import sharp from "sharp";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../src/app.js";
+import { createApp } from "../../src/app.js";
 import { signAppToken, notFound } from "@vmenu/common";
 
 // VM-02 (menu photos are uploaded, not sent as base64) and SEC-05 (the upload is safe).
@@ -181,7 +181,7 @@ describe("photo upload safety (SEC-05)", () => {
 
     it("an existing item keeps its old image when other fields are edited", async () => {
         // items made before this change may still point elsewhere; editing the name must not fail
-        const { Item } = await import("../src/models.js");
+        const { Item } = await import("../../src/models/item.model.js");
         const old = await Item.create({ name: "Old", price: 1, image: "https://images.example/old.jpg", resId: RES_ID });
         const res = await request(app)
             .put(`/api/menu/${SLUG}/items/${old._id}`)
