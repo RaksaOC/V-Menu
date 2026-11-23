@@ -1044,6 +1044,55 @@ if (PHASE === "after" && VM24.set) {
     });
 }
 
+// VM-28: notes in the cart ("no chilli") and on the kitchen card, highlighted.
+const VM28 = { number: "" };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-28 ${vp.width} ${theme}`, async () => {
+        const customer = await newPage(browser, vp, theme);
+        const menu = dishesOf(await (await customer.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+        const dish = menu[2] ?? menu[0];
+        await customer.context.addInitScript(
+            ([key, lines]) => localStorage.setItem(key, lines),
+            [`cart:${SLUG}:T2`, JSON.stringify([{ item: dish, quantity: 1 }, { item: dish, quantity: 2 }])] as const,
+        );
+        await customer.page.goto(`${BASE}/${SLUG}/customer/T2/cart`);
+        await settle(customer.page);
+        const lineNote = customer.page.getByRole("textbox", { name: /^Note for / }).first();
+        if (await lineNote.count()) {
+            await lineNote.fill("No chilli");
+            await customer.page.getByRole("textbox", { name: "Note for the kitchen" }).fill("Birthday, please bring a candle");
+        }
+        await shot({ page: customer.page, theme, width: vp.width }, "VM-28-cart", false);
+        if (!VM28.number) {
+            const res = await customer.page.request.post(`${BASE}/api/orders/${SLUG}`, {
+                data: {
+                    table: "T2",
+                    note: "Birthday, please bring a candle",
+                    orderedItems: [
+                        { item: { _id: dish._id }, quantity: 1, note: "No chilli" },
+                        { item: { _id: dish._id }, quantity: 2 },
+                    ],
+                },
+            });
+            VM28.number = String((await res.json())._id).slice(-6).toUpperCase();
+        }
+        await customer.context.close();
+
+        const chef = await newPage(browser, vp, theme, "chef");
+        await chef.page.goto(`${BASE}/${SLUG}/kitchen`);
+        await settle(chef.page);
+        const card = chef.page.locator("article").filter({ hasText: `Order #${VM28.number}` });
+        await card.scrollIntoViewIfNeeded();
+        await settle(chef.page);
+        await shot({ page: chef.page, theme, width: vp.width }, "VM-28-kitchen-card", false);
+        await chef.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
