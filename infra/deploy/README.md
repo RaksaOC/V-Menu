@@ -179,6 +179,46 @@ The image build (`release.yml`) runs in the branch's environment, so staging's V
 
 Add each hostname under its project's Firebase → Authentication → Settings → Authorized domains, or sign-in will fail there. The console rejects some hyphenated names such as `staging-v-menu.chanraksa.com`; add those with the Identity Toolkit API (`PATCH .../admin/v2/projects/<id>/config?updateMask=authorizedDomains`).
 
+### 7. Firebase hardening checklist (SEC-08)
+
+These are console settings, so code can't make them. Do each one in **both** projects unless it says otherwise, then tick it here in a PR. The Firebase "Browser key" is public by design (every visitor's browser gets it), so these settings are what stop other people using it against our projects.
+
+**1. Restrict the API key.** Google Cloud console → APIs & Services → Credentials → the "Browser key (auto created by Firebase)":
+
+- [ ] **Application restrictions → HTTP referrers:**
+  - production: `https://v-menu.chanraksa.com/*`
+  - staging: `https://staging-v-menu.chanraksa.com/*` and `http://localhost:*`
+  - each project's own `https://<project>.firebaseapp.com/*`, which Firebase uses for email links
+- [ ] **API restrictions → Restrict key:** only the **Identity Toolkit API** and the **Token Service API**. Production also needs the Firebase installations and analytics APIs while Analytics is on: check the key's usage in the console before removing them.
+
+**2. Authorized domains.** Firebase → Authentication → Settings → Authorized domains:
+
+- [ ] **production:** remove `localhost`. Only `v-menu.chanraksa.com` and the project's own `firebaseapp.com` / `web.app` domains stay.
+- [ ] **staging:** `staging-v-menu.chanraksa.com`, plus `localhost` for local work.
+
+**3. Email enumeration protection.** Authentication → Settings → User actions:
+
+- [ ] Turn **Email enumeration protection** on. The app no longer asks Firebase whether an email has an account (VM-12), and "Forgot password?" gives the same answer either way (VM-14), so nothing in the app depends on it being off.
+
+**4. Password policy.** Authentication → Settings → Password policy:
+
+- [ ] **Enforce** a password policy with a minimum length of **8** and **Require numeric character** on.
+- The app's forms already ask for 8 characters with a letter and a number when a password is set: the owner sign-up and "Create an account" at `/login`. Firebase's policy can't say "a letter" (only lowercase or uppercase), so the letter rule lives in the forms.
+- [ ] Leave **"Require password change on sign-in"** off at first. Turn it on later if old short passwords should be changed.
+
+**5. Email verification (VM-13).**
+
+- [ ] Nothing to switch on: the app already requires a verified email before an invite counts. Check that the verification and password-reset email templates read well (Authentication → Templates).
+
+**Check it.** `scripts/check-firebase-config.mjs` reads a project's settings (read only) and lists anything that doesn't match items 2 to 4. It needs a token that can read the project, for example `gcloud auth print-access-token` for an account with the Firebase Viewer role:
+
+```bash
+FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node scripts/check-firebase-config.mjs v-menu-e9835 production v-menu.chanraksa.com
+FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node scripts/check-firebase-config.mjs v-menu-staging staging staging-v-menu.chanraksa.com
+```
+
+It doesn't check the API key restrictions (item 1); look at those in the console.
+
 ## Everyday use
 
 | I want to… | Do this |

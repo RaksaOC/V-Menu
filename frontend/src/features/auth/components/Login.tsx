@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailA
 import { auth } from "@/lib/firebase";
 import { getMemberships } from "@/features/auth/api";
 import { firebaseCode, signInMessage } from "@/features/auth/login-errors";
+import { PASSWORD_RULE, passwordProblem } from "@/features/auth/password-rule";
 import { CheckInbox } from "@/features/auth/components/CheckInbox";
 import { LoginForm, type LoginProblems } from "@/features/auth/components/LoginForm";
 
@@ -47,7 +48,7 @@ export function Login({ onSuccess }: Props) {
             const code = firebaseCode(err);
             console.error("Create account error:", code);
             if (code === "auth/email-already-in-use") return { email: "This email already has an account. Sign in instead." };
-            if (code === "auth/weak-password") return { password: "Choose a stronger password" };
+            if (code === "auth/weak-password" || code === "auth/password-does-not-meet-requirements") return { password: PASSWORD_RULE };
             toast.error("Couldn't create the account");
         }
     }
@@ -77,7 +78,7 @@ export function Login({ onSuccess }: Props) {
             submitLabel={creating ? "Create account" : "Login"}
             busyLabel={creating ? "Creating..." : "Logging in..."}
             canReset={!creating}
-            checkPassword={creating ? (p) => (p.length < 6 ? "Password must be at least 6 characters" : undefined) : undefined}
+            checkPassword={creating ? passwordProblem : undefined}
             onSubmit={creating ? createAccount : signIn}
             footer={
                 <p className="text-center text-sm text-[var(--muted)]">

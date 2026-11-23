@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Store, User as UserIcon, Mail, Lock, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CheckInbox } from "@/features/auth/components/CheckInbox";
+import { PASSWORD_RULE, passwordProblem } from "@/features/auth/password-rule";
 
 const SignupPage = () => {
     const router = useRouter();
@@ -18,9 +19,13 @@ const SignupPage = () => {
     const [loading, setLoading] = useState(false);
     // VM-13: signed up, waiting for the email to be verified
     const [unverified, setUnverified] = useState<User | null>(null);
+    const [passwordError, setPasswordError] = useState(""); // SEC-08
 
     const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        const problem = passwordProblem(password);
+        setPasswordError(problem ?? "");
+        if (problem) return;
         setLoading(true);
 
         try {
@@ -39,7 +44,9 @@ const SignupPage = () => {
             setUnverified(userCred.user);
         } catch (err: any) {
             console.error("Signup error:", err.message);
-            alert("Error: " + err.message);
+            if (err?.code === "auth/weak-password" || err?.code === "auth/password-does-not-meet-requirements")
+                setPasswordError(PASSWORD_RULE);
+            else alert("Error: " + err.message);
         } finally {
             setLoading(false);
         }
@@ -144,13 +151,25 @@ const SignupPage = () => {
                     <motion.input
                         type="password"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        aria-invalid={passwordError ? true : undefined}
+                        aria-describedby={passwordError ? "signup-password-error" : undefined}
+                        onChange={(e) => {
+                            setPassword(e.target.value);
+                            setPasswordError("");
+                        }}
                         className="px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-zinc-800 dark:text-white focus:outline-none"
                         required
                         whileFocus="focus"
                         whileTap="focus"
                         variants={inputVariants}
                     />
+                    {passwordError ? (
+                        <p id="signup-password-error" role="alert" className="text-sm text-red-600 dark:text-red-400">
+                            {passwordError}
+                        </p>
+                    ) : (
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">At least 8 characters, with a letter and a number.</p>
+                    )}
                 </div>
 
                 <motion.button
