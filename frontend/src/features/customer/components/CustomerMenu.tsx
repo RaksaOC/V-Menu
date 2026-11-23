@@ -6,8 +6,8 @@ import {ItemOutput} from "@/lib/types/Item";
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {useCallback, useEffect, useState} from "react";
-import {ToastContainer} from "react-toastify";
-import SkeletonMenuCard from "@/components/ui/skeletons/SkeletonMenuCard";
+import {ToastHost} from "@/components/ui";
+import {Skeleton} from "@/components/ui";
 import {apiErrorCode} from "@/lib/api";
 import TableProblem, {type TableProblemKind} from "@/features/customer/components/TableProblem";
 import {checkTable, getMenu} from "@/features/customer/api";
@@ -48,7 +48,7 @@ export default function CustomerPage() {
 
     return (
         <>
-            <ToastContainer position={"top-center"}/>
+            <ToastHost/>
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
                 {/* Enhanced Header with Gradient Background */}
                 <header
@@ -101,9 +101,7 @@ export default function CustomerPage() {
                                 <TableProblem kind={problem} table={table} onRetry={load}/>
                             ) : isLoading ? (
                                 <>
-                                    <SkeletonMenuCard isLight={true}/>
-                                    <SkeletonMenuCard isLight={true}/>
-                                    <SkeletonMenuCard isLight={true}/>
+                                    <Skeleton variant="menu" count={3} className="contents"/>
                                 </>
                             ) : items.length > 0 ? (
                                 items.map((item, index) => (

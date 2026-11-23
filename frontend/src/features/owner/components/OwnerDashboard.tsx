@@ -16,14 +16,16 @@ import {
     ChevronDown,
     Check
 } from "lucide-react";
-import Header from "@/features/owner/components/Header";
+import DashboardHeader from "@/components/layout/DashboardHeader";
+import {ToastHost} from "@/components/ui";
+import MobileSidebar from "@/components/layout/MobileSidebar";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from '@headlessui/react';
 import {createRestaurant, getRestaurants} from "@/features/owner/api";
 import {RestaurantOutput} from "@/lib/types/Restaurant";
-import Overview from "@/features/owner/components/overview/Overview";
+import Overview from "@/features/restaurant/components/Overview";
 import {ResContext} from "@/features/owner/ResContext";
-import Menu from "@/features/owner/components/menu/Menu";
-import Tables from "@/features/owner/components/tables/Tables";
+import Menu from "@/features/restaurant/components/Menu";
+import Tables from "@/features/restaurant/components/Tables";
 import Staff from '@/features/staff/components/Staff';
 import Preferences from '@/features/owner/components/preferences/Preferences';
 import {AddRestaurantPopup} from "@/features/owner/components/AddRestaurantPopup";
@@ -110,13 +112,13 @@ const OwnerDashboard = () => {
                 case "menu":
                     return (
                         <ResContext.Provider value={selectedRestaurant.slug}>
-                            <Menu></Menu>
+                            <Menu role="owner"/>
                         </ResContext.Provider>
                     )
                 case "tables":
                     return (
                         <ResContext.Provider value={selectedRestaurant.slug}>
-                            <Tables></Tables>
+                            <Tables role="owner"/>
                         </ResContext.Provider>
                     )
                 case "staff":
@@ -321,12 +323,19 @@ const OwnerDashboard = () => {
     return (
         <div className="w-full min-h-screen bg-gray-50">
             {/* Header with integrated mobile sidebar */}
-            <Header
-                sidebarOpen={sidebarOpen}
-                setSidebarOpen={setSidebarOpen}
-                sidebarContent={sidebarContent}
-                userInfo={{name: "John Doe", role: "Owner"}}
+            <ToastHost/>
+            <DashboardHeader
+                title="V-Menu Owner"
+                subtitle="Manage your restaurants"
+                roleLabel="Owner"
+                email="owner@gmail.com"
+                loginHref="/owner/login"
+                position="fixed"
+                onOpenMenu={() => setSidebarOpen(true)}
             />
+            <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={{name: "John Doe", role: "Owner"}}>
+                {sidebarContent}
+            </MobileSidebar>
 
             <div className="flex">
                 {/* Desktop Sidebar */}

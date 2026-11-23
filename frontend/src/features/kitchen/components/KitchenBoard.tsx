@@ -3,7 +3,7 @@
 import {useEffect, useState, useRef} from "react";
 import Card from "./OrderCard";
 import {OrderOutput} from "@/lib/types/Order";
-import {ToastContainer} from "react-toastify";
+import {ToastHost} from "@/components/ui";
 import {toast} from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
@@ -180,20 +180,7 @@ export default function KitchenPage({pollMs = 2000}: {pollMs?: number} = {}) {
             </main>
 
             {/* Enhanced Toast Container */}
-            <ToastContainer
-                position="top-center"
-                autoClose={2000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="light"
-                toastClassName="!bg-white !text-gray-800 !shadow-xl !border !border-gray-100"
-                progressClassName="!bg-gradient-to-r !from-slate-500 !to-gray-500"
-            />
+            <ToastHost/>
         </div>
     );
 }

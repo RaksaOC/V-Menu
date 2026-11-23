@@ -1,7 +1,7 @@
 'use client'
 
 import {useEffect, useState} from "react";
-import {ToastContainer} from "react-toastify";
+import {ToastHost} from "@/components/ui";
 import {toast} from "@/lib/toast";
 import {placeOrder as sendOrder} from "@/features/customer/api";
 import {clearCart, readCart, saveCart} from "@/features/customer/cart";
@@ -241,20 +241,7 @@ export default function CartPage() {
 
                 {/* Enhanced Toast Container */
                 }
-                <ToastContainer
-                    position="top-center"
-                    autoClose={2000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="light"
-                    toastClassName="!bg-white !text-gray-800 !shadow-xl !border !border-gray-100"
-                    progressClassName="!bg-gradient-to-r !from-emerald-500 !to-green-500"
-                />
+                <ToastHost/>
             </div>
         </>
     )
