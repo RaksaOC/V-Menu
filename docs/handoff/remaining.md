@@ -1,6 +1,6 @@
 # Remaining work: every ticket
 
-Generated 2026-11-23 21:23. 4 of 77 done (5%). Essential (P0 path): 4 of 14.
+Generated 2026-11-23 21:35. 5 of 77 done (6%). Essential (P0 path): 5 of 14.
 
 "Essential" = the 6 P0 blockers, the cleanup tickets they depend on, and the final showcase. Order = the order to work in (dependencies first).
 
@@ -13,8 +13,8 @@ Generated 2026-11-23 21:23. 4 of 77 done (5%). Essential (P0 path): 4 of 14.
 | 5 | CL-03 | Enforce the boundaries in CI | P1 |  | not started |  | [#101](https://github.com/RaksaOC/V-Menu/issues/101) | CL-02 | [notes](tickets/CL-03.md) |
 | 6 | SEC-09 | Security scanning in the pipeline | P1 |  | not started |  | [#121](https://github.com/RaksaOC/V-Menu/issues/121) | CL-01 | [notes](tickets/SEC-09.md) |
 | 7 | B1 | Frontend unit tests | testing/CI | yes | completed | [#140](https://github.com/RaksaOC/V-Menu/pull/140) | [#124](https://github.com/RaksaOC/V-Menu/issues/124) | CL-01 |  |
-| 8 | CL-08 | Frontend folders by feature | P1 | yes | in progress |  | [#106](https://github.com/RaksaOC/V-Menu/issues/106) | B1 | [notes](tickets/CL-08.md) |
-| 9 | CL-10 | One API client per feature, and one toast helper | P1 | yes | not started |  | [#108](https://github.com/RaksaOC/V-Menu/issues/108) | CL-08 | [notes](tickets/CL-10.md) |
+| 8 | CL-08 | Frontend folders by feature | P1 | yes | completed | [#141](https://github.com/RaksaOC/V-Menu/pull/141) | [#106](https://github.com/RaksaOC/V-Menu/issues/106) | B1 |  |
+| 9 | CL-10 | One API client per feature, and one toast helper | P1 | yes | in progress |  | [#108](https://github.com/RaksaOC/V-Menu/issues/108) | CL-08 | [notes](tickets/CL-10.md) |
 | 10 | CL-09 | Merge duplicate components and build a small UI kit | P1 | yes | not started |  | [#107](https://github.com/RaksaOC/V-Menu/issues/107) | CL-08 | [notes](tickets/CL-09.md) |
 | 11 | VM-01 | Table QR codes do not exist | P0 | yes | not started |  | [#63](https://github.com/RaksaOC/V-Menu/issues/63) | CL-09, B1 | [notes](tickets/VM-01.md) |
 | 12 | VM-02 | Adding a menu item with a real photo fails | P0 | yes | not started |  | [#64](https://github.com/RaksaOC/V-Menu/issues/64) | CL-02, CL-09 | [notes](tickets/VM-02.md) |
