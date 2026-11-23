@@ -15,6 +15,7 @@ import { ordersRoutes } from "./routes/orders.routes.js";
 import { overviewRoutes } from "./routes/overview.routes.js";
 import { ownerRoutes } from "./routes/owner.routes.js";
 import { tableRoutes } from "./routes/table.routes.js";
+import { watchPendingOrders } from "./lib/metrics.js";
 
 interface Deps {
     lookupRestaurant?: LookupRestaurant;
@@ -44,6 +45,7 @@ export function createApp({
         restaurant: restaurantFrom(lookupRestaurant),
     };
 
+    watchPendingOrders(() => orders.oldestPendingAt()); // B10: read when /metrics is scraped
     const app = baseApp();
     // Mounted before "/:slug" so "owner" is never read as a restaurant slug.
     app.use("/api/orders/owner", ownerRoutes(ctx));

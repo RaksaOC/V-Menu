@@ -43,6 +43,8 @@ export interface OrdersRepo {
     listServed(resIds: string[]): Promise<OrderRecord[]>;
     /** null when there's no such order in this restaurant */
     get(resId: string, id: string): Promise<OrderRecord | null>;
+    /** B10: when the oldest order still pending, in any restaurant, was placed; null when none is */
+    oldestPendingAt(): Promise<Date | null>;
 }
 
 // resIds and statuses come from our own code, never from a request body, so $in is safe here.
@@ -76,4 +78,8 @@ export const mongoOrdersRepo: OrdersRepo = {
         ).lean<OrderRecord>(),
     listServed: (resIds) => Order.find({ ...inRestaurants(resIds), status: "served" }).lean<OrderRecord[]>(),
     get: (resId, id) => Order.findOne({ _id: id, resId }).lean<OrderRecord>(),
+    async oldestPendingAt() {
+        const oldest = await Order.findOne({ status: "pending" }, { orderedAt: 1 }).sort({ orderedAt: 1 }).lean<{ orderedAt: Date }>();
+        return oldest?.orderedAt ?? null;
+    },
 };

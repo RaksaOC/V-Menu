@@ -1,5 +1,6 @@
 import type { PlaceOrderBody } from "@vmenu/contracts";
 import type { BoundClients } from "../clients/index.js";
+import { countOrderStatus } from "../lib/metrics.js";
 import type { BillsRepo } from "../repositories/bills.repo.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
 
@@ -17,6 +18,7 @@ export function ordersService({ orders, bills, clients }: { orders: OrdersRepo; 
             });
             const order = await orders.create({ table, orderedItems: items, resId });
             await bills.addToOpenBill(resId, table, order._id);
+            countOrderStatus("pending"); // B10
             return order;
         },
     };

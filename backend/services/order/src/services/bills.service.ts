@@ -1,5 +1,6 @@
 import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
 import type { CancelOrderBody } from "@vmenu/contracts";
+import { countOrderStatus } from "../lib/metrics.js";
 import { OpenBillExists, type BillsRepo } from "../repositories/bills.repo.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
 import { pages, paging } from "./paging.js";
@@ -36,6 +37,7 @@ export function billsService({ bills, orders }: { bills: BillsRepo; orders: Orde
                 { cancelReason: reason },
             );
             if (!cancelled) throw new HttpError(409, "The order changed just now; try again", "ORDER_STATUS_STEP");
+            countOrderStatus("cancelled"); // B10
             return cancelled;
         },
 
