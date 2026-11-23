@@ -22,7 +22,15 @@ function runLink() {
 }
 
 function fromSemgrep(sarif) {
-    const results = (sarif.runs ?? []).flatMap((r) => r.results ?? []);
+    // A SARIF result may leave out its level; then it's the rule's default level, and if the
+    // rule has none either, "warning" (SARIF 2.1.0, 3.27.10). Semgrep leaves it out.
+    const results = (sarif.runs ?? []).flatMap((run) => {
+        const rules = run.tool?.driver?.rules ?? [];
+        return (run.results ?? []).map((r) => {
+            const rule = rules[r.ruleIndex] ?? rules.find((x) => x.id === r.ruleId);
+            return { ...r, level: r.level ?? rule?.defaultConfiguration?.level ?? "warning" };
+        });
+    });
     const findings = results.map((r) => {
         const loc = r.locations?.[0]?.physicalLocation;
         const where = loc ? `${loc.artifactLocation?.uri}:${loc.region?.startLine ?? "?"}` : "";

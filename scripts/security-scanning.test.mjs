@@ -35,6 +35,24 @@ test("Semgrep: errors are high and block; warnings are listed but don't", () => 
     assert.match(summarize("semgrep", sarif()).markdown, /No findings/);
 });
 
+test("Semgrep: a result without a level takes its rule's default level (Semgrep's SARIF does this)", () => {
+    const report = {
+        runs: [
+            {
+                tool: { driver: { rules: [{ id: "x.code-string-concat", defaultConfiguration: { level: "error" } }, { id: "x.other" }] } },
+                results: [
+                    { ruleId: "x.code-string-concat", locations: [] },
+                    { ruleId: "x.other", locations: [] },
+                ],
+            },
+        ],
+    };
+    const r = summarize("semgrep", report);
+    assert.equal(r.counts.high, 1);
+    assert.equal(r.counts.medium, 1); // no level anywhere: SARIF's default, warning
+    assert.equal(r.blocking.length, 1);
+});
+
 test("ZAP: only High alerts that aren't on the known list block", () => {
     const report = zap(alert("10038", 2, "CSP header not set"), alert("40012", 3, "XSS (reflected)"), alert("90001", 3, "Known one"));
     const r = summarize("zap", report, { known: ["90001"] });
