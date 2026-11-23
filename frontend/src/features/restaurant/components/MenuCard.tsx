@@ -8,17 +8,19 @@ type Props = { item: ItemOutput } & ({ role: "owner"; onEdit: (item: ItemOutput)
 export default function MenuCard(props: Props) {
     const { item } = props;
     return (
-        <Card className="flex flex-col overflow-hidden p-0">
+        <Card padded={false} className="flex flex-col overflow-hidden">
             <div className="relative">
                 <img src={item.image} alt={item.name} className="h-44 w-full object-cover" />
-                <Chip tone={item.isEnabled ? "ok" : "bad"} className="absolute right-3 top-3 bg-[var(--bg)]">
-                    {item.isEnabled ? <CheckCircle size={12} aria-hidden /> : <XCircle size={12} aria-hidden />}
-                    {item.isEnabled ? "Enabled" : "Disabled"}
-                </Chip>
+                <span className="absolute right-3 top-3 rounded-[var(--r-chip)] bg-[var(--bg)]">
+                    <Chip tone={item.isEnabled ? "ok" : "bad"}>
+                        {item.isEnabled ? <CheckCircle size={12} aria-hidden /> : <XCircle size={12} aria-hidden />}
+                        {item.isEnabled ? "Enabled" : "Disabled"}
+                    </Chip>
+                </span>
             </div>
             <div className="flex flex-1 items-end justify-between gap-3 p-4">
                 <div className="min-w-0">
-                    <h3 className="truncate font-semibold">{item.name}</h3>
+                    <h3 className="line-clamp-2 font-semibold leading-snug">{item.name}</h3>
                     <p className="text-lg font-bold text-[var(--ok)]">${item.price.toFixed(2)}</p>
                 </div>
                 {props.role === "owner" ? (
