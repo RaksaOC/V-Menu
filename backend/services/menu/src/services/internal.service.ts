@@ -28,7 +28,14 @@ export function internalService({ items, tables }: { items: ItemsRepo; tables: T
                 items: lines.map((l) => {
                     const i = byId.get(String(l._id))!;
                     return {
-                        item: { _id: String(i._id), name: i.name, price: i.price, image: i.image, isEnabled: i.isEnabled },
+                        item: {
+                            _id: String(i._id),
+                            name: i.name,
+                            priceCents: i.priceCents,
+                            price: i.priceCents / 100, // CL-07: for one release
+                            image: i.image,
+                            isEnabled: i.isEnabled,
+                        },
                         quantity: l.quantity,
                     };
                 }),

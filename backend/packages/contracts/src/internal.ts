@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ObjectId, label } from "./common.js";
+import { Cents, ObjectId, label } from "./common.js";
 
 // Calls between services (CL-05): if either side changes a shape, the contract tests fail.
 
@@ -24,7 +24,15 @@ export const OrderCheckRequest = z.object({
 export type OrderCheckRequest = z.infer<typeof OrderCheckRequest>;
 
 /** A dish as it was when ordered: the menu's name and price, not the browser's. */
-export const OrderedDish = z.object({ _id: z.string(), name: z.string(), price: z.number(), image: z.string(), isEnabled: z.boolean() });
+export const OrderedDish = z.object({
+    _id: z.string(),
+    name: z.string(),
+    priceCents: Cents,
+    /** @deprecated CL-07: priceCents / 100, kept on stored orders so a rollback still works; gone in the next release. */
+    price: z.number().optional(),
+    image: z.string(),
+    isEnabled: z.boolean(),
+});
 export const OrderLine = z.object({ item: OrderedDish, quantity: z.number().int().min(1) });
 export type OrderLine = z.infer<typeof OrderLine>;
 

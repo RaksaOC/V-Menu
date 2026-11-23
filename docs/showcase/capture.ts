@@ -867,6 +867,57 @@ for (const [vp, theme, n] of [
     });
 }
 
+// CL-07: the same order on the screens that show money and dates: the kitchen card, the cashier's
+// bill and invoice, and the customer's confirmation. Dates and times now read the same everywhere,
+// in the restaurant's time zone.
+const CL07: { id?: string } = {};
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`CL-07 ${vp.width} ${theme}`, async () => {
+        const kitchen = await newPage(browser, vp, theme, "chef");
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!CL07.id) {
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open.filter((b) => b.table === "T2"))
+                await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const queue = (await (await kitchen.page.request.get(api("/kitchen"))).json()) as { _id: string; status: string }[];
+            for (const o of queue)
+                for (const status of ["preparing", "ready", "served"].slice(["pending", "preparing", "ready"].indexOf(o.status)))
+                    await kitchen.page.request.patch(api(`/kitchen/${o._id}/status`), { data: { status } });
+            const menu = dishesOf(await (await kitchen.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            const placed = await kitchen.page.request.post(api(""), {
+                data: {
+                    table: "T2",
+                    orderedItems: [
+                        { item: { _id: menu[0]._id }, quantity: 3 },
+                        { item: { _id: menu[1]._id }, quantity: 1 },
+                    ],
+                },
+            });
+            CL07.id = ((await placed.json()) as { _id: string })._id;
+        }
+        await kitchen.page.goto(`${BASE}/${SLUG}/kitchen`);
+        await settle(kitchen.page);
+        await shot({ page: kitchen.page, theme, width: vp.width }, "CL-07-kitchen", false);
+        await kitchen.page.goto(`${BASE}/${SLUG}/customer/T2/orders/${CL07.id}`);
+        await settle(kitchen.page);
+        await shot({ page: kitchen.page, theme, width: vp.width }, "CL-07-customer-order", false);
+        await kitchen.context.close();
+
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T2" }) });
+        await card.scrollIntoViewIfNeeded();
+        await shot({ page: cashier.page, theme, width: vp.width }, "CL-07-cashier-bill", false);
+        await cashier.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

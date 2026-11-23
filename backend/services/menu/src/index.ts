@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { createApp } from "./app.js";
+import { prepareDatabase } from "./db.js";
 import { requireEnv, logger, handleShutdown } from "@vmenu/common";
 
 requireEnv("MONGODB_URI", "JWT_SECRET", "INTERNAL_API_KEY", "RESTAURANT_SERVICE_URL");
@@ -7,6 +8,10 @@ const port = Number(process.env.PORT ?? 4102);
 
 await mongoose.connect(process.env.MONGODB_URI!);
 logger.info("connected to MongoDB");
+
+// CL-07: the data migration, before the first request.
+const migrated = await prepareDatabase();
+if (migrated.migrated) logger.info(migrated, "migrated dish prices to cents");
 
 const server = createApp().listen(port, () => logger.info({ port }, "menu-service listening"));
 

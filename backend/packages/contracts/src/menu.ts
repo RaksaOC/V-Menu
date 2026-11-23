@@ -1,21 +1,33 @@
 import { z } from "zod";
-import { IsoDate, ObjectId, text } from "./common.js";
+import { Cents, IsoDate, ObjectId, text } from "./common.js";
+import { toCents } from "./money.js";
 
 // menu-service: dishes and tables (CL-05).
 
-const Price = z.coerce.number("Must be a number").refine(Number.isFinite, "Must be a number").pipe(z.number().min(0, "Can't be negative"));
+/**
+ * CL-07: the field is `priceCents`. For one release the old `price` in dollars is still accepted,
+ * for a page opened before the deploy. Something that isn't a number is left for the check to refuse.
+ */
+function oldPriceToCents(body: unknown) {
+    if (!body || typeof body !== "object" || "priceCents" in body || !("price" in body)) return body;
+    const { price, ...rest } = body as { price: unknown };
+    const dollars = typeof price === "number" || (typeof price === "string" && price.trim() !== "") ? Number(price) : NaN;
+    return { ...rest, priceCents: Number.isFinite(dollars) ? toCents(dollars) : price };
+}
 
-export const CreateItemBody = z.object({
+const ItemFields = z.object({
     name: text(120),
-    price: Price,
+    priceCents: Cents,
     image: text(2000),
     isEnabled: z.boolean("Must be true or false").optional(),
     /** VM-25: one of this restaurant's categories, or null for "Other". */
     categoryId: ObjectId.nullable().optional(),
 });
+
+export const CreateItemBody = z.preprocess(oldPriceToCents, ItemFields);
 export type CreateItemBody = z.infer<typeof CreateItemBody>;
 
-export const UpdateItemBody = CreateItemBody.partial();
+export const UpdateItemBody = z.preprocess(oldPriceToCents, ItemFields.partial());
 export type UpdateItemBody = z.infer<typeof UpdateItemBody>;
 
 /** Switching a dish or a table on or off. */
@@ -39,7 +51,9 @@ export type UpdateTableBody = z.infer<typeof UpdateTableBody>;
 export const MenuItem = z.object({
     _id: z.string(),
     name: z.string(),
-    price: z.number(),
+    priceCents: Cents,
+    /** @deprecated CL-07: priceCents / 100, for pages opened before the deploy; gone in the next release. */
+    price: z.number().optional(),
     image: z.string(),
     isEnabled: z.boolean(),
     categoryId: z.string().nullable().optional(),

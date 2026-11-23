@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { logger } from "@vmenu/common";
 import { renameIsPayed } from "./migrations/is-paid.js";
 import { isDoneToStatus } from "./migrations/order-status.js";
+import { linesToCents } from "./migrations/price-cents.js";
 import { Bill } from "./models/bill.model.js";
 import { Order } from "./models/order.model.js";
 
@@ -12,7 +13,7 @@ import { Order } from "./models/order.model.js";
  */
 export async function prepareDatabase() {
     const db = mongoose.connection.db!;
-    const migrated = { bills: await renameIsPayed(db), orders: await isDoneToStatus(db) }; // CL-06, VM-27
+    const migrated = { bills: await renameIsPayed(db), orders: await isDoneToStatus(db), money: await linesToCents(db) }; // CL-06, VM-27, CL-07
     await Order.createIndexes();
     try {
         await Bill.createIndexes();

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IsoDate, ObjectId, label, pageOf, text } from "./common.js";
+import { Cents, IsoDate, ObjectId, label, pageOf, text } from "./common.js";
 import { OrderLine } from "./internal.js";
 
 // order-service: orders, bills and the dashboards (CL-05).
@@ -102,11 +102,30 @@ export const TableOrderView = z.object({
     cancelReason: z.string().optional(),
     table: z.string(),
     placedAt: IsoDate,
-    lines: z.array(z.object({ name: z.string(), price: z.number(), quantity: z.number(), total: z.number() })),
-    total: z.number(),
+    lines: z.array(
+        z.object({
+            name: z.string(),
+            priceCents: Cents,
+            quantity: z.number(),
+            totalCents: Cents,
+            /** @deprecated CL-07: in dollars, for pages opened before the deploy; gone in the next release. */
+            price: z.number().optional(),
+            /** @deprecated CL-07: as above. */
+            total: z.number().optional(),
+        }),
+    ),
+    totalCents: Cents,
+    /** @deprecated CL-07: in dollars, for pages opened before the deploy; gone in the next release. */
+    total: z.number().optional(),
 });
 export type TableOrderView = z.infer<typeof TableOrderView>;
-export const TableBill = z.object({ table: z.string(), orders: z.array(TableOrderView), total: z.number() });
+export const TableBill = z.object({
+    table: z.string(),
+    orders: z.array(TableOrderView),
+    totalCents: Cents,
+    /** @deprecated CL-07: in dollars, for pages opened before the deploy; gone in the next release. */
+    total: z.number().optional(),
+});
 export type TableBill = z.infer<typeof TableBill>;
 
 /** VM-09: an optional period for the dashboards, as ?from=&to= (ISO dates; `to` itself is not included). */
@@ -133,8 +152,8 @@ export const Overview = z.object({
     unpaidBillCount: z.number(),
     /** bills paid in the period */
     paymentCount: z.number(),
-    /** the lines on the bills paid in the period, cancelled orders left out */
-    revenue: z.number(),
+    /** CL-07: in cents: the lines on the bills paid in the period, cancelled orders left out */
+    revenueCents: Cents,
     ...Period,
 });
 export type Overview = z.infer<typeof Overview>;
@@ -153,7 +172,7 @@ export const OwnerOverview = z.object({
     itemCount: z.number(),
     orderCount: z.number(),
     paymentCount: z.number(),
-    revenue: z.number(),
+    revenueCents: Cents,
     /** items on the bills paid in the period */
     itemsSoldCount: z.number(),
     /** items per order, over the same paid orders */

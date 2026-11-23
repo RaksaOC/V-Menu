@@ -14,12 +14,11 @@ function period(query: unknown) {
 const tableCounts = (c: MenuCounts) => ({ tableCount: c.numOfTables, activeTableCount: c.numOfActiveTables, itemCount: c.numOfItems });
 
 /**
- * VM-09: what was sold, from paid bills only. Cancelled orders count nowhere (VM-27). Money is
- * added up in whole cents, so the total has no floating-point dust. Top sellers are grouped by
- * dish id, shown with the dish's most recent name.
+ * VM-09: what was sold, from paid bills only. Cancelled orders count nowhere (VM-27). Money is in
+ * whole cents (CL-07). Top sellers are grouped by dish id, shown with the dish's most recent name.
  */
 export function sales(paid: BillRecord[]) {
-    let cents = 0;
+    let revenueCents = 0;
     let itemsSoldCount = 0;
     let orderCount = 0;
     const sold = new Map<string, TopSeller & { at: number }>();
@@ -30,7 +29,7 @@ export function sales(paid: BillRecord[]) {
             const at = new Date(order.createdAt).getTime();
             for (const { item, quantity } of order.orderedItems) {
                 if (!item) continue;
-                cents += Math.round((item.price ?? 0) * 100) * quantity;
+                revenueCents += (item.priceCents ?? 0) * quantity;
                 itemsSoldCount += quantity;
                 const id = String(item._id);
                 const seen = sold.get(id) ?? { _id: id, name: item.name, quantity: 0, at };
@@ -41,7 +40,7 @@ export function sales(paid: BillRecord[]) {
         }
     }
     return {
-        revenue: cents / 100,
+        revenueCents,
         itemsSoldCount,
         avgItemsPerOrder: orderCount > 0 ? Number((itemsSoldCount / orderCount).toFixed(2)) : 0,
         topSellingItems: [...sold.values()]
@@ -67,7 +66,7 @@ export function statsService({ orders, bills, clients }: { orders: OrdersRepo; b
             orderCount,
             unpaidBillCount,
             paymentCount: paid.length,
-            revenue: sales(paid).revenue,
+            revenueCents: sales(paid).revenueCents,
             from,
             to,
         };

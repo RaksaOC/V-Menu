@@ -4,19 +4,21 @@ import { Item } from "../models/item.model.js";
 export interface ItemRecord {
     _id: string;
     name: string;
-    price: number;
+    priceCents: number;
+    /** @deprecated CL-07: priceCents / 100, kept for a rollback */
+    price?: number;
     image: string;
     isEnabled: boolean;
     resId: string;
     categoryId?: string | null;
 }
-export type ItemFields = Partial<Pick<ItemRecord, "name" | "price" | "image" | "isEnabled" | "categoryId">>;
+export type ItemFields = Partial<Pick<ItemRecord, "name" | "priceCents" | "image" | "isEnabled" | "categoryId">>;
 
 /** Every MongoDB query on menu items (CL-04). Ids are checked by the services first. */
 export interface ItemsRepo {
     list(resId: string, opts?: { enabledOnly?: boolean }): Promise<ItemRecord[]>;
     get(resId: string, id: string): Promise<ItemRecord | null>;
-    create(resId: string, fields: ItemFields & Pick<ItemRecord, "name" | "price" | "image">): Promise<ItemRecord>;
+    create(resId: string, fields: ItemFields & Pick<ItemRecord, "name" | "priceCents" | "image">): Promise<ItemRecord>;
     /** null when there's no such item in this restaurant */
     update(resId: string, id: string, fields: ItemFields): Promise<ItemRecord | null>;
     remove(resId: string, id: string): Promise<ItemRecord | null>;
@@ -28,14 +30,17 @@ export interface ItemsRepo {
 }
 
 const plain = <T>(doc: T) => doc as unknown as ItemRecord;
+/** CL-07: writes the old dollar price too, whenever the price changes. */
+const withOldPrice = <T extends ItemFields>(fields: T) =>
+    fields.priceCents === undefined ? fields : { ...fields, price: fields.priceCents / 100 };
 
 export const mongoItemsRepo: ItemsRepo = {
     list: (resId, { enabledOnly = false } = {}) => Item.find(enabledOnly ? { resId, isEnabled: true } : { resId }).lean<ItemRecord[]>(),
     get: (resId, id) => Item.findOne({ _id: id, resId }).lean<ItemRecord>(),
     async create(resId, fields) {
-        return plain((await Item.create({ ...fields, resId })).toObject());
+        return plain((await Item.create({ ...withOldPrice(fields), resId })).toObject());
     },
-    update: (resId, id, fields) => Item.findOneAndUpdate({ _id: id, resId }, fields, { new: true, runValidators: true }).lean<ItemRecord>(),
+    update: (resId, id, fields) => Item.findOneAndUpdate({ _id: id, resId }, withOldPrice(fields), { new: true, runValidators: true }).lean<ItemRecord>(),
     remove: (resId, id) => Item.findOneAndDelete({ _id: id, resId }).lean<ItemRecord>(),
     count: (resId) => Item.countDocuments({ resId }),
     // ids were checked to be ObjectIds; sanitizeFilter would strip the $in otherwise

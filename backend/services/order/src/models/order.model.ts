@@ -9,7 +9,8 @@ const orderSchema = new mongoose.Schema(
         orderedItems: [
             {
                 _id: false,
-                item: { _id: String, name: String, price: Number, image: String, isEnabled: Boolean },
+                // CL-07: priceCents is the price; `price` (dollars) stays for one release, for a rollback
+                item: { _id: String, name: String, priceCents: Number, price: Number, image: String, isEnabled: Boolean },
                 quantity: { type: Number, required: true, min: 1 },
             },
         ],

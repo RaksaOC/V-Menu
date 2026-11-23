@@ -5,18 +5,23 @@ import type { OrderRecord, OrdersRepo } from "../repositories/orders.repo.js";
 // VM-07: what a customer at a table may see: their table's orders as the server saved them
 // (dishes, the menu's prices, totals). Nothing internal: no restaurant id, no other table.
 
-const cents = (n: number) => Math.round(n * 100) / 100;
-
 /** The short number shown to the customer and staff: the last 6 characters of the order id. */
 export const orderNumber = (id: string) => String(id).slice(-6).toUpperCase();
 
 function view(order: OrderRecord) {
-    const lines = order.orderedItems.map((l) => ({
-        name: l.item.name,
-        price: l.item.price,
-        quantity: l.quantity,
-        total: cents(l.item.price * l.quantity),
-    }));
+    // CL-07: whole cents. The old dollar fields are sent for one release, for pages opened before the deploy.
+    const lines = order.orderedItems.map((l) => {
+        const totalCents = l.item.priceCents * l.quantity;
+        return {
+            name: l.item.name,
+            priceCents: l.item.priceCents,
+            quantity: l.quantity,
+            totalCents,
+            price: l.item.priceCents / 100,
+            total: totalCents / 100,
+        };
+    });
+    const totalCents = lines.reduce((sum, l) => sum + l.totalCents, 0);
     return {
         _id: String(order._id),
         number: orderNumber(String(order._id)),
@@ -25,7 +30,8 @@ function view(order: OrderRecord) {
         table: order.table,
         placedAt: order.orderedAt,
         lines,
-        total: cents(lines.reduce((sum, l) => sum + l.total, 0)),
+        totalCents,
+        total: totalCents / 100,
     };
 }
 
@@ -45,7 +51,8 @@ export function tableService({ orders, bills }: { orders: OrdersRepo; bills: Bil
             const list = (bill?.orders ?? []).map(view);
             // VM-27: a cancelled order stays on the bill but isn't charged
             const charged = list.filter((o) => o.status !== "cancelled");
-            return { table, orders: list, total: cents(charged.reduce((sum, o) => sum + o.total, 0)) };
+            const totalCents = charged.reduce((sum, o) => sum + o.totalCents, 0);
+            return { table, orders: list, totalCents, total: totalCents / 100 };
         },
     };
 }

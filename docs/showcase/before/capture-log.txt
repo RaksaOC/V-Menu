@@ -163,3 +163,13 @@ ok   VM-09-restaurant-overview-1280-dark
 ok   VM-09-owner-overview-360
 ok   VM-09-owner-restaurants-360
 ok   VM-09-restaurant-overview-360
+# ONLY=CL-07 (2026-11-23T17:41:21.865Z)
+ok   CL-07-kitchen-1280
+ok   CL-07-customer-order-1280
+ok   CL-07-cashier-bill-1280
+ok   CL-07-kitchen-1280-dark
+ok   CL-07-customer-order-1280-dark
+ok   CL-07-cashier-bill-1280-dark
+ok   CL-07-kitchen-360
+ok   CL-07-customer-order-360
+ok   CL-07-cashier-bill-360
