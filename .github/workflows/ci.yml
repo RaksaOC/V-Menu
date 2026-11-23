@@ -31,6 +31,8 @@ jobs:
           - { name: menu-service, dir: services/menu-service, kind: service }
           - { name: order-service, dir: services/order-service, kind: service }
           - { name: frontend, dir: frontend, kind: web }
+          # Repo-level checks (issue and PR templates); no install needed.
+          - { name: repo, dir: ., kind: repo }
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -43,12 +45,19 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
+          # The repo checks install nothing, so there is no npm cache to save.
+          cache: ${{ matrix.kind != 'repo' && 'npm' || '' }}
           cache-dependency-path: ${{ matrix.dir }}/package-lock.json
 
       - run: npm ci --no-audit --no-fund
+        if: matrix.kind != 'repo'
 
       - run: npm run typecheck
+        if: matrix.kind != 'repo'
+
+      - name: Repo checks (templates)
+        if: matrix.kind == 'repo'
+        run: npm run test:repo
 
       # ---- services: tests with a coverage threshold (vitest.config.ts) ----
       # mongodb-memory-server downloads a MongoDB binary on first use; keep it between runs.
