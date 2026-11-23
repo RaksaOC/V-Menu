@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -21,13 +21,19 @@ function probe(files) {
     const dir = mkdtempSync(join(tmpdir(), "vm-boundaries-"));
     try {
         cpSync(config, join(dir, ".dependency-cruiser.cjs"));
-        const base = { "frontend/tsconfig.json": JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": ["./src/*"] } } }) };
+        // the real tsconfig, so imports resolve the same way as in the repo
+        const base = {
+            "frontend/tsconfig.json": readFileSync(join(root, "frontend", "tsconfig.json"), "utf8"),
+            "frontend/src/index.ts": "export {};\n", // TypeScript refuses a tsconfig with no files
+        };
         for (const [path, body] of Object.entries({ ...base, ...files })) {
             mkdirSync(dirname(join(dir, path)), { recursive: true });
             writeFileSync(join(dir, path), body);
         }
-        const targets = ["backend", "frontend/src"].filter((t) => existsSync(join(dir, t)));
-        return cruise(dir, targets);
+        return cruise(
+            dir,
+            ["backend", "frontend/src"].filter((t) => existsSync(join(dir, t))),
+        );
     } finally {
         rmSync(dir, { recursive: true, force: true });
     }

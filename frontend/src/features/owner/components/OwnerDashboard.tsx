@@ -23,7 +23,7 @@ import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headless
 import { createRestaurant, getRestaurants } from "@/features/owner/api";
 import { RestaurantOutput } from "@/lib/types/Restaurant";
 import Overview from "@/features/restaurant/components/Overview";
-import { ResContext } from "@/features/owner/ResContext";
+import { ResContext } from "@/lib/restaurantContext";
 import Menu from "@/features/restaurant/components/Menu";
 import Tables from "@/features/restaurant/components/Tables";
 import Staff from "@/features/staff/components/Staff";

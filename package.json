@@ -7,12 +7,13 @@
     "dev:db": "node scripts/dev-db.mjs",
     "dev": "concurrently -k -n db,restaurant,menu,order,web -c gray,magenta,yellow,cyan,green \"npm:dev:db\" \"npm --prefix backend/services/restaurant run dev\" \"npm --prefix backend/services/menu run dev\" \"npm --prefix backend/services/order run dev\" \"npm --prefix frontend run dev\"",
     "dev:services": "concurrently -k -n restaurant,menu,order -c magenta,yellow,cyan \"npm --prefix backend/services/restaurant run dev\" \"npm --prefix backend/services/menu run dev\" \"npm --prefix backend/services/order run dev\"",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run deps && npm test",
     "test": "npm --prefix backend test && npm --prefix frontend test && npm run test:repo",
     "test:repo": "node --test scripts/*.test.mjs",
     "test:e2e": "npm --prefix e2e test",
     "lint": "npm --prefix frontend run lint",
     "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck",
+    "deps": "depcruise --config .dependency-cruiser.cjs backend/services backend/packages frontend/src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "seed": "npm --prefix backend/services/restaurant run seed && npm --prefix backend/services/menu run seed",
@@ -26,7 +27,9 @@
   },
   "devDependencies": {
     "concurrently": "^10.0.7",
+    "dependency-cruiser": "^18.9.0",
     "mongodb-memory-server": "^11.3.0",
-    "prettier": "^3.10.1"
+    "prettier": "^3.10.1",
+    "typescript": "^5.9.3"
   }
 }

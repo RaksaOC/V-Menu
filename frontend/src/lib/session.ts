@@ -18,3 +18,18 @@ export function endSession(): void {
     localStorage.removeItem("token");
     navigation.to(`${login}?expired=1`);
 }
+
+// Clears every copy of the session: the httpOnly cookie (only the server can remove it),
+// the token the API client sends, and the Firebase sign-in.
+export async function signOut() {
+    try {
+        await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+        // offline: the cookie expires on its own within the hour
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("userEmail");
+    // Loaded only when signing out, so pages that just call the API (customer pages) don't load Firebase.
+    const [{ signOut: firebaseSignOut }, { auth }] = await Promise.all([import("firebase/auth"), import("@/lib/firebase")]);
+    await firebaseSignOut(auth).catch(() => {});
+}
