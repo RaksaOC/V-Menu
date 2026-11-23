@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { Clock, LogOut, Menu as MenuIcon, User, UtensilsCrossed } from "lucide-react";
-import { signOut } from "@/lib/session";
+import { Clock, LogOut, Menu as MenuIcon, MonitorX, User, UtensilsCrossed } from "lucide-react";
+import { navigation, signOut } from "@/lib/session";
+import { signOutEverywhere } from "@/lib/sign-out-everywhere";
+import { toast } from "@/lib/toast";
 
 interface Props {
     /** e.g. "V-Menu Owner", "V-Menu Cashier" */
@@ -40,6 +42,11 @@ export default function DashboardHeader({
         const timer = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(timer);
     }, [clock]);
+
+    async function endAllSessions() {
+        if (await signOutEverywhere()) navigation.to(loginHref);
+        else toast.error("Couldn't sign out everywhere. Try again.");
+    }
 
     return (
         <header
@@ -93,6 +100,15 @@ export default function DashboardHeader({
                             >
                                 <LogOut size={16} aria-hidden /> Sign Out
                             </Link>
+                        </MenuItem>
+                        <MenuItem>
+                            <button
+                                type="button"
+                                onClick={() => void endAllSessions()}
+                                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-[var(--bad)] data-[focus]:bg-[var(--bad-soft)]"
+                            >
+                                <MonitorX size={16} aria-hidden /> Sign out everywhere
+                            </button>
                         </MenuItem>
                     </MenuItems>
                 </Menu>
