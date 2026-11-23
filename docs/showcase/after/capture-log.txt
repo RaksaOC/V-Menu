@@ -9,3 +9,10 @@ ok   VM-01-owner-tables-1280
 ok   VM-01-owner-qr-1280
 ok   VM-01-owner-tables-1280-dark
 ok   VM-01-owner-qr-1280-dark
+# ONLY=VM-02 (2026-11-23T11:20:01.989Z)
+ok   VM-02-owner-add-photo-1280
+ok   VM-02-customer-menu-1280
+ok   VM-02-owner-add-photo-1280-dark
+ok   VM-02-customer-menu-1280-dark
+ok   VM-02-owner-add-photo-360
+ok   VM-02-customer-menu-360
