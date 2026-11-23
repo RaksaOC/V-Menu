@@ -4,6 +4,7 @@ import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { signAppToken, HttpError, notFound } from "@vmenu/common";
+import { OrderCheckResponse } from "@vmenu/contracts";
 import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
 import { Order } from "../../src/models/order.model.js";
@@ -23,7 +24,7 @@ const clients: Clients = {
         if (!menuUp) throw new HttpError(503, "A required service is unavailable");
         if (body.table !== "1") throw new HttpError(409, "Table is not available");
         // The browser said the price was 0; the menu answers with the real one.
-        return { items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) };
+        return OrderCheckResponse.parse({ items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) }); // CL-05
     },
 };
 const app = createApp({
@@ -307,5 +308,24 @@ describe("cashier bills: open ones by default, paid history a page at a time (VM
     it("is backed by an index", async () => {
         const names = (await Bill.listIndexes()).map((i: { name: string }) => i.name);
         expect(names).toContain("resId_1_isPayed_1_updatedAt_-1");
+    });
+});
+
+describe("input checks name the fields (CL-05, VM-17)", () => {
+    it("a bad order is a 400 with the fields to fix", async () => {
+        const res = await request(app)
+            .post(`/api/orders/${R.slug}`)
+            .send({ table: "", orderedItems: [{ item: {}, quantity: 0 }] });
+        expect(res.status).toBe(400);
+        expect(res.body.code).toBe("INVALID_INPUT");
+        expect(Object.keys(res.body.fields).sort()).toEqual(["orderedItems.0.item._id", "orderedItems.0.quantity", "table"]);
+    });
+
+    it("marking a bill needs true or false", async () => {
+        await place("1");
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        const res = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPayed: "yes" });
+        expect(res.status).toBe(400);
+        expect(res.body.fields).toEqual({ isPayed: "Must be true or false" });
     });
 });

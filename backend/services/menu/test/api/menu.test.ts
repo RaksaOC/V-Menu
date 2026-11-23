@@ -121,3 +121,33 @@ describe("order check (internal)", () => {
         expect(res.body).toMatchObject({ code: "ITEMS_UNAVAILABLE", message: "Some items are no longer available" });
     });
 });
+
+describe("input checks name the fields (CL-05, VM-17)", () => {
+    it("a bad new dish is a 400 with the fields to fix", async () => {
+        const res = await addItem({ name: "", price: "abc" });
+        expect(res.status).toBe(400);
+        expect(res.body.code).toBe("INVALID_INPUT");
+        expect(Object.keys(res.body.fields).sort()).toEqual(["image", "name", "price"]);
+    });
+
+    it("a manual table needs its name", async () => {
+        const res = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: " " });
+        expect(res.status).toBe(400);
+        expect(res.body.fields).toEqual({ name: "Required" });
+    });
+});
+
+describe("contract: menu-service's real order-check answer (CL-05)", () => {
+    it("matches OrderCheckResponse, the schema order-service reads it with", async () => {
+        const { OrderCheckResponse } = await import("@vmenu/contracts");
+        const { body: dish } = await addItem({ name: "Kuy Teav", price: 2.5, image: PHOTO });
+        const table = (await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({})).body;
+        await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
+        const res = await request(app)
+            .post(`/internal/restaurants/${RES_ID}/order-check`)
+            .set("x-internal-key", "internal-test-key")
+            .send({ table: table.name, items: [{ _id: dish._id, quantity: 2 }] });
+        expect(res.status).toBe(200);
+        expect(OrderCheckResponse.parse(res.body)).toEqual(res.body);
+    });
+});
