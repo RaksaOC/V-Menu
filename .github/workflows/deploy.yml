@@ -257,17 +257,6 @@ jobs:
       SSH_KEY: ${{ secrets.SSH_KEY }}
       SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
       SSH_PORT: ${{ vars.SSH_PORT }}
-      MONGODB_URI_RESTAURANT: ${{ secrets.MONGODB_URI_RESTAURANT }}
-      MONGODB_URI_MENU: ${{ secrets.MONGODB_URI_MENU }}
-      MONGODB_URI_ORDER: ${{ secrets.MONGODB_URI_ORDER }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-      FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
-      LOG_LEVEL: ${{ vars.LOG_LEVEL }}
-      FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
-      MONGO_MODE: ${{ vars.MONGO_MODE }}
-      MONGO_NETWORK: ${{ vars.MONGO_NETWORK }}
-      PROXY_NETWORK: ${{ vars.PROXY_NETWORK }}
     steps:
       - uses: actions/checkout@v7
 
