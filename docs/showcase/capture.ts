@@ -1098,6 +1098,67 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-29: the kitchen board with orders of three ages (just now, 7 min, 20 min), and kiosk mode.
+// Making orders older changes the local database: only when backend/services/order/.env is there.
+async function ageOrders(ages: Record<string, number>) {
+    const envFile = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "backend", "services", "order", ".env");
+    if (!existsSync(envFile)) return;
+    const uri = readFileSync(envFile, "utf8").match(/^MONGODB_URI=(.*)$/m)?.[1]?.trim();
+    if (!uri) return;
+    const { createRequire } = await import("node:module");
+    const mongoose = createRequire(import.meta.url)("../../backend/node_modules/mongoose");
+    const conn = await mongoose.createConnection(uri).asPromise();
+    try {
+        for (const [id, minutes] of Object.entries(ages)) {
+            const at = new Date(Date.now() - minutes * 60_000);
+            await conn.collection("orders").updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: { createdAt: at, orderedAt: at } });
+        }
+    } finally {
+        await conn.close();
+    }
+}
+const VM29 = { ready: false };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-29 ${vp.width} ${theme}`, async () => {
+        const chef = await newPage(browser, vp, theme, "chef");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM29.ready) {
+            VM29.ready = true;
+            // start from an empty board: serve what's there (this lane's demo data only)
+            const next: Record<string, string> = { pending: "preparing", preparing: "ready", ready: "served" };
+            for (const o of (await (await chef.page.request.get(api("/kitchen"))).json()) as { _id: string; status: string }[]) {
+                for (let s = next[o.status]; s; s = next[s]) await chef.page.request.patch(api(`/kitchen/${o._id}/status`), { data: { status: s } });
+            }
+            const menu = dishesOf(await (await chef.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            const ids: string[] = [];
+            for (const [table, lines] of [
+                ["T3", [{ item: { _id: menu[1]._id }, quantity: 2 }]],
+                ["T1", [{ item: { _id: menu[0]._id }, quantity: 1 }, { item: { _id: menu[3]._id }, quantity: 2 }]],
+                ["T2", [{ item: { _id: menu[2]._id }, quantity: 1 }]],
+            ] as const) {
+                const res = await chef.page.request.post(api(""), { data: { table, orderedItems: lines } });
+                ids.push(String((await res.json())._id));
+            }
+            await ageOrders({ [ids[0]]: 20, [ids[1]]: 7 });
+        }
+        await chef.page.goto(`${BASE}/${SLUG}/kitchen`);
+        await settle(chef.page);
+        await shot({ page: chef.page, theme, width: vp.width }, "VM-29-kitchen-board");
+        const kiosk = chef.page.getByRole("button", { name: "Kiosk mode" });
+        if (theme === "light" && (await kiosk.count())) {
+            await chef.page.getByRole("button", { name: "Start service" }).click();
+            await kiosk.click();
+            await settle(chef.page);
+            await shot({ page: chef.page, theme, width: vp.width }, "VM-29-kiosk", false);
+        }
+        await chef.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
