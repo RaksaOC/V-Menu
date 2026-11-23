@@ -1,15 +1,18 @@
-import {ItemInput, ItemOutput} from "@/lib/types/Item";
+import {ItemOutput} from "@/lib/types/Item";
 import { addToCart } from "../cart";
 import {Plus} from "lucide-react";
 
 interface CardProps {
+    /** The restaurant and table whose cart the dish goes into (VM-05). */
+    slug: string;
+    table: string;
     _id: string;
     name: string;
     price: number;
     image: string;
 }
 
-export default function Card({ _id, name, price, image }: CardProps) {
+export default function Card({ slug, table, _id, name, price, image }: CardProps) {
     return (
         <div className="bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:scale-[1.02] hover:border-emerald-200">
             {/* Image Container */}
@@ -41,7 +44,7 @@ export default function Card({ _id, name, price, image }: CardProps) {
                             _id,
                             image,
                             name,
-                            price: parseInt(price.toFixed(2)),
+                            price, // was parseInt(price.toFixed(2)), which dropped the cents
                             isEnabled: true,
                         };
 
@@ -50,7 +53,7 @@ export default function Card({ _id, name, price, image }: CardProps) {
                             quantity: 1,
                         };
 
-                        addToCart(cartItem);
+                        addToCart(slug, table, cartItem);
                     }}
                     className=" text-sm mt-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold p-2 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 flex items-center justify-center gap-1"
                 >
