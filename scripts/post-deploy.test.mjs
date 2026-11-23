@@ -50,7 +50,7 @@ test("it checks the demo restaurant first, and runs the short browser suite", ()
     assert.match(post, /playwright test --grep @post-deploy/);
     assert.match(post, /BASE_URL: \$\{\{ needs\.deploy\.outputs\.url \}\}/);
     // Every check runs even when an earlier one failed, so one run shows everything that's wrong.
-    for (const name of ["Security headers", "Browser tests", "Scan"]) assert.match(step(post, name), /if: '?!cancelled\(\)/, name);
+    for (const name of ["Security headers", "Browser tests", "Scan"]) assert.match(step(post, name), /if: .*!cancelled\(\)/, name);
 });
 
 test("JWT_SECRET only reaches the step that signs the short-lived staff tokens", () => {
@@ -58,8 +58,8 @@ test("JWT_SECRET only reaches the step that signs the short-lived staff tokens",
     assert.ok(sign, "a 'Staff tokens' step");
     assert.match(sign, /JWT_SECRET: \$\{\{ secrets\.JWT_SECRET \}\}/);
     assert.match(sign, /::add-mask::/);
-    assert.match(sign, /node scripts\/staff-token\.mjs chef/);
-    assert.match(sign, /node scripts\/staff-token\.mjs cashier/);
+    assert.match(sign, /for role in chef cashier/);
+    assert.match(sign, /node scripts\/staff-token\.mjs "\$role"/);
     const others = post.replace(sign, "");
     assert.doesNotMatch(others, /secrets\.JWT_SECRET/);
     assert.doesNotMatch(others, /secrets\.(SSH_|MONGODB_)/, "the browser tests run without server secrets");

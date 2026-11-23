@@ -11,7 +11,7 @@
 #
 # Inputs, all as environment variables:
 #   TARGET            staging | prod
-#   DEPLOY_ACTION     an image tag (sha-1a2b3c4, 1.2.0), --rollback or --seed
+#   DEPLOY_ACTION     an image tag (sha-1a2b3c4, 1.2.0), --rollback, --seed or --check-failed
 #   EXPECTED_SHA      optional: full git sha every /version must report
 #   SSH_HOST SSH_USER SSH_KEY        secrets; SSH_PORT (default 22)
 #   SSH_KNOWN_HOSTS   optional secret: the server's host key line(s). Recommended.
@@ -24,7 +24,8 @@ die() { echo "::error::$*" >&2; exit 1; }
 
 case ${TARGET:-} in staging | prod) ;; *) die "TARGET must be staging or prod" ;; esac
 ACTION=${DEPLOY_ACTION:-}
-[[ $ACTION =~ ^(--rollback|--seed|[A-Za-z0-9._-]{1,128})$ ]] || die "invalid DEPLOY_ACTION: '$ACTION'"
+[[ $ACTION =~ ^(--rollback|--seed|--check-failed|[A-Za-z0-9._-]{1,128})$ ]] || die "invalid DEPLOY_ACTION: '$ACTION'"
+[[ $ACTION != --check-failed || $TARGET == staging ]] || die "--check-failed is for staging only (the post-deploy checks run there)"
 [[ -z ${EXPECTED_SHA:-} || $EXPECTED_SHA =~ ^[0-9a-f]{7,40}$ ]] || die "invalid EXPECTED_SHA"
 
 : "${SSH_PORT:=22}"

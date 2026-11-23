@@ -482,7 +482,7 @@
       },
       "annotations": {
         "summary": "{{ $labels.env }}: {{ $labels.action }} failed",
-        "description": "See deploy-history.log and the failed run in GitHub Actions."
+        "description": "A deploy, rollback or seed failed, or the post-deploy checks of staging failed (action post-deploy-check, B7). See deploy-history.log and the failed run in GitHub Actions."
       },
       "data": [
         {

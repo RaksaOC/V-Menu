@@ -7,6 +7,7 @@
 #   remote-deploy.sh <staging|prod> <tag>         deploy an image tag (sha-1a2b3c4, 1.2.0)
 #   remote-deploy.sh <staging|prod> --rollback    go back to the previous tag
 #   remote-deploy.sh staging --seed               load the demo restaurant (staging only)
+#   remote-deploy.sh staging --check-failed       record that the post-deploy checks failed (B7)
 #
 # Environment:
 #   EXPECTED_SHA=<full git sha>  fail unless every service's /version reports this commit
@@ -29,7 +30,7 @@ log() { printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"; }
 die() { log "ERROR: $*" >&2; exit 1; }
 
 case $ENV_NAME in staging | prod) ;; *) die "environment must be staging or prod" ;; esac
-[[ -n $ACTION ]] || die "missing tag (or --rollback / --seed)"
+[[ -n $ACTION ]] || die "missing tag (or --rollback / --seed / --check-failed)"
 cd "$DIR" 2>/dev/null || die "$DIR does not exist; run infra/deploy/setup-server.sh first"
 [[ -f .env ]] || die "$DIR/.env is missing; the deploy workflow writes it"
 
@@ -160,6 +161,16 @@ case $ACTION in
         compose exec -T menu-service node dist/seed.js
         record seed "$(current_tag)" ok
         result seed "$(current_tag)"
+        ;;
+
+    --check-failed)
+        # B7: the post-deploy checks (deploy.yml) failed against this version. Only a history
+        # line: the monitoring agent ships it, and the "Deploy failed" alert fires. Nothing is
+        # restarted or rolled back.
+        [[ $ENV_NAME == staging ]] || die "post-deploy checks run on staging only"
+        record post-deploy-check "$(current_tag)" failed
+        log "recorded: post-deploy checks failed on $(current_tag)"
+        result post-deploy-check "$(current_tag)"
         ;;
 
     --rollback)
