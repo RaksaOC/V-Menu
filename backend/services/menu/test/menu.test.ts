@@ -76,9 +76,7 @@ describe("tables", () => {
         const t1 = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "auto" });
         const t2 = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "auto" });
         expect([t1.body.name, t2.body.name]).toEqual(["1", "2"]);
-        expect((await request(app).get(`/api/menu/${SLUG}/public/tables/1`)).status).toBe(200); // new tables start open (VM-04)
-        await request(app).patch(`/api/menu/${SLUG}/tables/${t1.body._id}/availability`).set(cashier).send({ isEnabled: false });
-        expect((await request(app).get(`/api/menu/${SLUG}/public/tables/1`)).status).toBe(404);
+        expect((await request(app).get(`/api/menu/${SLUG}/public/tables/1`)).status).toBe(404); // new tables start closed
         await request(app).patch(`/api/menu/${SLUG}/tables/${t1.body._id}/availability`).set(cashier).send({ isEnabled: true });
         expect((await request(app).get(`/api/menu/${SLUG}/public/tables/1`)).status).toBe(200);
     });
@@ -90,8 +88,7 @@ describe("order check (internal)", () => {
         const { body: table } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "A1" });
         const check = (t: string) =>
             request(app).post(`/internal/restaurants/${RES_ID}/order-check`).set("x-internal-key", "internal-test-key").send({ table: t, items: [{ _id: item._id, quantity: 2 }] });
-        await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: false });
-        expect((await check("A1")).status).toBe(409);
+        expect((await check("A1")).status).toBe(409); // new tables start closed
         await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
         const ok = await check("A1");
         expect(ok.body.items[0]).toMatchObject({ item: { name: "Bai Sach Chrouk", price: 3 }, quantity: 2 });
