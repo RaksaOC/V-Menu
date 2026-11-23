@@ -11,7 +11,15 @@ export interface BillRecord {
     createdAt: Date;
     /** when it last changed: for a paid bill, when it was paid */
     updatedAt?: Date;
+    /** VM-30 */
+    billRequestedAt?: Date;
+    staffCalledAt?: Date;
+    requestLog?: { bill?: Date; staff?: Date };
 }
+
+/** VM-30: the bill field each customer button sets. */
+export const REQUEST_FLAG = { bill: "billRequestedAt", staff: "staffCalledAt" } as const;
+export type RequestKind = keyof typeof REQUEST_FLAG;
 
 /** Thrown when a change would give a table a second open bill (VM-08). */
 export class OpenBillExists extends Error {
@@ -49,6 +57,10 @@ export interface BillsRepo {
     hasOtherOpenBill(resId: string, table: string, exceptId: string): Promise<boolean>;
     /** null when there's no such bill in this restaurant; throws OpenBillExists */
     setPaid(resId: string, id: string, isPaid: boolean): Promise<BillRecord | null>;
+    /** VM-30: a customer pressed a button: the flag (shown since `flagAt`) and the time of this press. */
+    markRequest(resId: string, id: string, kind: RequestKind, flagAt: Date, pressedAt: Date): Promise<void>;
+    /** VM-30: the cashier dismissed it. */
+    clearRequest(resId: string, id: string, kind: RequestKind): Promise<BillRecord | null>;
 }
 
 export const mongoBillsRepo: BillsRepo = {
@@ -105,10 +117,22 @@ export const mongoBillsRepo: BillsRepo = {
     },
     async setPaid(resId, id, isPaid) {
         try {
-            return await Bill.findOneAndUpdate({ _id: id, resId }, { isPaid }, { new: true }).populate("orders").lean<BillRecord>();
+            // VM-30: paying clears the customer's requests
+            const update = isPaid ? { isPaid, $unset: { billRequestedAt: "", staffCalledAt: "" } } : { isPaid };
+            return await Bill.findOneAndUpdate({ _id: id, resId }, update, { new: true }).populate("orders").lean<BillRecord>();
         } catch (err) {
             if (isDuplicateKey(err)) throw new OpenBillExists(); // re-opened while another bill opened
             throw err;
         }
     },
+    async markRequest(resId, id, kind, flagAt, pressedAt) {
+        await Bill.updateOne(
+            { _id: id, resId, isPaid: false },
+            { $set: { [REQUEST_FLAG[kind]]: flagAt, [`requestLog.${kind}`]: pressedAt } },
+        );
+    },
+    clearRequest: (resId, id, kind) =>
+        Bill.findOneAndUpdate({ _id: id, resId }, { $unset: { [REQUEST_FLAG[kind]]: "" } }, { new: true })
+            .populate("orders")
+            .lean<BillRecord>(),
 };

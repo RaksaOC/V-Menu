@@ -29,5 +29,8 @@ export function billTotals(orders: (OrderRecord | null)[]) {
     return { lines, subtotalCents, totalCents: subtotalCents }; // no tax or discount yet
 }
 
-/** The bill with its lines and totals added. */
-export const withTotals = <T extends { orders: (OrderRecord | null)[] }>(bill: T) => ({ ...bill, ...billTotals(bill.orders) });
+/** The bill with its lines and totals added. VM-30: the internal press times are left out. */
+export const withTotals = <T extends { orders: (OrderRecord | null)[]; requestLog?: unknown }>({ requestLog: _internal, ...bill }: T) => ({
+    ...bill,
+    ...billTotals(bill.orders),
+});

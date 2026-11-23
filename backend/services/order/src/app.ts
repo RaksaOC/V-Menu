@@ -7,6 +7,7 @@ import { billsService } from "./services/bills.service.js";
 import { kitchenService } from "./services/kitchen.service.js";
 import { ordersService } from "./services/orders.service.js";
 import { statsService } from "./services/stats.service.js";
+import { requestsService } from "./services/requests.service.js";
 import { tableService } from "./services/table.service.js";
 import { billsRoutes } from "./routes/bills.routes.js";
 import { restaurantFrom, type RouteContext } from "./routes/context.js";
@@ -44,6 +45,7 @@ export function createApp({
                 bills: billsService({ bills, orders }),
                 stats: statsService({ orders, bills, clients: bound }),
                 table: tableService({ orders, bills }),
+                requests: requestsService({ bills }),
             };
         },
         restaurant: restaurantFrom(lookupRestaurant),

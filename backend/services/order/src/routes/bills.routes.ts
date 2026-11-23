@@ -32,5 +32,10 @@ export function billsRoutes({ services, restaurant }: RouteContext) {
         const body = parse(CancelOrderBody, req.body ?? {});
         res.json(await services(req).bills.cancelOrder(resId, String(req.params.id), String(req.params.orderId), body, req.user!.uid));
     });
+    // VM-30: the cashier dismisses a "bill requested" or "staff called" badge
+    r.delete("/:id/requests/:kind", async (req, res) => {
+        const resId = (await restaurant(req))._id;
+        res.json(withOldName(await services(req).requests.dismiss(resId, String(req.params.id), String(req.params.kind))));
+    });
     return r;
 }

@@ -4,10 +4,10 @@ import Invoice from "./Invoice";
 import { formatDateTime } from "@/lib/dates";
 import { useMoney } from "@/components/money/MoneyProvider";
 import { useParams } from "next/navigation";
-import { DollarSign, Eye, EyeOff, XCircle } from "lucide-react";
+import { BellRing, DollarSign, Eye, EyeOff, Receipt, X, XCircle } from "lucide-react";
 import { Button, Chip, Input } from "@/components/ui";
 import { BILL_STATUS_LABEL, STATUS_TONE } from "@/lib/order-status";
-import type { Bill, Order } from "@vmenu/contracts";
+import type { Bill, Order, TableRequestKind } from "@vmenu/contracts";
 
 interface Props {
     order: Bill;
@@ -18,11 +18,23 @@ interface Props {
     onSeen?: (id: string) => void;
     /** VM-27: cancel one order on this (open) bill, with a reason */
     onCancelOrder?: (billId: string, orderId: string, reason: string) => void;
+    /** VM-30: dismiss a "bill requested" or "staff called" badge */
+    onDismissRequest?: (billId: string, kind: TableRequestKind) => void;
 }
+
+/** VM-30: how long the customer has been waiting: "just now", "3 min". */
+const waited = (at: string) => {
+    const minutes = Math.floor((Date.now() - new Date(at).getTime()) / 60_000);
+    return minutes < 1 ? "just now" : `${minutes} min`;
+};
+const REQUEST_BADGES = [
+    { kind: "bill", field: "billRequestedAt", label: "BILL REQUESTED", name: "bill request", Icon: Receipt },
+    { kind: "staff", field: "staffCalledAt", label: "STAFF CALLED", name: "staff call", Icon: BellRing },
+] as const;
 
 const orderNumber = (id: string) => id.slice(-6).toUpperCase();
 
-function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: Props) {
+function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder, onDismissRequest }: Props) {
     const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [showInvoice, setShowInvoice] = useState(false);
     const [cancelling, setCancelling] = useState<{ id: string; reason: string; error: string } | null>(null);
@@ -49,6 +61,35 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                 )}
                 {/*<span className="text-sm text-zinc-500 dark:text-zinc-400">Order ID: {order._id}</span>*/}
             </div>
+
+            {/* VM-30: the customer asked for the bill, or for a staff member */}
+            {REQUEST_BADGES.some(({ field }) => order[field]) && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                    {REQUEST_BADGES.map(({ kind, field, label, name, Icon }) => {
+                        const at = order[field];
+                        if (!at) return null;
+                        return (
+                            <span
+                                key={kind}
+                                className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-sm font-bold tracking-wide text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/20 dark:text-amber-100"
+                            >
+                                <Icon size={14} aria-hidden />
+                                {label} · {waited(at)}
+                                {!order.isPaid && onDismissRequest && (
+                                    <button
+                                        type="button"
+                                        aria-label={`Dismiss ${name}`}
+                                        onClick={() => onDismissRequest(order._id, kind)}
+                                        className="-mr-1 rounded-full p-0.5 hover:bg-amber-200 dark:hover:bg-amber-500/30"
+                                    >
+                                        <X size={14} aria-hidden />
+                                    </button>
+                                )}
+                            </span>
+                        );
+                    })}
+                </div>
+            )}
 
             <div className="bg-none  rounded-xl p-3 mb-4 border border-slate-500">
                 {subOrders.length > 0 ? (

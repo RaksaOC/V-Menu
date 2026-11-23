@@ -1,5 +1,5 @@
 import api, { seg } from "@/lib/api";
-import type { PlaceOrderBody, PublicMenu, TableBill, TableOrderView } from "@vmenu/contracts";
+import type { PlaceOrderBody, PublicMenu, TableBill, TableOrderView, TableRequestKind } from "@vmenu/contracts";
 
 /** The dishes a customer can order, by category (public, no sign-in; VM-25). */
 export async function getMenu(slug: string): Promise<PublicMenu> {
@@ -28,5 +28,11 @@ export async function getTableOrder(slug: string, table: string, orderId: string
 
 export async function getTableBill(slug: string, table: string): Promise<TableBill> {
     const { data } = await api.get<TableBill>(`/api/orders/${seg(slug)}/tables/${seg(table)}/open-bill`);
+    return data;
+}
+
+/** VM-30: "Request bill" or "Call staff": flags the table's open bill for the cashier. */
+export async function askStaff(slug: string, table: string, kind: TableRequestKind): Promise<{ kind: TableRequestKind; at: string }> {
+    const { data } = await api.post(`/api/orders/${seg(slug)}/tables/${seg(table)}/requests`, { kind });
     return data;
 }

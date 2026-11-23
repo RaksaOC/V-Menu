@@ -8,6 +8,11 @@ const billSchema = new mongoose.Schema(
         orders: [{ type: mongoose.Schema.Types.ObjectId, ref: "Order" }],
         isPaid: { type: Boolean, default: false },
         resId: { type: String, required: true, index: true },
+        // VM-30: the customer pressed "Request bill" or "Call staff". Cleared when paid or dismissed.
+        billRequestedAt: Date,
+        staffCalledAt: Date,
+        // the last press of each button, kept after a dismiss, for the once-per-2-minutes limit
+        requestLog: { bill: Date, staff: Date },
     },
     { timestamps: true },
 );

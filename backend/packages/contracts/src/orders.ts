@@ -93,6 +93,14 @@ export type Order = z.infer<typeof Order>;
 export const BillLine = z.object({ _id: z.string(), name: z.string(), priceCents: Cents, quantity: z.number().int(), totalCents: Cents });
 export type BillLine = z.infer<typeof BillLine>;
 
+/** VM-30: what a customer can ask for from the menu: the bill, or a staff member. */
+export const TableRequestKind = z.enum(["bill", "staff"], "Must be bill or staff");
+export type TableRequestKind = z.infer<typeof TableRequestKind>;
+export const TableRequestBody = z.object({ kind: TableRequestKind });
+export type TableRequestBody = z.infer<typeof TableRequestBody>;
+/** Each button works at most once per 2 minutes per bill. */
+export const REQUEST_EVERY_MS = 2 * 60_000;
+
 /** A table's bill: the orders of one visit, open until the cashier marks it paid. */
 export const Bill = z.object({
     _id: z.string(),
@@ -105,6 +113,9 @@ export const Bill = z.object({
     lines: z.array(BillLine),
     subtotalCents: Cents,
     totalCents: Cents,
+    /** VM-30: the customer asked for the bill, or called staff; cleared when paid or dismissed */
+    billRequestedAt: IsoDate.optional(),
+    staffCalledAt: IsoDate.optional(),
     resId: z.string().optional(),
     createdAt: IsoDate,
     updatedAt: IsoDate.optional(),

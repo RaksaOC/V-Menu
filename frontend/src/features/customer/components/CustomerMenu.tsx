@@ -9,6 +9,7 @@ import { ToastHost } from "@/components/ui";
 import { Skeleton } from "@/components/ui";
 import { apiErrorCode } from "@/lib/api";
 import TableProblem, { type TableProblemKind } from "@/features/customer/components/TableProblem";
+import TableRequests from "@/features/customer/components/TableRequests";
 import { checkTable, getMenu } from "@/features/customer/api";
 import { reconcileCart } from "@/features/customer/cart";
 import { dishesOf, searchMenu, sectionId } from "@/features/customer/menu";
@@ -100,6 +101,8 @@ export default function CustomerPage() {
                             </div>
                             <p className="text-emerald-100 text-lg font-medium">Table {table}</p>
                             <p className="text-emerald-50/80 text-sm mt-1">Browse our delicious menu and order with ease</p>
+                            {/* VM-30: once the table has ordered */}
+                            <TableRequests slug={resSlug} table={table} />
                         </div>
                     </div>
 

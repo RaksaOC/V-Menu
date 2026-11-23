@@ -1,5 +1,5 @@
 // In-memory repositories and clients for the service unit tests (CL-04): no MongoDB, no HTTP.
-import type { BillRecord, BillsRepo } from "../../src/repositories/bills.repo.js";
+import { REQUEST_FLAG, type BillRecord, type BillsRepo } from "../../src/repositories/bills.repo.js";
 import type { OrderRecord, OrdersRepo } from "../../src/repositories/orders.repo.js";
 import type { BoundClients } from "../../src/clients/index.js";
 
@@ -166,7 +166,23 @@ export function fakeBills(orders: { all: OrderRecord[]; onBill?: (id: string) =>
             const b = all.find((x) => x._id === id && x.resId === resId);
             if (!b) return null;
             b.isPaid = isPaid;
+            if (isPaid) {
+                delete b.billRequestedAt; // VM-30
+                delete b.staffCalledAt;
+            }
             b.updatedAt = new Date(Date.UTC(2026, 0, 1, 0, 0, clock++));
+            return withOrders(b);
+        },
+        async markRequest(resId, id, kind, flagAt, pressedAt) {
+            const b = all.find((x) => x._id === id && x.resId === resId && !x.isPaid);
+            if (!b) return;
+            b[REQUEST_FLAG[kind]] = flagAt;
+            b.requestLog = { ...b.requestLog, [kind]: pressedAt };
+        },
+        async clearRequest(resId, id, kind) {
+            const b = all.find((x) => x._id === id && x.resId === resId);
+            if (!b) return null;
+            delete b[REQUEST_FLAG[kind]];
             return withOrders(b);
         },
     };

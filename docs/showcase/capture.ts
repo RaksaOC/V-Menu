@@ -1181,9 +1181,12 @@ for (const [vp, theme] of [
         if (!VM30.ready) {
             VM30.ready = true;
             const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
-            for (const b of open.filter((b) => b.table === "T4")) await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            for (const b of open.filter((b) => b.table === "T4"))
+                await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
             const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
-            await cashier.page.request.post(api(""), { data: { table: "T4", orderedItems: [{ item: { _id: menu[0]._id }, quantity: 2 }] } });
+            await cashier.page.request.post(api(""), {
+                data: { table: "T4", orderedItems: [{ item: { _id: menu[0]._id }, quantity: 2 }] },
+            });
         }
 
         const customer = await newPage(browser, vp, theme);

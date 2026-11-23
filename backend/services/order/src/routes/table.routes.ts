@@ -12,6 +12,11 @@ export function tableRoutes({ services, restaurant }: RouteContext) {
         const place = await restaurant(req);
         res.json(await services(req).table.order(place._id, tableOf(req), String(req.params.id)));
     });
+    // VM-30: "Request bill" and "Call staff"
+    r.post("/requests", async (req, res) => {
+        const place = await restaurant(req);
+        res.json(await services(req).requests.ask(place._id, tableOf(req), req.body));
+    });
     r.get("/open-bill", async (req, res) => {
         const place = await restaurant(req);
         res.json(await services(req).table.openBill(place._id, tableOf(req)));
