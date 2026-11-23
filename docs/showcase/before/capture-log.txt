@@ -190,3 +190,21 @@ ok   VM-24-customer-menu-1280-dark
 ok   VM-24-preferences-360
 ok   VM-24-invoice-360
 ok   VM-24-customer-menu-360
+# ONLY=VM-24 (2026-11-23T19:16:39.337Z)
+FAIL VM-24 1280 light: locator.click: Timeout 5000ms exceeded.
+FAIL VM-24 1280 dark: locator.click: Timeout 5000ms exceeded.
+FAIL VM-24 360 light: locator.click: Timeout 5000ms exceeded.
+# ONLY=VM-24 (2026-11-23T19:17:26.024Z)
+FAIL VM-24 1280 light: locator.click: Timeout 5000ms exceeded.
+FAIL VM-24 1280 dark: locator.click: Timeout 5000ms exceeded.
+FAIL VM-24 360 light: locator.click: Timeout 5000ms exceeded.
+# ONLY=VM-24 (2026-11-23T19:18:05.949Z)
+ok   VM-24-preferences-1280
+ok   VM-24-invoice-1280
+ok   VM-24-customer-menu-1280
+ok   VM-24-preferences-1280-dark
+ok   VM-24-invoice-1280-dark
+ok   VM-24-customer-menu-1280-dark
+ok   VM-24-preferences-360
+ok   VM-24-invoice-360
+ok   VM-24-customer-menu-360

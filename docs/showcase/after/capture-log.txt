@@ -205,3 +205,23 @@ ok   VM-31-cashier-bill-1280-dark
 ok   VM-31-invoice-1280-dark
 ok   VM-31-cashier-bill-360
 ok   VM-31-invoice-360
+# ONLY=VM-24 (2026-11-23T19:15:02.915Z)
+ok   VM-24-preferences-1280
+ok   VM-24-invoice-1280
+ok   VM-24-customer-menu-1280
+ok   VM-24-preferences-1280-dark
+ok   VM-24-invoice-1280-dark
+ok   VM-24-customer-menu-1280-dark
+ok   VM-24-preferences-360
+ok   VM-24-invoice-360
+ok   VM-24-customer-menu-360
+# ONLY=VM-24 (2026-11-23T19:18:35.306Z)
+ok   VM-24-preferences-1280
+ok   VM-24-invoice-1280
+ok   VM-24-customer-menu-1280
+ok   VM-24-preferences-1280-dark
+ok   VM-24-invoice-1280-dark
+ok   VM-24-customer-menu-1280-dark
+ok   VM-24-preferences-360
+ok   VM-24-invoice-360
+ok   VM-24-customer-menu-360
