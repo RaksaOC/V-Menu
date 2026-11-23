@@ -1,6 +1,6 @@
 # Remaining work: every ticket
 
-Generated 2026-11-23 17:48. 4 of 77 done (5%). Essential (P0 path): 4 of 14.
+Generated 2026-11-23 18:18. 4 of 77 done (5%). Essential (P0 path): 4 of 14.
 
 "Essential" = the 6 P0 blockers, the cleanup tickets they depend on, and the final showcase. Order = the order to work in (dependencies first).
 
