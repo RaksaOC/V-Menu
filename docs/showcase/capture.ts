@@ -218,6 +218,35 @@ for (const theme of ["light", "dark"] as const) {
     }
 }
 
+// VM-01: "View QR Code" opens the table's QR code (cashier and owner), and the owner can print them all.
+for (const [vp, theme] of [[DESKTOP, "light"], [DESKTOP, "dark"], [PHONE, "light"]] as const) {
+    await step(`VM-01 cashier ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "cashier");
+        await context.addInitScript(() => localStorage.setItem("dashboardSection", "tables"));
+        await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(page);
+        await page.getByRole("button", { name: /view qr code/i }).first().click({ timeout: 5000 });
+        await page.waitForTimeout(800);
+        await shot({ page, theme, width: vp.width }, "VM-01-cashier-qr", false);
+        await context.close();
+    });
+}
+for (const theme of ["light", "dark"] as const) {
+    await step(`VM-01 owner ${theme}`, async () => {
+        const { context, page } = await newPage(browser, DESKTOP, theme, "owner");
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page.getByRole("button", { name: /^\s*Tables\s*$/i }).first().click({ timeout: 5000 });
+        await settle(page);
+        const c = { page, theme, width: DESKTOP.width };
+        await shot(c, "VM-01-owner-tables", false);
+        await page.getByRole("button", { name: /view qr code/i }).first().click({ timeout: 5000 });
+        await page.waitForTimeout(800);
+        await shot(c, "VM-01-owner-qr", false);
+        await context.close();
+    });
+}
+
 // ---------------------------------------------------------------- owner
 for (const theme of ["light", "dark"] as const) {
     await step(`owner ${theme}`, async () => {

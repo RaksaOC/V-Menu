@@ -32,3 +32,11 @@ ok   VM-35-owner-menu-1280-dark
 # ONLY=CL-10 (2026-11-23T11:00:57.027Z)
 ok   CL-10-toast-added-to-cart-360
 ok   CL-10-toast-added-to-cart-360-dark
+# ONLY=VM-01 (2026-11-23T11:11:00.625Z)
+ok   VM-01-cashier-qr-1280
+ok   VM-01-cashier-qr-1280-dark
+ok   VM-01-cashier-qr-360
+ok   VM-01-owner-tables-1280
+ok   VM-01-owner-qr-1280
+ok   VM-01-owner-tables-1280-dark
+ok   VM-01-owner-qr-1280-dark
