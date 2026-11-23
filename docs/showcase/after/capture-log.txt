@@ -35,3 +35,45 @@ ok   VM-03-session-ended-1280
 ok   VM-03-connection-lost-1280
 ok   VM-03-session-ended-1280-dark
 ok   VM-03-connection-lost-1280-dark
+# ONLY=CL-09 (2026-11-23T11:59:01.116Z)
+ok   CL-09-cashier-tables-1280
+ok   CL-09-cashier-menu-1280
+ok   CL-09-owner-tables-1280
+ok   CL-09-owner-edit-table-1280
+ok   CL-09-owner-menu-1280
+ok   CL-09-ui-kit-1280
+ok   CL-09-cashier-tables-1280-dark
+ok   CL-09-cashier-menu-1280-dark
+ok   CL-09-owner-tables-1280-dark
+ok   CL-09-owner-edit-table-1280-dark
+ok   CL-09-owner-menu-1280-dark
+ok   CL-09-ui-kit-1280-dark
+ok   CL-09-cashier-tables-360
+# ONLY=CL-09 (2026-11-23T12:00:32.912Z)
+ok   CL-09-cashier-tables-1280
+ok   CL-09-cashier-menu-1280
+ok   CL-09-owner-tables-1280
+ok   CL-09-owner-edit-table-1280
+ok   CL-09-owner-menu-1280
+ok   CL-09-ui-kit-1280
+ok   CL-09-cashier-tables-1280-dark
+ok   CL-09-cashier-menu-1280-dark
+ok   CL-09-owner-tables-1280-dark
+ok   CL-09-owner-edit-table-1280-dark
+ok   CL-09-owner-menu-1280-dark
+ok   CL-09-ui-kit-1280-dark
+ok   CL-09-cashier-tables-360
+# ONLY=CL-09 (2026-11-23T12:01:23.350Z)
+ok   CL-09-cashier-tables-1280
+ok   CL-09-cashier-menu-1280
+ok   CL-09-owner-tables-1280
+ok   CL-09-owner-edit-table-1280
+ok   CL-09-owner-menu-1280
+ok   CL-09-ui-kit-1280
+ok   CL-09-cashier-tables-1280-dark
+ok   CL-09-cashier-menu-1280-dark
+ok   CL-09-owner-tables-1280-dark
+ok   CL-09-owner-edit-table-1280-dark
+ok   CL-09-owner-menu-1280-dark
+ok   CL-09-ui-kit-1280-dark
+ok   CL-09-cashier-tables-360
