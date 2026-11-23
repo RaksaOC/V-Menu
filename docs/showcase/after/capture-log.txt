@@ -198,3 +198,10 @@ ok   CL-07-cashier-bill-1280-dark
 ok   CL-07-kitchen-360
 ok   CL-07-customer-order-360
 ok   CL-07-cashier-bill-360
+# ONLY=VM-31 (2026-11-23T17:56:43.866Z)
+ok   VM-31-cashier-bill-1280
+ok   VM-31-invoice-1280
+ok   VM-31-cashier-bill-1280-dark
+ok   VM-31-invoice-1280-dark
+ok   VM-31-cashier-bill-360
+ok   VM-31-invoice-360
