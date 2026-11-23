@@ -10,8 +10,8 @@ export default defineConfig({
             exclude: ["src/index.ts", "src/seed.ts"],
             reporter: ["text", "text-summary", "json-summary", "html"],
             reportsDirectory: "coverage",
-            // CI fails below this.
-            thresholds: { lines: 70 },
+            // CI fails below these. The business rules (CL-04) must stay almost fully covered.
+            thresholds: { lines: 70, "src/services/**": { lines: 90, functions: 90, branches: 90, statements: 90 } },
         },
     },
 });

@@ -2,9 +2,9 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../src/app.js";
+import { createApp } from "../../src/app.js";
 import { signAppToken, HttpError, notFound } from "@vmenu/common";
-import type { Clients } from "../src/lib/clients.js";
+import type { Clients } from "../../src/clients/index.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 
