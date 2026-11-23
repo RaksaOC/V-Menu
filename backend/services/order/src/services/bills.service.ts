@@ -1,6 +1,6 @@
 import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
 import type { CancelOrderBody } from "@vmenu/contracts";
-import { countOrderStatus } from "../lib/metrics.js";
+import { countOrderStatus } from "../lib/order-metrics.js";
 import { OpenBillExists, type BillsRepo } from "../repositories/bills.repo.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
 import { pages, paging } from "./paging.js";

@@ -1,6 +1,6 @@
 import type { PlaceOrderBody } from "@vmenu/contracts";
 import type { BoundClients } from "../clients/index.js";
-import { countOrderStatus } from "../lib/metrics.js";
+import { countOrderStatus } from "../lib/order-metrics.js";
 import type { BillsRepo } from "../repositories/bills.repo.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
 

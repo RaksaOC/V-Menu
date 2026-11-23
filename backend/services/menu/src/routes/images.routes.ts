@@ -2,7 +2,7 @@ import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { HttpError, requireRole } from "@vmenu/common";
 import type { RouteContext } from "./context.js";
-import { countUpload } from "../lib/metrics.js";
+import { countUpload } from "../lib/upload-metrics.js";
 import { receivePhoto } from "./upload.js";
 
 /** /api/menu/:slug/images: the owner uploads photos; customers' browsers load them (VM-02, SEC-05). */

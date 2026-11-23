@@ -15,7 +15,7 @@ import { ordersRoutes } from "./routes/orders.routes.js";
 import { overviewRoutes } from "./routes/overview.routes.js";
 import { ownerRoutes } from "./routes/owner.routes.js";
 import { tableRoutes } from "./routes/table.routes.js";
-import { watchPendingOrders } from "./lib/metrics.js";
+import { watchPendingOrders } from "./lib/order-metrics.js";
 
 interface Deps {
     lookupRestaurant?: LookupRestaurant;

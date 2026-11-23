@@ -1,6 +1,6 @@
 import { assertId, HttpError, notFound } from "@vmenu/common";
 import { NEXT_STATUS, type UpdateOrderStatusBody } from "@vmenu/contracts";
-import { countOrderStatus, observeReady } from "../lib/metrics.js";
+import { countOrderStatus, observeReady } from "../lib/order-metrics.js";
 import { pages, paging } from "./paging.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
 
