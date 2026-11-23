@@ -52,12 +52,21 @@ if [[ -z ${SSH_HOST:-}${SSH_USER:-}${SSH_KEY:-} ]]; then
 fi
 
 # Fail early, by name, when a secret was never added to the GitHub Environment.
+# B7: --check-failed only adds a history line. It copies nothing: the copy replaces the server's
+# .env, which holds the running TAG, and this action runs outside the deploy queue.
+copy_files=true
+needed=(SSH_HOST SSH_USER SSH_KEY MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY)
+if [[ $ACTION == --check-failed ]]; then
+    copy_files=false
+    needed=(SSH_HOST SSH_USER SSH_KEY)
+fi
 missing=()
-for name in SSH_HOST SSH_USER SSH_KEY MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY; do
+for name in "${needed[@]}"; do
     [[ -n ${!name:-} ]] || missing+=("$name")
 done
 ((${#missing[@]} == 0)) || die "missing secrets in the '$TARGET' environment: ${missing[*]}"
 
+if [[ $copy_files == true ]]; then
 # The services refuse to start with a shorter one (backend/services/*/src/lib/config.ts).
 ((${#JWT_SECRET} >= 32)) || die "JWT_SECRET in the '$TARGET' environment is ${#JWT_SECRET} characters; it must be at least 32 (openssl rand -hex 32)"
 
@@ -67,12 +76,14 @@ for name in MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET
     value=${!name}
     [[ $value != *"'"* && $value != *$'\n'* ]] || die "$name contains a single quote or a newline; change that value"
 done
+fi
 
 # ---- build the bundle the server gets ----
 umask 077
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 bundle=$work/bundle
+if [[ $copy_files == true ]]; then
 # Server layout, not the repo's: docker-compose.prod.yml reads services/<service-name>/.env.
 mkdir -p "$bundle"/services/{restaurant-service,menu-service,order-service}
 
@@ -116,6 +127,7 @@ EOF
     echo "MONGODB_URI='$MONGODB_URI_ORDER'"
     common
 } >"$bundle/services/order-service/.env"
+fi
 
 # ---- SSH ----
 key=$work/id_deploy
@@ -132,9 +144,11 @@ ssh_opts=(-i "$key" -p "$SSH_PORT" -o UserKnownHostsFile="$known" -o StrictHostK
     -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15)
 remote_dir=/srv/vmenu/$TARGET
 
-echo "Copying compose and env files to $remote_dir"
-tar -C "$bundle" -czf - . | ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" "test -d '$remote_dir' && tar -xzf - -C '$remote_dir'" ||
-    die "copy failed. Does $remote_dir exist and belong to $SSH_USER? (infra/deploy/setup-server.sh creates it)"
+if [[ $copy_files == true ]]; then
+    echo "Copying compose and env files to $remote_dir"
+    tar -C "$bundle" -czf - . | ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" "test -d '$remote_dir' && tar -xzf - -C '$remote_dir'" ||
+        die "copy failed. Does $remote_dir exist and belong to $SSH_USER? (infra/deploy/setup-server.sh creates it)"
+fi
 
 # For the DORA lead time: the average commit time of what this deploy ships. A merge commit
 # ships the commits of its second parent; any other commit ships itself. Empty if unknown.

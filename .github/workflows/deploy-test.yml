@@ -167,6 +167,8 @@ jobs:
           deploy staging --check-failed
           sudo tail -n1 /srv/vmenu/staging/deploy-history.log | grep -P "\tpost-deploy-check\t$V1\tfailed\t" \
             || { echo "::error::no post-deploy-check failed line in the history"; exit 1; }
+          sudo grep -q "^TAG=$V1$" /srv/vmenu/staging/.env \
+            || { echo "::error::recording a failed check changed the server's .env"; exit 1; }
           expect_tag staging "$V1"
           if deploy prod --check-failed; then
             echo "::error::--check-failed is for staging only"; exit 1
