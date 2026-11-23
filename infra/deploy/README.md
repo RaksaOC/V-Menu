@@ -181,7 +181,31 @@ Create **`production`**:
 
 Branch rulesets (Settings → Rules → Rulesets):
 - **main: owner only**: restrict updates, block deletion and force pushes; bypass: repository admin.
-- **staging: PRs only**: require a pull request, block deletion and force pushes; bypass: repository admin.
+- **staging: PRs only**: require a pull request, block deletion and force pushes; bypass: repository admin. Require the status checks listed below.
+
+#### Required checks (B8)
+
+Set these on the **staging: PRs only** ruleset, under **Require status checks to pass**. The names must match exactly, including the brackets:
+
+<!-- required-checks -->
+- `test`: the gate over every package's tests, including the frontend's unit tests
+- `integration`: the real services, the smoke test and the database-user check (SEC-11)
+- `e2e`: every browser spec
+- `audit (frontend)`
+- `audit (services/restaurant-service)`
+- `audit (services/menu-service)`
+- `audit (services/order-service)`
+- `semgrep`: **add this one.** It's the code scan (SEC-09). It already fails a PR with a new high finding, but until it's required, that PR can still be merged.
+<!-- /required-checks -->
+
+- **Pick `semgrep` in lowercase.** `Semgrep OSS` is a different check, from the Semgrep app.
+- **Don't require** `validate`, `lint` or `vm-test`. They only run when certain files change, so every other PR would wait for them for ever. Don't require `deploy` either: it only runs after a merge.
+- **A job that's skipped counts as passed** on GitHub. So when `test` fails, `integration` and `e2e` show "skipped", and it's `test` that blocks the merge. Keep all three required.
+- **To compare with what's set now** (read-only):
+  ```bash
+  gh api repos/RaksaOC/V-Menu/rulesets/27796986 --jq '.rules[] | select(.type=="required_status_checks") | .parameters.required_status_checks[].context'
+  ```
+- `scripts/required-checks.test.mjs` fails if one of these jobs is renamed, stops running on every PR, or can no longer fail.
 
 Add these to **both** environments, with different values for each (see `staging.env.example` / `prod.env.example`):
 
