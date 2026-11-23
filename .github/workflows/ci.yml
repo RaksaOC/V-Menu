@@ -27,8 +27,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # backend/ is one npm workspace (CL-02): npm ci in any of its folders installs the
-          # whole workspace from backend/package-lock.json.
+          # backend/ is one npm workspace (CL-02) with one backend/package-lock.json. npm ci in a
+          # package's folder installs only that package's dependencies, so each package must list
+          # everything it imports, tests included (CL-05).
           - { name: common, dir: backend/packages/common, kind: service, lock: backend/package-lock.json }
           - { name: contracts, dir: backend/packages/contracts, kind: service, lock: backend/package-lock.json }
           - { name: restaurant-service, dir: backend/services/restaurant, kind: service, lock: backend/package-lock.json }
