@@ -204,6 +204,12 @@ describe("photo upload metrics (B10)", () => {
         return line ? Number(line.split(" ").pop()) : 0;
     };
 
+    it("lists every result from the start, so a dashboard's increase() doesn't miss the first one after a restart", async () => {
+        const { text } = await request(app).get("/metrics");
+        for (const result of ["ok", "not_a_photo", "too_large", "bad_request", "denied", "rate_limited", "error"])
+            expect(text).toMatch(new RegExp(`^vmenu_image_uploads_total\\{result="${result}"\\} \\d+$`, "m"));
+    });
+
     it("counts each upload by its result", async () => {
         const before = { ok: await count("ok"), wrong: await count("not_a_photo"), big: await count("too_large") };
         expect((await upload(photo)).status).toBe(201);

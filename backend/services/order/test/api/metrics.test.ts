@@ -4,7 +4,7 @@ import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { signAppToken, notFound } from "@vmenu/common";
-import { OrderCheckResponse } from "@vmenu/contracts";
+import { ORDER_STATUSES, OrderCheckResponse } from "@vmenu/contracts";
 import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
 import { Order } from "../../src/models/order.model.js";
@@ -125,6 +125,11 @@ describe("order metrics (B10)", () => {
         const { body: order } = await place();
         await Order.updateOne({ _id: order._id }, { $set: { orderedAt: new Date(Date.now() - 25 * 60 * 60_000) } });
         expect(await metric("vmenu_orders_pending_oldest_seconds")).toBe(0);
+    });
+
+    it("lists every status from the start, so a dashboard's increase() doesn't miss the first order after a restart", async () => {
+        const { text } = await request(app).get("/metrics");
+        for (const status of ORDER_STATUSES) expect(text).toMatch(new RegExp(`^vmenu_orders_total\\{status="${status}"\\} \\d+$`, "m"));
     });
 
     it("has the rate-limited orders counter, starting at 0", async () => {
