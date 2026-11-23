@@ -199,7 +199,7 @@ describe("errors", () => {
     it("falls back to a general message when the server sends none", async () => {
         const { apiErrorMessage } = await import("@/lib/api");
         answer("get", "/api/orders/demo-bistro/kitchen", {}, 500);
-        const err = await kitchen.getKitchenOrders("demo-bistro").catch((e) => e);
+        const err = await kitchen.getActiveOrders("demo-bistro").catch((e: unknown) => e);
         expect(apiErrorMessage(err, "Could not load the orders")).toBe("Could not load the orders");
     });
 

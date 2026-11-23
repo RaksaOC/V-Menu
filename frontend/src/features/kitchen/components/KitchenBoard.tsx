@@ -9,11 +9,12 @@ import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ChefHat, Clock, History, Bell } from "lucide-react";
-import { getKitchenOrders, markOrderDone } from "@/features/kitchen/api";
+import { getActiveOrders, markOrderDone } from "@/features/kitchen/api";
 import { useConnectionStatus } from "@/lib/useConnectionStatus";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
 
-export default function KitchenPage({ pollMs = 2000 }: { pollMs?: number } = {}) {
+// VM-10: every 5 s (was 2 s), and only the orders still to cook
+export default function KitchenPage({ pollMs = 5000 }: { pollMs?: number } = {}) {
     const params = useParams();
     const connection = useConnectionStatus();
     const [orders, setOrders] = useState<OrderOutput[]>([]);
@@ -23,7 +24,7 @@ export default function KitchenPage({ pollMs = 2000 }: { pollMs?: number } = {})
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const activeOrders = (await getKitchenOrders(String(params.res))).filter((order: OrderOutput) => !order.isDone);
+                const activeOrders = await getActiveOrders(String(params.res));
                 setOrders(activeOrders);
                 setTotalOrders(activeOrders.length);
                 previousOrderIdsRef.current = activeOrders.map((order: OrderOutput) => order._id);
@@ -38,7 +39,7 @@ export default function KitchenPage({ pollMs = 2000 }: { pollMs?: number } = {})
 
         const intervalId = setInterval(async () => {
             try {
-                const activeOrders = (await getKitchenOrders(String(params.res))).filter((order: OrderOutput) => !order.isDone);
+                const activeOrders = await getActiveOrders(String(params.res));
 
                 const newOrders = activeOrders.filter((order: OrderOutput) => !previousOrderIdsRef.current.includes(order._id));
                 if (newOrders.length > 0) {
