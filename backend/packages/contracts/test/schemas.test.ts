@@ -82,7 +82,7 @@ describe("menu", () => {
         expect(fieldsOf(C.UpdateTableBody, { name: "" })).toEqual(["name"]);
         ok(C.MenuItem, { _id: ID, name: "A", price: 1, image: "/x", isEnabled: true });
         fieldsOf(C.MenuItem, { _id: ID, name: "A", price: "1", image: "/x", isEnabled: true });
-        ok(C.Table, { _id: ID, name: "1", isEnabled: false });
+        ok(C.Table, { _id: ID, name: "1", isEnabled: false, qrToken: "AbCdEfGhIjKlMnOpQrSt_-" });
         ok(C.UploadedPhoto, { url: "/api/menu/x/images/" + ID });
     });
 });
@@ -109,6 +109,36 @@ describe("dish descriptions and tags (VM-26)", () => {
         const id = "665f00000000000000000001";
         ok(C.MenuItem, { _id: id, ...dish, isEnabled: false, description: "Hot", tags: ["spicy"] });
         ok(C.MenuItem, { _id: id, ...dish, isEnabled: true });
+    });
+});
+
+describe("table links (SEC-04)", () => {
+    const TOKEN = "AbCdEfGhIjKlMnOpQrSt_-";
+    const line = { item: { _id: "665f00000000000000000001" }, quantity: 1 };
+
+    it("a link token is 16 random bytes in base64url", () => {
+        ok(C.QrToken, TOKEN);
+        for (const bad of ["", "short", `${TOKEN}x`, "AbCdEfGhIjKlMnOpQrSt/+", 7]) expect(C.QrToken.safeParse(bad).success).toBe(false);
+    });
+
+    it("an order names its table by link token, or by name; never both, never neither", () => {
+        expect(C.PlaceOrderBody.parse({ qrToken: TOKEN, orderedItems: [line] })).toEqual({ qrToken: TOKEN, orderedItems: [line] });
+        ok(C.PlaceOrderBody, { table: "1", orderedItems: [line] });
+        expect(fieldsOf(C.PlaceOrderBody, { qrToken: TOKEN, table: "1", orderedItems: [line] })).toEqual(["table"]);
+        expect(fieldsOf(C.PlaceOrderBody, { orderedItems: [line] })).toEqual(["table"]);
+        expect(fieldsOf(C.PlaceOrderBody, { qrToken: "nope", orderedItems: [line] })).toEqual(["qrToken"]);
+    });
+
+    it("so does the order check, and its answer says which table it was", () => {
+        const items = [{ _id: "665f00000000000000000001", quantity: 1 }];
+        ok(C.OrderCheckRequest, { qrToken: TOKEN, items });
+        expect(fieldsOf(C.OrderCheckRequest, { items })).toEqual(["table"]);
+        const dish = { _id: "665f00000000000000000001", name: "A", price: 1, image: "/x", isEnabled: true };
+        expect(C.OrderCheckResponse.parse({ table: "T1", items: [{ item: dish, quantity: 1 }] }).table).toBe("T1");
+    });
+
+    it("what a customer learns from a token is only the table's name and whether it's open", () => {
+        expect(C.TableLink.parse({ table: "T1", isOpen: true, qrToken: TOKEN, _id: "x" })).toEqual({ table: "T1", isOpen: true });
     });
 });
 

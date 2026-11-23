@@ -12,30 +12,31 @@ const { tableUrl } = await import("@/lib/table-url");
 const { default: TableQrModal } = await import("@/components/qr/TableQrModal");
 const { qrSheetHtml } = await import("@/components/qr/print");
 
-describe("tableUrl", () => {
-    it("builds the table's menu address and encodes the table name", () => {
-        expect(tableUrl("demo-bistro", "Patio 2", "https://v-menu.chanraksa.com")).toBe(
-            "https://v-menu.chanraksa.com/demo-bistro/customer/Patio%202",
-        );
+const TOKEN = "AbCdEfGhIjKlMnOpQrSt_-";
+const TOKEN2 = "ZyXwVuTsRqPoNmLkJiHg_-";
+
+describe("tableUrl (SEC-04: the table's link token, never its name)", () => {
+    it("builds the table's address from its token", () => {
+        expect(tableUrl("demo-bistro", TOKEN, "https://v-menu.chanraksa.com")).toBe(`https://v-menu.chanraksa.com/demo-bistro/t/${TOKEN}`);
     });
 
     it("uses the site it runs on, so staging codes point to staging", () => {
-        expect(tableUrl("demo-bistro", "T1")).toBe(`${window.location.origin}/demo-bistro/customer/T1`);
+        expect(tableUrl("demo-bistro", TOKEN)).toBe(`${window.location.origin}/demo-bistro/t/${TOKEN}`);
     });
 
-    it("encodes characters that would break the path", () => {
-        expect(tableUrl("demo-bistro", "A/B #1", "https://x")).toBe("https://x/demo-bistro/customer/A%2FB%20%231");
+    it("encodes the slug", () => {
+        expect(tableUrl("a b", TOKEN, "https://x")).toBe(`https://x/a%20b/t/${TOKEN}`);
     });
 });
 
 describe("TableQrModal", () => {
     const open = (onClose = vi.fn()) =>
-        render(<TableQrModal slug="demo-bistro" restaurantName="Demo Bistro" tableName="Patio 2" onClose={onClose} />);
+        render(<TableQrModal slug="demo-bistro" restaurantName="Demo Bistro" tableName="Patio 2" qrToken={TOKEN} onClose={onClose} />);
 
     it("shows a QR code for the table's menu, with the restaurant and table names", async () => {
         open();
         const img = await screen.findByRole("img", { name: "QR code for table Patio 2" });
-        expect(qr.toDataURL).toHaveBeenCalledWith(tableUrl("demo-bistro", "Patio 2"), expect.any(Object));
+        expect(qr.toDataURL).toHaveBeenCalledWith(tableUrl("demo-bistro", TOKEN), expect.any(Object));
         expect(img.getAttribute("src")).toMatch(/^data:image\/png;base64,/);
         expect(screen.getByRole("dialog", { name: /Patio 2/ })).toBeTruthy();
         expect(screen.getByText("Demo Bistro")).toBeTruthy();
@@ -53,7 +54,7 @@ describe("TableQrModal", () => {
         fireEvent.click(await screen.findByRole("button", { name: /print/i }));
         await waitFor(() =>
             expect(printing.printQrCards).toHaveBeenCalledWith([
-                { restaurantName: "Demo Bistro", tableName: "Patio 2", url: tableUrl("demo-bistro", "Patio 2") },
+                { restaurantName: "Demo Bistro", tableName: "Patio 2", url: tableUrl("demo-bistro", TOKEN) },
             ]),
         );
     });
@@ -69,7 +70,7 @@ describe("TableQrModal", () => {
 });
 
 describe("View QR Code buttons", () => {
-    const table = { _id: "t1", name: "T1", isEnabled: true };
+    const table = { _id: "t1", name: "T1", isEnabled: true, qrToken: TOKEN };
 
     it("opens the QR code from the owner's table card", async () => {
         const { default: TableCard } = await import("@/features/restaurant/components/TableCard");
@@ -92,8 +93,8 @@ describe("Print all QR codes", () => {
         const { ResContext } = await import("@/lib/restaurant-context");
         const { default: Tables } = await import("@/features/restaurant/components/Tables");
         answer("get", "/api/menu/demo-bistro/tables", [
-            { _id: "t1", name: "T1", isEnabled: true },
-            { _id: "t2", name: "Patio 2", isEnabled: false },
+            { _id: "t1", name: "T1", isEnabled: true, qrToken: TOKEN },
+            { _id: "t2", name: "Patio 2", isEnabled: false, qrToken: TOKEN2 },
         ]);
         render(
             <ResContext.Provider value="demo-bistro">
@@ -102,8 +103,8 @@ describe("Print all QR codes", () => {
         );
         fireEvent.click(await screen.findByRole("button", { name: /print all qr codes/i }));
         expect(printing.printQrCards).toHaveBeenLastCalledWith([
-            { tableName: "T1", url: tableUrl("demo-bistro", "T1") },
-            { tableName: "Patio 2", url: tableUrl("demo-bistro", "Patio 2") },
+            { tableName: "T1", url: tableUrl("demo-bistro", TOKEN) },
+            { tableName: "Patio 2", url: tableUrl("demo-bistro", TOKEN2) },
         ]);
     });
 });
@@ -135,7 +136,7 @@ describe("the restaurant's name on the QR code (VM-21)", () => {
         vi.doMock("next/navigation", () => ({ useParams: () => ({ res: "demo-bistro" }), useRouter: () => ({ push: vi.fn() }) }));
         server.use(
             http.get("*/api/menu/demo-bistro/tables", () =>
-                HttpResponse.json([{ _id: "665f000000000000000000a1", name: "T1", isEnabled: true }]),
+                HttpResponse.json([{ _id: "665f000000000000000000a1", name: "T1", isEnabled: true, qrToken: TOKEN }]),
             ),
             http.get("*/api/restaurants/demo-bistro/public", () => HttpResponse.json({ name: "Demo Bistro", slug: "demo-bistro" })),
         );

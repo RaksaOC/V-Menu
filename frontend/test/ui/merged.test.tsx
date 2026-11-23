@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({ useParams: () => ({ res: "demo-bistro" }), u
 const { default: TableCard } = await import("@/features/restaurant/components/TableCard");
 const { default: MenuCard } = await import("@/features/restaurant/components/MenuCard");
 
-const table = { _id: "t1", name: "T1", isEnabled: true };
+const table = { _id: "t1", name: "T1", isEnabled: true, qrToken: "AbCdEfGhIjKlMnOpQrSt_-" };
 const dish = { _id: "i1", name: "Fish Amok", price: 5.5, image: "/images/img.png", isEnabled: true };
 
 describe("one TableCard and one MenuCard, role by props", () => {
