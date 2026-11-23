@@ -161,6 +161,27 @@ describe("an order is never left off its bill (VM-23)", () => {
     });
 });
 
+describe("order notes (VM-28)", () => {
+    const send = (lineNote: string, note: string) =>
+        request(app)
+            .post(`/api/orders/${R.slug}`)
+            .send({ table: "1", note, orderedItems: [{ item: { _id: ITEM._id }, quantity: 1, note: lineNote }] });
+
+    it("are saved, trimmed, and shown to the kitchen", async () => {
+        const res = await send("  no chilli ", " birthday ");
+        expect(res.status).toBe(201);
+        expect(res.body).toMatchObject({ note: "birthday", orderedItems: [{ note: "no chilli" }] });
+        const kitchen = await request(app).get(`/api/orders/${R.slug}/kitchen`).set(chef);
+        expect(kitchen.body[0]).toMatchObject({ note: "birthday", orderedItems: [{ note: "no chilli" }] });
+    });
+
+    it("over-long notes get 400 and save nothing", async () => {
+        expect((await send("x".repeat(101), "")).status).toBe(400);
+        expect((await send("", "y".repeat(201))).status).toBe(400);
+        expect((await request(app).get(`/api/orders/${R.slug}/kitchen`).set(chef)).body).toEqual([]);
+    });
+});
+
 describe("bills carry their server totals (VM-31)", () => {
     it("GET /bills and PATCH /bills/:id answer with lines, subtotal and total in cents", async () => {
         await place("1", 2);

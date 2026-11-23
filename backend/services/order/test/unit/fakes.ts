@@ -16,7 +16,7 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[]; onBill: (id: st
         all,
         onBill: () => false, // fakeBills fills this in
         failCreates: 0, // VM-23: the next N saves throw, like a database hiccup
-        async create({ table, orderedItems, resId, billId }) {
+        async create({ table, orderedItems, resId, billId, note }) {
             if (repo.failCreates > 0) {
                 repo.failCreates--;
                 throw new Error("database hiccup");
@@ -28,6 +28,7 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[]; onBill: (id: st
                 orderedItems,
                 resId,
                 ...(billId && { billId }),
+                ...(note && { note }),
                 status: "pending" as const,
                 statusHistory: [{ status: "pending" as const, at, by: "customer" }],
                 orderedAt: at,
