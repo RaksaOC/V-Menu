@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Upload, ImageIcon, Tag, DollarSign, PlusCircle } from "lucide-react";
+import { PHOTO_TYPES, usePhoto } from "./usePhoto";
 
 interface ItemInput {
     name: string;
@@ -14,33 +15,11 @@ interface Props {
 }
 
 export default function AddItemPopup({ onClose, onSave }: Props) {
-    const [imagePreview, setImagePreview] = useState("");
-    const [imageFile, setImageFile] = useState(null);
+    const photo = usePhoto();
     const [name, setName] = useState("");
     const [price, setPrice] = useState("");
     const [errors, setErrors] = useState({ name: "", price: "" });
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleImageChange = (e: any) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                alert("Image size should be less than 5MB");
-                return;
-            }
-            if (!file.type.startsWith("image/")) {
-                alert("Please select a valid image file");
-                return;
-            }
-
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
 
     const validateForm = () => {
         const newErrors = { name: "", price: "" };
@@ -73,27 +52,23 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
         setIsSubmitting(true);
 
         try {
-            let imageUrl = "/images/img.png";
-            if (imagePreview) {
-                imageUrl = imagePreview;
-            }
-
+            // Upload first (VM-02); the item stores the short URL. No photo: the app's placeholder.
+            const uploaded = await photo.upload();
             onSave({
                 name: name.trim(),
                 price: parseFloat(price),
-                image: imageUrl,
+                image: uploaded ?? "/images/img.png",
                 isEnabled: true,
             });
-        } catch (error) {
-            console.error("Error saving item:", error);
+        } catch {
+            // the photo field shows why the upload failed
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const clearImage = () => {
-        setImagePreview("");
-        setImageFile(null);
+        photo.reset();
         const fileInput: HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
     };
@@ -125,10 +100,10 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
 
                         <div className="flex items-start gap-4">
                             <div className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl overflow-hidden flex items-center justify-center relative group">
-                                {imagePreview ? (
+                                {photo.preview ? (
                                     <>
                                         <img
-                                            src={imagePreview}
+                                            src={photo.preview}
                                             alt="Preview"
                                             className="w-full h-full object-cover"
                                         />
@@ -151,9 +126,9 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
                             <div className="flex-1">
                                 <input
                                     type="file"
-                                    accept="image/*"
+                                    accept={PHOTO_TYPES}
                                     id="fileInput"
-                                    onChange={handleImageChange}
+                                    onChange={photo.choose}
                                     className="hidden"
                                 />
                                 <label htmlFor="fileInput">
@@ -162,7 +137,9 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
                                         <span className="text-sm font-medium">Choose Image</span>
                                     </div>
                                 </label>
-                                <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB</p>
+                                <p className="text-xs text-gray-500 mt-2">JPG, PNG or WebP, up to 5 MB</p>
+                                {photo.progress !== null && <p className="text-xs text-blue-600 mt-1" aria-live="polite">Uploading… {photo.progress}%</p>}
+                                {photo.error && <p role="alert" className="text-xs text-red-600 mt-1">{photo.error}</p>}
                             </div>
                         </div>
                     </div>
@@ -236,7 +213,7 @@ export default function AddItemPopup({ onClose, onSave }: Props) {
                             disabled={isSubmitting}
                             className="flex-1 px-4 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition-colors"
                         >
-                            {isSubmitting ? "Saving..." : "Save"}
+                            {photo.progress !== null ? `Uploading ${photo.progress}%` : isSubmitting ? "Saving..." : "Save"}
                         </button>
                     </div>
                 </form>
