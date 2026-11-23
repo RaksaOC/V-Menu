@@ -13,7 +13,7 @@ process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner1" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner2" };
-const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
+const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 let closedTable: string | null = null;
 
 const clients: Clients = {

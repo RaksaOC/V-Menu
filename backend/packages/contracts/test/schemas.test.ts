@@ -36,16 +36,16 @@ describe("shared", () => {
 describe("menu", () => {
     it("CreateItemBody: name, price (a number from 0, numeric text too) and image; unknown fields dropped", () => {
         const item = C.CreateItemBody.parse({ name: " Amok ", price: "5.5", image: "/x.png", resId: "smuggled" });
-        expect(item).toEqual({ name: "Amok", price: 5.5, image: "/x.png" });
-        expect(fieldsOf(C.CreateItemBody, { name: "", price: -1 }).sort()).toEqual(["image", "name", "price"]);
-        expect(fieldsOf(C.CreateItemBody, { name: "A", price: "abc", image: "/x" })).toEqual(["price"]);
-        expect(fieldsOf(C.CreateItemBody, { name: "A", price: 1, image: "/x", isEnabled: "yes" })).toEqual(["isEnabled"]);
+        expect(item).toEqual({ name: "Amok", priceCents: 550, image: "/x.png" });
+        expect(fieldsOf(C.CreateItemBody, { name: "", priceCents: -1 }).sort()).toEqual(["image", "name", "priceCents"]);
+        expect(fieldsOf(C.CreateItemBody, { name: "A", priceCents: "abc", image: "/x" })).toEqual(["priceCents"]);
+        expect(fieldsOf(C.CreateItemBody, { name: "A", priceCents: 100, image: "/x", isEnabled: "yes" })).toEqual(["isEnabled"]);
     });
 
     it("UpdateItemBody: any subset, each still checked", () => {
         ok(C.UpdateItemBody, {});
-        ok(C.UpdateItemBody, { price: 6 });
-        expect(fieldsOf(C.UpdateItemBody, { price: "abc" })).toEqual(["price"]);
+        ok(C.UpdateItemBody, { priceCents: 600 });
+        expect(fieldsOf(C.UpdateItemBody, { priceCents: "abc" })).toEqual(["priceCents"]);
     });
 
     it("AvailabilityBody: true or false", () => {
@@ -66,8 +66,8 @@ describe("menu", () => {
     it("UpdateTableBody, and the response shapes", () => {
         ok(C.UpdateTableBody, { name: "Window", isEnabled: true });
         expect(fieldsOf(C.UpdateTableBody, { name: "" })).toEqual(["name"]);
-        ok(C.MenuItem, { _id: ID, name: "A", price: 1, image: "/x", isEnabled: true });
-        fieldsOf(C.MenuItem, { _id: ID, name: "A", price: "1", image: "/x", isEnabled: true });
+        ok(C.MenuItem, { _id: ID, name: "A", priceCents: 100, image: "/x", isEnabled: true });
+        fieldsOf(C.MenuItem, { _id: ID, name: "A", priceCents: "1", image: "/x", isEnabled: true });
         ok(C.Table, { _id: ID, name: "1", isEnabled: false });
         ok(C.UploadedPhoto, { url: "/api/menu/x/images/" + ID });
     });
@@ -84,14 +84,14 @@ describe("menu categories (VM-25)", () => {
     });
 
     it("an item may name a category, or none (Other)", () => {
-        expect(C.CreateItemBody.parse({ name: "Tea", price: 1, image: "/x", categoryId: ID }).categoryId).toBe(ID);
+        expect(C.CreateItemBody.parse({ name: "Tea", priceCents: 100, image: "/x", categoryId: ID }).categoryId).toBe(ID);
         expect(C.UpdateItemBody.parse({ categoryId: null })).toEqual({ categoryId: null });
         expect(fieldsOf(C.UpdateItemBody, { categoryId: "drinks" })).toEqual(["categoryId"]);
-        ok(C.MenuItem, { _id: ID, name: "Tea", price: 1, image: "/x", isEnabled: true, categoryId: null });
+        ok(C.MenuItem, { _id: ID, name: "Tea", priceCents: 100, image: "/x", isEnabled: true, categoryId: null });
     });
 
     it("the public menu is sections of dishes; Other has no id", () => {
-        const tea = { _id: ID, name: "Tea", price: 1, image: "/x", isEnabled: true };
+        const tea = { _id: ID, name: "Tea", priceCents: 100, image: "/x", isEnabled: true };
         ok(C.PublicMenu, {
             categories: [
                 { _id: ID, name: "Drinks", items: [tea] },
@@ -103,7 +103,7 @@ describe("menu categories (VM-25)", () => {
 });
 
 describe("internal calls", () => {
-    const line = { item: { _id: ID, name: "Amok", price: 5, image: "/x", isEnabled: true }, quantity: 2 };
+    const line = { item: { _id: ID, name: "Amok", priceCents: 500, image: "/x", isEnabled: true }, quantity: 2 };
 
     it("OrderCheckRequest: a table and 1 to 100 lines of an id and 1 to 99", () => {
         ok(C.OrderCheckRequest, { table: "1", items: [{ _id: ID, quantity: 1 }] });
@@ -118,8 +118,8 @@ describe("internal calls", () => {
 
     it("OrderCheckResponse, MenuCounts and RestaurantRef", () => {
         ok(C.OrderCheckResponse, { items: [line] });
-        expect(fieldsOf(C.OrderCheckResponse, { items: [{ ...line, item: { ...line.item, price: "5" } }] })).toEqual([
-            "items.0.item.price",
+        expect(fieldsOf(C.OrderCheckResponse, { items: [{ ...line, item: { ...line.item, priceCents: "5" } }] })).toEqual([
+            "items.0.item.priceCents",
         ]);
         fieldsOf(C.OrderCheckResponse, { items: [] });
         ok(C.MenuCounts, { numOfTables: 4, numOfActiveTables: 2, numOfItems: 10 });
@@ -136,11 +136,11 @@ describe("orders", () => {
         table: "1",
         status: "pending",
         createdAt: "2026-11-23T10:00:00.000Z",
-        orderedItems: [{ item: { _id: ID, name: "Amok", price: 5, image: "/x", isEnabled: true }, quantity: 1 }],
+        orderedItems: [{ item: { _id: ID, name: "Amok", priceCents: 500, image: "/x", isEnabled: true }, quantity: 1 }],
     };
 
     it("PlaceOrderBody: the table (text or number) and lines of an item id and 1 to 99; the browser's price is dropped", () => {
-        const body = C.PlaceOrderBody.parse({ table: 7, isDone: true, orderedItems: [{ item: { _id: ID, price: 0 }, quantity: 2 }] });
+        const body = C.PlaceOrderBody.parse({ table: 7, isDone: true, orderedItems: [{ item: { _id: ID, priceCents: 0 }, quantity: 2 }] });
         expect(body).toEqual({ table: "7", orderedItems: [{ item: { _id: ID }, quantity: 2 }] });
         expect(fieldsOf(C.PlaceOrderBody, { table: "", orderedItems: [] }).sort()).toEqual(["orderedItems", "table"]);
         expect(fieldsOf(C.PlaceOrderBody, { table: "1", orderedItems: [{ item: {}, quantity: 100 }] }).sort()).toEqual([
@@ -176,11 +176,11 @@ describe("orders", () => {
             status: "pending",
             table: "1",
             placedAt: order.createdAt,
-            lines: [{ name: "Amok", price: 5, quantity: 1, total: 5 }],
-            total: 5,
+            lines: [{ name: "Amok", priceCents: 500, quantity: 1, totalCents: 500 }],
+            totalCents: 500,
         };
         ok(C.TableOrderView, view);
-        ok(C.TableBill, { table: "1", orders: [view], total: 5 });
+        ok(C.TableBill, { table: "1", orders: [view], totalCents: 500 });
         // VM-09: the counts are named xCount, and the revenue comes with the range it covers
         const six = {
             tableCount: 1,
@@ -189,7 +189,7 @@ describe("orders", () => {
             orderCount: 1,
             unpaidBillCount: 0,
             paymentCount: 1,
-            revenue: 5,
+            revenueCents: 500,
             from: null,
             to: null,
         };
@@ -202,7 +202,7 @@ describe("orders", () => {
             itemCount: 1,
             orderCount: 1,
             paymentCount: 1,
-            revenue: 5,
+            revenueCents: 500,
             itemsSoldCount: 1,
             avgItemsPerOrder: 1,
             topSellingItems: [{ _id: ID, name: "Amok", quantity: 1 }],

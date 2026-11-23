@@ -15,7 +15,7 @@ process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 process.env.INTERNAL_API_KEY = "internal-test-key";
 
 const R = { _id: "665f00000000000000000001", name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1" };
-const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
+const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 let menuUp = true;
 
 // Stand-ins for restaurant-service and menu-service.
@@ -68,13 +68,13 @@ async function serve(id: string) {
 const place = (table = "1", quantity = 2) =>
     request(app)
         .post(`/api/orders/${R.slug}`)
-        .send({ table, orderedItems: [{ item: { _id: ITEM._id, price: 0 }, quantity }] });
+        .send({ table, orderedItems: [{ item: { _id: ITEM._id, priceCents: 0 }, quantity }] });
 
 describe("placing orders", () => {
     it("uses the menu's price and groups orders into one open bill per table", async () => {
         const first = await place();
         expect(first.status).toBe(201);
-        expect(first.body.orderedItems[0].item.price).toBe(2.5);
+        expect(first.body.orderedItems[0].item.priceCents).toBe(250);
         await place();
         const bills = await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier);
         expect(bills.body).toHaveLength(1);
@@ -171,7 +171,7 @@ describe("kitchen and cashier", () => {
         const paid = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
         expect(paid.body.isPaid).toBe(true);
         const overview = await request(app).get(`/api/orders/${R.slug}/overview`).set(owner);
-        expect(overview.body).toMatchObject({ orderCount: 1, paymentCount: 1, unpaidBillCount: 0, tableCount: 4, revenue: 5 });
+        expect(overview.body).toMatchObject({ orderCount: 1, paymentCount: 1, unpaidBillCount: 0, tableCount: 4, revenueCents: 500 });
     });
 });
 
@@ -185,11 +185,11 @@ describe("the owner's numbers come from paid bills (VM-09)", () => {
         const { body: order } = await place("1", 3);
         await serve(order._id);
         const before = await request(app).get("/api/orders/owner/overview").set(owner);
-        expect(before.body).toMatchObject({ revenue: 0, itemsSoldCount: 0, unpaidBillCount: 1, topSellingItems: [] });
+        expect(before.body).toMatchObject({ revenueCents: 0, itemsSoldCount: 0, unpaidBillCount: 1, topSellingItems: [] });
         await payTable();
         const after = await request(app).get("/api/orders/owner/overview").set(owner);
         expect(after.body).toMatchObject({
-            revenue: 7.5,
+            revenueCents: 750,
             itemsSoldCount: 3,
             avgItemsPerOrder: 3,
             paymentCount: 1,
@@ -206,12 +206,12 @@ describe("the owner's numbers come from paid bills (VM-09)", () => {
         await payTable();
         const inRange = { from: new Date(Date.now() - 60_000).toISOString(), to: new Date(Date.now() + 60_000).toISOString() };
         const now = await request(app).get("/api/orders/owner/overview").query(inRange).set(owner);
-        expect(now.body).toMatchObject({ revenue: 5, paymentCount: 1, orderCount: 1, ...inRange });
+        expect(now.body).toMatchObject({ revenueCents: 500, paymentCount: 1, orderCount: 1, ...inRange });
         const lastYear = await request(app)
             .get(`/api/orders/${R.slug}/overview`)
             .query({ from: "2025-01-01T00:00:00.000Z", to: "2025-02-01T00:00:00.000Z" })
             .set(owner);
-        expect(lastYear.body).toMatchObject({ revenue: 0, paymentCount: 0, orderCount: 0, tableCount: 4 });
+        expect(lastYear.body).toMatchObject({ revenueCents: 0, paymentCount: 0, orderCount: 0, tableCount: 4 });
     });
 
     it("answers 400 for a date that isn't one", async () => {
@@ -280,8 +280,8 @@ describe("what the customer sees after ordering (VM-07)", () => {
             _id: order._id,
             number: order._id.slice(-6).toUpperCase(),
             table: "1",
-            lines: [{ name: "Kuy Teav", price: 2.5, quantity: 2, total: 5 }],
-            total: 5,
+            lines: [{ name: "Kuy Teav", priceCents: 250, quantity: 2, totalCents: 500 }],
+            totalCents: 500,
         });
         expect(new Date(res.body.placedAt).getTime()).toBeGreaterThan(Date.now() - 60_000);
         expect(JSON.stringify(res.body)).not.toContain(R._id); // nothing internal
@@ -302,8 +302,8 @@ describe("what the customer sees after ordering (VM-07)", () => {
         expect(res.status).toBe(200);
         expect(res.body.table).toBe("1");
         expect(res.body.orders).toHaveLength(2);
-        expect(res.body.orders.map((o: { total: number }) => o.total)).toEqual([5, 2.5]);
-        expect(res.body.total).toBe(7.5);
+        expect(res.body.orders.map((o: { totalCents: number }) => o.totalCents)).toEqual([500, 250]);
+        expect(res.body.totalCents).toBe(750);
         expect(JSON.stringify(res.body)).not.toContain(R._id);
     });
 
@@ -312,7 +312,7 @@ describe("what the customer sees after ordering (VM-07)", () => {
         const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
         await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
         const res = await tableApi("1", "/open-bill");
-        expect(res.body).toEqual({ table: "1", orders: [], total: 0 });
+        expect(res.body).toEqual({ table: "1", orders: [], totalCents: 0, total: 0 });
     });
 });
 
@@ -508,6 +508,6 @@ describe("order status over HTTP (VM-27)", () => {
         const queue = await request(app).get(`/api/orders/${R.slug}/kitchen`).set(chef);
         expect(queue.body.map((o: { _id: string }) => o._id)).toEqual([kept._id]);
         const open = await request(app).get(`/api/orders/${R.slug}/tables/1/open-bill`);
-        expect(open.body.total).toBe(5); // 2 × 2.50; the cancelled 3 aren't charged
+        expect(open.body.totalCents).toBe(500); // 2 × 2.50; the cancelled 3 aren't charged
     });
 });

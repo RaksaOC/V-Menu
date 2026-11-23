@@ -28,7 +28,7 @@ const { Bill } = await import("../../src/models/bill.model.js");
 
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
-const DISH = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
+const DISH = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 const clients: Clients = {
     listOwnerRestaurants: async (_req, ownerId) => [A, B].filter((r) => r.ownerId === ownerId),
     menuCounts: async () => ({ numOfTables: 1, numOfActiveTables: 1, numOfItems: 1 }),

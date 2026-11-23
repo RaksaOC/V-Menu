@@ -127,11 +127,11 @@ describe("cancelled orders don't count", () => {
 
         const bill = await s.tableView.openBill(R1._id, "1");
         expect(bill.orders.map((o) => o.status)).toEqual(["served", "cancelled"]);
-        expect(bill.total).toBe(2 * DISH.price);
+        expect(bill.totalCents).toBe(2 * DISH.priceCents);
 
         await s.billing.setPaid(R1._id, (await openBill(s))._id, true); // VM-09: revenue is paid bills
         const owner = await s.stats.ownerOverview("owner1");
-        expect(owner).toMatchObject({ orderCount: 1, revenue: 2 * DISH.price, itemsSoldCount: 2 });
+        expect(owner).toMatchObject({ orderCount: 1, revenueCents: 2 * DISH.priceCents, itemsSoldCount: 2 });
         expect((await s.stats.restaurantOverview(R1._id)).orderCount).toBe(1);
     });
 

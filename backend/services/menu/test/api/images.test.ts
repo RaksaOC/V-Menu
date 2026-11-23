@@ -86,7 +86,7 @@ describe("photo upload (VM-02)", () => {
 
     it("an item saved with the uploaded URL shows on the customer menu", async () => {
         const { body } = await upload(photo);
-        const item = await request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", price: 5, image: body.url });
+        const item = await request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", priceCents: 500, image: body.url });
         expect(item.status).toBe(201);
         const menu = await request(app).get(`/api/menu/${SLUG}/public/items`);
         expect(menu.body.categories[0].items[0].image).toBe(body.url); // VM-25: grouped
@@ -171,7 +171,7 @@ describe("photo upload safety (SEC-05)", () => {
     });
 
     it("an item's image must be one of this restaurant's uploaded photos", async () => {
-        const add = (image: string) => request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", price: 5, image });
+        const add = (image: string) => request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", priceCents: 500, image });
         expect((await add("https://tracker.example/pixel.jpg")).status).toBe(400);
         expect((await add("data:image/jpeg;base64,/9j/4AAQ")).status).toBe(400);
         expect((await add(`/api/menu/other-xyz789/images/${"a".repeat(24)}`)).status).toBe(400);
@@ -182,11 +182,11 @@ describe("photo upload safety (SEC-05)", () => {
     it("an existing item keeps its old image when other fields are edited", async () => {
         // items made before this change may still point elsewhere; editing the name must not fail
         const { Item } = await import("../../src/models/item.model.js");
-        const old = await Item.create({ name: "Old", price: 1, image: "https://images.example/old.jpg", resId: RES_ID });
+        const old = await Item.create({ name: "Old", priceCents: 100, image: "https://images.example/old.jpg", resId: RES_ID });
         const res = await request(app)
             .put(`/api/menu/${SLUG}/items/${old._id}`)
             .set(owner)
-            .send({ name: "Renamed", price: 1, image: "https://images.example/old.jpg" });
+            .send({ name: "Renamed", priceCents: 100, image: "https://images.example/old.jpg" });
         expect(res.status).toBe(200);
         expect(res.body.name).toBe("Renamed");
         const swap = await request(app)

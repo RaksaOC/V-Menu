@@ -78,7 +78,7 @@ describe("placing an order", () => {
         });
         await placing.place(
             R1._id,
-            PlaceOrderBody.parse({ table: "1", orderedItems: [{ item: { _id: DISH._id, name: "Free?", price: 0 }, quantity: 3 }] }),
+            PlaceOrderBody.parse({ table: "1", orderedItems: [{ item: { _id: DISH._id, name: "Free?", priceCents: 0 }, quantity: 3 }] }),
         );
         expect(sent).toEqual({ table: "1", items: [{ _id: DISH._id, quantity: 3 }] });
     });
@@ -346,8 +346,9 @@ describe("what the customer sees (VM-07)", () => {
         expect(view).toMatchObject({
             number: o._id.slice(-6).toUpperCase(),
             table: "1",
-            total: 7.5,
-            lines: [{ name: DISH.name, price: 2.5, quantity: 3, total: 7.5 }],
+            totalCents: 750,
+            total: 7.5, // CL-07: the old dollar fields, for one release
+            lines: [{ name: DISH.name, priceCents: 250, quantity: 3, totalCents: 750, price: 2.5, total: 7.5 }],
         });
         expect(view.placedAt).toEqual(o.orderedAt);
         expect(await status(tableView.order(R1._id, "2", o._id))).toBe(404);
@@ -361,21 +362,21 @@ describe("what the customer sees (VM-07)", () => {
         await placing.place(R1._id, { table: "1", orderedItems: [line(2)] });
         await placing.place(R1._id, { table: "2", orderedItems: [line(5)] });
         const bill = await tableView.openBill(R1._id, "1");
-        expect(bill.orders.map((o) => o.total)).toEqual([2.5, 5]);
-        expect(bill.total).toBe(7.5);
+        expect(bill.orders.map((o) => o.totalCents)).toEqual([250, 500]);
+        expect(bill.totalCents).toBe(750);
         await billing.setPaid(R1._id, bills.all[0]._id, true);
-        expect(await tableView.openBill(R1._id, "1")).toEqual({ table: "1", orders: [], total: 0 });
-        expect(await tableView.openBill(R1._id, "x".repeat(41))).toEqual({ table: "x".repeat(41), orders: [], total: 0 });
+        expect(await tableView.openBill(R1._id, "1")).toEqual({ table: "1", orders: [], totalCents: 0, total: 0 });
+        expect(await tableView.openBill(R1._id, "x".repeat(41))).toEqual({ table: "x".repeat(41), orders: [], totalCents: 0, total: 0 });
     });
 
     it("rounds money to cents", async () => {
         const { placing, tableView } = setup({
             orderCheck: async (_r: string, body: { items: { quantity: number }[] }) => ({
-                items: body.items.map((l) => ({ item: { ...DISH, price: 0.1 }, quantity: l.quantity })),
+                items: body.items.map((l) => ({ item: { ...DISH, priceCents: 10 }, quantity: l.quantity })),
             }),
         });
         const o = await placing.place(R1._id, { table: "1", orderedItems: [line(3)] });
-        expect((await tableView.order(R1._id, "1", o._id)).total).toBe(0.3);
+        expect((await tableView.order(R1._id, "1", o._id)).totalCents).toBe(30);
     });
 });
 
@@ -403,7 +404,7 @@ describe("dashboard numbers", () => {
             orderCount: 2,
             unpaidBillCount: 1,
             paymentCount: 1,
-            revenue: 5, // table 1's paid bill: 2 x 2.50
+            revenueCents: 500, // table 1's paid bill: 2 x 2.50
             from: null,
             to: null,
         });
@@ -412,8 +413,8 @@ describe("dashboard numbers", () => {
     it("the owner's list of restaurants, each with its numbers", async () => {
         const { stats } = await busyDay();
         const list = await stats.ownerRestaurants("owner1");
-        expect(list.map((r) => [r.resName, r.orderCount, r.revenue])).toEqual([
-            ["Mee Keav", 2, 5],
+        expect(list.map((r) => [r.resName, r.orderCount, r.revenueCents])).toEqual([
+            ["Mee Keav", 2, 500],
             ["Bai Sach", 1, 0],
         ]);
         expect(await stats.ownerRestaurants("someone-else")).toEqual([]);
@@ -424,23 +425,23 @@ describe("dashboard numbers", () => {
         expect(await empty.stats.ownerOverview("owner1")).toMatchObject({
             orderCount: 0,
             avgItemsPerOrder: 0,
-            revenue: 0,
+            revenueCents: 0,
             itemsSoldCount: 0,
             topSellingItems: [],
         });
 
         const free = setup({
             orderCheck: async (_r: string, body: { items: { quantity: number }[] }) => ({
-                items: body.items.map((l) => ({ item: { ...DISH, price: 0 }, quantity: l.quantity })),
+                items: body.items.map((l) => ({ item: { ...DISH, priceCents: 0 }, quantity: l.quantity })),
             }),
         });
         await free.placing.place(R1._id, { table: "1", orderedItems: [line(1)] });
         await free.billing.setPaid(R1._id, free.bills.all[0]._id, true);
-        expect(await free.stats.ownerOverview("owner1")).toMatchObject({ revenue: 0, itemsSoldCount: 1, avgItemsPerOrder: 1 });
+        expect(await free.stats.ownerOverview("owner1")).toMatchObject({ revenueCents: 0, itemsSoldCount: 1, avgItemsPerOrder: 1 });
     });
 
     it("ranks the top five sellers", async () => {
-        const dishes = ["A", "B", "C", "D", "E", "F"].map((name, i) => ({ ...DISH, _id: newId(), name, price: 1 + i }));
+        const dishes = ["A", "B", "C", "D", "E", "F"].map((name, i) => ({ ...DISH, _id: newId(), name, priceCents: 100 + i }));
         const s = setup({
             orderCheck: async (_r: string, body: { items: { _id: string; quantity: number }[] }) => ({
                 items: body.items.map((l) => ({ item: dishes.find((d) => d._id === l._id)!, quantity: l.quantity })),
@@ -463,7 +464,7 @@ describe("owner revenue and top sellers (VM-09)", () => {
     const KUY = "665f00000000000000000a01"; // renamed from "Kuy Teav" to "Kuy Teav (large)"
     const COFFEE = "665f00000000000000000a02";
     const OTHER_KUY = "665f00000000000000000a03"; // a different dish, also called "Kuy Teav"
-    const dish = (_id: string, name: string, price: number) => ({ _id, name, price, image: "x.jpg", isEnabled: true });
+    const dish = (_id: string, name: string, price: number) => ({ _id, name, priceCents: Math.round(price * 100), image: "x.jpg", isEnabled: true });
 
     function fixtures() {
         const s = setup();
@@ -512,7 +513,7 @@ describe("owner revenue and top sellers (VM-09)", () => {
 
     it("revenue is the lines on paid bills; cancelled orders and open bills count nowhere", async () => {
         const o = await fixtures().stats.ownerOverview("owner1");
-        expect(o.revenue).toBe(25.25); // 5 + 1.25 + 3 + 16
+        expect(o.revenueCents).toBe(2525); // $5 + $1.25 + $3 + $16
         expect(o.itemsSoldCount).toBe(8); // 2 + 1 + 1 + 4
         expect(o.avgItemsPerOrder).toBe(4); // 8 items on the 2 paid, not cancelled orders
         expect(o.orderCount).toBe(3); // o1, o3, o4; the cancelled o2 isn't an order that counts
@@ -532,16 +533,16 @@ describe("owner revenue and top sellers (VM-09)", () => {
 
     it("each restaurant's overview has its own revenue", async () => {
         const { stats } = fixtures();
-        expect((await stats.restaurantOverview(R1._id)).revenue).toBe(6.25);
-        expect((await stats.restaurantOverview(R2._id)).revenue).toBe(19);
+        expect((await stats.restaurantOverview(R1._id)).revenueCents).toBe(625);
+        expect((await stats.restaurantOverview(R2._id)).revenueCents).toBe(1900);
     });
 
     it("a date range keeps the bills paid in it, and the orders placed in it", async () => {
         const { stats } = fixtures();
         const range = { from: "2026-11-05T00:00:00.000Z", to: "2026-11-30T00:00:00.000Z" };
         const o = await stats.ownerOverview("owner1", range);
-        expect(o).toMatchObject({ revenue: 19, itemsSoldCount: 5, orderCount: 2, paymentCount: 1, ...range });
-        expect(await stats.restaurantOverview(R1._id, range)).toMatchObject({ revenue: 0, orderCount: 1, paymentCount: 0, ...range });
+        expect(o).toMatchObject({ revenueCents: 1900, itemsSoldCount: 5, orderCount: 2, paymentCount: 1, ...range });
+        expect(await stats.restaurantOverview(R1._id, range)).toMatchObject({ revenueCents: 0, orderCount: 1, paymentCount: 0, ...range });
         // open bills are what's open now, whatever the range
         expect(o.unpaidBillCount).toBe(1);
     });
@@ -560,7 +561,7 @@ describe("sales from paid bills (VM-09)", () => {
     it("skips an order that no longer exists and a line without a dish; a missing price is 0", () => {
         const s = sales([bill([null, order([{ quantity: 2 }, { item: { _id: "x", name: "Water" }, quantity: 1 }])])]);
         expect(s).toEqual({
-            revenue: 0,
+            revenueCents: 0,
             itemsSoldCount: 1,
             avgItemsPerOrder: 1,
             topSellingItems: [{ _id: "x", name: "Water", quantity: 1 }],
@@ -568,7 +569,7 @@ describe("sales from paid bills (VM-09)", () => {
     });
 
     it("equal sellers are listed by name", () => {
-        const line = (_id: string, name: string) => ({ item: { _id, name, price: 1 }, quantity: 1 });
+        const line = (_id: string, name: string) => ({ item: { _id, name, priceCents: 100 }, quantity: 1 });
         const s = sales([bill([order([line("b", "Tea"), line("a", "Amok")])])]);
         expect(s.topSellingItems.map((t) => t.name)).toEqual(["Amok", "Tea"]);
     });

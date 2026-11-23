@@ -174,7 +174,7 @@ export function fakeBills(orders: { all: OrderRecord[]; onBill?: (id: string) =>
 
 export const R1 = { _id: "665f00000000000000000001", name: "Mee Keav", slug: "mee-keav", ownerId: "owner1" };
 export const R2 = { _id: "665f00000000000000000002", name: "Bai Sach", slug: "bai-sach", ownerId: "owner1" };
-export const DISH = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
+export const DISH = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 
 /** The menu answers with the real dish and price for each line, and refuses table "closed". */
 export function fakeClients(over: Partial<BoundClients> = {}): BoundClients {
