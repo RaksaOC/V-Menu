@@ -67,7 +67,15 @@ export default function CustomerPage() {
         document.getElementById(sectionId(section))?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     const card = (item: MenuSection["items"][number]) => (
-        <ItemCard key={item._id} slug={resSlug} table={table} _id={item._id} name={item.name} image={item.image} priceCents={item.priceCents} />
+        <ItemCard
+            key={item._id}
+            slug={resSlug}
+            table={table}
+            _id={item._id}
+            name={item.name}
+            image={item.image}
+            priceCents={item.priceCents}
+        />
     );
 
     return (

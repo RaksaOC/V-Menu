@@ -11,7 +11,7 @@ const { default: OrderCard } = await import("@/features/cashier/components/order
 const dish = (name: string, price: number) => ({
     _id: `665f0000000000000000${name.length}${name.length}${name.length}${name.length}`.slice(0, 24),
     name,
-    price,
+    priceCents: Math.round(price * 100),
     image: "/x.jpg",
     isEnabled: true,
 });

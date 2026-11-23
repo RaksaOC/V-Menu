@@ -171,7 +171,8 @@ describe("photo upload safety (SEC-05)", () => {
     });
 
     it("an item's image must be one of this restaurant's uploaded photos", async () => {
-        const add = (image: string) => request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", priceCents: 500, image });
+        const add = (image: string) =>
+            request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", priceCents: 500, image });
         expect((await add("https://tracker.example/pixel.jpg")).status).toBe(400);
         expect((await add("data:image/jpeg;base64,/9j/4AAQ")).status).toBe(400);
         expect((await add(`/api/menu/other-xyz789/images/${"a".repeat(24)}`)).status).toBe(400);

@@ -28,10 +28,9 @@ function show(date: Date, locale: string, parts: Intl.DateTimeFormatOptions, tim
 export function formatDate(value: DateInput, { timeZone, weekday = false }: ZoneOption & { weekday?: boolean } = {}) {
     const date = parse(value);
     if (!date) return "";
-    const parts: Intl.DateTimeFormatOptions = weekday
-        ? { weekday: "short", day: "numeric", month: "short" }
-        : { day: "numeric", month: "short", year: "numeric" };
-    return show(date, "en-GB", parts, timeZone);
+    if (weekday)
+        return `${show(date, "en-GB", { weekday: "short" }, timeZone)}, ${show(date, "en-GB", { day: "numeric", month: "short" }, timeZone)}`;
+    return show(date, "en-GB", { day: "numeric", month: "short", year: "numeric" }, timeZone);
 }
 
 /** "3:30 PM", or "3:30:05 PM" with `seconds`. Empty for something that isn't a date. */

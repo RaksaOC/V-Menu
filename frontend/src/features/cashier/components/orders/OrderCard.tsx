@@ -67,7 +67,9 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                                         </p>
                                     </div>
                                 </div>
-                                <p className="font-bold text-zinc-700 dark:text-white">{formatMoney(item.item.priceCents * item.quantity)}</p>
+                                <p className="font-bold text-zinc-700 dark:text-white">
+                                    {formatMoney(item.item.priceCents * item.quantity)}
+                                </p>
                             </div>
                         ));
                         return (

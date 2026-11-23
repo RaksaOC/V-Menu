@@ -2,7 +2,7 @@ import type { Bill, MenuItem, Order, Overview, Restaurant, StaffMember, Table } 
 
 // API answers the frontend tests mock, typed by @vmenu/contracts and checked against its schemas
 // (test/contracts.test.ts), so a mock can't drift from what the services really send (CL-05).
-export const dish: MenuItem = { _id: "665f00000000000000000011", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
+export const dish: MenuItem = { _id: "665f00000000000000000011", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
 export const table: Table = { _id: "665f00000000000000000021", name: "T1", isEnabled: true };
 export const order: Order = {
     _id: "665f00000000000000000031",
@@ -25,7 +25,7 @@ export const overview: Overview = {
     itemCount: 4,
     orderCount: 2,
     paymentCount: 1,
-    revenue: 5,
+    revenueCents: 500,
     from: null,
     to: null,
 };

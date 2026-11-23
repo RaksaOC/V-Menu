@@ -464,7 +464,13 @@ describe("owner revenue and top sellers (VM-09)", () => {
     const KUY = "665f00000000000000000a01"; // renamed from "Kuy Teav" to "Kuy Teav (large)"
     const COFFEE = "665f00000000000000000a02";
     const OTHER_KUY = "665f00000000000000000a03"; // a different dish, also called "Kuy Teav"
-    const dish = (_id: string, name: string, price: number) => ({ _id, name, priceCents: Math.round(price * 100), image: "x.jpg", isEnabled: true });
+    const dish = (_id: string, name: string, price: number) => ({
+        _id,
+        name,
+        priceCents: Math.round(price * 100),
+        image: "x.jpg",
+        isEnabled: true,
+    });
 
     function fixtures() {
         const s = setup();

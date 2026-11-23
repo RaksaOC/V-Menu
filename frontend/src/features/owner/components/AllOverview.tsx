@@ -48,7 +48,9 @@ const StatCard = ({ title, value, icon: Icon, color, bgColor, textColor, subtitl
             <div>
                 <h3 className={`text-sm font-semibold ${textColor} uppercase tracking-wide mb-2`}>{title}</h3>
                 <div className="flex items-baseline space-x-2">
-                    <span className="text-3xl font-bold text-gray-800">{typeof value === "number" ? value.toLocaleString("en-US") : value}</span>
+                    <span className="text-3xl font-bold text-gray-800">
+                        {typeof value === "number" ? value.toLocaleString("en-US") : value}
+                    </span>
                     {subtitle && <span className="text-sm text-gray-500">{subtitle}</span>}
                 </div>
             </div>

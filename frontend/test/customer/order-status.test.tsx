@@ -16,8 +16,8 @@ const ORDER = {
     number: "ABC123",
     table: "T1",
     placedAt: "2026-11-23T12:34:00.000Z",
-    lines: [{ name: "Fish Amok", price: 5.5, quantity: 2, total: 11 }],
-    total: 11,
+    lines: [{ name: "Fish Amok", priceCents: 550, quantity: 2, totalCents: 1100 }],
+    totalCents: 1100,
 };
 afterEach(() => vi.useRealTimers());
 
@@ -28,7 +28,9 @@ function api(answer: () => object) {
             asked.push(Date.now());
             return HttpResponse.json(answer());
         }),
-        http.get("*/api/orders/demo-bistro/tables/T1/open-bill", () => HttpResponse.json({ table: "T1", orders: [answer()], total: 11 })),
+        http.get("*/api/orders/demo-bistro/tables/T1/open-bill", () =>
+            HttpResponse.json({ table: "T1", orders: [answer()], totalCents: 1100 }),
+        ),
     );
     return asked;
 }

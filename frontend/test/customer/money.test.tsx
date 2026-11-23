@@ -33,21 +33,17 @@ describe("the cart in cents (CL-07)", () => {
 describe("the dish form in cents (CL-07)", () => {
     it("takes dollars and saves whole cents", async () => {
         const onSave = vi.fn();
-        const { container } = render(<ItemForm onClose={vi.fn()} onSave={onSave} />);
-        const [name, price] = [
-            container.ownerDocument.querySelector("input[type=text]")!,
-            container.ownerDocument.querySelector("input[type=number]")!,
-        ];
-        fireEvent.change(name, { target: { value: "Amok" } });
-        fireEvent.change(price, { target: { value: "2.35" } });
-        fireEvent.submit(container.ownerDocument.querySelector("form")!);
+        render(<ItemForm onClose={vi.fn()} onSave={onSave} />);
+        fireEvent.change(screen.getByLabelText("Item Name"), { target: { value: "Amok" } });
+        fireEvent.change(screen.getByLabelText("Price ($)"), { target: { value: "2.35" } });
+        fireEvent.submit(document.querySelector("form")!);
         await vi.waitFor(() => expect(onSave).toHaveBeenCalled());
         expect(onSave.mock.calls[0][0]).toMatchObject({ name: "Amok", priceCents: 235 });
         expect(onSave.mock.calls[0][0]).not.toHaveProperty("price");
     });
 
     it("shows a dish's price in dollars when editing", () => {
-        const { container } = render(<ItemForm item={{ ...dish, priceCents: 235 }} onClose={vi.fn()} onSave={vi.fn()} />);
-        expect((container.ownerDocument.querySelector("input[type=number]") as HTMLInputElement).value).toBe("2.35");
+        render(<ItemForm item={{ ...dish, priceCents: 235 }} onClose={vi.fn()} onSave={vi.fn()} />);
+        expect(screen.getByLabelText<HTMLInputElement>("Price ($)").value).toBe("2.35");
     });
 });

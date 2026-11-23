@@ -78,7 +78,7 @@ describe("the cashier's menu", () => {
         const dish = (n: string, categoryId: string | null) => ({
             _id: `665f0000000000000000000${n.length}`,
             name: n,
-            price: 1,
+            priceCents: 100,
             image: "/x.png",
             isEnabled: true,
             categoryId,

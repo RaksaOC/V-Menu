@@ -9,8 +9,8 @@ vi.mock("react-toastify/dist/ReactToastify.css", () => ({}));
 const { addToCart, cartKey, readCart, reconcileCart } = await import("@/features/customer/cart");
 const { default: Card } = await import("@/features/customer/components/ItemCard");
 
-const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", price: 2.5, image: "/images/kuy-teav.jpg", isEnabled: true };
-const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", price: 4, image: "/images/lok-lak.jpg", isEnabled: true };
+const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", priceCents: 250, image: "/images/kuy-teav.jpg", isEnabled: true };
+const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", priceCents: 400, image: "/images/lok-lak.jpg", isEnabled: true };
 // VM-05: one cart per restaurant and table, stored under cart:<slug>:<table>.
 const SLUG = "demo-bistro";
 const T = "T1";
@@ -75,7 +75,7 @@ describe("one cart per restaurant and table (VM-05)", () => {
                 { item: lokLak, quantity: 1 },
             ]),
         );
-        const newPrice = { ...kuyTeav, price: 3 };
+        const newPrice = { ...kuyTeav, priceCents: 300 };
         expect(reconcileCart(SLUG, T, [newPrice])).toBe(1);
         expect(saved()).toEqual([{ item: newPrice, quantity: 2 }]);
         expect(reconcileCart(SLUG, T, [newPrice])).toBe(0);
@@ -84,7 +84,7 @@ describe("one cart per restaurant and table (VM-05)", () => {
 
 describe("menu item card", () => {
     it("shows the dish and adds one of it to the cart", () => {
-        render(<Card slug={SLUG} table={T} _id={lokLak._id} name="Lok Lak" price={4} image={lokLak.image} />);
+        render(<Card slug={SLUG} table={T} _id={lokLak._id} name="Lok Lak" priceCents={400} image={lokLak.image} />);
         expect(screen.getByRole("heading", { name: "Lok Lak" })).toBeInTheDocument();
         expect(screen.getByText("$4.00")).toBeInTheDocument();
         fireEvent.click(screen.getByRole("button", { name: /add to cart/i }));
@@ -94,8 +94,8 @@ describe("menu item card", () => {
     // Was a known bug (B1): the card stored parseInt(price.toFixed(2)), so $2.50 went into the
     // cart as $2. Fixed with VM-05's cart helpers; this was an \`it.fails\` until then.
     it("keeps the cents of the price", () => {
-        render(<Card slug={SLUG} table={T} _id={kuyTeav._id} name="Kuy Teav" price={2.5} image={kuyTeav.image} />);
+        render(<Card slug={SLUG} table={T} _id={kuyTeav._id} name="Kuy Teav" priceCents={250} image={kuyTeav.image} />);
         fireEvent.click(screen.getByRole("button", { name: /add to cart/i }));
-        expect(saved()[0].item.price).toBe(2.5);
+        expect(saved()[0].item.priceCents).toBe(250);
     });
 });

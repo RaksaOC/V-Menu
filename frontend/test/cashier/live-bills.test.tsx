@@ -10,7 +10,7 @@ vi.mock("react-toastify/dist/ReactToastify.css", () => ({}));
 vi.mock("next/navigation", () => ({ useParams: () => ({ res: "demo-bistro" }), useRouter: () => ({ push: vi.fn() }) }));
 const { default: Orders } = await import("@/features/cashier/components/orders/Orders");
 
-const dish = { _id: "i1", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
+const dish = { _id: "i1", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
 const order = (id: string) => ({
     _id: id,
     table: "x",

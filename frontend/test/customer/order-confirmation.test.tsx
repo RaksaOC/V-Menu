@@ -18,20 +18,20 @@ const ORDER = {
     table: "T1",
     placedAt: "2026-11-23T12:34:00.000Z",
     lines: [
-        { name: "Fish Amok", price: 5.5, quantity: 2, total: 11 },
-        { name: "Iced Coffee", price: 1.5, quantity: 1, total: 1.5 },
+        { name: "Fish Amok", priceCents: 550, quantity: 2, totalCents: 1100 },
+        { name: "Iced Coffee", priceCents: 150, quantity: 1, totalCents: 150 },
     ],
-    total: 12.5,
+    totalCents: 1250,
 };
 const EARLIER = {
     ...ORDER,
     _id: "665f00000000000000aaa111",
     number: "AAA111",
-    lines: [{ name: "Fried Rice", price: 3.5, quantity: 1, total: 3.5 }],
-    total: 3.5,
+    lines: [{ name: "Fried Rice", priceCents: 350, quantity: 1, totalCents: 350 }],
+    totalCents: 350,
 };
 
-function api({ order = ORDER, bill = { table: "T1", orders: [EARLIER, ORDER], total: 16 } } = {}) {
+function api({ order = ORDER, bill = { table: "T1", orders: [EARLIER, ORDER], totalCents: 1600 } } = {}) {
     server.use(
         http.get("*/api/orders/demo-bistro/tables/T1/orders/:id", () => HttpResponse.json(order)),
         http.get("*/api/orders/demo-bistro/tables/T1/open-bill", () => HttpResponse.json(bill)),
@@ -79,7 +79,7 @@ describe("order confirmation", () => {
             ),
         );
         server.use(
-            http.get("*/api/orders/demo-bistro/tables/T1/open-bill", () => HttpResponse.json({ table: "T1", orders: [], total: 0 })),
+            http.get("*/api/orders/demo-bistro/tables/T1/open-bill", () => HttpResponse.json({ table: "T1", orders: [], totalCents: 0 })),
         );
         render(<OrderConfirmation />);
         expect(await screen.findByText(/Order not found/)).toBeTruthy();

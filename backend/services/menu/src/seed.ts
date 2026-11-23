@@ -13,7 +13,12 @@ const items = [
     { name: "Fried Rice", priceCents: 350, category: "Mains", image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600" },
     { name: "Beef Lok Lak", priceCents: 500, category: "Mains", image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=600" },
     { name: "Fish Amok", priceCents: 550, category: "Mains", image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600" },
-    { name: "Iced Coffee", priceCents: 150, category: "Drinks", image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600" },
+    {
+        name: "Iced Coffee",
+        priceCents: 150,
+        category: "Drinks",
+        image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600",
+    },
 ];
 
 requireEnv("MONGODB_URI");

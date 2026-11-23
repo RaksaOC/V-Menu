@@ -10,7 +10,6 @@ import { formatTime } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { CUSTOMER_STATUS, isFinal } from "@/lib/order-status";
 
-
 /** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far.
  *  VM-27: its status, checked every 10 seconds until it's served or cancelled. */
 export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number } = {}) {

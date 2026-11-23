@@ -26,7 +26,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
     const fileId = useId();
     const photo = usePhoto(item?.image ?? "");
     const [name, setName] = useState(item?.name ?? "");
-    const [price, setPrice] = useState(item ? String(item.priceCents / 100) : "") // typed in dollars, saved in cents (CL-07);
+    const [price, setPrice] = useState(item ? String(item.priceCents / 100) : ""); // typed in dollars, saved in cents (CL-07);
     const [categoryId, setCategoryId] = useState(item?.categoryId ?? "");
     const [errors, setErrors] = useState({ name: "", price: "" });
     const [saving, setSaving] = useState(false);

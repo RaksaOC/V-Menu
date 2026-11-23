@@ -239,6 +239,13 @@ docs/showcase/               before/after screenshots for each PR (capture.ts)
 
 Photo credits for the tour images are in `frontend/public/images/tour/CREDITS.md`.
 
+## Money and dates
+
+- **Money is whole cents** in the database and the API, in fields named `...Cents` (`priceCents`, `totalCents`, `revenueCents`). So `0.1 + 0.2` can't turn into `0.30000000000000004`.
+- **Two helpers** in `@vmenu/contracts` do the converting: `toCents()` for an amount someone typed and `formatMoney()` for showing it. The frontend imports them through `@/lib/money`.
+- **For one release** the API and the stored data also keep the old `price` in dollars (CL-07), so a page opened before a deploy keeps working and a rollback is safe.
+- **Dates** are ISO strings in the API. The frontend shows them with `formatDate()`, `formatTime()` and `formatDateTime()` from `@/lib/dates`, in the restaurant's time zone (default `Asia/Phnom_Penh`), not the device's.
+
 ## Naming
 
 One style, checked by `scripts/naming.test.mjs` (CL-06):
@@ -248,4 +255,4 @@ One style, checked by `scripts/naming.test.mjs` (CL-06):
 - **Data:**
   - A bill is `isPaid`. It used to be `isPayed`. order-service renames the stored field at startup (`src/migrations/is-paid.ts`). For one release the API also accepts `isPayed` and sends it alongside `isPaid`.
   - A person's role at one restaurant is a `Membership` (it used to be `Tenant`). The collection keeps its name, `tenants`, and `tenantId` is still the person's Firebase uid.
-  - Counts are `xCount`: `orderCount`, `paymentCount`, `unpaidBillCount`, `tableCount` (VM-09; they were `numOfX`). An amount of money is named for what it is, such as `revenue`, not a count. Only the internal call from order-service to menu-service still says `numOfX`; order-service renames them for the dashboards.
+  - Counts are `xCount`: `orderCount`, `paymentCount`, `unpaidBillCount`, `tableCount` (VM-09; they were `numOfX`). An amount of money is named for what it is, in cents: `revenueCents`, not a count. Only the internal call from order-service to menu-service still says `numOfX`; order-service renames them for the dashboards.

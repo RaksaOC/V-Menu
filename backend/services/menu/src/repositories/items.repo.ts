@@ -40,7 +40,8 @@ export const mongoItemsRepo: ItemsRepo = {
     async create(resId, fields) {
         return plain((await Item.create({ ...withOldPrice(fields), resId })).toObject());
     },
-    update: (resId, id, fields) => Item.findOneAndUpdate({ _id: id, resId }, withOldPrice(fields), { new: true, runValidators: true }).lean<ItemRecord>(),
+    update: (resId, id, fields) =>
+        Item.findOneAndUpdate({ _id: id, resId }, withOldPrice(fields), { new: true, runValidators: true }).lean<ItemRecord>(),
     remove: (resId, id) => Item.findOneAndDelete({ _id: id, resId }).lean<ItemRecord>(),
     count: (resId) => Item.countDocuments({ resId }),
     // ids were checked to be ObjectIds; sanitizeFilter would strip the $in otherwise

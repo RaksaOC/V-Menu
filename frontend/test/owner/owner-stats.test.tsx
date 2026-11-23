@@ -24,7 +24,7 @@ const totals: OwnerOverview = {
     itemCount: 20,
     orderCount: 3,
     paymentCount: 2,
-    revenue: 1225.25,
+    revenueCents: 122525,
     itemsSoldCount: 8,
     avgItemsPerOrder: 4,
     topSellingItems: [
@@ -79,7 +79,7 @@ describe("owner dashboard (VM-09)", () => {
 
 describe("one restaurant's overview (VM-09)", () => {
     it("shows its revenue next to the counts", async () => {
-        server.use(http.get("*/api/orders/demo-bistro/overview", () => HttpResponse.json({ ...overview, revenue: 6.25 })));
+        server.use(http.get("*/api/orders/demo-bistro/overview", () => HttpResponse.json({ ...overview, revenueCents: 625 })));
         render(
             <ResContext.Provider value="demo-bistro">
                 <Overview />

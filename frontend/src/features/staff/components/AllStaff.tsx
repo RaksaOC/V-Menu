@@ -377,9 +377,7 @@ export default function AllStaff() {
                                                     <td className="py-4 px-1">
                                                         <div className="flex items-center gap-2 justify-center">
                                                             <Calendar size={16} className="text-gray-400" />
-                                                            <span className="text-gray-900">
-                                                                {formatDate(member.createdAt)}
-                                                            </span>
+                                                            <span className="text-gray-900">{formatDate(member.createdAt)}</span>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -423,9 +421,7 @@ export default function AllStaff() {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Calendar size={16} className="text-gray-400" />
-                                                    <span className="text-gray-900 text-sm">
-                                                        {formatDate(member.createdAt)}
-                                                    </span>
+                                                    <span className="text-gray-900 text-sm">{formatDate(member.createdAt)}</span>
                                                 </div>
                                             </div>
                                         </div>

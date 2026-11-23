@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
 const { default: KitchenBoard } = await import("@/features/kitchen/components/KitchenBoard");
 const { default: KitchenHistory } = await import("@/features/kitchen/components/KitchenHistory");
 
-const dish = { _id: "i1", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
+const dish = { _id: "i1", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
 const order = (n: number, status = "pending") => ({
     _id: `o${n}`,
     table: `T${n}`,
