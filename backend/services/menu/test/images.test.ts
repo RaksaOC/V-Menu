@@ -110,9 +110,14 @@ describe("photo upload (VM-02)", () => {
     });
 
     it("only the restaurant's owner may upload", async () => {
-        expect((await upload(photo, "dish.jpg", {})).status).toBe(401);
-        expect((await upload(photo, "dish.jpg", cashier)).status).toBe(403);
-        expect((await upload(photo, "dish.jpg", otherOwner)).status).toBe(403);
+        // A small file: the server answers 401/403 before reading the body, and with a large
+        // one the client can still be sending when the connection closes (ECONNRESET).
+        const small = await sharp({ create: { width: 10, height: 10, channels: 3, background: "#f00" } })
+            .png()
+            .toBuffer();
+        expect((await upload(small, "dish.png", {})).status).toBe(401);
+        expect((await upload(small, "dish.png", cashier)).status).toBe(403);
+        expect((await upload(small, "dish.png", otherOwner)).status).toBe(403);
     });
 
     it("an image is only served under its own restaurant", async () => {
