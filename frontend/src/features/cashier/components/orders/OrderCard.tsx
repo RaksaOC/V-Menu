@@ -71,7 +71,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder, on
                         return (
                             <span
                                 key={kind}
-                                className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-sm font-bold tracking-wide text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/20 dark:text-amber-100"
+                                className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-sm font-bold tracking-wide text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/20 dark:text-amber-100"
                             >
                                 <Icon size={14} aria-hidden />
                                 {label} · {waited(at)}
