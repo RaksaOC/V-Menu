@@ -3,7 +3,8 @@ import {TableOutput} from "@/lib/types/Table";
 import {useContext, useState} from "react";
 import EditTablePopup from "@/features/owner/components/tables/EditTablePopup";
 import {ItemInput, ItemOutput} from "@/lib/types/Item";
-import api from "@/lib/api";
+import {deleteTable, updateTable} from "@/features/owner/api";
+import {apiStatus} from "@/lib/api";
 import {ResContext} from "@/features/owner/ResContext";
 
 interface TableCardProps {
@@ -21,14 +22,11 @@ function TableCard({table, onModified}: TableCardProps) {
         }
 
         try {
-            const response = await api.put(`/api/menu/${resSlug}/tables/${id}`, editedTable);
-            if (response.status === 200) {
-                console.log("TableCard updated:", response.data);
-                setShowEdit(false);
-                onModified();
-            }
-        } catch (error : any) {
-            if (error.response?.status === 409) {
+            await updateTable(resSlug, id, editedTable);
+            setShowEdit(false);
+            onModified();
+        } catch (error) {
+            if (apiStatus(error) === 409) {
                 console.log("TableCard name is taken");
                 setShowEdit(true);
                 return "taken"
@@ -40,10 +38,7 @@ function TableCard({table, onModified}: TableCardProps) {
     }
 
     async function handleDelete(id : string) {
-        const response = await api.delete(`/api/menu/${resSlug}/tables/${id}`);
-        if (response.status === 200) {
-            console.log(response);
-        }
+        await deleteTable(resSlug, id);
         setShowEdit(false);
         onModified();
     }

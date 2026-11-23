@@ -25,23 +25,7 @@ import {
     Target,
     Activity
 } from "lucide-react";
-import api from "@/lib/api";
-
-interface TopItems {
-    name: string;
-    quantity: number;
-}
-
-interface Data {
-    numOfUnpaidOrders: number;
-    numOfItems: number;
-    numOfOrders: number;
-    numOfPayments: number;
-    numOfMoneyEarned: number;
-    totalItemsSold: number;
-    avgItemsPerOrder: number;
-    topSellingItems: TopItems[];
-}
+import {getOwnerOverview, type OwnerOverview, type TopItem} from "@/features/owner/api";
 
 interface StatCardProps {
     title: string;
@@ -118,7 +102,7 @@ const StatCard = ({
 };
 
 interface TopSellingChartProps {
-    data: TopItems[];
+    data: TopItem[];
     isVisible: boolean;
 }
 
@@ -202,7 +186,7 @@ const TopSellingChart: React.FC<TopSellingChartProps> = ({data, isVisible}) => {
 };
 
 interface MetricsChartProps {
-    data: Data;
+    data: OwnerOverview;
     isVisible: boolean;
 }
 
@@ -264,7 +248,7 @@ const MetricsChart: React.FC<MetricsChartProps> = ({data, isVisible}) => {
 };
 
 export default function AllOverview() {
-    const [data, setData] = useState<Data | null>(null);
+    const [data, setData] = useState<OwnerOverview | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [cardsVisible, setCardsVisible] = useState(false);
 
@@ -272,8 +256,7 @@ export default function AllOverview() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const response = await api.get("/api/orders/owner/overview");
-                setData(response.data);
+                setData(await getOwnerOverview());
 
                 // Trigger card animations after data loads
                 setTimeout(() => setCardsVisible(true), 100);

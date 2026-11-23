@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Header from "@/features/owner/components/Header";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from '@headlessui/react';
-import api from "@/lib/api";
+import {createRestaurant, getRestaurants} from "@/features/owner/api";
 import {RestaurantOutput} from "@/lib/types/Restaurant";
 import Overview from "@/features/owner/components/overview/Overview";
 import {ResContext} from "@/features/owner/ResContext";
@@ -60,20 +60,19 @@ const OwnerDashboard = () => {
 
     useEffect(() => {
         const fetchRestaurants = async () => {
-            const response = await api.get("/api/restaurants");
-            setRestaurants(response.data);
-            setSelectedRestaurant(response.data[0]);
+            const restaurants = await getRestaurants();
+            setRestaurants(restaurants);
+            setSelectedRestaurant(restaurants[0]);
         }
         fetchRestaurants();
     }, [refresh]);
 
     const handleAddRestaurant = async (name: string) => {
         try {
-            const response = await api.post(`/api/restaurants`, {name: name});
-            console.log(response.data);
+            const restaurants = await createRestaurant(name);
             setShowAddRes(false);
             setRefresh(prevState => !prevState);
-            setSelectedRestaurant(response.data[response.data.length - 1]);
+            setSelectedRestaurant(restaurants[restaurants.length - 1]);
         } catch (error) {
             console.log(error);
         }

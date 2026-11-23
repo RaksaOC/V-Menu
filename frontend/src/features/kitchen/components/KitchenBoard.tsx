@@ -3,12 +3,13 @@
 import {useEffect, useState, useRef} from "react";
 import Card from "./OrderCard";
 import {OrderOutput} from "@/lib/types/Order";
-import {toast, ToastContainer} from "react-toastify";
+import {ToastContainer} from "react-toastify";
+import {toast} from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {ChefHat, Clock, History, Bell} from "lucide-react";
-import api from "@/lib/api";
+import {getKitchenOrders, markOrderDone} from "@/features/kitchen/api";
 
 export default function KitchenPage() {
     const params = useParams();
@@ -19,8 +20,7 @@ export default function KitchenPage() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await api.get(`/api/orders/${params.res}/kitchen`);
-                const activeOrders = response.data.filter((order: OrderOutput) => !order.isDone);
+                const activeOrders = (await getKitchenOrders(String(params.res))).filter((order: OrderOutput) => !order.isDone);
                 setOrders(activeOrders);
                 setTotalOrders(activeOrders.length);
                 previousOrderIdsRef.current = activeOrders.map((order: OrderOutput) => order._id);
@@ -33,22 +33,11 @@ export default function KitchenPage() {
 
         const intervalId = setInterval(async () => {
             try {
-                const response = await api.get(`/api/orders/${params.res}/kitchen`);
-                const activeOrders = response.data.filter((order: OrderOutput) => !order.isDone);
+                const activeOrders = (await getKitchenOrders(String(params.res))).filter((order: OrderOutput) => !order.isDone);
 
                 const newOrders = activeOrders.filter((order: OrderOutput) => !previousOrderIdsRef.current.includes(order._id));
                 if (newOrders.length > 0) {
-                    toast.info(`${newOrders.length} new order${newOrders.length > 1 ? 's' : ''} received! 🔔`, {
-                        position: "top-center",
-                        autoClose: 3000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        theme: "light",
-                        className: "!bg-white !text-gray-800 !shadow-xl !border !border-blue-200",
-                        progressClassName: "!bg-gradient-to-r !from-blue-500 !to-indigo-500",
-                    });
+                    toast.info(`${newOrders.length} new order${newOrders.length > 1 ? 's' : ''} received! 🔔`);
                 }
 
                 setOrders(activeOrders);
@@ -64,29 +53,13 @@ export default function KitchenPage() {
 
     const handleOnDone = async (id: string) => {
         try {
-            await api.patch(`/api/orders/${params.res}/kitchen/${id}/done`);
+            await markOrderDone(String(params.res), id);
             setOrders(prev => prev.filter(order => order._id !== id));
             setTotalOrders(prev => prev - 1);
-            toast.success("Order completed! ✅", {
-                position: "top-center",
-                autoClose: 2000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: "light",
-                className: "!bg-white !text-gray-800 !shadow-xl !border !border-green-200",
-                progressClassName: "!bg-gradient-to-r !from-green-500 !to-emerald-500",
-            });
+            toast.success("Order completed! ✅");
         } catch (err) {
             console.error("Failed to mark order as done:", err);
-            toast.error("Failed to update order status", {
-                position: "top-center",
-                autoClose: 2000,
-                theme: "light",
-                className: "!bg-white !text-gray-800 !shadow-xl !border !border-red-200",
-                progressClassName: "!bg-gradient-to-r !from-red-500 !to-pink-500",
-            });
+            toast.error("Failed to update order status");
         }
     };
 

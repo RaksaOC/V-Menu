@@ -1,11 +1,10 @@
 import React from "react";
 import {useEffect, useState} from "react";
-import axios from "axios";
 import SkeletonOverviewCard from "@/components/ui/skeletons/SkeletonOverviewCard";
 import {Users, Clock, Table, UtensilsCrossed, CheckCircle, CreditCard, TrendingUp, AlertTriangle} from "lucide-react";
 
 import {Overview as OverviewData} from "@/lib/types/Overview";
-import api from "@/lib/api";
+import {getOverview} from "@/features/cashier/api";
 import {useParams} from "next/navigation";
 
 export default function Overview() {
@@ -16,8 +15,7 @@ export default function Overview() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get(`/api/orders/${params.res}/overview`);
-                setOverviewData(await response.data || {});
+                setOverviewData(await getOverview(String(params.res)));
             } catch (error) {
                 console.error("Error fetching allRestaurants:", error);
             } finally {

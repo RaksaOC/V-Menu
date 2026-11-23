@@ -1,8 +1,9 @@
 'use client'
 
 import {useEffect, useState} from "react";
-import {toast, ToastContainer} from "react-toastify";
-import axios from "axios";
+import {ToastContainer} from "react-toastify";
+import {toast} from "@/lib/toast";
+import {placeOrder as sendOrder} from "@/features/customer/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
 import {CartItem} from "@/lib/types/CartItem";
 import {OrderInput} from "@/lib/types/Order";
@@ -48,17 +49,7 @@ export default function CartPage() {
         updatedItems.splice(index, 1);
         updateCart(updatedItems);
 
-        toast.info("Item removed from cart", {
-            position: "top-center",
-            autoClose: 1500,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "light",
-            className: "!bg-white !text-gray-800 !shadow-xl !border !border-gray-100",
-            progressClassName: "!bg-gradient-to-r !from-orange-500 !to-red-500",
-        });
+        toast.info("Item removed from cart");
     };
 
     const total = cartItems.reduce((sum, item) => sum + item.item.price * item.quantity, 0);
@@ -66,17 +57,7 @@ export default function CartPage() {
 
     const placeOrder = async () => {
         if (!cartItems.length) {
-            toast.error("No items in cart! 🛒", {
-                position: "top-center",
-                autoClose: 2000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: "light",
-                className: "!bg-white !text-gray-800 !shadow-xl !border !border-gray-100",
-                progressClassName: "!bg-gradient-to-r !from-red-500 !to-pink-500",
-            });
+            toast.error("No items in cart! 🛒");
             return;
         }
 
@@ -89,19 +70,9 @@ export default function CartPage() {
                 isDone: false,
                 orderedItems: cartItems,
             }
-            await axios.post(`/api/orders/${params.res}`, orderToAdd);
+            await sendOrder(String(params.res), orderToAdd);
 
-            toast.success("Order placed successfully!", {
-                position: "top-center",
-                autoClose: 2000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: "light",
-                className: "!bg-white !text-gray-800 !shadow-xl !border !border-gray-100",
-                progressClassName: "!bg-gradient-to-r !from-emerald-500 !to-green-500",
-            });
+            toast.success("Order placed successfully!");
 
             setTimeout(() => {
                 setCartItems([]);
@@ -111,13 +82,7 @@ export default function CartPage() {
 
         } catch (error) {
             console.error("Order failed:", error);
-            toast.error("Failed to place order. Please try again.", {
-                position: "top-center",
-                autoClose: 2000,
-                theme: "light",
-                className: "!bg-white !text-gray-800 !shadow-xl !border !border-gray-100",
-                progressClassName: "!bg-gradient-to-r !from-red-500 !to-pink-500",
-            });
+            toast.error("Failed to place order. Please try again.");
         } finally {
             setIsPlacingOrder(false);
         }

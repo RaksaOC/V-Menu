@@ -1,12 +1,11 @@
 'use client'
 
 import {useEffect, useState} from "react";
-import axios from "axios";
 import MenuCard from "./MenuCard";
 import SkeletonMenuCards from "@/components/ui/skeletons/SkeletonMenuCard";
 import {ItemOutput} from "@/lib/types/Item";
 import {jwtDecode} from "jwt-decode";
-import api from "@/lib/api";
+import {getMenuItems, setItemAvailability} from "@/features/cashier/api";
 import {UtensilsCrossed, TrendingUp} from "lucide-react";
 import {useParams} from "next/navigation";
 
@@ -18,8 +17,7 @@ const Menu = () => {
     useEffect(() => {
         async function fetchMenu() {
             try {
-                const res = await api.get(`/api/menu/${params.res}/items`);
-                setMenuItems(res.data);
+                setMenuItems(await getMenuItems(String(params.res)));
             } catch (err) {
                 console.error("Error fetching menu:", err);
             } finally {
@@ -36,7 +34,7 @@ const Menu = () => {
         if (item) {
             isEnabled = item.isEnabled;
         }
-        const res = await api.patch(`/api/menu/${params.res}/items/${id}/availability`, {isEnabled: !isEnabled});
+        await setItemAvailability(String(params.res), id, !isEnabled);
 
         setMenuItems((prev) =>
             prev.map((item) =>

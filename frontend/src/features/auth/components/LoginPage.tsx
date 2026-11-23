@@ -7,7 +7,7 @@ import {RoleSelect} from "@/features/auth/components/RoleSelect";
 import {AnimatePresence, motion} from "framer-motion";
 import {ArrowLeft} from "lucide-react";
 import {ToastContainer} from "react-toastify";
-import api from "@/lib/api";
+import {login, type StaffRole} from "@/features/auth/api";
 import {useRouter} from "next/navigation";
 
 export default function LoginPage() {
@@ -45,12 +45,12 @@ export default function LoginPage() {
             // "chef" is called "kitchen" in page URLs
             const realRole = role === 'chef' ? 'kitchen' : role;
             const resSlug = selectedRes?.split(' - ')[1];
-            const response = await api.post(`/api/auth/login`, {
+            const appToken = await login({
                 idToken: logInDetail.idToken,
-                role,
+                role: role as StaffRole,
                 resSlug: role === 'owner' ? undefined : resSlug,
             });
-            localStorage.setItem("token", response.data.appToken);
+            localStorage.setItem("token", appToken);
             router.push(role === 'owner' ? `/owner` : `/${resSlug}/${realRole}`);
         } catch (error: any) {
             console.error(error);

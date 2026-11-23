@@ -1,4 +1,4 @@
-import { toast } from "react-toastify";
+import {toast} from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
 import { CartItem } from "@/lib/types/CartItem";
 
@@ -15,31 +15,11 @@ export function addToCart(itemToAdd: CartItem): void {
         // Increment quantity
         allCartItems[existingItemIndex].quantity += 1;
 
-        toast.success("Added to existing item!", {
-            position: "top-center",
-            autoClose: 1500,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "light",
-            className: "!bg-white !text-gray-800 !shadow-xl !border !border-gray-100",
-            progressClassName: "!bg-gradient-to-r !from-emerald-500 !to-green-500",
-        });
+        toast.success("Added to existing item!");
     } else {
         allCartItems.push(itemToAdd);
 
-        toast.success("Added to cart! 🛒", {
-            position: "top-center",
-            autoClose: 1500,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "light",
-            className: "!bg-white !text-gray-800 !shadow-xl !border !border-gray-100",
-            progressClassName: "!bg-gradient-to-r !from-emerald-500 !to-green-500",
-        });
+        toast.success("Added to cart! 🛒");
     }
 
     // Save updated items

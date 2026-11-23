@@ -1,5 +1,5 @@
 import {useContext, useEffect, useState} from "react";
-import api from "@/lib/api";
+import {addStaff, getStaff, removeStaff, updateStaff} from "@/features/staff/api";
 import {ResContext} from "@/features/owner/ResContext";
 import {Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, ChevronsUpDown, Pencil} from "lucide-react";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/react";
@@ -26,8 +26,7 @@ export default function Staff() {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await api.get(`/api/restaurants/${resSlug}/staff`);
-                setStaff(response.data);
+                setStaff(await getStaff(resSlug));
             } catch (error) {
                 console.error("Error fetching staff:", error);
             } finally {
@@ -55,7 +54,7 @@ export default function Staff() {
             const uid = userCred.user.uid;
 
             // The password stays with Firebase; our API only gets the account id.
-            await api.post(`/api/restaurants/${resSlug}/staff`, {
+            await addStaff(resSlug, {
                 name: newTenant.name,
                 email: newTenant.email,
                 role: newTenant.role,
@@ -76,8 +75,7 @@ export default function Staff() {
 
     async function handleEditStaff(tenant: TenantOutput) {
         try {
-            const response = await api.put(`/api/restaurants/${resSlug}/staff/${tenant._id}`, tenant);
-            console.log(response);
+            await updateStaff(resSlug, tenant);
             setShowEditStaff(false);
             setRefresh(prevState => !prevState);
         } catch (error) {
@@ -87,8 +85,7 @@ export default function Staff() {
 
     async function handleDeleteStaff(id: string) {
         try {
-            const response = await api.delete(`/api/restaurants/${resSlug}/staff/${id}`);
-            console.log(response);
+            await removeStaff(resSlug, id);
             setShowEditStaff(false);
             setRefresh(prevState => !prevState);
         } catch (err) {

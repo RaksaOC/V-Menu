@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react";
 import { createUserWithEmailAndPassword, UserCredential } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import axios from "axios";
+import { signup } from "@/features/auth/api";
 import { motion } from "framer-motion";
 import { Store, User, Mail, Lock, ArrowRight } from "lucide-react";
 import {useRouter} from "next/navigation";
@@ -25,7 +25,7 @@ const SignupPage = () => {
 
             // restaurant-service checks the Firebase ID token, then creates the restaurant
             // and gives this account the owner, cashier and chef roles.
-            await axios.post("/api/auth/signup", {
+            await signup({
                 idToken: await userCred.user.getIdToken(),
                 ownerName: ownerName,
                 resName: restaurantName,
