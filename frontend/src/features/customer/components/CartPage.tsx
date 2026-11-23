@@ -91,15 +91,11 @@ export default function CartPage() {
                 isDone: false,
                 orderedItems: cartItems,
             };
-            await sendOrder(slug, orderToAdd);
+            const order = await sendOrder(slug, orderToAdd);
             clearCart(slug, table); // straight away, so the same cart can't be sent twice
-
-            toast.success("Order placed successfully!");
-
-            setTimeout(() => {
-                setCartItems([]);
-                router.back();
-            }, 2000);
+            setCartItems([]);
+            // VM-07: the order's confirmation, with its number and the server's prices
+            router.push(`/${slug}/customer/${encodeURIComponent(table)}/orders/${order._id}`);
         } catch (error) {
             // VM-06: say why, and keep the cart. Dishes that went off the menu are taken out of it.
             const message = apiErrorMessage(error, "Couldn't place the order. Please try again.");

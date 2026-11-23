@@ -28,6 +28,8 @@ export interface BillsRepo {
     /** newest first, with the orders filled in */
     listWithOrders(resId: string): Promise<BillRecord[]>;
     get(resId: string, id: string): Promise<BillRecord | null>;
+    /** the table's open bill with its orders, or null */
+    findOpen(resId: string, table: string): Promise<BillRecord | null>;
     hasOtherOpenBill(resId: string, table: string, exceptId: string): Promise<boolean>;
     /** null when there's no such bill in this restaurant; throws OpenBillExists */
     setPaid(resId: string, id: string, isPayed: boolean): Promise<BillRecord | null>;
@@ -50,6 +52,7 @@ export const mongoBillsRepo: BillsRepo = {
             await join();
         }
     },
+    findOpen: (resId, table) => Bill.findOne({ resId, table, isPayed: false }).populate("orders").lean<BillRecord>(),
     get: (resId, id) => Bill.findOne({ _id: id, resId }).populate("orders").lean<BillRecord>(),
     async hasOtherOpenBill(resId, table, exceptId) {
         // exceptId is a bill id this service already looked up, not raw input

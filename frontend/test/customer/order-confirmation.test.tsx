@@ -82,6 +82,6 @@ describe("order confirmation", () => {
         );
         render(<OrderConfirmation />);
         expect(await screen.findByText(/Order not found/)).toBeTruthy();
-        expect(screen.getByRole("link", { name: /back to the menu|order more/i })).toBeTruthy();
+        expect(screen.getByRole("link", { name: /back to the menu/i })).toBeTruthy();
     });
 });

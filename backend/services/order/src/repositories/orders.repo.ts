@@ -21,6 +21,8 @@ export interface OrdersRepo {
     /** null when there's no such order in this restaurant */
     markDone(resId: string, id: string): Promise<OrderRecord | null>;
     listDone(resIds: string[]): Promise<OrderRecord[]>;
+    /** null when there's no such order in this restaurant */
+    get(resId: string, id: string): Promise<OrderRecord | null>;
 }
 
 // resIds come from our own services, never from a request body, so $in is safe here.
@@ -33,5 +35,6 @@ export const mongoOrdersRepo: OrdersRepo = {
     countFor: (resIds, where = {}) => Order.countDocuments({ ...inRestaurants(resIds), ...where }),
     listForKitchen: (resId) => Order.find({ resId }).sort({ createdAt: 1 }).lean<OrderRecord[]>(),
     markDone: (resId, id) => Order.findOneAndUpdate({ _id: id, resId }, { isDone: true }, { new: true }).lean<OrderRecord>(),
+    get: (resId, id) => Order.findOne({ _id: id, resId }).lean<OrderRecord>(),
     listDone: (resIds) => Order.find({ ...inRestaurants(resIds), isDone: true }).lean<OrderRecord[]>(),
 };
