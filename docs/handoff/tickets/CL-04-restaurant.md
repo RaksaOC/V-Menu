@@ -2,12 +2,12 @@
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** [#102](https://github.com/RaksaOC/V-Menu/issues/102)
+- **Issue:** -
 - **Branch to create:** `cleanup/CL-04-restaurant-layers`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue [#102](https://github.com/RaksaOC/V-Menu/issues/102).
+The full ticket (problem, what to change, tests, done when) is in issue -.
 
 ## Depends on
 

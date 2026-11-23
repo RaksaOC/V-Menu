@@ -2,12 +2,12 @@
 
 - **Priority:** P2
 - **Status:** not started
-- **Issue:** [#122](https://github.com/RaksaOC/V-Menu/issues/122)
+- **Issue:** -
 - **Branch to create:** `feat/SEC-10-auth-failure-metrics`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue [#122](https://github.com/RaksaOC/V-Menu/issues/122).
+The full ticket (problem, what to change, tests, done when) is in issue -.
 
 ## Depends on
 

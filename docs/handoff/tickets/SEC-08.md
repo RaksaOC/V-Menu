@@ -2,12 +2,12 @@
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** [#120](https://github.com/RaksaOC/V-Menu/issues/120)
+- **Issue:** -
 - **Branch to create:** `fix/SEC-08-firebase-hardening`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue [#120](https://github.com/RaksaOC/V-Menu/issues/120).
+The full ticket (problem, what to change, tests, done when) is in issue -.
 
 ## Depends on
 

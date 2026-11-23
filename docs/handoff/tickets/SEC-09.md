@@ -2,12 +2,12 @@
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** [#121](https://github.com/RaksaOC/V-Menu/issues/121)
+- **Issue:** -
 - **Branch to create:** `ci/SEC-09-security-scanning`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue [#121](https://github.com/RaksaOC/V-Menu/issues/121).
+The full ticket (problem, what to change, tests, done when) is in issue -.
 
 ## Depends on
 

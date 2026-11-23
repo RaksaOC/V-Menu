@@ -2,12 +2,12 @@
 
 - **Priority:** P2
 - **Status:** not started
-- **Issue:** [#123](https://github.com/RaksaOC/V-Menu/issues/123)
+- **Issue:** -
 - **Branch to create:** `tests/SEC-11-db-user-isolation`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue [#123](https://github.com/RaksaOC/V-Menu/issues/123).
+The full ticket (problem, what to change, tests, done when) is in issue -.
 
 ## Depends on
 

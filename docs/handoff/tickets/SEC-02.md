@@ -2,12 +2,12 @@
 
 - **Priority:** P1
 - **Status:** not started
-- **Issue:** [#114](https://github.com/RaksaOC/V-Menu/issues/114)
+- **Issue:** -
 - **Branch to create:** `fix/SEC-02-security-headers`
 
 ## What to do
 
-The full ticket (problem, what to change, tests, done when) is in issue [#114](https://github.com/RaksaOC/V-Menu/issues/114).
+The full ticket (problem, what to change, tests, done when) is in issue -.
 
 ## Depends on
 
