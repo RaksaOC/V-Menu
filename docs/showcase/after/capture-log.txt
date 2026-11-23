@@ -219,3 +219,8 @@ ok   VM-26-cashier-menu-1280-dark
 ok   VM-26-customer-menu-360
 ok   VM-26-owner-item-form-360
 ok   VM-26-cashier-menu-360
+# ONLY=VM-32 (2026-11-23T17:50:27.205Z)
+ok   VM-32-restaurant-page-1280
+ok   VM-32-restaurant-page-1280-dark
+ok   VM-32-restaurant-page-360
+ok   VM-32-restaurant-page-360-dark
