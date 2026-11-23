@@ -146,8 +146,12 @@ The frontend only needs the public Firebase web config, plus the three service U
 The services import their shared code from `@vmenu/common` (`backend/packages/common`), so a fix there applies to all three. `npm run dev`, `build`, `typecheck`, `test` and `seed` in a service first compile `@vmenu/common` to `dist/`. The service images build with `backend/` as the context: `docker build -f backend/services/menu/Dockerfile backend`.
 
 ```
-frontend/                    Next.js app (pages only, no database access)
-  src/components/tour/       landing-page tour
+frontend/                    Next.js app (no database access)
+  src/app/                   routes only: each page.tsx renders one feature component
+  src/features/<area>/       customer, kitchen, cashier, owner, staff, auth: components and logic
+  src/components/ui/         shared UI pieces (loading skeletons)
+  src/components/marketing/  landing page and tour
+  src/lib/                   API client, Firebase, dates, shared types
   src/theme/deep-lab.css     design tokens
 backend/                     one npm workspace with one package-lock.json (npm install here installs all of it)
   packages/
