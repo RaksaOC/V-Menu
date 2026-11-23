@@ -49,7 +49,7 @@ export default function TableQrModal({ slug, tableName, restaurantName, onClose 
                         href={dataUrl ?? undefined}
                         download={fileName}
                         aria-disabled={!dataUrl}
-                        className="inline-flex items-center justify-center gap-2 rounded-[var(--r-chip)] border border-[var(--line)] px-4 py-2.5 text-sm font-semibold hover:bg-[var(--card)]"
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-[var(--r-chip)] border border-[var(--line)] px-4 py-2.5 text-sm font-semibold hover:bg-[var(--card)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                     >
                         <Download size={16} aria-hidden /> Download PNG
                     </a>

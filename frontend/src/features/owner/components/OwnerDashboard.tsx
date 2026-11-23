@@ -23,7 +23,7 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from '@headlessui
 import {createRestaurant, getRestaurants} from "@/features/owner/api";
 import {RestaurantOutput} from "@/lib/types/Restaurant";
 import Overview from "@/features/restaurant/components/Overview";
-import {ResContext} from "@/features/owner/ResContext";
+import {ResContext, ResNameContext} from "@/features/owner/ResContext";
 import Menu from "@/features/restaurant/components/Menu";
 import Tables from "@/features/restaurant/components/Tables";
 import Staff from '@/features/staff/components/Staff';
@@ -118,7 +118,9 @@ const OwnerDashboard = () => {
                 case "tables":
                     return (
                         <ResContext.Provider value={selectedRestaurant.slug}>
-                            <Tables role="owner"/>
+                            <ResNameContext.Provider value={selectedRestaurant.name}>
+                                <Tables role="owner"/>
+                            </ResNameContext.Provider>
                         </ResContext.Provider>
                     )
                 case "staff":

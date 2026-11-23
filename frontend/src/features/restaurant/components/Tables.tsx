@@ -7,7 +7,7 @@ import { printQrCards } from "@/components/qr/print";
 import { tableUrl } from "@/lib/tableUrl";
 import { apiStatus } from "@/lib/api";
 import { createTable, deleteTable, getTables, setTableAvailability, updateTable } from "@/features/restaurant/api";
-import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
+import { useRestaurantName, useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
 import TableCard from "./TableCard";
 import TableForm from "./TableForm";
 import type { TableInput, TableOutput } from "@/lib/types/Table";
@@ -18,6 +18,7 @@ import type { TableInput, TableOutput } from "@/lib/types/Table";
  */
 export default function Tables({ role }: { role: "owner" | "cashier" }) {
     const slug = useRestaurantSlug();
+    const restaurantName = useRestaurantName();
     const [tables, setTables] = useState<TableOutput[]>([]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState<TableOutput | "new" | null>(null);
@@ -97,7 +98,7 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                         <Button
                             variant="outline"
                             icon={<Printer size={16} aria-hidden />}
-                            onClick={() => printQrCards(tables.map((t) => ({ tableName: t.name, url: tableUrl(slug, t.name) })))}
+                            onClick={() => printQrCards(tables.map((t) => ({ restaurantName, tableName: t.name, url: tableUrl(slug, t.name) })))}
                         >
                             Print all QR codes
                         </Button>

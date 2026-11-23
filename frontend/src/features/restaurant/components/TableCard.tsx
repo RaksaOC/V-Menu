@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CheckCircle, Pencil, QrCode, Table as TableIcon, XCircle } from "lucide-react";
 import { Button, Card, Chip } from "@/components/ui";
 import TableQrModal from "@/components/qr/TableQrModal";
-import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
+import { useRestaurantName, useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
 import type { TableOutput } from "@/lib/types/Table";
 
 type Props = { table: TableOutput } & ({ role: "owner"; onEdit: (table: TableOutput) => void } | { role: "cashier"; onToggle: (table: TableOutput) => void });
@@ -13,6 +13,7 @@ type Props = { table: TableOutput } & ({ role: "owner"; onEdit: (table: TableOut
 export default function TableCard(props: Props) {
     const { table } = props;
     const slug = useRestaurantSlug();
+    const restaurantName = useRestaurantName();
     const [showQr, setShowQr] = useState(false);
     return (
         <Card className="relative flex flex-col items-center gap-4 text-center">
@@ -40,11 +41,12 @@ export default function TableCard(props: Props) {
                         Edit Table
                     </Button>
                 )}
-                <Button icon={<QrCode size={16} aria-hidden />} onClick={() => setShowQr(true)} block>
+                {/* outline, not coral: the screen's one main action is Add Table or Open Table (VM-01) */}
+                <Button variant="outline" icon={<QrCode size={16} aria-hidden />} onClick={() => setShowQr(true)} block>
                     View QR Code
                 </Button>
             </div>
-            {showQr && <TableQrModal slug={slug} tableName={table.name} onClose={() => setShowQr(false)} />}
+            {showQr && <TableQrModal slug={slug} restaurantName={restaurantName} tableName={table.name} onClose={() => setShowQr(false)} />}
         </Card>
     );
 }
