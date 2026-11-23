@@ -34,7 +34,7 @@ jobs:
           - { name: menu-service, dir: backend/services/menu, kind: service, lock: backend/package-lock.json }
           - { name: order-service, dir: backend/services/order, kind: service, lock: backend/package-lock.json }
           - { name: frontend, dir: frontend, kind: web, lock: frontend/package-lock.json }
-          # Repo-level checks (issue and PR templates); no install needed.
+          # Repo-level checks: issue and PR templates, repo hygiene, formatting.
           - { name: repo, dir: ., kind: repo, lock: package-lock.json }
     defaults:
       run:
@@ -48,12 +48,16 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          # The repo checks install nothing, so there is no npm cache to save.
-          cache: ${{ matrix.kind != 'repo' && 'npm' || '' }}
+          cache: npm
           cache-dependency-path: ${{ matrix.lock }}
 
       - run: npm ci --no-audit --no-fund
         if: matrix.kind != 'repo'
+
+      # The repo job only needs the root tools (Prettier, CL-12); skip install scripts, so the
+      # root's mongodb-memory-server doesn't download MongoDB here.
+      - run: npm ci --no-audit --no-fund --ignore-scripts
+        if: matrix.kind == 'repo'
 
       - run: npm run typecheck
         if: matrix.kind != 'repo'
