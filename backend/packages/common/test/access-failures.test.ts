@@ -3,12 +3,13 @@ import type { AddressInfo } from "node:net";
 import type { Request } from "express";
 import { SignJWT } from "jose";
 import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
     assertRestaurantAccess,
     baseApp,
     callService,
     finish,
+    logger,
     maskEmail,
     rateLimitHandler,
     requireInternal,
@@ -27,15 +28,6 @@ const lines: { fields: Record<string, unknown>; text: string }[] = [];
 let upstream: Server;
 
 const app = baseApp();
-// Keeps what the error handler logs for each request.
-app.use((req, _res, next) => {
-    (req as unknown as { log: unknown }).log = {
-        warn: (fields: Record<string, unknown>, msg: string) => lines.push({ fields, text: JSON.stringify([fields, msg]) }),
-        error: () => undefined,
-        info: () => undefined,
-    };
-    next();
-});
 app.get("/api/orders/:slug/kitchen", requireRole("chef"), (req, res) => {
     assertRestaurantAccess(req.user!, req.params.slug === "mee-keav" ? RES : { _id: "665f00000000000000000002", ownerId: "x" });
     res.json({ ok: true });
@@ -71,7 +63,12 @@ beforeAll(async () => {
 afterAll(() => upstream.close());
 beforeEach(() => {
     lines.length = 0;
+    // The refusal is written by the plain logger: a request's own logger would add its full URL and headers.
+    vi.spyOn(logger, "warn").mockImplementation(((fields: Record<string, unknown>, msg: string) => {
+        lines.push({ fields, text: JSON.stringify([fields, msg]) });
+    }) as typeof logger.warn);
 });
+afterEach(() => vi.restoreAllMocks());
 
 describe("each refusal counts under its reason (SEC-10)", () => {
     const signExpired = () =>
@@ -182,6 +179,14 @@ describe("the log line (SEC-10)", () => {
         await request(app).get(`${KITCHEN}?secret=abc123`).set(cookie("forged.token.value"));
         expect(lines[0].text).not.toContain("forged.token.value");
         expect(lines[0].text).not.toContain("abc123");
+    });
+
+    it("has the request id, to find the same request in the other logs, and not the request's headers", async () => {
+        const res = await request(app).get(KITCHEN).set("x-request-id", "req-123").set("referer", "https://site.example/?private=1");
+        expect(res.status).toBe(401);
+        expect(lines[0].fields.requestId).toBe("req-123");
+        expect(lines[0].fields).not.toHaveProperty("req");
+        expect(lines[0].text).not.toContain("private=1");
     });
 
     it("never logs an internal key", async () => {
