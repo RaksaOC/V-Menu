@@ -18,7 +18,8 @@ async function call(method, path, body) {
 
 // VM-25: grouped by category ({ categories: [{ items }] }); older services answered a flat list
 const menu = await call("GET", `/api/menu/${slug}/public/items`);
-const items = Array.isArray(menu) ? menu : (menu?.categories ?? []).flatMap((c) => c.items);
+// VM-26: sold-out dishes are on the menu, but can't be ordered
+const items = (Array.isArray(menu) ? menu : (menu?.categories ?? []).flatMap((c) => c.items)).filter((i) => i.isEnabled !== false);
 if (!items.length) throw new Error(`No dishes for "${slug}": run npm run docker:seed first`);
 await call("GET", `/api/menu/${slug}/public/tables/${table}`);
 

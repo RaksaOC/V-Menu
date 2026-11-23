@@ -36,7 +36,11 @@ describe("items", () => {
         expect(item).toMatchObject({ name: "Amok", price: 5, image: photo, resId: A._id, isEnabled: true });
         await menu.create(A, { name: "Hidden", price: 1, image: PLACEHOLDER, isEnabled: false });
         expect((await menu.list(A._id)).map((i) => i.name)).toEqual(["Amok", "Hidden"]);
-        expect((await menu.publicMenu(A._id)).categories.flatMap((c) => c.items.map((i) => i.name))).toEqual(["Amok"]);
+        // VM-26: a dish that's off stays on the customer's menu, as sold out, after the others
+        expect((await menu.publicMenu(A._id)).categories.flatMap((c) => c.items.map((i) => [i.name, i.isEnabled]))).toEqual([
+            ["Amok", true],
+            ["Hidden", false],
+        ]);
         expect(await menu.list(B._id)).toEqual([]);
     });
 

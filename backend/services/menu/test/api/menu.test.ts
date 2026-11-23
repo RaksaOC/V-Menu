@@ -47,13 +47,50 @@ beforeEach(async () => {
 const addItem = (body: object) => request(app).post(`/api/menu/${SLUG}/items`).set(owner).send(body);
 
 describe("menu items", () => {
-    it("owner adds an item; customers only see enabled ones", async () => {
+    it("owner adds an item; customers see a switched-off one as sold out, after the others (VM-26)", async () => {
+        await addItem({ name: "Lok Lak", price: 4, image: PHOTO, isEnabled: false });
         await addItem({ name: "Kuy Teav", price: 2.5, image: PHOTO });
-        const hidden = await addItem({ name: "Lok Lak", price: 4, image: PHOTO, isEnabled: false });
-        expect(hidden.status).toBe(201);
         const pub = await request(app).get(`/api/menu/${SLUG}/public/items`);
         // VM-25: grouped by category; with none set, everything is under Other
-        expect(pub.body).toMatchObject({ categories: [{ _id: null, name: "Other", items: [{ name: "Kuy Teav" }] }] });
+        expect(pub.body).toMatchObject({
+            categories: [
+                {
+                    _id: null,
+                    name: "Other",
+                    items: [
+                        { name: "Kuy Teav", isEnabled: true },
+                        { name: "Lok Lak", isEnabled: false },
+                    ],
+                },
+            ],
+        });
+    });
+
+    it("a description and tags are saved, shown to customers, and can be cleared (VM-26)", async () => {
+        const { body: dish } = await addItem({
+            name: "Amok",
+            price: 5,
+            image: PHOTO,
+            description: " Steamed fish curry ",
+            tags: ["spicy", "contains nuts", "spicy"],
+        });
+        expect(dish).toMatchObject({ description: "Steamed fish curry", tags: ["spicy", "contains nuts"] });
+        const pub = await request(app).get(`/api/menu/${SLUG}/public/items`);
+        expect(pub.body.categories[0].items[0]).toMatchObject({ description: "Steamed fish curry", tags: ["spicy", "contains nuts"] });
+        const cleared = await request(app).put(`/api/menu/${SLUG}/items/${dish._id}`).set(owner).send({ description: "", tags: [] });
+        expect(cleared.body).toMatchObject({ description: "", tags: [] });
+    });
+
+    it("a sold-out dish is on the public menu but can't be ordered (VM-26)", async () => {
+        const { body: dish } = await addItem({ name: "Amok", price: 5, image: PHOTO, isEnabled: false });
+        const { body: table } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "C3" });
+        await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
+        const res = await request(app)
+            .post(`/internal/restaurants/${RES_ID}/order-check`)
+            .set("x-internal-key", "internal-test-key")
+            .send({ table: "C3", items: [{ _id: dish._id, quantity: 1 }] });
+        expect(res.status).toBe(409);
+        expect(res.body.code).toBe("ITEMS_UNAVAILABLE");
     });
 
     it("ignores a resId in the body", async () => {
@@ -144,6 +181,8 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
         [{ image: "" }, "image", "Required"],
         [{ isEnabled: "yes" }, "isEnabled", "Must be true or false"],
         [{ categoryId: "nope" }, "categoryId", "Must be a 24-character id"],
+        [{ description: "x".repeat(301) }, "description", "At most 300 characters"], // VM-26
+        [{ tags: ["tasty"] }, "tags.0", "Not one of the dish tags"], // VM-26
     ])("editing a dish with %j is a 400 naming %s, and changes nothing", async (body, field, message) => {
         const { body: dish } = await addItem({ name: "Amok", price: 5, image: PHOTO });
         const res = await request(app).put(`/api/menu/${SLUG}/items/${dish._id}`).set(owner).send(body);

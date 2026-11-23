@@ -87,6 +87,31 @@ describe("menu", () => {
     });
 });
 
+describe("dish descriptions and tags (VM-26)", () => {
+    const dish = { name: "Amok", price: 5, image: "/x.png" };
+    it("a description is optional, trimmed, up to 300 characters, and can be emptied", () => {
+        expect(C.CreateItemBody.parse({ ...dish, description: "  Steamed fish curry  " }).description).toBe("Steamed fish curry");
+        expect(C.UpdateItemBody.parse({ description: "   " })).toEqual({ description: "" });
+        ok(C.CreateItemBody, { ...dish, description: "x".repeat(300) });
+        expect(fieldsOf(C.CreateItemBody, { ...dish, description: "x".repeat(301) })).toEqual(["description"]);
+        expect(fieldsOf(C.CreateItemBody, { ...dish, description: 7 })).toEqual(["description"]);
+    });
+
+    it("tags come from the fixed list, each once", () => {
+        expect(C.DISH_TAGS).toEqual(expect.arrayContaining(["vegetarian", "spicy", "contains nuts"]));
+        expect(C.CreateItemBody.parse({ ...dish, tags: ["spicy", "vegetarian", "spicy"] }).tags).toEqual(["spicy", "vegetarian"]);
+        expect(C.UpdateItemBody.parse({ tags: [] })).toEqual({ tags: [] });
+        expect(fieldsOf(C.CreateItemBody, { ...dish, tags: ["tasty"] })).toEqual(["tags.0"]);
+        expect(fieldsOf(C.CreateItemBody, { ...dish, tags: "spicy" })).toEqual(["tags"]);
+    });
+
+    it("a dish from the API may carry them; older dishes have neither", () => {
+        const id = "665f00000000000000000001";
+        ok(C.MenuItem, { _id: id, ...dish, isEnabled: false, description: "Hot", tags: ["spicy"] });
+        ok(C.MenuItem, { _id: id, ...dish, isEnabled: true });
+    });
+});
+
 describe("public restaurant info (VM-21)", () => {
     it("is only a name and a slug: anything else is dropped", () => {
         const safe = C.PublicRestaurant.parse({ name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1", email: "o@x.com" });
