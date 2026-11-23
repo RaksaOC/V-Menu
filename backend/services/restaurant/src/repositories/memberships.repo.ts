@@ -36,6 +36,8 @@ export interface MembershipsRepo {
     hasRole(resId: string, role: string, who: Person): Promise<boolean>;
     /** is this email already listed with this role here, linked or not (VM-12: no duplicate invites) */
     emailHasRole(resId: string, role: string, email: string): Promise<boolean>;
+    /** VM-18: has this person (same email, or same account) got this role in another row here */
+    otherRowHasRole(resId: string, id: string, role: string, who: Pick<MembershipRecord, "email" | "tenantId">): Promise<boolean>;
     /** VM-12: gives this account every invite for its email that no account has taken yet. Call it
      *  only with a verified email (VM-13). Returns how many were linked. */
     linkInvites(email: string, uid: string): Promise<number>;
@@ -58,6 +60,11 @@ export const mongoMembershipsRepo: MembershipsRepo = {
     },
     async emailHasRole(resId, role, email) {
         return Boolean(await Membership.exists({ resId, role, email }));
+    },
+    async otherRowHasRole(resId, id, role, { email, tenantId }) {
+        // no account yet (null) says nothing: two pending invites aren't the same person
+        const samePerson = tenantId ? [{ email }, { tenantId }] : [{ email }];
+        return Boolean(await Membership.exists({ resId, role, _id: mongoose.trusted({ $ne: id }), $or: samePerson }));
     },
     async linkInvites(email, uid) {
         return (await Membership.updateMany({ email, tenantId: null }, { $set: { tenantId: uid } })).modifiedCount;

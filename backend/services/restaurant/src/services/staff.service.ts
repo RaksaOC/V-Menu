@@ -46,6 +46,14 @@ export function staffService({ restaurants, memberships }: { restaurants: Restau
         async update(user: AppUser, slug: string, id: string, body: unknown) {
             const { resId, member: m } = await member(user, slug, id);
             const fields = parse(UpdateStaffBody, body);
+            const role = fields.role ?? m.role;
+            const email = fields.email ?? m.email;
+            // VM-18: only when this edit changes who or what the row is, so old duplicates can still be renamed
+            if (
+                (role !== m.role || email !== m.email) &&
+                (await memberships.otherRowHasRole(resId, id, role, { email, tenantId: m.tenantId }))
+            )
+                throw new HttpError(409, "This person already has that role here");
             return (await memberships.update(resId, id, fields)) ?? m;
         },
 

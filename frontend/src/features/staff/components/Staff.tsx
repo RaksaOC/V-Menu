@@ -20,6 +20,7 @@ export default function Staff() {
     const [staffToEdit, setStaffToEdit] = useState<StaffMember>();
     const [refresh, setRefresh] = useState(false);
     const [emailError, setEmailError] = useState("");
+    const [roleError, setRoleError] = useState("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -53,12 +54,15 @@ export default function Staff() {
     }
 
     async function handleEditStaff(tenant: StaffMember) {
+        setRoleError("");
         try {
             await updateStaff(resSlug, tenant);
             setShowEditStaff(false);
             setRefresh((prevState) => !prevState);
         } catch (error) {
-            console.error("Error editing staff:", error);
+            // VM-18: they already have that role here
+            if (apiStatus(error) === 409) setRoleError(apiErrorMessage(error));
+            else console.error("Error editing staff:", error);
         }
     }
 
@@ -501,9 +505,13 @@ export default function Staff() {
             {showEditStaff && staffToEdit && (
                 <StaffForm
                     member={staffToEdit}
+                    roleError={roleError}
                     onSave={handleEditStaff}
                     onDelete={handleDeleteStaff}
-                    onClose={() => setShowEditStaff(false)}
+                    onClose={() => {
+                        setShowEditStaff(false);
+                        setRoleError("");
+                    }}
                 />
             )}
         </>

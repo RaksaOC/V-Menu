@@ -56,6 +56,15 @@ export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] }
         async emailHasRole(resId, role, email) {
             return all.some((t) => t.resId === resId && t.role === role && t.email === email);
         },
+        async otherRowHasRole(resId, id, role, { email, tenantId }) {
+            return all.some(
+                (t) =>
+                    t.resId === resId &&
+                    t.role === role &&
+                    t._id !== id &&
+                    (t.email === email || (tenantId !== null && t.tenantId === tenantId)),
+            );
+        },
         async linkInvites(email, uid) {
             const invites = all.filter((t) => t.email === email && t.tenantId === null);
             for (const t of invites) t.tenantId = uid;

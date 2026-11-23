@@ -12,6 +12,8 @@ interface Props {
     member?: StaffMember;
     /** The server's answer about the email, e.g. this person already has that role here. */
     emailError?: string;
+    /** The server's answer about the role: this person already has it here (VM-18). */
+    roleError?: string;
     onClose: () => void;
     onAdd?: (input: AddStaffBody) => void;
     onSave?: (member: StaffMember) => void;
@@ -22,29 +24,32 @@ interface Props {
 const loginUrl = () => (typeof window === "undefined" ? "/login" : `${window.location.origin}/login`);
 
 /** Add and edit a staff member, in the shared Modal (CL-09; was AddStaffPopUp and EditStaffPopUp). */
-export default function StaffForm({ member, emailError = "", onClose, onAdd, onSave, onDelete }: Props) {
+export default function StaffForm({ member, emailError = "", roleError = "", onClose, onAdd, onSave, onDelete }: Props) {
     const formId = useId();
     const roleId = useId();
     const [name, setName] = useState(member?.name ?? "");
     const [email, setEmail] = useState(member?.email ?? "");
     const [role, setRole] = useState<Role | "">(member && member.role !== "owner" ? member.role : "");
     const [tried, setTried] = useState(false);
-    const [sent, setSent] = useState(""); // the email last sent: the server's error is about that one
+    // what was last sent: the server's errors are about those values
+    const [sent, setSent] = useState("");
+    const [sentRole, setSentRole] = useState("");
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     const badEmail = !member && !/\S+@\S+\.\S+/.test(email);
     const errors = {
         name: !name.trim() ? "Name is required" : "",
         email: badEmail ? "Enter a valid email" : email === sent ? emailError : "",
-        role: !role ? "Choose a role" : "",
+        role: !role ? "Choose a role" : role === sentRole ? roleError : "",
     };
     const show = (key: keyof typeof errors) => (tried ? errors[key] || undefined : undefined);
 
     function submit(e: FormEvent) {
         e.preventDefault();
         setTried(true);
-        if (errors.name || errors.role || badEmail) return;
+        if (errors.name || !role || badEmail) return;
         setSent(email);
+        setSentRole(role);
         if (member) onSave?.({ ...member, name: name.trim(), role: role as Role });
         else onAdd?.({ name: name.trim(), email: email.trim(), role: role as Role });
     }
