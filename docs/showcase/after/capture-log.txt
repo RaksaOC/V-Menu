@@ -184,3 +184,7 @@ ok   VM-09-restaurant-overview-1280-dark
 ok   VM-09-owner-overview-360
 ok   VM-09-owner-restaurants-360
 ok   VM-09-restaurant-overview-360
+# ONLY=VM-22 (2026-11-23T17:29:35.918Z)
+ok   VM-22-cart-too-many-orders-1280
+ok   VM-22-cart-too-many-orders-1280-dark
+ok   VM-22-cart-too-many-orders-360
