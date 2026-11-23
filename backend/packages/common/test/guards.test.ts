@@ -108,13 +108,16 @@ describe("calling another service", () => {
     let base: string;
     beforeAll(async () => {
         server = createServer((req, res) => {
-            const status = req.url === "/missing" ? 404 : req.url === "/broken" ? 500 : 200;
+            const status =
+                req.url === "/missing" || req.url === "/closed" ? (req.url === "/closed" ? 409 : 404) : req.url === "/broken" ? 500 : 200;
             res.writeHead(status, { "content-type": "application/json" });
             res.end(
                 JSON.stringify(
                     status === 200
                         ? { key: req.headers["x-internal-key"], requestId: req.headers["x-request-id"] }
-                        : { message: "No such restaurant" },
+                        : req.url === "/closed"
+                          ? { message: "Table is not available", code: "TABLE_CLOSED" }
+                          : { message: "No such restaurant" },
                 ),
             );
         });
@@ -133,6 +136,10 @@ describe("calling another service", () => {
     it("passes 4xx answers on and turns 5xx into 502", async () => {
         await expect(callService(base, "/missing", fakeReq)).rejects.toMatchObject({ status: 404, message: "No such restaurant" });
         await expect(callService(base, "/broken", fakeReq)).rejects.toMatchObject({ status: 502 });
+    });
+
+    it("keeps the other service's error code, so the browser can tell errors apart (VM-06)", async () => {
+        await expect(callService(base, "/closed", fakeReq)).rejects.toMatchObject({ status: 409, code: "TABLE_CLOSED" });
     });
 
     it("looks a restaurant up by slug once, then answers from the cache", async () => {

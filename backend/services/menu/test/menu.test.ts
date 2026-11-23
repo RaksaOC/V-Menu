@@ -93,9 +93,31 @@ describe("order check (internal)", () => {
                 .post(`/internal/restaurants/${RES_ID}/order-check`)
                 .set("x-internal-key", "internal-test-key")
                 .send({ table: t, items: [{ _id: item._id, quantity: 2 }] });
-        expect((await check("A1")).status).toBe(409); // new tables start closed
+        const closed = await check("A1");
+        expect(closed.status).toBe(409); // new tables start closed
+        expect(closed.body).toMatchObject({ code: "TABLE_CLOSED", message: "Table is not available" });
         await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
         const ok = await check("A1");
         expect(ok.body.items[0]).toMatchObject({ item: { name: "Bai Sach Chrouk", price: 3 }, quantity: 2 });
+    });
+
+    it("names the dishes that are no longer available (VM-06)", async () => {
+        const { body: item } = await addItem({ name: "Amok", price: 5, image: PHOTO });
+        const { body: gone } = await addItem({ name: "Prahok", price: 4, image: PHOTO });
+        const { body: table } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "B2" });
+        await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
+        await request(app).patch(`/api/menu/${SLUG}/items/${gone._id}/availability`).set(owner).send({ isEnabled: false });
+        const res = await request(app)
+            .post(`/internal/restaurants/${RES_ID}/order-check`)
+            .set("x-internal-key", "internal-test-key")
+            .send({
+                table: "B2",
+                items: [
+                    { _id: item._id, quantity: 1 },
+                    { _id: gone._id, quantity: 1 },
+                ],
+            });
+        expect(res.status).toBe(409);
+        expect(res.body).toMatchObject({ code: "ITEMS_UNAVAILABLE", message: "Some items are no longer available" });
     });
 });
