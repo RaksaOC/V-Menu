@@ -21,8 +21,12 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[] } {
         async countFor(resIds, where = {}) {
             return all.filter(inRes(resIds)).filter((o) => where.isDone === undefined || o.isDone === where.isDone).length;
         },
-        async listForKitchen(resId) {
-            return all.filter((o) => o.resId === resId).sort((a, b) => +a.createdAt - +b.createdAt);
+        async listActive(resId) {
+            return all.filter((o) => o.resId === resId && !o.isDone).sort((a, b) => +a.createdAt - +b.createdAt);
+        },
+        async pageDone(resId, skip, limit) {
+            const done = all.filter((o) => o.resId === resId && o.isDone).sort((a, b) => +b.createdAt - +a.createdAt);
+            return { orders: done.slice(skip, skip + limit), total: done.length };
         },
         async markDone(resId, id) {
             const o = all.find((x) => x._id === id && x.resId === resId);
