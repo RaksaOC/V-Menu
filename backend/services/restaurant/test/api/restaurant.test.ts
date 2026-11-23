@@ -167,6 +167,20 @@ describe("internal routes", () => {
 });
 
 // VM-03: staff stay signed in for a whole shift; the token and the cookie last as long.
+describe("who am I (VM-20)", () => {
+    it("answers with the signed-in person's name, from their cookie", async () => {
+        await signUp();
+        const login = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "owner" });
+        const res = await request(app).get("/api/auth/me").set("cookie", login.headers["set-cookie"][0].split(";")[0]);
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({ name: "Ory", email: "owner@x.com", role: "owner" });
+    });
+
+    it("needs a session", async () => {
+        expect((await request(app).get("/api/auth/me")).status).toBe(401);
+    });
+});
+
 describe("session length (VM-03)", () => {
     // SEC-01: the token is only in the httpOnly cookie
     const cookieToken = (res: { headers: Record<string, unknown> }) =>

@@ -46,6 +46,7 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/auth/login", NO_APP_TOKEN], // Firebase ID token only
     ["POST /api/auth/signup", NO_APP_TOKEN],
     ["POST /api/auth/memberships", NO_APP_TOKEN],
+    ["GET /api/auth/me", only(["owner", "cashier", "chef"], { ownData: true })],
     ["POST /api/auth/sign-out-everywhere", only(["owner", "cashier", "chef"], { ownData: true })],
     ["GET /api/restaurants", ownersOwnData],
     ["POST /api/restaurants", ownersOwnData],

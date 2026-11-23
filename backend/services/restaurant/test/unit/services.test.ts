@@ -403,3 +403,40 @@ describe("session versions (SEC-03)", () => {
         expect(await status(auth.sessionVersion({ role: "cashier" }))).toBe(400);
     });
 });
+
+describe("who am I (VM-20)", () => {
+    async function bistro() {
+        const s = setup();
+        const r = await s.places.createForOwner("Bistro", { uid: "owner", email: "owner@x.test", name: "Ory Chan" });
+        const other = await s.places.createForOwner("Other", { uid: "zed", email: "zed@x.test", name: "Zed" });
+        await s.memberships.createMany([
+            { name: "Bob at Bistro", tenantId: "bob", email: "bob@x.test", role: "cashier", resId: String(r._id) },
+            { name: "Bob at Other", tenantId: "bob", email: "bob@x.test", role: "cashier", resId: String(other._id) },
+        ]);
+        return { ...s, r, other };
+    }
+
+    it("an owner gets the name from their sign-up", async () => {
+        const { auth } = await bistro();
+        expect(await auth.me({ uid: "owner", email: "owner@x.test", role: "owner" })).toEqual({
+            name: "Ory Chan",
+            email: "owner@x.test",
+            role: "owner",
+        });
+    });
+
+    it("staff get the name from this restaurant's row", async () => {
+        const { auth, other } = await bistro();
+        const me = await auth.me({ uid: "bob", email: "bob@x.test", role: "cashier", resId: String(other._id), resSlug: other.slug });
+        expect(me).toEqual({ name: "Bob at Other", email: "bob@x.test", role: "cashier" });
+    });
+
+    it("with no row to read, the email stands in for the name", async () => {
+        const { auth } = await bistro();
+        expect(await auth.me({ uid: "ghost", email: "ghost@x.test", role: "owner" })).toEqual({
+            name: "ghost@x.test",
+            email: "ghost@x.test",
+            role: "owner",
+        });
+    });
+});

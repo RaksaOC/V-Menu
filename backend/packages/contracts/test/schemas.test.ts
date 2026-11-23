@@ -269,6 +269,7 @@ describe("restaurants", () => {
         ok(C.StaffMember, member);
         ok(C.StaffMember, { ...member, tenantId: null }); // an invite nobody has accepted yet (VM-12)
         ok(C.StaffOverview, [{ resName: "A", staff: [member] }]);
+        ok(C.Me, { name: "Ory", email: "ory@x.test", role: "owner" }); // VM-20
         ok(C.Memberships, { "Mee Keav - mee-keav-abc123": ["owner", "chef"] });
         fieldsOf(C.Memberships, { "A - a": ["admin"] });
     });
