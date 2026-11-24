@@ -25,6 +25,8 @@ export interface ItemsRepo {
     update(resId: string, id: string, fields: ItemFields): Promise<ItemRecord | null>;
     remove(resId: string, id: string): Promise<ItemRecord | null>;
     count(resId: string): Promise<number>;
+    /** PHOTOS-S3: how many of the restaurant's dishes show this image */
+    countWithImage(resId: string, image: string): Promise<number>;
     /** the enabled items among these ids */
     findEnabled(resId: string, ids: string[]): Promise<ItemRecord[]>;
     /** VM-25: a deleted category's dishes go to "Other"; answers how many moved */
@@ -46,6 +48,7 @@ export const mongoItemsRepo: ItemsRepo = {
         Item.findOneAndUpdate({ _id: id, resId }, withOldPrice(fields), { new: true, runValidators: true }).lean<ItemRecord>(),
     remove: (resId, id) => Item.findOneAndDelete({ _id: id, resId }).lean<ItemRecord>(),
     count: (resId) => Item.countDocuments({ resId }),
+    countWithImage: (resId, image) => Item.countDocuments({ resId, image }),
     // ids were checked to be ObjectIds; sanitizeFilter would strip the $in otherwise
     findEnabled: (resId, ids) => Item.find({ _id: mongoose.trusted({ $in: ids }), resId, isEnabled: true }).lean<ItemRecord[]>(),
     async clearCategory(resId, categoryId) {

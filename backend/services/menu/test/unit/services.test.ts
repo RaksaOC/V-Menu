@@ -67,10 +67,10 @@ describe("items", () => {
         const newId2 = newId();
         await menu.update(A, item._id, { image: imageUrl(A.slug, newId2), isEnabled: false });
         expect(store.objects.has(photoKey(A._id, oldId))).toBe(false);
+        expect((await menu.list(A._id))[0]).toMatchObject({ priceCents: 600, isEnabled: false, image: imageUrl(A.slug, newId2) });
         await menu.update(A, item._id, { image: imageUrl(A.slug, legacyId) });
         await menu.update(A, item._id, { image: PLACEHOLDER });
         expect(images.files.has(legacyId)).toBe(false);
-        expect((await menu.list(A._id))[0]).toMatchObject({ priceCents: 600, isEnabled: false, image: imageUrl(A.slug, newId2) });
     });
 
     it("deletes the item and its photo; a failed photo delete doesn't fail the request", async () => {

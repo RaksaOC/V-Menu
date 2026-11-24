@@ -17,7 +17,7 @@ const store = () =>
 
 type Condition = [string, string, string | number] | [string, number, number];
 const policyOf = (fields: Record<string, string>) =>
-    JSON.parse(Buffer.from(fields.policy!, "base64").toString("utf8")) as { expiration: string; conditions: (Condition | object)[] };
+    JSON.parse(Buffer.from(fields.Policy!, "base64").toString("utf8")) as { expiration: string; conditions: (Condition | object)[] };
 
 describe("upload keys", () => {
     it("an upload key is incoming/<restaurant>/<random>, and says whose it is", () => {
@@ -44,9 +44,9 @@ describe("signed upload form (POST policy)", () => {
         expect(form.maxBytes).toBe(5 * 1024 * 1024);
         expect(form.fields.key).toBe(key);
         expect(form.fields["Content-Type"]).toBe("image/png");
-        expect(form.fields["x-amz-algorithm"]).toBe("AWS4-HMAC-SHA256");
-        expect(form.fields["x-amz-signature"]).toMatch(/^[0-9a-f]{64}$/);
-        expect(form.fields["x-amz-credential"]).toMatch(/^key\/\d{8}\/us-east-1\/s3\/aws4_request$/);
+        expect(form.fields["X-Amz-Algorithm"]).toBe("AWS4-HMAC-SHA256");
+        expect(form.fields["X-Amz-Signature"]).toMatch(/^[0-9a-f]{64}$/);
+        expect(form.fields["X-Amz-Credential"]).toMatch(/^key\/\d{8}\/us-east-1\/s3\/aws4_request$/);
 
         const policy = policyOf(form.fields);
         expect(policy.conditions).toContainEqual(["eq", "$key", key]);

@@ -159,3 +159,22 @@ export type MenuSection = z.infer<typeof MenuSection>;
 /** GET /api/menu/:slug/public/items: every dish, by category, in the owner's order. A dish that is off is shown as sold out (VM-26). */
 export const PublicMenu = z.object({ categories: z.array(MenuSection) });
 export type PublicMenu = z.infer<typeof PublicMenu>;
+
+// PHOTOS-S3: a menu photo goes from the browser straight to object storage. The owner asks for a
+// signed form (PhotoUploadBody -> PhotoUploadForm), posts the file to `url` with `fields`, then
+// sends the key back (ConfirmPhotoBody), which answers { url } to save on the dish.
+/** The type is checked by the service (415 for anything but JPEG, PNG or WebP). */
+export const PhotoUploadBody = z.object({ contentType: z.string("Required").max(100, "At most 100 characters") });
+export type PhotoUploadBody = z.infer<typeof PhotoUploadBody>;
+
+export const PhotoUploadForm = z.object({
+    key: z.string(),
+    url: z.string(),
+    fields: z.record(z.string(), z.string()),
+    expiresAt: IsoDate,
+    maxBytes: z.number(),
+});
+export type PhotoUploadForm = z.infer<typeof PhotoUploadForm>;
+
+export const ConfirmPhotoBody = z.object({ key: z.string("Required").max(200, "At most 200 characters") });
+export type ConfirmPhotoBody = z.infer<typeof ConfirmPhotoBody>;

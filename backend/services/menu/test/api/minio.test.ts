@@ -1,5 +1,13 @@
 import { randomBytes } from "node:crypto";
-import * as Minio from "minio";
+import {
+    DeleteBucketCommand,
+    DeleteObjectCommand,
+    GetBucketLifecycleConfigurationCommand,
+    HeadBucketCommand,
+    HeadObjectCommand,
+    ListObjectsV2Command,
+    S3Client,
+} from "@aws-sdk/client-s3";
 import mongoose from "mongoose";
 import sharp from "sharp";
 import request from "supertest";
@@ -29,14 +37,14 @@ describe.skipIf(!ENDPOINT)("photos in a real MinIO (PHOTOS-S3)", () => {
     });
     const photos = minioPhotoStore(config);
     const url = new URL(config.endpoint);
-    const admin = new Minio.Client({
-        endPoint: url.hostname,
-        port: Number(url.port),
-        useSSL: false,
-        accessKey: config.accessKey,
-        secretKey: config.secretKey,
+    const admin = new S3Client({
+        endpoint: url.origin,
         region: config.region,
+        forcePathStyle: true,
+        credentials: { accessKeyId: config.accessKey, secretAccessKey: config.secretKey },
     });
+    const Bucket = config.bucket;
+    const stat = (Key: string) => admin.send(new HeadObjectCommand({ Bucket, Key }));
     const app = createApp({ lookupRestaurant: fakeRestaurantLookup([R]), photos });
     let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
     let owner: Record<string, string>;
@@ -53,10 +61,9 @@ describe.skipIf(!ENDPOINT)("photos in a real MinIO (PHOTOS-S3)", () => {
     afterAll(async () => {
         await mongoose.connection.db?.dropDatabase();
         await mongo?.stop();
-        const keys: string[] = [];
-        for await (const o of admin.listObjectsV2(config.bucket, "", true)) if (o.name) keys.push(o.name);
-        if (keys.length) await admin.removeObjects(config.bucket, keys);
-        await admin.removeBucket(config.bucket).catch(() => {});
+        const { Contents = [] } = await admin.send(new ListObjectsV2Command({ Bucket }));
+        for (const o of Contents) await admin.send(new DeleteObjectCommand({ Bucket, Key: o.Key! }));
+        await admin.send(new DeleteBucketCommand({ Bucket })).catch(() => {});
     });
 
     /** What the browser does: the form's fields, then the file, posted to the form's address. */
@@ -69,9 +76,9 @@ describe.skipIf(!ENDPOINT)("photos in a real MinIO (PHOTOS-S3)", () => {
     const sign = (contentType: string) => request(app).post(`/api/menu/${R.slug}/images/uploads`).set(owner).send({ contentType });
 
     it("makes the bucket and a rule that expires incoming/ after a day; is up", async () => {
-        expect(await admin.bucketExists(config.bucket)).toBe(true);
-        const rules = (await admin.getBucketLifecycle(config.bucket))?.Rule ?? [];
-        expect(rules).toContainEqual(
+        await admin.send(new HeadBucketCommand({ Bucket }));
+        const { Rules = [] } = await admin.send(new GetBucketLifecycleConfigurationCommand({ Bucket }));
+        expect(Rules).toContainEqual(
             expect.objectContaining({
                 Status: "Enabled",
                 Filter: { Prefix: "incoming/" },
@@ -92,10 +99,10 @@ describe.skipIf(!ENDPOINT)("photos in a real MinIO (PHOTOS-S3)", () => {
         expect(done.status).toBe(201);
         const id = done.body.url.split("/").pop();
         const key = `photos/${R._id}/${id}.webp`;
-        const stat = await admin.statObject(config.bucket, key);
-        expect(stat.metaData["content-type"]).toBe("image/webp");
-        expect(stat.metaData["cache-control"]).toBe("public, max-age=31536000, immutable");
-        await expect(admin.statObject(config.bucket, form.body.key)).rejects.toThrow(); // incoming is gone
+        const kept = await stat(key);
+        expect(kept.ContentType).toBe("image/webp");
+        expect(kept.CacheControl).toBe("public, max-age=31536000, immutable");
+        await expect(stat(form.body.key)).rejects.toThrow(); // incoming is gone
 
         const redirect = await request(app).get(done.body.url);
         expect(redirect.status).toBe(302);
@@ -111,7 +118,7 @@ describe.skipIf(!ENDPOINT)("photos in a real MinIO (PHOTOS-S3)", () => {
             .set(owner)
             .send({ name: "Amok", priceCents: 500, image: done.body.url });
         await request(app).delete(`/api/menu/${R.slug}/items/${item.body._id}`).set(owner);
-        await expect(admin.statObject(config.bucket, key)).rejects.toThrow();
+        await expect(stat(key)).rejects.toThrow();
     });
 
     it("MinIO itself refuses a file over 5 MB, another type, and another key", async () => {
@@ -128,7 +135,7 @@ describe.skipIf(!ENDPOINT)("photos in a real MinIO (PHOTOS-S3)", () => {
             "image/jpeg",
         );
         expect(elsewhere.status).toBe(403);
-        await expect(admin.statObject(config.bucket, form.key)).rejects.toThrow(); // nothing was stored
+        await expect(stat(form.key)).rejects.toThrow(); // nothing was stored
     });
 
     it("an expired form is refused by MinIO", async () => {

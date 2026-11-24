@@ -20,8 +20,29 @@ export function markShuttingDown() {
     shuttingDown = true;
 }
 
+interface BaseAppOptions {
+    /** PHOTOS-S3: more things /ready waits for besides MongoDB, by name (menu-service: storage). */
+    ready?: Record<string, () => Promise<boolean>>;
+    /** a check that hasn't answered by then counts as not ready */
+    readyTimeoutMs?: number;
+}
+
+/** True when the check answers true in time; false when it says no, throws or hangs. */
+function passes(check: () => Promise<boolean>, timeoutMs: number): Promise<boolean> {
+    return new Promise((resolve) => {
+        const timer = setTimeout(() => resolve(false), timeoutMs);
+        Promise.resolve()
+            .then(check)
+            .then(
+                (ok) => resolve(ok === true),
+                () => resolve(false),
+            )
+            .finally(() => clearTimeout(timer));
+    });
+}
+
 // The parts every service shares: security headers, JSON body, logs, metrics, liveness and readiness.
-export function baseApp(): Express {
+export function baseApp({ ready: checks = {}, readyTimeoutMs = 2500 }: BaseAppOptions = {}): Express {
     const app = express();
     app.disable("x-powered-by");
     // SEC-06: the request path is browser -> Caddy -> Next.js rewrite -> service. Caddy sets
@@ -39,12 +60,22 @@ export function baseApp(): Express {
     app.get("/health", (_req, res) => {
         res.json({ status: "ok", service: process.env.SERVICE_NAME, db: dbConnected() });
     });
-    // Readiness: safe to send traffic. False until MongoDB is connected and again while
-    // shutting down, so health checks and proxies stop routing here before the process exits.
-    app.get("/ready", (_req, res) => {
+    // Readiness: safe to send traffic. False until MongoDB is connected (and the service's own
+    // checks pass, e.g. object storage) and again while shutting down, so health checks and
+    // proxies stop routing here before the process exits.
+    app.get("/ready", async (_req, res) => {
         const db = dbConnected();
-        const ready = db && !shuttingDown;
-        res.status(ready ? 200 : 503).json({ status: ready ? "ok" : "not ready", service: process.env.SERVICE_NAME, db, shuttingDown });
+        const results = Object.fromEntries(
+            await Promise.all(Object.entries(checks).map(async ([name, check]) => [name, await passes(check, readyTimeoutMs)] as const)),
+        );
+        const ready = db && !shuttingDown && Object.values(results).every(Boolean);
+        res.status(ready ? 200 : 503).json({
+            status: ready ? "ok" : "not ready",
+            service: process.env.SERVICE_NAME,
+            db,
+            ...results,
+            shuttingDown,
+        });
     });
     // Which build is running: GIT_SHA is baked into the Docker image at build time.
     app.get("/version", (_req, res) => {

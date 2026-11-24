@@ -3,6 +3,7 @@ import { httpOpenBills, type OpenBillsFor } from "./clients/open-bills.js";
 import { mongoCategoriesRepo, type CategoriesRepo } from "./repositories/categories.repo.js";
 import { mongoImagesRepo, type ImagesRepo } from "./repositories/images.repo.js";
 import { mongoItemsRepo, type ItemsRepo } from "./repositories/items.repo.js";
+import { minioPhotoStore, storageConfig, type PhotoStore } from "./repositories/photo-store.js";
 import { mongoTablesRepo, type TablesRepo } from "./repositories/tables.repo.js";
 import { categoriesService } from "./services/categories.service.js";
 import { imagesService } from "./services/images.service.js";
@@ -22,7 +23,10 @@ interface Deps {
     uploadsPerHour?: number;
     items?: ItemsRepo;
     tables?: TablesRepo;
+    /** photos from before PHOTOS-S3, in GridFS */
     images?: ImagesRepo;
+    /** PHOTOS-S3: object storage (MinIO), from the S3_* settings */
+    photos?: PhotoStore;
     categories?: CategoriesRepo;
     /** VM-15: order-service, asked before a table is renamed or deleted */
     openBills?: OpenBillsFor;
@@ -35,22 +39,24 @@ export function createApp({
     items = mongoItemsRepo,
     tables = mongoTablesRepo,
     images = mongoImagesRepo,
+    photos = minioPhotoStore(storageConfig()),
     categories = mongoCategoriesRepo,
     openBills = httpOpenBills,
 }: Deps = {}) {
+    const photoFiles = imagesService({ images, photos });
     const ctx: RouteContext = {
         services: {
-            items: itemsService({ items, images, categories }),
+            items: itemsService({ items, photos: photoFiles, categories }),
             categories: categoriesService({ categories, items }),
             tables: tablesService({ tables }),
-            images: imagesService({ images }),
+            images: photoFiles,
             internal: internalService({ items, tables }),
         },
         ...restaurantFrom(lookupRestaurant),
         openBills,
     };
 
-    const app = baseApp();
+    const app = baseApp({ ready: { storage: photoFiles.isUp } }); // PHOTOS-S3: not ready without object storage
     app.use(
         "/api/menu/:slug",
         publicRoutes(ctx),
