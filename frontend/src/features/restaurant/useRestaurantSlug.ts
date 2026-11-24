@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 import { useParams } from "next/navigation";
-import { ResContext } from "@/features/owner/ResContext";
+import { ResContext } from "@/lib/restaurantContext";
 
 /**
  * The restaurant a shared screen is about (CL-09): the owner's dashboard says which one through

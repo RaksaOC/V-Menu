@@ -65,6 +65,10 @@ jobs:
       - run: npm run typecheck
         if: matrix.kind != 'repo'
 
+      - name: Import boundaries (dependency-cruiser, CL-03)
+        if: matrix.kind == 'repo'
+        run: npm run deps
+
       - name: Formatting (Prettier, CL-12)
         if: matrix.kind == 'repo'
         run: npm run format:check

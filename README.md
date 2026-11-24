@@ -128,11 +128,12 @@ These are the same commands CI runs:
 
 | Command | What it runs |
 |---|---|
-| `npm run check` | everything below except e2e, in order: format, lint, typecheck, tests |
+| `npm run check` | everything below except e2e, in order: format, lint, typecheck, import boundaries, tests |
 | `npm test` | backend tests (each service and `@vmenu/common`: Vitest, Supertest, in-memory MongoDB), frontend tests (Vitest, Testing Library, MSW) and the repo checks |
 | `npm run test:e2e` | Playwright against a running stack (`npm run dev` and `npm run seed` first) |
 | `npm run lint` | ESLint on the frontend |
 | `npm run typecheck` | TypeScript for the backend workspace and the frontend |
+| `npm run deps` | import boundaries (dependency-cruiser, rules in `.dependency-cruiser.cjs`): no service imports another, routes don't reach models, packages don't import services, the frontend imports only `@vmenu/contracts` from the backend, and features don't import each other |
 | `npm run format` / `format:check` | Prettier (settings in `.prettierrc.json`, `.editorconfig` for editors) |
 | `npm run test:repo` | the issue forms, the PR template and repo hygiene (no `.DS_Store`, root scripts, formatting commit listed in `.git-blame-ignore-revs`) |
 

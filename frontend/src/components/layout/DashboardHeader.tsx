@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Clock, LogOut, Menu as MenuIcon, User, UtensilsCrossed } from "lucide-react";
-import { signOut } from "@/features/auth/session";
+import { signOut } from "@/lib/session";
 
 interface Props {
     /** e.g. "V-Menu Owner", "V-Menu Cashier" */

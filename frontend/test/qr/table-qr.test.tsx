@@ -89,7 +89,7 @@ describe("View QR Code buttons", () => {
 describe("Print all QR codes", () => {
     it("prints one card per table from the owner's Tables page", async () => {
         const { answer } = await import("../api/helpers");
-        const { ResContext } = await import("@/features/owner/ResContext");
+        const { ResContext } = await import("@/lib/restaurantContext");
         const { default: Tables } = await import("@/features/restaurant/components/Tables");
         answer("get", "/api/menu/demo-bistro/tables", [
             { _id: "t1", name: "T1", isEnabled: true },
