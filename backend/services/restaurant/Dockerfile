@@ -53,6 +53,7 @@ USER node
 WORKDIR /app/services/restaurant
 EXPOSE 4101
 # Every 3 s while starting, then every 30 s (each check is a process the Docker engine starts).
-HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --start-interval=3s --retries=3 \
+# Up to 3 minutes to start: the shared server can need over a minute to boot Node.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=180s --start-interval=3s --retries=3 \
     CMD wget -qO- http://localhost:$PORT/ready || exit 1
 CMD ["node", "dist/index.js"]
