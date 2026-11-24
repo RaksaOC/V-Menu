@@ -6,14 +6,16 @@ import { useParams } from "next/navigation";
 import { CheckCircle2, ChefHat, Clock, Plus, Receipt } from "lucide-react";
 import { getTableBill, getTableOrder, type TableBill, type TableOrderView } from "@/features/customer/api";
 import { useTableLink } from "@/features/customer/table-link";
-import { apiErrorMessage } from "@/lib/api";
+import { apiErrorMessage, apiStatus } from "@/lib/api";
 import { formatTime } from "@/lib/dates";
 import { useMoney } from "@/components/money/MoneyProvider";
 import { CUSTOMER_STATUS, isFinal } from "@/lib/order-status";
 import { ThemeToggle } from "@/components/marketing/tour/ThemeToggle";
 
 /** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far.
- *  VM-27: its status, checked every 10 seconds until it's served or cancelled. */
+ *  VM-27: its status, checked every 10 seconds until it's served or cancelled.
+ *  A failed check doesn't stick: the next good one clears it, and while an order is on the page a
+ *  failed check leaves it there and the checks go on. An order that isn't there (404) stops them. */
 export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number } = {}) {
     const money = useMoney(); // VM-24: prices in the restaurant's currency
     const params = useParams<{ orderId: string }>();
@@ -23,12 +25,22 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
     const [order, setOrder] = useState<TableOrderView | null>(null);
     const [bill, setBill] = useState<TableBill | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [gone, setGone] = useState(false); // 404: no such order, so nothing to check again
 
-    const finished = order ? isFinal(order.status) : false;
+    const finished = gone || (order ? isFinal(order.status) : false);
     const load = useCallback(() => {
         getTableOrder(link, String(params.orderId))
-            .then(setOrder)
-            .catch((err) => setError(apiErrorMessage(err, "Couldn't load this order.")));
+            .then((found) => {
+                setOrder(found);
+                setError(null);
+            })
+            .catch((err) => {
+                setError(apiErrorMessage(err, "Couldn't load this order."));
+                if (apiStatus(err) === 404) {
+                    setGone(true);
+                    setOrder(null); // it isn't there any more: say so instead of showing it
+                }
+            });
         getTableBill(link)
             .then(setBill)
             .catch(() => setBill(null)); // the list is a bonus; the order above is what matters
@@ -64,7 +76,7 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
             </header>
 
             <main className="mx-auto max-w-2xl space-y-6 px-4 py-6">
-                {error && (
+                {error && !order && (
                     <div role="alert" className="rounded-[var(--r-card)] border border-[var(--bad)] bg-[var(--bad-soft)] p-5">
                         <p className="font-semibold">{error}</p>
                         <Link href={menuHref} className="mt-3 inline-block font-semibold text-[var(--accent-text)] underline">
