@@ -19,17 +19,31 @@ export function endSession(): void {
     navigation.to(`${login}?expired=1`);
 }
 
-// Clears every copy of the session: the httpOnly cookie (only the server can remove it),
-// the token the API client sends, and the Firebase sign-in.
-export async function signOut() {
-    try {
-        await fetch("/api/auth/logout", { method: "POST" });
-    } catch {
-        // offline: the cookie expires on its own within the hour
-    }
+/** The message for a sign-out the server didn't confirm. */
+export const SIGN_OUT_FAILED = "Couldn't sign out, so you're still signed in. Please try again.";
+
+/** Clears this browser's own copies of the sign-in: the token the API client sends, and Firebase's. */
+export async function forgetSignIn() {
     localStorage.removeItem("token");
     localStorage.removeItem("userEmail");
     // Loaded only when signing out, so pages that just call the API (customer pages) don't load Firebase.
     const [{ signOut: firebaseSignOut }, { auth }] = await Promise.all([import("firebase/auth"), import("@/lib/firebase")]);
     await firebaseSignOut(auth).catch(() => {});
+}
+
+/**
+ * Ends the session here. SEC-01: only the server can remove the httpOnly cookie, and the cookie
+ * stays a working session for up to 12 hours (VM-03). So this is true only once the server has
+ * answered OK; on any other answer, or none (offline), it is false and nothing here changes: the
+ * caller says so and keeps the person on the page, instead of showing them as signed out.
+ */
+export async function signOut(): Promise<boolean> {
+    try {
+        const res = await fetch("/api/auth/logout", { method: "POST" });
+        if (!res.ok) return false;
+    } catch {
+        return false;
+    }
+    await forgetSignIn();
+    return true;
 }

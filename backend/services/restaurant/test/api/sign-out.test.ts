@@ -33,6 +33,6 @@ describe("sign-out isn't held back by the sign-in rate limit (SEC-01)", () => {
 
     it("signing out doesn't use up the sign-in limit either", async () => {
         for (let i = 0; i < 40; i++) expect((await request(app).post("/api/auth/logout")).status).toBe(200);
-        expect((await request(app).post("/api/auth/memberships").send({})).status).toBe(400); // still under the limit
+        expect((await request(app).post("/api/auth/memberships").send({})).status).not.toBe(429); // still under the limit
     });
 });

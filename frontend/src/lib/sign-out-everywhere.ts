@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { signOut } from "@/lib/session";
+import { forgetSignIn } from "@/lib/session";
 
 /**
  * SEC-03: ends every session of this account, on every device, then signs out here.
@@ -11,6 +11,6 @@ export async function signOutEverywhere(): Promise<boolean> {
     } catch {
         return false;
     }
-    await signOut();
+    await forgetSignIn(); // the server has ended every session and cleared this browser's cookie
     return true;
 }

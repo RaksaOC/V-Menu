@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Order } from "@vmenu/contracts";
+import { ToastHost } from "@/components/ui";
 import { ThemeToggle } from "@/components/marketing/tour/ThemeToggle";
 import { BAND_BUTTON } from "@/features/kitchen/band";
 import { KITCHEN_THEME_KEY } from "@/theme/ThemeSync";
@@ -29,6 +30,7 @@ export default function History() {
         "flex min-h-11 items-center gap-1 rounded-[var(--r-chip)] border border-[var(--line)] px-4 font-medium hover:bg-[var(--card)] disabled:opacity-40";
     return (
         <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+            <ToastHost /> {/* SEC-01: Sign Out says so when it failed */}
             <header className="vm-band px-4 py-5 sm:px-6">
                 <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
                     <div>

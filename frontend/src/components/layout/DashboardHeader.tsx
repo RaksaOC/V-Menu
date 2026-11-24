@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Clock, LogOut, Menu as MenuIcon, MonitorX, User, UtensilsCrossed } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/dates";
-import { navigation, signOut } from "@/lib/session";
+import { navigation, signOut, SIGN_OUT_FAILED } from "@/lib/session";
 import { signOutEverywhere } from "@/lib/sign-out-everywhere";
 import { toast } from "@/lib/toast";
 
@@ -46,6 +45,12 @@ export default function DashboardHeader({
         const timer = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(timer);
     }, [clock]);
+
+    // SEC-01: the login page opens only once the server has ended the session
+    async function leave() {
+        if (await signOut()) navigation.to(loginHref);
+        else toast.error(SIGN_OUT_FAILED);
+    }
 
     async function endAllSessions() {
         if (await signOutEverywhere()) navigation.to(loginHref);
@@ -94,13 +99,13 @@ export default function DashboardHeader({
                             {email && <p className="truncate text-sm text-[var(--muted)]">{email}</p>}
                         </div>
                         <MenuItem>
-                            <Link
-                                href={loginHref}
-                                onClick={() => void signOut()}
-                                className="mt-1 flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--bad)] data-[focus]:bg-[var(--bad-soft)]"
+                            <button
+                                type="button"
+                                onClick={() => void leave()}
+                                className="mt-1 flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-[var(--bad)] data-[focus]:bg-[var(--bad-soft)]"
                             >
                                 <LogOut size={16} aria-hidden /> Sign Out
-                            </Link>
+                            </button>
                         </MenuItem>
                         <MenuItem>
                             <button
