@@ -10,6 +10,7 @@ const { default: ItemForm } = await import("@/features/restaurant/components/Ite
 const { default: Menu } = await import("@/features/restaurant/components/Menu");
 const { checkItem } = await import("@/features/restaurant/item-rules");
 const { CreateItemBody } = await import("@vmenu/contracts");
+const { toCents } = await import("@/lib/money");
 
 const field = (name: string) => screen.getByLabelText(name);
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
@@ -37,7 +38,7 @@ describe("checks in the browser, the same as the server's (VM-17)", () => {
         type("Item Name", "B");
         type("Price ($)", "0");
         submit();
-        await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: "B", price: 0 })));
+        await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: "B", priceCents: 0 })));
     });
 });
 
@@ -45,7 +46,25 @@ describe("the browser's checks are the server's rules (VM-17)", () => {
     // The bundle takes only types from @vmenu/contracts, so the rules are written out twice.
     // This keeps the copy honest: same verdict, same message, for each field.
     const names = ["Amok", "B", "", "   ", "  Amok  ", "x".repeat(120), "x".repeat(121)];
-    const prices = ["5", "0", "2.35", "", " ", "-1", "-0.01", "-1.555", "2.555", "0.001", "1e300", "abc", "1e999", "0x10", " 7 "];
+    const prices = [
+        "5",
+        "0",
+        "2.35",
+        "",
+        " ",
+        "-1",
+        "-0.01",
+        "-1.555",
+        "2.555",
+        "0.001",
+        "1e300",
+        "abc",
+        "1e999",
+        "0x10",
+        " 7 ",
+        "1000000",
+        "1000000.01",
+    ];
     it.each(names.flatMap((name) => prices.map((price) => [name.length > 20 ? `${name.length} characters` : name, price, name])))(
         "name %j, price %j",
         (_label, price, name) => {
@@ -53,12 +72,22 @@ describe("the browser's checks are the server's rules (VM-17)", () => {
             const fields: Record<string, string> = {};
             for (const issue of server.error?.issues ?? []) fields[String(issue.path[0])] ??= issue.message;
             expect(checkItem({ name, price })).toEqual(fields);
+            // CL-07: the form sends what it accepts as cents, and the server takes those too
+            if (!Object.keys(fields).length)
+                expect(CreateItemBody.safeParse({ name, priceCents: toCents(Number(price)), image: "/images/img.png" }).success).toBe(true);
         },
     );
 });
 
 describe("the server's answer is shown next to the field (VM-17)", () => {
-    const DISH = { _id: "665f0000000000000000d001", name: "Amok", price: 5, image: "/images/img.png", isEnabled: true, categoryId: null };
+    const DISH = {
+        _id: "665f0000000000000000d001",
+        name: "Amok",
+        priceCents: 500,
+        image: "/images/img.png",
+        isEnabled: true,
+        categoryId: null,
+    };
 
     it("a 400 naming the price shows under Price, and the popup stays open", async () => {
         answer("get", "/api/menu/demo-bistro/items", [DISH]);
@@ -73,13 +102,13 @@ describe("the server's answer is shown next to the field (VM-17)", () => {
         const sent = answer(
             "put",
             `/api/menu/demo-bistro/items/${DISH._id}`,
-            { code: "INVALID_INPUT", message: "Please check: price", fields: { price: "At most 2 decimal places" } },
+            { code: "INVALID_INPUT", message: "Please check: priceCents", fields: { priceCents: "At most $1,000,000" } }, // CL-07: the form sends cents
             400,
         );
         type("Price ($)", "6");
         fireEvent.click(within(dialog).getByRole("button", { name: "Save Changes" }));
         await waitFor(() => expect(sent).toHaveLength(1));
-        await waitFor(() => expect(field("Price ($)")).toHaveAccessibleDescription("At most 2 decimal places"));
+        await waitFor(() => expect(field("Price ($)")).toHaveAccessibleDescription("At most $1,000,000"));
         expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 });

@@ -75,7 +75,7 @@ describe("prices in the API are whole cents (CL-07)", () => {
         expect(C.CreateItemBody.parse({ ...dish, price: 2.35 })).toMatchObject({ priceCents: 235 });
         expect(C.CreateItemBody.parse({ ...dish, price: "2.35" })).toMatchObject({ priceCents: 235 });
         expect(C.UpdateItemBody.parse({ price: 3 })).toEqual({ priceCents: 300 });
-        expect(fieldsOf(C.CreateItemBody, { ...dish, price: "free" })).toEqual(["priceCents"]);
+        expect(fieldsOf(C.CreateItemBody, { ...dish, price: "free" })).toEqual(["price"]); // VM-17: under the field that old page sent
         expect(C.CreateItemBody.parse({ ...dish, price: 9, priceCents: 235 })).toMatchObject({ priceCents: 235 }); // cents win
     });
 

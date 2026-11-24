@@ -51,18 +51,21 @@ describe("menu", () => {
         expect(cents(2.5).error?.issues[0].message).toBe("Must be a whole number of cents");
     });
 
-    it("the old dollar price is still strict: a number from 0 or numeric text, at most 2 decimal places (VM-17, CL-07)", () => {
+    it("the old dollar price keeps VM-17's checks and messages, under `price` (VM-17, CL-07)", () => {
         const price = (value: unknown) => C.UpdateItemBody.safeParse({ price: value });
         expect(price(0).data).toEqual({ priceCents: 0 });
         expect(price(" 2.5 ").data).toEqual({ priceCents: 250 });
         expect(price(2.35).data).toEqual({ priceCents: 235 });
         for (const bad of ["", "  ", null, true, [], "abc", "1e999", -5, "-1", 1e300])
             expect(price(bad).success, JSON.stringify(bad)).toBe(false);
-        expect(price(-5).error?.issues[0].message).toBe("Can't be negative");
+        expect(price(-5).error?.issues[0]).toMatchObject({ path: ["price"], message: "Must be 0 or more" });
+        expect(price("").error?.issues[0].message).toBe("Required");
         expect(price("abc").error?.issues[0].message).toBe("Must be a number");
         // money has cents: the form's old step="0.01" stopped this only in the browser
-        expect(price(2.555).error?.issues[0].message).toBe("Must be a whole number of cents");
-        expect(price(10_000_000).error?.issues[0].message).toBe("At most $1,000,000");
+        expect(price(2.555).error?.issues[0].message).toBe("At most 2 decimal places");
+        expect(price(1e300).error?.issues[0].message).toBe("At most $1,000,000");
+        // the other fields are still checked alongside it
+        expect(fieldsOf(C.CreateItemBody, { name: "", price: -1 }).sort()).toEqual(["image", "name", "price"]);
     });
 
     it("UpdateItemBody: any subset, each still checked", () => {
@@ -97,7 +100,7 @@ describe("menu", () => {
 });
 
 describe("dish descriptions and tags (VM-26)", () => {
-    const dish = { name: "Amok", price: 5, image: "/x.png" };
+    const dish = { name: "Amok", priceCents: 500, image: "/x.png" };
     it("a description is optional, trimmed, up to 300 characters, and can be emptied", () => {
         expect(C.CreateItemBody.parse({ ...dish, description: "  Steamed fish curry  " }).description).toBe("Steamed fish curry");
         expect(C.UpdateItemBody.parse({ description: "   " })).toEqual({ description: "" });
@@ -142,7 +145,7 @@ describe("table links (SEC-04)", () => {
         const items = [{ _id: "665f00000000000000000001", quantity: 1 }];
         ok(C.OrderCheckRequest, { qrToken: TOKEN, items });
         expect(fieldsOf(C.OrderCheckRequest, { items })).toEqual(["table"]);
-        const dish = { _id: "665f00000000000000000001", name: "A", price: 1, image: "/x", isEnabled: true };
+        const dish = { _id: "665f00000000000000000001", name: "A", priceCents: 100, image: "/x", isEnabled: true };
         expect(C.OrderCheckResponse.parse({ table: "T1", items: [{ item: dish, quantity: 1 }] }).table).toBe("T1");
     });
 

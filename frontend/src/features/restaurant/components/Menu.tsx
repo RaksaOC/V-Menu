@@ -73,7 +73,8 @@ export default function Menu({ role }: { role: "owner" | "cashier" }) {
             await load();
         } catch (err) {
             const fields = apiErrorFields(err);
-            if (fields) return fields;
+            // CL-07: the form sends priceCents; the owner types it in the Price box
+            if (fields) return fields.priceCents ? { ...fields, price: fields.priceCents } : fields;
             toast.error(apiErrorMessage(err, "Could not save the dish"));
         }
     }

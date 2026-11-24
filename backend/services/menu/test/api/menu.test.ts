@@ -184,10 +184,11 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
         [{ priceCents: "" }, "priceCents", "Must be a number"],
         [{ priceCents: null }, "priceCents", "Must be a number"],
         [{ priceCents: 2.5 }, "priceCents", "Must be a whole number of cents"],
-        [{ price: -5 }, "priceCents", "Can't be negative"], // CL-07: the old dollar field, from a page opened before the deploy
-        [{ price: "" }, "priceCents", "Must be a number"],
-        [{ price: "abc" }, "priceCents", "Must be a number"],
-        [{ price: 2.555 }, "priceCents", "Must be a whole number of cents"],
+        [{ price: -5 }, "price", "Must be 0 or more"], // CL-07: the old dollar field, from a page opened before the deploy
+        [{ price: "" }, "price", "Required"],
+        [{ price: null }, "price", "Must be a number"],
+        [{ price: "abc" }, "price", "Must be a number"],
+        [{ price: 2.555 }, "price", "At most 2 decimal places"],
         [{ name: "" }, "name", "Required"],
         [{ name: "   " }, "name", "Required"],
         [{ name: "x".repeat(121) }, "name", "At most 120 characters"],
