@@ -1,7 +1,8 @@
-import { assertId, badRequest, notFound } from "@vmenu/common";
+import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
 import type { ImagesRepo } from "../repositories/images.repo.js";
-import type { CreateItemBody, UpdateItemBody } from "@vmenu/contracts";
-import type { ItemsRepo } from "../repositories/items.repo.js";
+import { OTHER_CATEGORY, type CreateItemBody, type MenuSection, type PublicMenu, type UpdateItemBody } from "@vmenu/contracts";
+import type { CategoriesRepo } from "../repositories/categories.repo.js";
+import type { ItemRecord, ItemsRepo } from "../repositories/items.repo.js";
 import { imageIdOf, isOwnImage, PLACEHOLDER } from "./photos.js";
 
 interface Restaurant {
@@ -17,7 +18,14 @@ function checkPhoto(image: string, slug: string) {
 }
 
 /** The menu: dishes, their prices and photos, and whether they're on (CL-04). */
-export function itemsService({ items, images }: { items: ItemsRepo; images: ImagesRepo }) {
+export function itemsService({ items, images, categories }: { items: ItemsRepo; images: ImagesRepo; categories: CategoriesRepo }) {
+    /** VM-25: a dish's category must be one of this restaurant's (null is "Other"). */
+    async function checkCategory(resId: string, categoryId: string | null | undefined) {
+        if (!categoryId) return;
+        if (!(await categories.get(resId, categoryId)))
+            throw new HttpError(400, "Unknown category", "INVALID_INPUT", { categoryId: "Unknown category" });
+    }
+
     /** Deletes a replaced or removed item's photo if it is one of ours. Never fails the request. */
     async function dropPhoto(url: string, restaurant: Restaurant) {
         if (!isOwnImage(url, restaurant.slug)) return;
@@ -36,13 +44,30 @@ export function itemsService({ items, images }: { items: ItemsRepo; images: Imag
     }
 
     return {
-        /** What customers see: the dishes that are on. */
-        publicList: (resId: string) => items.list(resId, { enabledOnly: true }),
+        /** What customers see (VM-25): the dishes that are on, by category in the owner's order,
+         *  by name within one; empty categories left out; dishes with no category last, as "Other". */
+        async publicMenu(resId: string): Promise<PublicMenu> {
+            const [all, sections] = await Promise.all([items.list(resId, { enabledOnly: true }), categories.list(resId)]);
+            const byName = (a: ItemRecord, b: ItemRecord) => a.name.localeCompare(b.name);
+            const known = new Set(sections.map((c) => String(c._id)));
+            const grouped: MenuSection[] = sections.map((c) => ({
+                _id: String(c._id),
+                name: c.name,
+                items: all.filter((i) => i.categoryId === String(c._id)).sort(byName),
+            }));
+            grouped.push({
+                _id: null,
+                name: OTHER_CATEGORY,
+                items: all.filter((i) => !i.categoryId || !known.has(i.categoryId)).sort(byName),
+            });
+            return { categories: grouped.filter((s) => s.items.length > 0) };
+        },
 
         list: (resId: string) => items.list(resId),
 
         async create(restaurant: Restaurant, body: CreateItemBody) {
             checkPhoto(body.image, restaurant.slug);
+            await checkCategory(restaurant._id, body.categoryId);
             return items.create(restaurant._id, body);
         },
 
@@ -52,6 +77,7 @@ export function itemsService({ items, images }: { items: ItemsRepo; images: Imag
             // an item's existing image may be sent back unchanged
             if (fields.image === before.image) delete fields.image;
             else if (fields.image !== undefined) checkPhoto(fields.image, restaurant.slug);
+            await checkCategory(restaurant._id, fields.categoryId);
             const updated = await items.update(restaurant._id, id, fields);
             if (!updated) throw notFound("Menu item not found");
             if (updated.image !== before.image) await dropPhoto(before.image, restaurant);

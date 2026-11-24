@@ -1,5 +1,5 @@
 import api, { seg } from "@/lib/api";
-import type { CreateItemBody, CreateTableBody, MenuItem, Overview, Table } from "@vmenu/contracts";
+import type { Category, CreateItemBody, CreateTableBody, MenuItem, Overview, Table } from "@vmenu/contracts";
 
 // CL-09: the calls the owner and the cashier both make about one restaurant (tables, menu,
 // overview), in one place. owner/api.ts and cashier/api.ts re-export what each role uses.
@@ -24,6 +24,33 @@ export async function updateMenuItem(slug: string, item: MenuItem): Promise<void
 
 export async function deleteMenuItem(slug: string, itemId: string): Promise<void> {
     await api.delete(`/api/menu/${seg(slug)}/items/${seg(itemId)}`);
+}
+
+// VM-25: menu categories. The owner arranges them; the cashier reads them to filter the menu.
+export async function getCategories(slug: string): Promise<Category[]> {
+    const { data } = await api.get<Category[]>(`/api/menu/${seg(slug)}/categories`);
+    return data;
+}
+
+export async function createCategory(slug: string, name: string): Promise<Category> {
+    const { data } = await api.post<Category>(`/api/menu/${seg(slug)}/categories`, { name });
+    return data;
+}
+
+export async function renameCategory(slug: string, id: string, name: string): Promise<Category> {
+    const { data } = await api.put<Category>(`/api/menu/${seg(slug)}/categories/${seg(id)}`, { name });
+    return data;
+}
+
+/** Every category id, in the new order; answers the categories in that order. */
+export async function reorderCategories(slug: string, ids: string[]): Promise<Category[]> {
+    const { data } = await api.put<Category[]>(`/api/menu/${seg(slug)}/categories/order`, { ids });
+    return data;
+}
+
+/** Its dishes move to "Other". */
+export async function deleteCategory(slug: string, id: string): Promise<void> {
+    await api.delete(`/api/menu/${seg(slug)}/categories/${seg(id)}`);
 }
 
 export async function getTables(slug: string): Promise<Table[]> {

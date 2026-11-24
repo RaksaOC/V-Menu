@@ -1,7 +1,7 @@
 "use client";
 
 import ItemCard from "@/features/customer/components/ItemCard";
-import { ShoppingCart, Store, Utensils } from "lucide-react";
+import { Search, ShoppingCart, Store, Utensils } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -11,11 +11,14 @@ import { apiErrorCode } from "@/lib/api";
 import TableProblem, { type TableProblemKind } from "@/features/customer/components/TableProblem";
 import { checkTable, getMenu } from "@/features/customer/api";
 import { reconcileCart } from "@/features/customer/cart";
+import { dishesOf, searchMenu, sectionId } from "@/features/customer/menu";
 import { toast } from "@/lib/toast";
-import type { MenuItem } from "@vmenu/contracts";
+import type { MenuSection } from "@vmenu/contracts";
 
 export default function CustomerPage() {
-    const [items, setItems] = useState<MenuItem[]>([]);
+    const [sections, setSections] = useState<MenuSection[]>([]);
+    const [query, setQuery] = useState("");
+    const [current, setCurrent] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [problem, setProblem] = useState<TableProblemKind | null>(null);
     const params = useParams();
@@ -30,9 +33,9 @@ export default function CustomerPage() {
         try {
             await checkTable(resSlug, table);
             const menu = await getMenu(resSlug);
-            setItems(menu);
+            setSections(menu.categories);
             // VM-05: dishes taken off the menu since they were added leave the cart.
-            const dropped = reconcileCart(resSlug, table, menu);
+            const dropped = reconcileCart(resSlug, table, dishesOf(menu));
             if (dropped)
                 toast.info(
                     `${dropped} ${dropped === 1 ? "item is" : "items are"} no longer available and ${dropped === 1 ? "was" : "were"} removed from your cart.`,
@@ -56,6 +59,16 @@ export default function CustomerPage() {
     useEffect(() => {
         load();
     }, [load]);
+
+    // VM-25: the search box narrows the sections; a tab scrolls to its section.
+    const shown = searchMenu(sections, query);
+    function goTo(section: MenuSection) {
+        setCurrent(sectionId(section));
+        document.getElementById(sectionId(section))?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    const card = (item: MenuSection["items"][number]) => (
+        <ItemCard key={item._id} slug={resSlug} table={table} _id={item._id} name={item.name} image={item.image} price={item.price} />
+    );
 
     return (
         <>
@@ -93,6 +106,51 @@ export default function CustomerPage() {
                     {/*</div>*/}
                 </header>
 
+                {/* VM-25: category tabs, sticky under the header, and the search box */}
+                {!problem && !isLoading && sections.length > 0 && (
+                    <div className="sticky top-0 z-40 border-b border-gray-200/70 bg-white/90 backdrop-blur-lg">
+                        <div className="mx-auto max-w-6xl space-y-3 px-4 py-3 sm:px-6">
+                            <label className="relative block">
+                                <Search
+                                    size={16}
+                                    aria-hidden
+                                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                />
+                                <input
+                                    type="search"
+                                    aria-label="Search dishes"
+                                    placeholder="Search dishes"
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30"
+                                />
+                            </label>
+                            {shown.length > 1 && (
+                                <nav aria-label="Menu categories" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                                    {shown.map((section) => {
+                                        const active = current === sectionId(section);
+                                        return (
+                                            <button
+                                                key={sectionId(section)}
+                                                type="button"
+                                                aria-current={active ? "true" : undefined}
+                                                onClick={() => goTo(section)}
+                                                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                                                    active
+                                                        ? "bg-emerald-600 text-white"
+                                                        : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                                                }`}
+                                            >
+                                                {section.name}
+                                            </button>
+                                        );
+                                    })}
+                                </nav>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Main Content */}
                 <main className="px-4 sm:px-6 py-8 pb-24">
                     <div className="max-w-6xl mx-auto">
@@ -102,38 +160,45 @@ export default function CustomerPage() {
                             <div className="h-1 w-16 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full"></div>
                         </div>
 
-                        {/* Items Grid */}
-                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {problem ? (
+                        {problem ? (
+                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 <TableProblem kind={problem} table={table} onRetry={load} />
-                            ) : isLoading ? (
-                                <>
-                                    <Skeleton variant="menu" count={3} className="contents" />
-                                </>
-                            ) : items.length > 0 ? (
-                                items.map((item, index) => (
-                                    <ItemCard
-                                        key={index}
-                                        slug={resSlug}
-                                        table={table}
-                                        _id={item._id}
-                                        name={item.name}
-                                        image={item.image}
-                                        price={item.price}
-                                    />
-                                ))
-                            ) : (
-                                <div className="col-span-full text-center py-12">
-                                    <div className="max-w-md mx-auto">
-                                        <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                                            <Store size={32} className="text-gray-400" />
+                            </div>
+                        ) : isLoading ? (
+                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                <Skeleton variant="menu" count={3} className="contents" />
+                            </div>
+                        ) : shown.length > 0 ? (
+                            <div className="space-y-10">
+                                {shown.map((section) => (
+                                    <section
+                                        key={sectionId(section)}
+                                        id={sectionId(section)}
+                                        aria-labelledby={`${sectionId(section)}-title`}
+                                        className="scroll-mt-36"
+                                    >
+                                        <h3 id={`${sectionId(section)}-title`} className="mb-4 text-lg font-semibold text-gray-800">
+                                            {section.name}
+                                        </h3>
+                                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                            {section.items.map(card)}
                                         </div>
-                                        <h3 className="text-lg font-semibold text-gray-700 mb-2">No Items Available</h3>
-                                        <p className="text-gray-500">Check back later for our delicious menu items.</p>
+                                    </section>
+                                ))}
+                            </div>
+                        ) : query.trim() ? (
+                            <p className="py-12 text-center text-gray-500">No dishes match “{query.trim()}”.</p>
+                        ) : (
+                            <div className="col-span-full text-center py-12">
+                                <div className="max-w-md mx-auto">
+                                    <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                                        <Store size={32} className="text-gray-400" />
                                     </div>
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No Items Available</h3>
+                                    <p className="text-gray-500">Check back later for our delicious menu items.</p>
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </main>
 

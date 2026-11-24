@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { signInAs, SLUG } from "./support/auth";
+import { dishesOf } from "./support/menu";
 
 // VM-11: the cashier is on Orders, a customer orders, and the bill appears without a reload.
 const TABLE = process.env.LIVE_TABLE ?? "T2";
@@ -18,7 +19,7 @@ test("a customer's new order shows up on the cashier's Orders within 15 s, marke
     await expect(card).toHaveCount(0);
 
     // the customer orders from another device (no reload on the cashier's side)
-    const [dish] = (await (await page.request.get(`/api/menu/${SLUG}/public/items`)).json()) as object[];
+    const [dish] = dishesOf(await (await page.request.get(`/api/menu/${SLUG}/public/items`)).json());
     const placed = await page.request.post(`/api/orders/${SLUG}`, {
         data: { table: TABLE, isDone: false, orderedItems: [{ item: dish, quantity: 1 }] },
     });

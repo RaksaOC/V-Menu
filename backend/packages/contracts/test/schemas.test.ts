@@ -72,6 +72,35 @@ describe("menu", () => {
     });
 });
 
+describe("menu categories (VM-25)", () => {
+    it("a category's name, and a new order as every id once", () => {
+        expect(C.CategoryBody.parse({ name: " Drinks " })).toEqual({ name: "Drinks" });
+        expect(fieldsOf(C.CategoryBody, { name: "" })).toEqual(["name"]);
+        expect(fieldsOf(C.CategoryBody, { name: "x".repeat(41) })).toEqual(["name"]);
+        ok(C.ReorderCategoriesBody, { ids: [ID] });
+        expect(fieldsOf(C.ReorderCategoriesBody, { ids: ["nope"] })).toEqual(["ids.0"]);
+        ok(C.Category, { _id: ID, name: "Drinks", sortOrder: 0 });
+    });
+
+    it("an item may name a category, or none (Other)", () => {
+        expect(C.CreateItemBody.parse({ name: "Tea", price: 1, image: "/x", categoryId: ID }).categoryId).toBe(ID);
+        expect(C.UpdateItemBody.parse({ categoryId: null })).toEqual({ categoryId: null });
+        expect(fieldsOf(C.UpdateItemBody, { categoryId: "drinks" })).toEqual(["categoryId"]);
+        ok(C.MenuItem, { _id: ID, name: "Tea", price: 1, image: "/x", isEnabled: true, categoryId: null });
+    });
+
+    it("the public menu is sections of dishes; Other has no id", () => {
+        const tea = { _id: ID, name: "Tea", price: 1, image: "/x", isEnabled: true };
+        ok(C.PublicMenu, {
+            categories: [
+                { _id: ID, name: "Drinks", items: [tea] },
+                { _id: null, name: "Other", items: [] },
+            ],
+        });
+        fieldsOf(C.PublicMenu, [tea]);
+    });
+});
+
 describe("internal calls", () => {
     const line = { item: { _id: ID, name: "Amok", price: 5, image: "/x", isEnabled: true }, quantity: 2 };
 

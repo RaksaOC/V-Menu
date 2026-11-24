@@ -47,7 +47,9 @@ for (const svc of ["restaurant", "menu", "order"]) {
 }
 
 // 2. customer order
-const items = await call("GET", `/api/menu/${slug}/public/items`);
+// VM-25: grouped by category ({ categories: [{ items }] }); older services answered a flat list
+const menu = await call("GET", `/api/menu/${slug}/public/items`);
+const items = Array.isArray(menu) ? menu : (menu?.categories ?? []).flatMap((c) => c.items);
 if (!items.length) throw new Error(`No dishes for "${slug}": seed the stack first`);
 await call("GET", `/api/menu/${slug}/public/tables/${table}`);
 const cart = items.slice(0, 2).map((item, i) => ({ item: { _id: item._id }, quantity: i + 1 }));

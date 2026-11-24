@@ -1,6 +1,7 @@
 // In-memory repositories for the service unit tests (CL-04): no MongoDB. Like MongoDB, they
 // hand out copies, so a service can't change stored data without calling the repository.
 import { Readable } from "node:stream";
+import type { CategoriesRepo, CategoryRecord } from "../../src/repositories/categories.repo.js";
 import type { ImagesRepo } from "../../src/repositories/images.repo.js";
 import type { ItemRecord, ItemsRepo } from "../../src/repositories/items.repo.js";
 import type { TableRecord, TablesRepo } from "../../src/repositories/tables.repo.js";
@@ -42,6 +43,56 @@ export function fakeItems(): ItemsRepo & { all: ItemRecord[] } {
         },
         async findEnabled(resId, ids) {
             return all.filter((i) => i.resId === resId && i.isEnabled && ids.includes(i._id));
+        },
+        async clearCategory(resId, categoryId) {
+            const moved = all.filter((i) => i.resId === resId && i.categoryId === categoryId);
+            for (const i of moved) i.categoryId = null;
+            return moved.length;
+        },
+    };
+}
+
+export function fakeCategories(): CategoriesRepo & { all: CategoryRecord[] } {
+    const all: CategoryRecord[] = [];
+    const find = (resId: string, id: string) => all.find((c) => c._id === id && c.resId === resId);
+    return {
+        all,
+        async list(resId) {
+            return all
+                .filter((c) => c.resId === resId)
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((c) => ({ ...c }));
+        },
+        async get(resId, id) {
+            const found = find(resId, id);
+            return found ? { ...found } : null;
+        },
+        async findByName(resId, name) {
+            const found = all.find((c) => c.resId === resId && c.name.toLowerCase() === name.toLowerCase());
+            return found ? { ...found } : null;
+        },
+        async create(resId, fields) {
+            const category = { _id: newId(), ...fields, resId };
+            all.push(category);
+            return { ...category };
+        },
+        async update(resId, id, fields) {
+            const category = find(resId, id);
+            if (!category) return null;
+            Object.assign(category, fields);
+            return { ...category };
+        },
+        async setOrder(resId, ids) {
+            ids.forEach((id, sortOrder) => {
+                const category = find(resId, id);
+                if (category) category.sortOrder = sortOrder;
+            });
+        },
+        async remove(resId, id) {
+            const category = find(resId, id);
+            if (!category) return null;
+            all.splice(all.indexOf(category), 1);
+            return category;
         },
     };
 }

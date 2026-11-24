@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { SLUG } from "./support/auth";
+import { withoutDishes } from "./support/menu";
 
 // VM-06: each ordering error shows the right text, and the cart is kept. The order API is mocked
 // with page.route, so no table or dish has to be broken for real.
@@ -39,7 +40,7 @@ test("dishes no longer available are taken out of the cart, the rest is kept", a
     );
     await page.route(`**/api/menu/${SLUG}/public/items`, async (route) => {
         const menu = await (await route.fetch()).json();
-        await route.fulfill({ json: menu.filter((i: { name: string }) => i.name !== goneName) });
+        await route.fulfill({ json: withoutDishes(menu, (dish) => dish.name !== goneName) });
     });
     await page.getByRole("button", { name: /place order/i }).click();
     await expect(alertBox(page)).toContainText("Some items are no longer available");

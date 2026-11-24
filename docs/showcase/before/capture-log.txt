@@ -127,3 +127,19 @@ ok   VM-11-orders-after-new-order-1280-dark
 ok   VM-11-order-history-1280-dark
 ok   VM-11-orders-after-new-order-360
 ok   VM-11-order-history-360
+# ONLY=VM-25 (2026-11-23T15:02:26.905Z)
+ok   VM-25-customer-menu-1280
+ok   VM-25-customer-drinks-1280
+ok   VM-25-owner-menu-1280
+ok   VM-25-owner-item-form-1280
+ok   VM-25-cashier-menu-1280
+ok   VM-25-customer-menu-1280-dark
+ok   VM-25-customer-drinks-1280-dark
+ok   VM-25-owner-menu-1280-dark
+ok   VM-25-owner-item-form-1280-dark
+ok   VM-25-cashier-menu-1280-dark
+ok   VM-25-customer-menu-360
+ok   VM-25-customer-drinks-360
+ok   VM-25-owner-menu-360
+ok   VM-25-owner-item-form-360
+ok   VM-25-cashier-menu-360
