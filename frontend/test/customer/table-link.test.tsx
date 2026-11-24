@@ -39,7 +39,7 @@ describe("the menu through a table's link (SEC-04)", () => {
         fireEvent.click(await screen.findByRole("button", { name: /add to cart/i }));
         expect(JSON.parse(localStorage.getItem(KEY)!)[0].item._id).toBe(DISH._id);
         await waitFor(() => expect(document.title).toBe("Demo Bistro · Table T1"));
-        expect(screen.getByRole("link", { name: /view cart/i })).toHaveAttribute("href", `/demo-bistro/t/${TOKEN}/cart`);
+        expect(screen.getByRole("link", { name: /view order/i })).toHaveAttribute("href", `/demo-bistro/t/${TOKEN}/cart`);
     });
 
     it("a closed table says so, by name", async () => {
@@ -53,7 +53,7 @@ describe("the menu through a table's link (SEC-04)", () => {
         render(<CustomerMenu />);
         expect(await screen.findByRole("heading", { name: "This table link isn't valid" })).toBeInTheDocument();
         expect(screen.getByText(/scan the QR code on your table/i)).toBeInTheDocument();
-        expect(screen.queryByRole("link", { name: /view cart/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: /view order/i })).not.toBeInTheDocument();
     });
 });
 

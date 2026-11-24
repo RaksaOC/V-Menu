@@ -55,14 +55,20 @@ export function readCart(slug: string, table: string): CartItem[] {
     }
 }
 
+/** VM-33: sent on window whenever a cart changes, so the cart bar can follow it. */
+export const CART_CHANGED = "vm-cart-changed";
+const announce = () => window.dispatchEvent(new Event(CART_CHANGED));
+
 export function saveCart(slug: string, table: string, items: CartItem[]): void {
     if (items.length) localStorage.setItem(cartKey(slug, table), JSON.stringify(items));
     else localStorage.removeItem(cartKey(slug, table));
+    announce();
 }
 
 export function clearCart(slug: string, table: string): void {
     localStorage.removeItem(cartKey(slug, table));
     localStorage.removeItem(orderNoteKey(slug, table));
+    announce();
 }
 
 /** VM-28: the note for the whole order, kept with the cart until the order is placed. */
@@ -82,7 +88,7 @@ export function addToCart(slug: string, table: string, itemToAdd: CartItem): voi
         toast.success("Added to existing item!");
     } else {
         items.push(itemToAdd);
-        toast.success("Added to cart! 🛒");
+        toast.success("Added to cart!");
     }
     saveCart(slug, table, items);
 }

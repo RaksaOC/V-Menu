@@ -25,85 +25,77 @@ interface CardProps {
     soldOut?: boolean;
 }
 
+/** One dish on the menu (VM-33): a 4:3 photo, the name, the price in mono, and one round + button. */
 export default function Card({ slug, table, _id, name, priceCents, image, description, tags, soldOut = false }: CardProps) {
     const [expanded, setExpanded] = useState(false);
     const money = useMoney(); // VM-24: prices in the restaurant's currency
+
+    function add() {
+        const item: MenuItem = { _id, image, name, priceCents, isEnabled: true };
+        addToCart(slug, table, { item, quantity: 1 });
+    }
+
     return (
         <article
             data-sold-out={soldOut ? "true" : undefined}
-            className={`flex h-full flex-col overflow-hidden bg-white rounded-3xl shadow-sm border border-gray-100 group transition-all duration-300 ${soldOut ? "" : "hover:shadow-xl hover:scale-[1.02] hover:border-emerald-200"}`}
+            className="flex h-full flex-col overflow-hidden rounded-[var(--r-card)] border border-[var(--line)] bg-[var(--card)]"
         >
-            {/* Image Container */}
-            <div className="relative overflow-hidden">
+            <div className="relative">
                 <img
                     src={image}
                     alt={name}
-                    className={`w-full h-48 object-cover transition-transform duration-300 ${soldOut ? "opacity-60 grayscale" : "group-hover:scale-110"}`}
+                    loading="lazy"
+                    className={`aspect-[4/3] w-full object-cover ${soldOut ? "opacity-60 grayscale" : ""}`}
                 />
-                {soldOut ? (
+                {soldOut && (
                     <span className="absolute left-3 top-3 rounded-[var(--r-chip)] bg-[var(--ink)] px-2 py-1 font-[family-name:var(--f-label)] text-xs font-semibold tracking-[var(--label-track)] text-[var(--bg)]">
                         SOLD OUT
                     </span>
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 )}
             </div>
 
-            {/* Content */}
-            <div className="flex flex-1 flex-col justify-between gap-3 p-5">
-                <div className="space-y-2">
+            <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
+                <div className="flex items-start justify-between gap-2">
                     <h4
-                        className={`text-lg font-bold line-clamp-2 leading-tight transition-colors duration-200 ${soldOut ? "text-gray-500" : "text-gray-800 group-hover:text-emerald-700"}`}
+                        className={`min-w-0 break-words text-base font-semibold leading-snug line-clamp-2 ${soldOut ? "text-[var(--muted)]" : "text-[var(--ink)]"}`}
                     >
                         {name}
                     </h4>
-                    {description && (
-                        <div>
-                            <p data-dish-description className={`text-sm text-gray-500 ${expanded ? "" : "line-clamp-3"}`}>
-                                {description}
-                            </p>
-                            {description.length > LONG_DESCRIPTION && (
-                                <button
-                                    type="button"
-                                    aria-expanded={expanded}
-                                    aria-label={`${expanded ? "Show less about" : "Read more about"} ${name}`}
-                                    onClick={() => setExpanded((open) => !open)}
-                                    className="mt-1 min-h-11 text-sm font-medium text-emerald-700 underline"
-                                >
-                                    {expanded ? "Less" : "More"}
-                                </button>
-                            )}
-                        </div>
-                    )}
-                    <DishTags tags={tags} />
-                    <div className="flex items-center gap-2">
-                        <span className={`text-2xl font-bold ${soldOut ? "text-gray-400" : "text-emerald-600"}`}>{money(priceCents)}</span>
-                    </div>
+                    <span
+                        className={`shrink-0 font-[family-name:var(--f-mono)] text-sm font-semibold ${soldOut ? "text-[var(--muted)]" : "text-[var(--ink)]"}`}
+                    >
+                        {money(priceCents)}
+                    </span>
                 </div>
+                {description && (
+                    <div>
+                        <p data-dish-description className={`text-sm text-[var(--muted)] ${expanded ? "" : "line-clamp-3"}`}>
+                            {description}
+                        </p>
+                        {description.length > LONG_DESCRIPTION && (
+                            <button
+                                type="button"
+                                aria-expanded={expanded}
+                                aria-label={`${expanded ? "Show less about" : "Read more about"} ${name}`}
+                                onClick={() => setExpanded((open) => !open)}
+                                className="mt-1 min-h-11 text-sm font-medium text-[var(--accent-text)] underline"
+                            >
+                                {expanded ? "Less" : "More"}
+                            </button>
+                        )}
+                    </div>
+                )}
+                <DishTags tags={tags} />
 
-                {/* Add to Cart Button: a sold-out dish has none (VM-26) */}
+                {/* a sold-out dish has no button (VM-26) */}
                 {!soldOut && (
                     <button
-                        onClick={() => {
-                            const item: MenuItem = {
-                                _id,
-                                image,
-                                name,
-                                priceCents,
-                                isEnabled: true,
-                            };
-
-                            const cartItem = {
-                                item,
-                                quantity: 1,
-                            };
-
-                            addToCart(slug, table, cartItem);
-                        }}
-                        className=" text-sm mt-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold p-2 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 flex items-center justify-center gap-1"
+                        type="button"
+                        onClick={add}
+                        aria-label={`Add to cart: ${name}`}
+                        className="mt-auto flex h-11 w-11 items-center justify-center self-end rounded-full bg-[var(--accent)] text-[var(--accent-ink)] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
                     >
-                        <Plus size={16} />
-                        Add to Cart
+                        <Plus size={20} aria-hidden />
                     </button>
                 )}
             </div>

@@ -107,3 +107,13 @@
         color-scheme: dark;
     }
 }
+
+/* VM-33: the solid forest band at the top of the customer's pages: deep green in light mode,
+   the stage colour in dark mode. */
+.vm-band {
+    background: var(--g-900);
+    color: #ffffff;
+}
+:root[data-theme="dark"] .vm-band {
+    background: var(--stage);
+}

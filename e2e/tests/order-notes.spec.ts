@@ -8,7 +8,7 @@ test("a note typed by the customer is shown on the kitchen card", async ({ brows
     const note = `no chilli ${Date.now().toString(36)}`;
     await page.goto(`/${SLUG}/customer/${TABLE}`);
     await page.getByRole("button", { name: "Add to Cart" }).first().click();
-    await page.getByRole("button", { name: "View Cart" }).click();
+    await page.getByRole("link", { name: /view order/i }).click();
     await page
         .getByRole("textbox", { name: /^Note for / })
         .first()

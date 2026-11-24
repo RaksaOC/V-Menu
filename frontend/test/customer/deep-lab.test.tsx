@@ -97,7 +97,7 @@ describe("cart page", () => {
     it("has one coral Place order button next to the total", () => {
         render(<CartBottomBar orderError={null} hasItems itemCount={3} totalCents={750} isPlacingOrder={false} placeOrder={vi.fn()} />);
         expect(screen.getByRole("button", { name: /place order/i })).toHaveAttribute("data-variant", "primary");
-        expect(screen.getByText("$7.50").className).toContain("font-[family-name:var(--f-mono)]");
+        expect(screen.getByText("Total: $7.50").className).toContain("font-[family-name:var(--f-mono)]");
     });
 });
 

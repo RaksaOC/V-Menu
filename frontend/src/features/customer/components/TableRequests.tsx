@@ -70,14 +70,14 @@ export default function TableRequests({ link }: { link: TableLink }) {
 
     return (
         <div className="mt-5">
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap gap-2">
                 {BUTTONS.map(({ kind, label, done, told, Icon }) => (
                     <button
                         key={kind}
                         type="button"
                         disabled={sent[kind] || busy === kind}
                         onClick={() => ask(kind, told)}
-                        className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:bg-white/70 disabled:text-emerald-900/70"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-[var(--r-chip)] border border-white/40 px-4 font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         <Icon size={18} aria-hidden />
                         {sent[kind] ? done : label}
@@ -87,7 +87,7 @@ export default function TableRequests({ link }: { link: TableLink }) {
             {message && (
                 <p
                     role="status"
-                    className={`mx-auto mt-3 max-w-md text-sm font-medium ${message.ok ? "text-white" : "rounded-lg bg-white px-3 py-2 text-red-700"}`}
+                    className={`mt-3 max-w-md text-sm font-medium ${message.ok ? "text-white" : "rounded-[var(--r-chip)] bg-[var(--bg)] px-3 py-2 text-[var(--bad)]"}`}
                 >
                     {message.text}
                 </p>

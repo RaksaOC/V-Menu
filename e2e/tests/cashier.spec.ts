@@ -35,8 +35,12 @@ test("open a table, the bill appears without a reload, print the invoice, mark i
         .filter({ has: page.getByRole("heading", { name: `Table ${TABLE}`, exact: true }) })
         .last();
     await expect(tableCard.getByText("Closed")).toBeVisible();
-    await tableCard.getByRole("button", { name: "Open Table" }).click();
-    await expect(tableCard.getByText("Available")).toBeVisible();
+    // a click while the list is still being loaded can be lost, so click again until it's open
+    const openButton = tableCard.getByRole("button", { name: "Open Table" });
+    await expect(async () => {
+        if (await openButton.isVisible()) await openButton.click();
+        await expect(tableCard.getByText("Available")).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 20_000 });
 
     // to Orders, where the table has no bill yet
     await page

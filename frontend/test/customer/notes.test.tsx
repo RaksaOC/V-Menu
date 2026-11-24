@@ -57,7 +57,7 @@ describe("notes in the cart (VM-28)", () => {
         const orderNote = screen.getByRole("textbox", { name: "Note for the kitchen" });
         expect(orderNote.getAttribute("maxlength")).toBe("200");
         fireEvent.change(orderNote, { target: { value: "birthday" } });
-        fireEvent.click(screen.getAllByRole("button", { name: /Place Order/ })[0]);
+        fireEvent.click(screen.getAllByRole("button", { name: /place order/i })[0]);
         await waitFor(() => expect(sent).toHaveLength(1));
         expect(sent[0]).toEqual({
             table: "1",

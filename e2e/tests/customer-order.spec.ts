@@ -15,7 +15,7 @@ test("customer orders a dish with a note, and the confirmation shows its status"
     await expect(page.getByText("Added to cart!")).toBeVisible();
 
     // cart -> place order -> confirmation
-    await page.getByRole("button", { name: "View Cart" }).click();
+    await page.getByRole("link", { name: /view order/i }).click();
     await expect(page).toHaveURL(new RegExp(`/${SLUG}/customer/${TABLE}/cart$`));
     await expect(page.getByRole("heading", { name: "Your Cart" })).toBeVisible();
     const note = `no ice ${Date.now().toString(36)}`;

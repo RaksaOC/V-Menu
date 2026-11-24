@@ -1,4 +1,5 @@
 import { AlertTriangle, DoorClosed, RotateCw, SearchX } from "lucide-react";
+import { Button } from "@/components/ui";
 
 export type TableProblemKind = "closed" | "no-restaurant" | "no-table" | "invalid-link" | "error";
 
@@ -23,26 +24,24 @@ const COPY: Record<TableProblemKind, { title: (table: string) => string; body: s
     error: { title: () => "Something went wrong", body: "We couldn't load the menu. Please check your connection and try again." },
 };
 
-/** What the customer sees instead of the menu when the table can't be used (VM-04). */
+/** What the customer sees instead of the menu when the table can't be used (VM-04), in the menu's style (VM-33). */
 export default function TableProblem({ kind, table, onRetry }: { kind: TableProblemKind; table: string; onRetry: () => void }) {
     const { title, body } = COPY[kind];
     const Icon = kind === "closed" ? DoorClosed : kind === "error" ? AlertTriangle : SearchX;
     return (
         <div className="col-span-full flex justify-center py-12" role={kind === "error" ? "alert" : "status"}>
-            <div className="max-w-md text-center">
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-                    <Icon size={32} className={kind === "error" ? "text-red-500" : "text-gray-500"} />
+            <div className="max-w-md rounded-[var(--r-card)] border border-[var(--line)] bg-[var(--card)] p-6 text-center">
+                <div
+                    className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[var(--r-card)] ${kind === "error" ? "bg-[var(--bad-soft)] text-[var(--bad)]" : "bg-[var(--surface-2)] text-[var(--muted)]"}`}
+                >
+                    <Icon size={28} aria-hidden />
                 </div>
-                <h2 className="mb-2 text-xl font-semibold text-gray-800">{title(table)}</h2>
-                <p className="text-gray-600">{body}</p>
+                <h2 className="mb-2 text-xl font-semibold text-[var(--ink)]">{title(table)}</h2>
+                <p className="text-[var(--muted)]">{body}</p>
                 {kind === "error" && (
-                    <button
-                        type="button"
-                        onClick={onRetry}
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white hover:bg-emerald-700"
-                    >
-                        <RotateCw size={18} /> Try again
-                    </button>
+                    <Button variant="solid" className="mt-6 min-h-11" icon={<RotateCw size={18} aria-hidden />} onClick={onRetry}>
+                        Try again
+                    </Button>
                 )}
             </div>
         </div>

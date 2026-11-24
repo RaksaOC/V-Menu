@@ -1,37 +1,19 @@
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { ThemeToggle } from "@/components/marketing/tour/ThemeToggle";
 
-/** The cart's header: Back to the menu, and the title. */
+/** The cart's header (VM-33): the forest band, Back to the menu, the title and the light/dark switch. */
 export default function CartHeader({ onBack }: { onBack: () => void }) {
+    const outlined =
+        "flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-[var(--r-chip)] border border-white/30 text-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]";
     return (
-        <header className="relative bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white overflow-hidden">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-black/5">
-                <div
-                    className={`absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]`}
-                ></div>
-            </div>
-
-            <div className="relative px-6 py-6">
-                <div className="max-w-4xl mx-auto">
-                    <div className="flex items-center justify-between w-full">
-                        <button
-                            onClick={onBack}
-                            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
-                        >
-                            <ArrowLeft size={18} />
-                            Back
-                        </button>
-
-                        <div className="text-right">
-                            <div className="flex items-center justify-center gap-3 mb-2">
-                                <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
-                                    <ShoppingBag size={22} className="text-white" />
-                                </div>
-                                <h1 className="text-2xl font-bold tracking-tight">Your Cart</h1>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <header className="vm-band px-4 py-4 sm:px-6">
+            <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                <button type="button" onClick={onBack} className={`${outlined} px-3 font-semibold`}>
+                    <ArrowLeft size={18} aria-hidden />
+                    Back
+                </button>
+                <h1 className="font-[family-name:var(--f-display)] text-2xl font-semibold tracking-[var(--d-track)]">Your Cart</h1>
+                <ThemeToggle className={outlined} />
             </div>
         </header>
     );
