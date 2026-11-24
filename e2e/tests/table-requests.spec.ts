@@ -3,14 +3,15 @@ import { signInAs, SLUG } from "./support/auth";
 import { dishesOf } from "./support/menu";
 
 // VM-30: the customer requests the bill from the menu; the cashier's card shows the badge. The test
-// uses a table of its own: each button works once per 2 minutes per bill.
+// uses a table of its own: each button works once per 2 minutes per bill. SEC-04: the customer is
+// on the table's QR link, as in a restaurant, so the request goes by the link token.
 test("the customer requests the bill and the cashier sees the badge", async ({ browser, page, baseURL }) => {
     const owner = await browser.newContext({ baseURL });
     await signInAs(owner, baseURL!, "owner");
     const name = `Req-${Date.now().toString(36)}`;
     const table = await owner.request.post(`/api/menu/${SLUG}/tables`, { data: { type: "manual", name } });
     expect(table.status()).toBe(201);
-    const tableId = (await table.json())._id as string;
+    const { _id: tableId, qrToken } = (await table.json()) as { _id: string; qrToken: string };
     expect((await owner.request.patch(`/api/menu/${SLUG}/tables/${tableId}/availability`, { data: { isEnabled: true } })).ok()).toBe(true);
 
     const cashier = await browser.newContext({ baseURL });
@@ -19,14 +20,18 @@ test("the customer requests the bill and the cashier sees the badge", async ({ b
         const [dish] = dishesOf(await (await page.request.get(`/api/menu/${SLUG}/public/items`)).json());
         expect(
             (
-                await page.request.post(`/api/orders/${SLUG}`, { data: { table: name, orderedItems: [{ item: dish, quantity: 1 }] } })
+                await page.request.post(`/api/orders/${SLUG}`, {
+                    data: { qrToken, orderedItems: [{ item: { _id: dish._id }, quantity: 1 }] },
+                })
             ).status(),
         ).toBe(201);
 
-        await page.goto(`/${SLUG}/customer/${name}`);
+        const asked = page.waitForRequest((r) => r.method() === "POST" && r.url().endsWith(`/t/${qrToken}/requests`));
+        await page.goto(`/${SLUG}/t/${qrToken}`);
         const requestBill = page.getByRole("button", { name: "Request bill" });
         await expect(requestBill).toBeVisible({ timeout: 20_000 });
         await requestBill.click();
+        await asked;
         await expect(page.getByText(/We've told the staff you'd like the bill/)).toBeVisible();
 
         const desk = await cashier.newPage();
