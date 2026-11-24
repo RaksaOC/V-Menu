@@ -10,23 +10,23 @@ interface TopSellingChartProps {
 }
 
 export const TopSellingChart: React.FC<TopSellingChartProps> = ({ data, isVisible }) => {
-    const COLORS = ["#3B82F6", "#8B5CF6", "#10B981", "#F59E0B", "#EF4444"];
+    const COLORS = ["var(--accent)", "var(--ok)", "var(--ink)", "var(--muted)", "var(--bad)"];
 
     return (
         <div
             className={`
-      bg-white rounded-3xl p-6 shadow-md border border-slate-200
-      transition-all duration-1000 ease-out transform
-      ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}
-    `}
+ bg-[var(--bg)] rounded-3xl p-6 border border-[var(--line)]
+ transition-all duration-1000 ease-out 
+ ${isVisible ? " opacity-100" : " opacity-0"}
+ `}
         >
             <div className="flex items-center space-x-3 mb-6">
-                <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-3 rounded-xl">
-                    <Trophy size={24} className="text-white" />
+                <div className="bg-[var(--btn-bg)] p-3 rounded-xl">
+                    <Trophy size={24} aria-hidden className="text-[var(--btn-ink)]" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-gray-800">Top Selling Items</h3>
-                    <p className="text-gray-500 text-sm">Most popular menu items</p>
+                    <h3 className="text-xl font-bold text-[var(--ink)]">Top Selling Items</h3>
+                    <p className="text-[var(--muted)] text-sm">Most popular menu items</p>
                 </div>
             </div>
 
@@ -36,20 +36,20 @@ export const TopSellingChart: React.FC<TopSellingChartProps> = ({ data, isVisibl
                         <div
                             key={item._id}
                             className={`
-                flex items-center justify-between p-4
-                transition-all duration-500 ease-out transform border-b border-b-gray-500 mb-2.5
-                ${isVisible ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"}
-              `}
+ flex items-center justify-between p-4
+ transition-all duration-500 ease-out border-b border-b-gray-500 mb-2.5
+ ${isVisible ? " opacity-100" : " opacity-0"}
+ `}
                         >
                             <div className="flex items-center space-x-3">
                                 <div className="w-4 h-4 rounded-full" style={{ backgroundColor: COLORS[index] }}></div>
-                                <span className="font-semibold text-gray-700">{item.name}</span>
+                                <span className="font-semibold text-[var(--body)]">{item.name}</span>
                             </div>
                             <div className="text-right">
-                                <span className="text-lg font-bold" style={{ color: COLORS[index] }}>
+                                <span className="font-[family-name:var(--f-mono)] text-lg font-semibold text-[var(--ink)]">
                                     {item.quantity}
                                 </span>
-                                <p className="text-xs text-gray-500">sold</p>
+                                <p className="text-xs text-[var(--muted)]">sold</p>
                             </div>
                         </div>
                     ))}

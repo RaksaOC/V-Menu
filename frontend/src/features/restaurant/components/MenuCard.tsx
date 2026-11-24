@@ -47,7 +47,7 @@ export default function MenuCard(props: Props) {
                             className={`relative h-6 w-11 shrink-0 rounded-full transition ${item.isEnabled ? "bg-[var(--ok)]" : "bg-[var(--line)]"}`}
                         >
                             <span
-                                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${item.isEnabled ? "left-[22px]" : "left-0.5"}`}
+                                className={`absolute top-0.5 h-5 w-5 rounded-full bg-[var(--bg)] shadow transition-all ${item.isEnabled ? "left-[22px]" : "left-0.5"}`}
                             />
                         </button>
                     )}

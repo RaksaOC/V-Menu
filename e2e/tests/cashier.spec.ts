@@ -39,7 +39,7 @@ test("open a table, the bill appears without a reload, print the invoice, mark i
     const openButton = tableCard.getByRole("button", { name: "Open Table" });
     await expect(async () => {
         if (await openButton.isVisible()) await openButton.click();
-        await expect(tableCard.getByText("Available")).toBeVisible({ timeout: 3_000 });
+        await expect(tableCard.getByText("Open", { exact: true })).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: 20_000 });
 
     // to Orders, where the table has no bill yet

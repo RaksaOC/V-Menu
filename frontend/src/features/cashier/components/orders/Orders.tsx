@@ -125,27 +125,27 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
             <div className={"orders-wrapper w-full text-center flex flex-col gap-6"}>
                 {lost && <ConnectionLostBar />}
                 <div className={"order-orderHistory w-full flex flex-wrap gap-3 justify-between items-center p-4"}>
-                    <div className="flex items-center space-x-2 text-lg font-semibold ">
+                    <div className="flex items-center space-x-2 text-lg font-semibold">
                         {showHistory ? <Clock size={20} /> : <ShoppingCart size={20} />}
                         <p>{showHistory ? "Order History" : "Active Orders"}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
                         {!showHistory && (
                             <>
-                                <span className="text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
+                                <span className="text-sm text-[var(--muted)]" aria-live="polite">
                                     {updatedAt !== null ? ago(now - updatedAt) : ""}
                                 </span>
                                 <button
                                     type="button"
                                     onClick={() => loadOpen()}
-                                    className="flex items-center gap-1.5 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium dark:border-slate-600"
+                                    className="flex items-center gap-1.5 rounded-xl border border-[var(--line)] px-3 py-2 text-sm font-medium"
                                 >
                                     <RefreshCw size={16} aria-hidden /> Refresh
                                 </button>
                             </>
                         )}
                         <button
-                            className={"bg-blue-600 text-white py-2 px-4 rounded-xl cursor-pointer "}
+                            className={"bg-[var(--btn-bg)] text-[var(--btn-ink)] py-2 px-4 rounded-xl cursor-pointer"}
                             onClick={() => {
                                 setShowHistory(!showHistory);
                                 setHistoryPage(1);

@@ -12,14 +12,14 @@ import StaffSkeleton from "./StaffSkeleton";
 
 function Tile({ icon: Icon, box, tone, label, value }: { icon: LucideIcon; box: string; tone: string; label: string; value: number }) {
     return (
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-[var(--bg)] rounded-xl border border-[var(--line)] p-4">
             <div className="flex items-center gap-3">
                 <div className={`p-2 ${box} rounded-lg`}>
                     <Icon size={20} className={tone} />
                 </div>
                 <div>
-                    <p className="text-sm text-gray-600">{label}</p>
-                    <p className="text-xl font-bold text-gray-900">{value}</p>
+                    <p className="text-sm text-[var(--body)]">{label}</p>
+                    <p className="text-xl font-bold text-[var(--ink)]">{value}</p>
                 </div>
             </div>
         </div>
@@ -59,9 +59,15 @@ export default function AllStaff() {
     return (
         <>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6 place-items-stretch">
-                <Tile icon={Users} box="bg-blue-100" tone="text-blue-600" label="Total Staff" value={totalStaff} />
-                <Tile icon={Utensils} box="bg-green-100" tone="text-green-600" label="Chefs" value={roleStats.chef || 0} />
-                <Tile icon={CreditCard} box="bg-blue-100" tone="text-blue-600" label="Cashiers" value={roleStats.cashier || 0} />
+                <Tile icon={Users} box="bg-[var(--accent-soft)]" tone="text-[var(--accent-text)]" label="Total Staff" value={totalStaff} />
+                <Tile icon={Utensils} box="bg-[var(--ok-soft)]" tone="text-[var(--ok)]" label="Chefs" value={roleStats.chef || 0} />
+                <Tile
+                    icon={CreditCard}
+                    box="bg-[var(--accent-soft)]"
+                    tone="text-[var(--accent-text)]"
+                    label="Cashiers"
+                    value={roleStats.cashier || 0}
+                />
             </div>
 
             <StaffFilters
@@ -73,7 +79,7 @@ export default function AllStaff() {
                 selectWidth="sm:max-w-xs"
             >
                 {totalFilteredStaff !== totalStaff && (
-                    <div className="mt-3 text-sm text-gray-600">
+                    <div className="mt-3 text-sm text-[var(--body)]">
                         Showing {totalFilteredStaff} of {totalStaff} staff members
                     </div>
                 )}
@@ -81,20 +87,20 @@ export default function AllStaff() {
 
             <div className="space-y-6">
                 {groups.length === 0 ? (
-                    <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                    <div className="bg-[var(--bg)] rounded-xl border border-[var(--line)] p-12 text-center">
                         <NoStaff filtered={Boolean(searchTerm) || roleFilter !== "all"} />
                     </div>
                 ) : (
                     groups.map((restaurant, index) => (
-                        <div key={index} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                            <div className="bg-gray-50 border-b border-gray-200 px-4 sm:px-6 py-4">
+                        <div key={index} className="bg-[var(--bg)] rounded-xl border border-[var(--line)] overflow-hidden">
+                            <div className="bg-[var(--card)] border-b border-[var(--line)] px-4 sm:px-6 py-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-blue-100 rounded-lg">
-                                        <House size={20} className="text-blue-600" />
+                                    <div className="p-2 bg-[var(--accent-soft)] rounded-lg">
+                                        <House size={20} className="text-[var(--accent-text)]" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-900">{restaurant.resName}</h3>
-                                        <p className="text-sm text-gray-600">{restaurant.staff.length} staff members</p>
+                                        <h3 className="text-lg font-semibold text-[var(--ink)]">{restaurant.resName}</h3>
+                                        <p className="text-sm text-[var(--body)]">{restaurant.staff.length} staff members</p>
                                     </div>
                                 </div>
                             </div>
@@ -102,15 +108,15 @@ export default function AllStaff() {
                             <div className="hidden lg:block">
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
-                                        <thead className="bg-gray-50 border-b border-gray-200">
+                                        <thead className="bg-[var(--card)] border-b border-[var(--line)]">
                                             <tr>
-                                                <th className="text-center py-4 px-2 font-semibold text-gray-900">Staff Member</th>
-                                                <th className="text-center py-4 px-1 font-semibold text-gray-900">Role</th>
-                                                <th className="text-center py-4 px-1 font-semibold text-gray-900">Email</th>
-                                                <th className="text-center py-4 px-1 font-semibold text-gray-900">Joined</th>
+                                                <th className="text-center py-4 px-2 font-semibold text-[var(--ink)]">Staff Member</th>
+                                                <th className="text-center py-4 px-1 font-semibold text-[var(--ink)]">Role</th>
+                                                <th className="text-center py-4 px-1 font-semibold text-[var(--ink)]">Email</th>
+                                                <th className="text-center py-4 px-1 font-semibold text-[var(--ink)]">Joined</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-200">
+                                        <tbody className="divide-y divide-[var(--line)]">
                                             {restaurant.staff.map((member) => (
                                                 <StaffRow key={member._id} member={member} />
                                             ))}
@@ -124,7 +130,7 @@ export default function AllStaff() {
                                     <StaffCard
                                         key={member._id}
                                         member={member}
-                                        className="bg-gray-50 rounded-xl border border-gray-100 p-4"
+                                        className="bg-[var(--card)] rounded-xl border border-[var(--line)] p-4"
                                     />
                                 ))}
                             </div>

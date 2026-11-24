@@ -83,24 +83,24 @@ export default function Preferences({ onSaved }: { onSaved?: (settings: Restaura
         }
     }
 
-    if (loadError) return <p className="text-red-600">{loadError}</p>;
-    if (!loaded) return <p className="text-gray-500">Loading settings…</p>;
+    if (loadError) return <p className="text-[var(--bad)]">{loadError}</p>;
+    if (!loaded) return <p className="text-[var(--muted)]">Loading settings…</p>;
 
     const preview = { currency, khrPerUsd: validRate(rate) ? Number(rate) : 4100 };
     return (
-        <div className="max-w-2xl space-y-6 text-gray-900">
+        <div className="max-w-2xl space-y-6 text-[var(--ink)]">
             <div>
                 <h2 className="text-xl font-bold sm:text-2xl">Preferences</h2>
-                <p className="mt-1 text-sm text-gray-600">How prices show on every page, and the payment QR on the printed invoice.</p>
+                <p className="mt-1 text-sm text-[var(--body)]">How prices show on every page, and the payment QR on the printed invoice.</p>
             </div>
 
-            <section className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+            <section className="space-y-4 rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4 sm:p-6">
                 <fieldset className="space-y-2">
                     <legend className="mb-2 text-sm font-semibold">Currency</legend>
                     {CURRENCIES.map((c) => (
                         <label
                             key={c.value}
-                            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${currency === c.value ? "border-blue-600 bg-blue-50" : "border-gray-200"}`}
+                            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${currency === c.value ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--line)]"}`}
                         >
                             <input
                                 type="radio"
@@ -115,7 +115,7 @@ export default function Preferences({ onSaved }: { onSaved?: (settings: Restaura
                             />
                             <span>
                                 <span className="block font-medium">{c.label}</span>
-                                <span className="block text-xs text-gray-500">{c.hint}</span>
+                                <span className="block text-xs text-[var(--muted)]">{c.hint}</span>
                             </span>
                         </label>
                     ))}
@@ -134,27 +134,27 @@ export default function Preferences({ onSaved }: { onSaved?: (settings: Restaura
                     }}
                 />
 
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[var(--body)]">
                     A $2.50 dish shows as{" "}
                     <MoneyProvider settings={preview}>
-                        <Price cents={250} className="text-gray-900" />
+                        <Price cents={250} className="text-[var(--ink)]" />
                     </MoneyProvider>
                 </p>
             </section>
 
-            <section className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+            <section className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4 sm:p-6">
                 <div>
                     <h3 className="flex items-center gap-2 text-sm font-semibold">
                         <QrCode size={16} aria-hidden /> Payment QR
                     </h3>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-[var(--muted)]">
                         For example your KHQR. It&apos;s printed on the invoice so guests can pay by scanning. JPG, PNG or WebP, up to 5 MB.
                     </p>
                 </div>
                 {qr && (
                     <div className="flex flex-wrap items-end gap-4">
                         {/* the owner's uploaded photo, served by menu-service */}
-                        <img src={qr} alt="Payment QR" className="h-40 w-40 rounded border border-gray-200 bg-white object-contain" />
+                        <img src={qr} alt="Payment QR" className="size-40 rounded border border-[var(--line)] bg-white object-contain" />
                         <Button
                             variant="outline"
                             size="sm"
@@ -177,7 +177,7 @@ export default function Preferences({ onSaved }: { onSaved?: (settings: Restaura
                 />
                 <label
                     htmlFor={fileId}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-50"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-[var(--card)]"
                 >
                     <Upload size={16} aria-hidden />
                     {uploading ? "Uploading…" : "Upload payment QR"}
@@ -189,7 +189,7 @@ export default function Preferences({ onSaved }: { onSaved?: (settings: Restaura
                     Save settings
                 </Button>
                 {status && (
-                    <p role="status" className={`text-sm ${status.ok ? "text-green-700" : "text-red-600"}`}>
+                    <p role="status" className={`text-sm ${status.ok ? "text-[var(--ok)]" : "text-[var(--bad)]"}`}>
                         {status.text}
                     </p>
                 )}

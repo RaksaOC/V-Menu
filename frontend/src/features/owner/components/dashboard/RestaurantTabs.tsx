@@ -18,7 +18,7 @@ export function RestaurantTabs({ selected, onSelect }: { selected: string; onSel
                 <button
                     key={id}
                     onClick={() => onSelect(id)}
-                    className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-gray-100 rounded-xl transition-all duration-75 text-sm md:text-base ${selected === id ? "underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3" : "decoration-0"}`}
+                    className={`px-3 md:px-4 py-2 flex items-end justify-start gap-2 hover:bg-[var(--card)] rounded-xl transition-all duration-75 text-sm md:text-base ${selected === id ? "underline underline-offset-8 md:underline-offset-12 decoration-blue-600 decoration-2 md:decoration-3" : "decoration-0"}`}
                 >
                     <Icon size={16} className="md:w-5 md:h-5" />
                     <p>{label}</p>

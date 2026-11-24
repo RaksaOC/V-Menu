@@ -57,8 +57,10 @@ export default function Overview() {
                     <Card key={label} className="space-y-4">
                         <div className="flex items-start justify-between">
                             <div>
-                                <p className="font-mono text-xs uppercase tracking-wide text-[var(--muted)]">{label}</p>
-                                <p className="mt-1 text-3xl font-bold">{value}</p>
+                                <p className="font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-[var(--muted)]">
+                                    {label}
+                                </p>
+                                <p className="mt-1 font-[family-name:var(--f-mono)] text-3xl font-semibold">{value}</p>
                             </div>
                             <span
                                 className={`rounded-[var(--r-chip)] p-2.5 ${urgent && value > 0 ? "bg-[var(--accent-soft)] text-[var(--accent-text)]" : "bg-[var(--card)] text-[var(--ink)]"}`}
@@ -87,16 +89,24 @@ export default function Overview() {
             </div>
             <Card className="grid gap-4 sm:grid-cols-3">
                 <div>
-                    <p className="text-sm text-[var(--muted)]">Table Occupancy</p>
-                    <p className="text-lg font-bold">{pct(data.activeTableCount ?? 0, tables)}%</p>
+                    <p className="font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-[var(--muted)]">
+                        Table Occupancy
+                    </p>
+                    <p className="font-[family-name:var(--f-mono)] text-lg font-semibold">{pct(data.activeTableCount ?? 0, tables)}%</p>
                 </div>
                 <div>
-                    <p className="text-sm text-[var(--muted)]">Payment Completion</p>
-                    <p className="text-lg font-bold">{pct(data.paymentCount ?? 0, data.orderCount ?? 0)}%</p>
+                    <p className="font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-[var(--muted)]">
+                        Payment Completion
+                    </p>
+                    <p className="font-[family-name:var(--f-mono)] text-lg font-semibold">
+                        {pct(data.paymentCount ?? 0, data.orderCount ?? 0)}%
+                    </p>
                 </div>
                 <div>
-                    <p className="text-sm text-[var(--muted)]">Revenue (paid bills)</p>
-                    <p className="text-lg font-bold">{money(data.revenueCents ?? 0)}</p>
+                    <p className="font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-[var(--muted)]">
+                        Revenue (paid bills)
+                    </p>
+                    <p className="font-[family-name:var(--f-mono)] text-lg font-semibold">{money(data.revenueCents ?? 0)}</p>
                 </div>
             </Card>
         </div>

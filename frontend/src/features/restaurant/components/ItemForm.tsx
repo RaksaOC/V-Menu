@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { Trash2 } from "lucide-react";
 import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
-import { Button, Input, Modal } from "@/components/ui";
+import { Button, Input, Modal, FIELD } from "@/components/ui";
 import { toCents } from "@/lib/money";
 import { checkItem, DISH_TAGS, ITEM_DESCRIPTION_MAX, type ItemFieldErrors } from "../item-rules";
 import PhotoField from "./PhotoField";
@@ -145,7 +145,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                             setDescription(e.target.value);
                             setErrors(({ description: _, ...rest }) => rest);
                         }}
-                        className={`w-full rounded-[var(--r-in)] border bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${errors.description ? "border-[var(--bad)]" : "border-[var(--line)]"}`}
+                        className={`${FIELD} ${errors.description ? "border-[var(--bad)]" : "border-[var(--line)]"}`}
                     />
                     {errors.description && (
                         <p id={`${descriptionId}-note`} className="text-xs text-[var(--bad)]">
@@ -168,7 +168,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                                 setCategoryId(e.target.value);
                                 setErrors(({ categoryId: _, ...rest }) => rest);
                             }}
-                            className="w-full rounded-[var(--r-in)] border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                            className={`${FIELD} border-[var(--line)]`}
                         >
                             <option value="">Other (no category)</option>
                             {categories.map((c) => (

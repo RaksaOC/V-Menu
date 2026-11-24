@@ -1862,6 +1862,50 @@ for (const vp of [PHONE, DESKTOP]) {
     }
 }
 
+// VM-35: the cashier and owner dashboards in Deep Lab: the cashier's overview, tables, orders and
+// menu, and the owner's overview, menu tab and tables tab, light and dark, phone and desktop.
+for (const vp of [PHONE, DESKTOP]) {
+    for (const theme of ["light", "dark"] as const) {
+        await step(`VM-35 final ${vp.width} ${theme}`, async () => {
+            for (const section of ["overview", "tables", "orders", "menu"]) {
+                const { context, page } = await newPage(browser, vp, theme, "cashier");
+                await context.addInitScript((s) => localStorage.setItem("dashboardSection", s), section);
+                await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+                await settle(page);
+                await shot({ page, theme, width: vp.width }, `VM-35-final-cashier-${section}`, false);
+                await context.close();
+            }
+            for (const [tab, name] of [
+                ["overview", "owner-overview"],
+                ["management", "owner-menu"],
+            ]) {
+                const { context, page } = await newPage(browser, vp, theme, "owner");
+                await context.addInitScript((t) => localStorage.setItem("activeTab", t), tab);
+                await page.goto(`${BASE}/owner`);
+                await settle(page);
+                if (name === "owner-menu")
+                    await page
+                        .getByRole("button", { name: "Menu", exact: true })
+                        .first()
+                        .click()
+                        .catch(() => {});
+                await settle(page);
+                await shot({ page, theme, width: vp.width }, `VM-35-final-${name}`, false);
+                if (name === "owner-menu") {
+                    await page
+                        .getByRole("button", { name: "Tables", exact: true })
+                        .first()
+                        .click()
+                        .catch(() => {});
+                    await settle(page);
+                    await shot({ page, theme, width: vp.width }, "VM-35-final-owner-tables", false);
+                }
+                await context.close();
+            }
+        });
+    }
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

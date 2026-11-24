@@ -37,20 +37,18 @@ export default function AllOverview() {
 
     const paymentRate = data.orderCount > 0 ? (data.paymentCount / data.orderCount) * 100 : 0;
     const cards = [
-        { title: "Revenue", value: money(data.revenueCents), icon: DollarSign, tone: "green", color: "from-green-500 to-emerald-600" },
-        { title: "Total Orders", value: data.orderCount, icon: ShoppingCart, tone: "blue", color: "from-blue-500 to-indigo-600" },
-        { title: "Unpaid Bills", value: data.unpaidBillCount, icon: AlertTriangle, tone: "amber", color: "from-amber-500 to-orange-600" },
-        { title: "Payments", value: data.paymentCount, icon: CreditCard, tone: "cyan", color: "from-cyan-500 to-blue-600" },
-        { title: "Menu Items", value: data.itemCount, icon: Package, tone: "purple", color: "from-purple-500 to-violet-600" },
-        { title: "Items Sold", value: data.itemsSoldCount, icon: Target, tone: "pink", color: "from-pink-500 to-rose-600" },
+        { title: "Revenue", value: money(data.revenueCents), icon: DollarSign },
+        { title: "Total Orders", value: data.orderCount, icon: ShoppingCart },
+        { title: "Unpaid Bills", value: data.unpaidBillCount, icon: AlertTriangle },
+        { title: "Payments", value: data.paymentCount, icon: CreditCard },
+        { title: "Menu Items", value: data.itemCount, icon: Package },
+        { title: "Items Sold", value: data.itemsSoldCount, icon: Target },
         {
             title: "Avg Items/Order",
             value: data.avgItemsPerOrder.toFixed(1),
             icon: TrendingUp,
-            tone: "indigo",
-            color: "from-indigo-500 to-purple-600",
         },
-        { title: "Payment Rate", value: `${paymentRate.toFixed(1)}%`, icon: Users, tone: "teal", color: "from-teal-500 to-cyan-600" },
+        { title: "Payment Rate", value: `${paymentRate.toFixed(1)}%`, icon: Users },
     ];
 
     return (
@@ -58,14 +56,14 @@ export default function AllOverview() {
             <div className="w-full mx-auto">
                 <div
                     className={`
-          mb-8 transition-all duration-1000 ease-out transform
-          ${cardsVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}
-        `}
+ mb-8 transition-all duration-1000 ease-out 
+ ${cardsVisible ? " opacity-100" : " opacity-0"}
+ `}
                 >
                     <div className="flex flex-wrap items-end justify-between gap-4">
                         <div>
-                            <h1 className="text-xl font-bold text-gray-800 mb-2">Dashboard Overview</h1>
-                            <p className="text-gray-600 text-sm">Revenue and items sold come from paid bills</p>
+                            <h1 className="text-xl font-bold text-[var(--ink)] mb-2">Dashboard Overview</h1>
+                            <p className="text-[var(--body)] text-sm">Revenue and items sold come from paid bills</p>
                         </div>
                         <div role="group" aria-label="Period" className="flex flex-wrap gap-2">
                             {PERIODS.map((p) => (
@@ -88,17 +86,13 @@ export default function AllOverview() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {cards.map((card, i) => (
+                    {cards.map((card) => (
                         <StatCard
                             key={card.title}
                             title={card.title}
                             value={card.value}
                             icon={card.icon}
-                            color={card.color}
-                            bgColor={TONES[card.tone][0]}
-                            textColor={TONES[card.tone][1]}
                             isUrgent={card.title === "Unpaid Bills" && data.unpaidBillCount > 0}
-                            delay={i * 100}
                         />
                     ))}
                 </div>
@@ -111,15 +105,3 @@ export default function AllOverview() {
         </div>
     );
 }
-
-// Written out in full so Tailwind finds the class names.
-const TONES: Record<string, [string, string]> = {
-    green: ["bg-green-50", "text-green-700"],
-    blue: ["bg-blue-50", "text-blue-700"],
-    amber: ["bg-amber-50", "text-amber-700"],
-    cyan: ["bg-cyan-50", "text-cyan-700"],
-    purple: ["bg-purple-50", "text-purple-700"],
-    pink: ["bg-pink-50", "text-pink-700"],
-    indigo: ["bg-indigo-50", "text-indigo-700"],
-    teal: ["bg-teal-50", "text-teal-700"],
-};

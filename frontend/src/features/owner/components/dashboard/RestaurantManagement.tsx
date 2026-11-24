@@ -25,14 +25,14 @@ export function RestaurantManagement({
 }) {
     return (
         <div className="space-y-6">
-            <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
+            <div className="bg-[var(--bg)] rounded-xl p-4 md:p-6 border border-[var(--line)]">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Restaurant Management</h2>
-                        <p className="text-gray-500 text-sm md:text-base">Select and manage your restaurant locations</p>
+                        <h2 className="text-xl md:text-2xl font-bold text-[var(--ink)]">Restaurant Management</h2>
+                        <p className="text-[var(--muted)] text-sm md:text-base">Select and manage your restaurant locations</p>
                     </div>
                     <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base w-full sm:w-auto justify-center"
+                        className="bg-[var(--btn-bg)] hover:opacity-90 text-[var(--btn-ink)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base w-full sm:w-auto justify-center"
                         onClick={onAdd}
                     >
                         <Plus size={16} /> Add Restaurant
@@ -49,10 +49,10 @@ export function RestaurantManagement({
                     }}
                 />
 
-                <div className={"w-full mt-4 h-0.5 bg-slate-200"}></div>
+                <div className={"w-full mt-4 h-0.5 bg-[var(--surface-2)]"}></div>
 
                 <RestaurantTabs selected={tab} onSelect={onTab} />
-                <div className={"bg-gray-50 rounded-lg p-6 mt-4"}>
+                <div className={"bg-[var(--card)] rounded-lg p-6 mt-4"}>
                     {/* VM-24: this restaurant's currency; reloaded on each tab, so a saved change shows */}
                     <MoneyProvider key={`${selected?.slug}:${tab}`} slug={selected?.slug ?? "-"}>
                         {selected && <RestaurantPanel restaurant={selected} tab={tab} onSettingsSaved={onSettingsSaved} />}

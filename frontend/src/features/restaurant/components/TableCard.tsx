@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CheckCircle, Pencil, QrCode, Table as TableIcon, XCircle } from "lucide-react";
 import type { Table } from "@vmenu/contracts";
-import { Button, Card, Chip } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import TableQrModal from "@/components/qr/TableQrModal";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 
@@ -27,11 +27,13 @@ export default function TableCard(props: Props) {
             >
                 <TableIcon size={26} aria-hidden />
             </div>
-            <h3 className="text-lg font-semibold">Table {table.name}</h3>
-            <Chip tone={table.isEnabled ? "ok" : "bad"}>
-                {table.isEnabled ? <CheckCircle size={12} aria-hidden /> : <XCircle size={12} aria-hidden />}
-                {table.isEnabled ? "Available" : "Closed"}
-            </Chip>
+            <h3 className="break-all text-lg font-semibold">Table {table.name}</h3>
+            {/* VM-35: a mono status chip */}
+            <span
+                className={`rounded-[var(--r-chip)] px-2.5 py-1 font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-[var(--ink)] ${table.isEnabled ? "bg-[var(--ok-soft)]" : "bg-[var(--surface-2)]"}`}
+            >
+                {table.isEnabled ? "Open" : "Closed"}
+            </span>
             <div className="mt-2 grid w-full gap-2">
                 {props.role === "cashier" ? (
                     <Button
@@ -47,7 +49,7 @@ export default function TableCard(props: Props) {
                         Edit Table
                     </Button>
                 )}
-                <Button icon={<QrCode size={16} aria-hidden />} onClick={() => setShowQr(true)} block>
+                <Button variant="outline" icon={<QrCode size={16} aria-hidden />} onClick={() => setShowQr(true)} block>
                     View QR Code
                 </Button>
             </div>

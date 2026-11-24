@@ -28,7 +28,7 @@ export default function RequestBadges({
                 return (
                     <span
                         key={kind}
-                        className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-sm font-bold tracking-wide text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/20 dark:text-amber-100"
+                        className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1 text-sm font-bold tracking-wide text-[var(--accent-text)]"
                     >
                         <Icon size={14} aria-hidden />
                         {label} · {waited(at)}
@@ -37,7 +37,7 @@ export default function RequestBadges({
                                 type="button"
                                 aria-label={`Dismiss ${name}`}
                                 onClick={() => onDismissRequest(order._id, kind)}
-                                className="-mr-1 rounded-full p-0.5 hover:bg-amber-200 dark:hover:bg-amber-500/30"
+                                className="-mr-1 rounded-full p-0.5 hover:bg-[var(--accent-soft)]"
                             >
                                 <X size={14} aria-hidden />
                             </button>

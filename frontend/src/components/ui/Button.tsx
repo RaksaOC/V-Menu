@@ -7,7 +7,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
     primary: "bg-[var(--accent)] text-[var(--accent-ink)] hover:brightness-95",
     solid: "bg-[var(--btn-bg)] text-[var(--btn-ink)] hover:opacity-90",
     outline: "border border-[var(--line)] bg-transparent text-[var(--ink)] hover:bg-[var(--card)]",
-    danger: "bg-[var(--bad)] text-white hover:opacity-90",
+    danger: "bg-[var(--bad)] text-[var(--bg)] hover:opacity-90",
 };
 const SIZES = { sm: "px-3 py-1.5 text-sm", md: "px-4 py-2.5 text-sm" };
 

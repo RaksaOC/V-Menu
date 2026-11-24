@@ -3,7 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { Trash2 } from "lucide-react";
 import type { AddStaffBody, StaffMember } from "@vmenu/contracts";
-import { Button, Input, Modal } from "@/components/ui";
+import { Button, Input, Modal, FIELD } from "@/components/ui";
 
 type Role = "cashier" | "chef";
 
@@ -108,7 +108,7 @@ export default function StaffForm({ member, emailError = "", roleError = "", onC
                         value={role}
                         onChange={(e) => setRole(e.target.value as Role | "")}
                         aria-invalid={show("role") ? true : undefined}
-                        className="w-full rounded-[var(--r-in)] border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-sm"
+                        className={`${FIELD} border-[var(--line)]`}
                     >
                         <option value="">Select a role</option>
                         <option value="cashier">Cashier</option>

@@ -11,35 +11,35 @@ interface MetricsChartProps {
 
 export const MetricsChart: React.FC<MetricsChartProps> = ({ data, isVisible }) => {
     const chartData = [
-        { name: "Orders", value: data.orderCount, color: "#3B82F6" },
-        { name: "Payments", value: data.paymentCount, color: "#10B981" },
-        { name: "Items Sold", value: data.itemsSoldCount, color: "#8B5CF6" },
-        { name: "Menu Items", value: data.itemCount, color: "#F59E0B" },
+        { name: "Orders", value: data.orderCount, color: "var(--accent)" },
+        { name: "Payments", value: data.paymentCount, color: "var(--ok)" },
+        { name: "Items Sold", value: data.itemsSoldCount, color: "var(--ink)" },
+        { name: "Menu Items", value: data.itemCount, color: "var(--muted)" },
     ];
 
     return (
         <div
             className={`
-      bg-white rounded-3xl p-6 shadow-md border border-slate-200
-      transition-all duration-1000 ease-out transform flex flex-col justify-between
-      ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}
-    `}
+ bg-[var(--bg)] rounded-3xl p-6 border border-[var(--line)]
+ transition-all duration-1000 ease-out flex flex-col justify-between
+ ${isVisible ? " opacity-100" : " opacity-0"}
+ `}
         >
             <div className="flex items-center space-x-3 mb-6">
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl">
-                    <Activity size={24} className="text-white" />
+                <div className="bg-[var(--btn-bg)] p-3 rounded-xl">
+                    <Activity size={24} aria-hidden className="text-[var(--btn-ink)]" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-gray-800">Performance Metrics</h3>
-                    <p className="text-gray-500 text-sm">Key business indicators</p>
+                    <h3 className="text-xl font-bold text-[var(--ink)]">Performance Metrics</h3>
+                    <p className="text-[var(--muted)] text-sm">Key business indicators</p>
                 </div>
             </div>
 
             <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData} margin={{ top: 0, right: -10, left: -40, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
                     <Tooltip
                         contentStyle={{
                             backgroundColor: "white",
@@ -48,7 +48,7 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({ data, isVisible }) =
                             boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
                         }}
                     />
-                    <Bar dataKey="value" fill="#3B82F6" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="value" fill="var(--accent)" radius={[8, 8, 0, 0]} />
                 </BarChart>
             </ResponsiveContainer>
         </div>

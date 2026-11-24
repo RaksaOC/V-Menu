@@ -41,7 +41,7 @@ function Invoice({ slug, table, billNumber, date, lines, subtotalCents, totalCen
                 </>
             }
         >
-            <div data-print className="bg-white p-6 font-mono text-black">
+            <div data-print className="bg-[var(--bg)] p-6 font-mono text-black">
                 <header className="mb-6 text-center">
                     <h1 className="text-2xl font-bold uppercase tracking-wide break-words">{settings?.name ?? slug}</h1>
                     <p className="mt-1">Table {table}</p>

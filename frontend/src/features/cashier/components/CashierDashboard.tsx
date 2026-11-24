@@ -72,7 +72,7 @@ const Dashboard = () => {
     const currentSection = navigationItems.find((item) => item.id === section);
 
     return (
-        <div className="relative min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white">
+        <div className="relative min-h-screen bg-[var(--card)] text-[var(--ink)]">
             <ToastHost />
             <DashboardHeader
                 title="V-Menu Cashier"
@@ -86,10 +86,10 @@ const Dashboard = () => {
 
             <div className="flex relative">
                 {/* Sidebar Navigation */}
-                <div className="w-72 hidden md:block bg-white fixed left-0 dark:bg-slate-800 min-h-[calc(100vh-88px)] border-r border-slate-200 dark:border-slate-700 p-6">
+                <div className="w-72 hidden md:block bg-[var(--bg)] fixed left-0 min-h-[calc(100vh-88px)] border-r border-[var(--line)] p-6">
                     <div className="mb-8">
-                        <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">Dashboard</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Manage your restaurant operations</p>
+                        <h2 className="text-lg font-semibold text-[var(--ink)] mb-2">Dashboard</h2>
+                        <p className="text-sm text-[var(--muted)]">Manage your restaurant operations</p>
                     </div>
 
                     <nav className="space-y-2">
@@ -103,41 +103,32 @@ const Dashboard = () => {
                                     onClick={() => handleSectionChange(item.id)}
                                     className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200 group ${
                                         isActive
-                                            ? "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
-                                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white"
+                                            ? "bg-[var(--bg)]     text-[var(--accent-text)]  border border-[var(--accent)] "
+                                            : "text-[var(--body)]  hover:bg-[var(--card)]  hover:text-[var(--ink)]"
                                     }`}
                                 >
                                     <div className="flex items-center space-x-3">
                                         <div
                                             className={`p-2 rounded-lg ${
-                                                isActive
-                                                    ? "bg-blue-100 dark:bg-blue-900/30"
-                                                    : "bg-slate-100 dark:bg-slate-700 group-hover:bg-slate-200 dark:group-hover:bg-slate-600"
+                                                isActive ? "bg-[var(--accent-soft)] " : "bg-[var(--card)]  group-hover:bg-[var(--card)] "
                                             }`}
                                         >
-                                            <Icon size={20} className={isActive ? "text-blue-600 dark:text-blue-400" : ""} />
+                                            <Icon size={20} className={isActive ? "text-[var(--accent-text)]" : ""} />
                                         </div>
                                         <div className="text-left">
                                             <div className="font-medium">{item.label}</div>
-                                            <div
-                                                className={`text-xs ${
-                                                    isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"
-                                                }`}
-                                            >
+                                            <div className={`text-xs ${isActive ? "text-[var(--accent-text)] " : "text-[var(--muted)] "}`}>
                                                 {item.description}
                                             </div>
                                         </div>
                                     </div>
-                                    <ChevronRight
-                                        size={16}
-                                        className={`transition-transform ${isActive ? "rotate-90" : "group-hover:translate-x-1"}`}
-                                    />
+                                    <ChevronRight size={16} className={`transition-transform ${isActive ? "rotate-90" : ""}`} />
                                 </button>
                             );
                         })}
                     </nav>
                 </div>
-                <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around items-center py-2 md:hidden">
+                <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg)] border-t border-[var(--line)] flex justify-around items-center py-2 md:hidden">
                     {navigationItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = section === item.id;
@@ -145,7 +136,7 @@ const Dashboard = () => {
                             <button
                                 key={item.id}
                                 onClick={() => handleSectionChange(item.id)}
-                                className={`flex flex-col items-center text-xs ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"}`}
+                                className={`flex flex-col items-center text-xs ${isActive ? "text-[var(--accent-text)] " : "text-[var(--muted)] "}`}
                             >
                                 <Icon size={20} />
                                 <span>{item.label}</span>
@@ -161,12 +152,12 @@ const Dashboard = () => {
                         <div className="flex items-center space-x-3 mb-2">
                             {currentSection && (
                                 <>
-                                    <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                                        <currentSection.icon size={20} className="text-white" />
+                                    <div className="p-2 bg-[var(--btn-bg)] rounded-lg">
+                                        <currentSection.icon size={20} aria-hidden className="text-[var(--btn-ink)]" />
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{currentSection.label}</h1>
-                                        <p className="text-slate-500 dark:text-slate-400">{currentSection.description}</p>
+                                        <h1 className="text-2xl font-bold text-[var(--ink)]">{currentSection.label}</h1>
+                                        <p className="text-[var(--muted)]">{currentSection.description}</p>
                                     </div>
                                 </>
                             )}
@@ -174,7 +165,7 @@ const Dashboard = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[600px]">
+                    <div className="bg-[var(--bg)] rounded-2xl shadow-sm border border-[var(--line)] min-h-[600px]">
                         <div className="p-6">{renderContent()}</div>
                     </div>
                 </div>
