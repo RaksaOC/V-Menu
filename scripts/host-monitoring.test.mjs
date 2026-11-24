@@ -31,3 +31,19 @@ test("alert uids are unique", () => {
     const uids = alerts.rules.map((r) => r.uid);
     assert.equal(new Set(uids).size, uids.length);
 });
+
+// The server has 2 shared CPUs and can be slow; on 24 Nov Alloy needed about 3 minutes to start
+// while the staging stack redeployed at the same time, and the deploy gave up after 2.
+test("the monitoring deploy gives a slow server time to start Alloy", () => {
+    const deploy = read("infra/monitoring/deploy.sh");
+    const wait = Number(/--wait-timeout (\d+)/.exec(deploy)?.[1]);
+    assert.ok(wait >= 300, `deploy.sh waits ${wait}s; allow at least 300s`);
+
+    const compose = read("infra/monitoring/compose.yml");
+    const alloy = compose.slice(compose.indexOf("\n  alloy:"), compose.indexOf("\nnetworks:"));
+    const start = /start_period: (\d+)s/.exec(alloy)?.[1];
+    assert.ok(Number(start) >= 180, `Alloy's start_period is ${start}s; allow at least 180s`);
+    assert.match(alloy, /start_interval: \ds/, "keep polling every few seconds while it starts");
+    const cpus = Number(/cpus: "([\d.]+)"/.exec(alloy)?.[1]);
+    assert.ok(cpus >= 0.5, `Alloy is capped at ${cpus} CPU; give it at least 0.5 to start up`);
+});
