@@ -1,0 +1,519 @@
+ok   VM-33-customer-menu-360
+ok   VM-33-customer-cart-360
+ok   VM-07-order-placed-360
+ok   VM-07-after-order-360
+ok   VM-33-customer-menu-360-dark
+ok   VM-33-customer-menu-1280
+ok   VM-33-customer-cart-1280
+ok   VM-07-order-placed-1280
+ok   VM-07-after-order-1280
+ok   VM-33-customer-menu-1280-dark
+ok   VM-04-closed-table-360
+ok   VM-04-unknown-restaurant-360
+ok   VM-34-kitchen-1280
+ok   VM-34-kitchen-1280-dark
+ok   VM-35-cashier-overview-1280
+ok   VM-35-cashier-tables-1280
+ok   VM-01-cashier-view-qr-click-1280
+ok   VM-35-cashier-orders-1280
+ok   VM-35-cashier-menu-1280
+ok   VM-35-cashier-overview-1280-dark
+ok   VM-35-cashier-tables-1280-dark
+ok   VM-35-cashier-orders-1280-dark
+ok   VM-35-cashier-menu-1280-dark
+ok   VM-35-owner-overview-1280
+ok   VM-35-owner-tables-1280
+ok   VM-01-owner-view-qr-click-1280
+ok   VM-35-owner-menu-1280
+ok   VM-02-add-item-with-photo-1280
+ok   VM-35-owner-overview-1280-dark
+ok   VM-35-owner-tables-1280-dark
+ok   VM-35-owner-menu-1280-dark
+# ONLY=CL-10 (2026-11-23T11:00:57.027Z)
+ok   CL-10-toast-added-to-cart-360
+ok   CL-10-toast-added-to-cart-360-dark
+# ONLY=VM-01 (2026-11-23T11:11:00.625Z)
+ok   VM-01-cashier-qr-1280
+ok   VM-01-cashier-qr-1280-dark
+ok   VM-01-cashier-qr-360
+ok   VM-01-owner-tables-1280
+ok   VM-01-owner-qr-1280
+ok   VM-01-owner-tables-1280-dark
+ok   VM-01-owner-qr-1280-dark
+# ONLY=VM-02 (2026-11-23T11:19:44.293Z)
+ok   VM-02-owner-add-photo-1280
+ok   VM-02-customer-menu-1280
+ok   VM-02-owner-add-photo-1280-dark
+ok   VM-02-customer-menu-1280-dark
+ok   VM-02-owner-add-photo-360
+ok   VM-02-customer-menu-360
+# ONLY=VM-04 (2026-11-23T11:28:40.091Z)
+ok   VM-04-closed-table-360
+ok   VM-04-unknown-table-360
+ok   VM-04-unknown-restaurant-360
+ok   VM-04-server-error-360
+ok   VM-04-closed-table-360-dark
+ok   VM-04-unknown-table-360-dark
+ok   VM-04-unknown-restaurant-360-dark
+ok   VM-04-server-error-360-dark
+# ONLY=VM-05 (2026-11-23T11:32:42.157Z)
+ok   VM-05-t1-cart-360
+ok   VM-05-t2-cart-360
+ok   VM-05-t1-cart-360-dark
+ok   VM-05-t2-cart-360-dark
+# ONLY=VM-03 (2026-11-23T11:47:05.463Z)
+ok   VM-03-session-ended-1280
+ok   VM-03-connection-lost-1280
+ok   VM-03-session-ended-1280-dark
+ok   VM-03-connection-lost-1280-dark
+# ONLY=CL-09 (2026-11-23T11:58:34.259Z)
+ok   CL-09-cashier-tables-1280
+ok   CL-09-cashier-menu-1280
+ok   CL-09-owner-tables-1280
+ok   CL-09-owner-edit-table-1280
+FAIL CL-09 screens light: locator.click: Timeout 5000ms exceeded.
+ok   CL-09-cashier-tables-1280-dark
+ok   CL-09-cashier-menu-1280-dark
+ok   CL-09-owner-tables-1280-dark
+ok   CL-09-owner-edit-table-1280-dark
+FAIL CL-09 screens dark: locator.click: Timeout 5000ms exceeded.
+ok   CL-09-cashier-tables-360
+# ONLY=CL-09 (2026-11-23T12:00:04.695Z)
+ok   CL-09-cashier-tables-1280
+ok   CL-09-cashier-menu-1280
+ok   CL-09-owner-tables-1280
+ok   CL-09-owner-edit-table-1280
+ok   CL-09-owner-menu-1280
+ok   CL-09-ui-kit-1280
+ok   CL-09-cashier-tables-1280-dark
+ok   CL-09-cashier-menu-1280-dark
+ok   CL-09-owner-tables-1280-dark
+ok   CL-09-owner-edit-table-1280-dark
+ok   CL-09-owner-menu-1280-dark
+ok   CL-09-ui-kit-1280-dark
+ok   CL-09-cashier-tables-360
+# ONLY=VM-06 (2026-11-23T13:00:56.933Z)
+ok   VM-06-cart-closed-1280
+ok   VM-06-cart-down-1280
+ok   VM-06-cart-sold-out-1280
+ok   VM-06-cart-closed-1280-dark
+ok   VM-06-cart-down-1280-dark
+ok   VM-06-cart-sold-out-1280-dark
+ok   VM-06-cart-closed-360
+ok   VM-06-cart-down-360
+ok   VM-06-cart-sold-out-360
+# ONLY=VM-07 (2026-11-23T13:10:26.986Z)
+ok   VM-07-after-order-1280
+ok   VM-07-after-order-1280-dark
+ok   VM-07-after-order-360
+# ONLY=VM-07 (2026-11-23T13:11:39.688Z)
+ok   VM-07-after-order-1280
+ok   VM-07-after-order-3s-1280
+ok   VM-07-after-order-1280-dark
+ok   VM-07-after-order-3s-1280-dark
+ok   VM-07-after-order-360
+ok   VM-07-after-order-3s-360
+# ONLY=VM-10 (2026-11-23T13:42:11.570Z)
+ok   VM-10-kitchen-history-1280
+ok   VM-10-kitchen-history-end-1280
+ok   VM-10-kitchen-history-1280-dark
+ok   VM-10-kitchen-history-end-1280-dark
+ok   VM-10-kitchen-history-360
+ok   VM-10-kitchen-history-end-360
+# ONLY=VM-11 (2026-11-23T13:49:28.644Z)
+ok   VM-11-orders-after-new-order-1280
+ok   VM-11-order-history-1280
+ok   VM-11-orders-after-new-order-1280-dark
+ok   VM-11-order-history-1280-dark
+ok   VM-11-orders-after-new-order-360
+ok   VM-11-order-history-360
+# ONLY=VM-25 (2026-11-23T15:02:26.905Z)
+ok   VM-25-customer-menu-1280
+ok   VM-25-customer-drinks-1280
+ok   VM-25-owner-menu-1280
+ok   VM-25-owner-item-form-1280
+ok   VM-25-cashier-menu-1280
+ok   VM-25-customer-menu-1280-dark
+ok   VM-25-customer-drinks-1280-dark
+ok   VM-25-owner-menu-1280-dark
+ok   VM-25-owner-item-form-1280-dark
+ok   VM-25-cashier-menu-1280-dark
+ok   VM-25-customer-menu-360
+ok   VM-25-customer-drinks-360
+ok   VM-25-owner-menu-360
+ok   VM-25-owner-item-form-360
+ok   VM-25-cashier-menu-360
+# ONLY=VM-27 (2026-11-23T15:18:47.623Z)
+ok   VM-27-kitchen-1280
+ok   VM-27-customer-status-1280
+ok   VM-27-cashier-bill-1280
+ok   VM-27-kitchen-1280-dark
+ok   VM-27-customer-status-1280-dark
+ok   VM-27-cashier-bill-1280-dark
+ok   VM-27-kitchen-360
+ok   VM-27-customer-status-360
+ok   VM-27-cashier-bill-360
+# ONLY=VM-12 (2026-11-23T17:00:18.764Z)
+ok   VM-12-owner-staff-1280
+ok   VM-12-add-staff-form-1280
+ok   VM-12-login-1280
+ok   VM-12-owner-staff-1280-dark
+ok   VM-12-add-staff-form-1280-dark
+ok   VM-12-login-1280-dark
+ok   VM-12-owner-staff-360
+ok   VM-12-add-staff-form-360
+ok   VM-12-login-360
+# ONLY=VM-14 (2026-11-23T17:27:47.774Z)
+ok   VM-14-owner-login-1280
+ok   VM-14-cashier-login-1280
+ok   VM-14-kitchen-login-1280
+ok   VM-14-owner-login-1280-dark
+ok   VM-14-cashier-login-1280-dark
+ok   VM-14-kitchen-login-1280-dark
+ok   VM-14-owner-login-360
+ok   VM-14-cashier-login-360
+ok   VM-14-kitchen-login-360
+# ONLY=VM-18 (2026-11-23T17:33:23.735Z)
+ok   VM-18-change-to-a-role-they-have-1280
+ok   VM-18-change-to-a-role-they-have-1280-dark
+ok   VM-18-change-to-a-role-they-have-360
+# ONLY=SEC-03 (2026-11-23T17:44:52.176Z)
+ok   SEC-03-account-menu-1280
+ok   SEC-03-account-menu-1280-dark
+ok   SEC-03-account-menu-360
+# ONLY=VM-19 (2026-11-23T17:54:29.908Z)
+ok   VM-19-kitchen-1280
+ok   VM-19-kitchen-history-1280
+ok   VM-19-other-restaurant-1280
+ok   VM-19-kitchen-1280-dark
+ok   VM-19-kitchen-history-1280-dark
+ok   VM-19-other-restaurant-1280-dark
+ok   VM-19-kitchen-360
+ok   VM-19-kitchen-history-360
+ok   VM-19-other-restaurant-360
+# ONLY=VM-20 (2026-11-23T17:59:24.487Z)
+ok   VM-20-owner-header-1280
+ok   VM-20-cashier-1280
+ok   VM-20-owner-header-1280-dark
+ok   VM-20-cashier-1280-dark
+ok   VM-20-owner-header-360
+ok   VM-20-cashier-360
+# ONLY=SEC-08 (2026-11-23T19:06:23.471Z)
+ok   SEC-08-signup-short-password-1280
+ok   SEC-08-signup-short-password-1280-dark
+ok   SEC-08-signup-short-password-360
+# ONLY=VM-16 (2026-11-23T16:59:56.587Z)
+ok   VM-16-add-taken-name-1280
+ok   VM-16-add-taken-name-1280-dark
+ok   VM-16-add-taken-name-360
+# ONLY=VM-17 (2026-11-23T17:10:32.654Z)
+ok   VM-17-add-item-errors-1280
+ok   VM-17-edit-item-too-long-1280
+ok   VM-17-add-item-errors-1280-dark
+ok   VM-17-edit-item-too-long-1280-dark
+ok   VM-17-add-item-errors-360
+ok   VM-17-edit-item-too-long-360
+# ONLY=VM-21 (2026-11-23T17:23:57.683Z)
+ok   VM-21-customer-heading-1280
+ok   VM-21-qr-popup-1280
+ok   VM-21-customer-heading-1280-dark
+ok   VM-21-qr-popup-1280-dark
+ok   VM-21-customer-heading-360
+ok   VM-21-qr-popup-360
+# ONLY=VM-26 (2026-11-23T17:31:34.662Z)
+ok   VM-26-customer-menu-1280
+ok   VM-26-owner-item-form-1280
+ok   VM-26-cashier-menu-1280
+ok   VM-26-customer-menu-1280-dark
+ok   VM-26-owner-item-form-1280-dark
+ok   VM-26-cashier-menu-1280-dark
+ok   VM-26-customer-menu-360
+ok   VM-26-owner-item-form-360
+ok   VM-26-cashier-menu-360
+# ONLY=VM-32 (2026-11-23T17:45:53.686Z)
+ok   VM-32-restaurant-page-1280
+ok   VM-32-restaurant-page-1280-dark
+ok   VM-32-restaurant-page-360
+ok   VM-32-restaurant-page-360-dark
+# ONLY=SEC-04 (2026-11-23T17:58:48.697Z)
+ok   SEC-04-qr-popup-1280
+ok   SEC-04-edit-table-1280
+ok   SEC-04-qr-popup-1280-dark
+ok   SEC-04-edit-table-1280-dark
+ok   SEC-04-qr-popup-360
+ok   SEC-04-edit-table-360
+# ONLY=VM-15 (2026-11-23T19:21:12.445Z)
+FAIL VM-15 1280 light: Unexpected token 'I', "Internal S"... is not valid JSON
+FAIL VM-15 1280 dark: Unexpected token 'I', "Internal S"... is not valid JSON
+FAIL VM-15 360 light: Unexpected token 'I', "Internal S"... is not valid JSON
+# ONLY=VM-15 (2026-11-23T19:22:04.198Z)
+ok   VM-15-rename-1280
+ok   VM-15-rename-1280-dark
+ok   VM-15-rename-360
+# ONLY=VM-09 (2026-11-23T17:01:47.002Z)
+ok   VM-09-owner-overview-1280
+ok   VM-09-owner-restaurants-1280
+ok   VM-09-restaurant-overview-1280
+ok   VM-09-owner-overview-1280-dark
+ok   VM-09-owner-restaurants-1280-dark
+ok   VM-09-restaurant-overview-1280-dark
+ok   VM-09-owner-overview-360
+ok   VM-09-owner-restaurants-360
+ok   VM-09-restaurant-overview-360
+# ONLY=CL-07 (2026-11-23T17:41:21.865Z)
+ok   CL-07-kitchen-1280
+ok   CL-07-customer-order-1280
+ok   CL-07-cashier-bill-1280
+ok   CL-07-kitchen-1280-dark
+ok   CL-07-customer-order-1280-dark
+ok   CL-07-cashier-bill-1280-dark
+ok   CL-07-kitchen-360
+ok   CL-07-customer-order-360
+ok   CL-07-cashier-bill-360
+# ONLY=VM-31 (2026-11-23T17:53:20.674Z)
+ok   VM-31-cashier-bill-1280
+ok   VM-31-invoice-1280
+ok   VM-31-cashier-bill-1280-dark
+ok   VM-31-invoice-1280-dark
+ok   VM-31-cashier-bill-360
+ok   VM-31-invoice-360
+# ONLY=VM-24 (2026-11-23T19:07:59.694Z)
+ok   VM-24-preferences-1280
+ok   VM-24-invoice-1280
+ok   VM-24-customer-menu-1280
+ok   VM-24-preferences-1280-dark
+ok   VM-24-invoice-1280-dark
+ok   VM-24-customer-menu-1280-dark
+ok   VM-24-preferences-360
+ok   VM-24-invoice-360
+ok   VM-24-customer-menu-360
+# ONLY=VM-24 (2026-11-23T19:16:39.337Z)
+FAIL VM-24 1280 light: locator.click: Timeout 5000ms exceeded.
+FAIL VM-24 1280 dark: locator.click: Timeout 5000ms exceeded.
+FAIL VM-24 360 light: locator.click: Timeout 5000ms exceeded.
+# ONLY=VM-24 (2026-11-23T19:17:26.024Z)
+FAIL VM-24 1280 light: locator.click: Timeout 5000ms exceeded.
+FAIL VM-24 1280 dark: locator.click: Timeout 5000ms exceeded.
+FAIL VM-24 360 light: locator.click: Timeout 5000ms exceeded.
+# ONLY=VM-24 (2026-11-23T19:18:05.949Z)
+ok   VM-24-preferences-1280
+ok   VM-24-invoice-1280
+ok   VM-24-customer-menu-1280
+ok   VM-24-preferences-1280-dark
+ok   VM-24-invoice-1280-dark
+ok   VM-24-customer-menu-1280-dark
+ok   VM-24-preferences-360
+ok   VM-24-invoice-360
+ok   VM-24-customer-menu-360
+# ONLY=VM-28 (2026-11-23T19:23:01.439Z)
+ok   VM-28-cart-1280
+ok   VM-28-kitchen-card-1280
+ok   VM-28-cart-1280-dark
+ok   VM-28-kitchen-card-1280-dark
+ok   VM-28-cart-360
+ok   VM-28-kitchen-card-360
+# ONLY=VM-29 (2026-11-23T19:32:13.742Z)
+ok   VM-29-kitchen-board-1280
+ok   VM-29-kitchen-board-1280-dark
+ok   VM-29-kitchen-board-360
+# ONLY=VM-30 (2026-11-23T19:44:28.931Z)
+ok   VM-30-customer-menu-1280
+ok   VM-30-cashier-card-1280
+ok   VM-30-customer-menu-1280-dark
+ok   VM-30-cashier-card-1280-dark
+ok   VM-30-customer-menu-360
+ok   VM-30-cashier-card-360
+# ONLY=CL-11 (2026-11-24T02:14:32.971Z)
+ok   CL-11-landing-1280
+FAIL CL-11 1280 light: locator.click: Timeout 30000ms exceeded.
+ok   CL-11-landing-1280-dark
+FAIL CL-11 1280 dark: locator.click: Timeout 30000ms exceeded.
+ok   CL-11-landing-360
+ok   CL-11-tour-360
+ok   CL-11-login-360
+ok   CL-11-signup-360
+ok   CL-11-customer-menu-360
+ok   CL-11-cart-360
+ok   CL-11-kitchen-360
+ok   CL-11-cashier-orders-360
+ok   CL-11-owner-management-360
+FAIL CL-11 360 light: locator.click: Timeout 30000ms exceeded.
+# ONLY=CL-11 (2026-11-24T02:16:13.071Z)
+ok   CL-11-landing-1280
+FAIL CL-11 1280 light: locator.click: Timeout 30000ms exceeded.
+ok   CL-11-landing-1280-dark
+FAIL CL-11 1280 dark: locator.click: Timeout 30000ms exceeded.
+ok   CL-11-landing-360
+ok   CL-11-tour-360
+ok   CL-11-login-360
+ok   CL-11-signup-360
+ok   CL-11-customer-menu-360
+ok   CL-11-cart-360
+ok   CL-11-kitchen-360
+ok   CL-11-cashier-orders-360
+ok   CL-11-owner-management-360
+ok   CL-11-owner-all-overview-360
+ok   CL-11-owner-all-restaurants-360
+ok   CL-11-owner-all-staff-360
+ok   CL-11-owner-staff-360
+ok   CL-11-owner-categories-360
+ok   CL-11-owner-item-form-360
+# ONLY=CL-11 1280 (2026-11-24T02:17:15.169Z)
+ok   CL-11-landing-1280
+ok   CL-11-tour-1280
+ok   CL-11-login-1280
+ok   CL-11-signup-1280
+ok   CL-11-customer-menu-1280
+ok   CL-11-cart-1280
+ok   CL-11-kitchen-1280
+ok   CL-11-cashier-orders-1280
+ok   CL-11-owner-management-1280
+ok   CL-11-owner-all-overview-1280
+ok   CL-11-owner-all-restaurants-1280
+ok   CL-11-owner-all-staff-1280
+ok   CL-11-owner-staff-1280
+ok   CL-11-owner-categories-1280
+ok   CL-11-owner-item-form-1280
+ok   CL-11-landing-1280-dark
+ok   CL-11-tour-1280-dark
+ok   CL-11-login-1280-dark
+ok   CL-11-signup-1280-dark
+ok   CL-11-customer-menu-1280-dark
+ok   CL-11-cart-1280-dark
+ok   CL-11-kitchen-1280-dark
+ok   CL-11-cashier-orders-1280-dark
+ok   CL-11-owner-management-1280-dark
+ok   CL-11-owner-all-overview-1280-dark
+ok   CL-11-owner-all-restaurants-1280-dark
+ok   CL-11-owner-all-staff-1280-dark
+ok   CL-11-owner-staff-1280-dark
+ok   CL-11-owner-categories-1280-dark
+ok   CL-11-owner-item-form-1280-dark
+# ONLY=VM-33 final (2026-11-24T03:44:26.960Z)
+ok   VM-33-final-menu-360
+ok   VM-33-final-menu-with-cart-360
+ok   VM-33-final-cart-360
+ok   VM-33-final-cart-empty-360
+ok   VM-33-final-not-found-360
+ok   VM-33-final-menu-360-dark
+ok   VM-33-final-menu-with-cart-360-dark
+ok   VM-33-final-cart-360-dark
+ok   VM-33-final-cart-empty-360-dark
+ok   VM-33-final-not-found-360-dark
+ok   VM-33-final-menu-1280
+ok   VM-33-final-menu-with-cart-1280
+ok   VM-33-final-cart-1280
+ok   VM-33-final-cart-empty-1280
+ok   VM-33-final-not-found-1280
+ok   VM-33-final-menu-1280-dark
+ok   VM-33-final-menu-with-cart-1280-dark
+ok   VM-33-final-cart-1280-dark
+ok   VM-33-final-cart-empty-1280-dark
+ok   VM-33-final-not-found-1280-dark
+# ONLY=VM-34 final (2026-11-24T04:01:59.910Z)
+ok   VM-34-final-kitchen-360
+ok   VM-34-final-kitchen-empty-360
+ok   VM-34-final-history-360
+ok   VM-34-final-kitchen-360-dark
+ok   VM-34-final-kitchen-empty-360-dark
+ok   VM-34-final-history-360-dark
+ok   VM-34-final-kitchen-1280
+ok   VM-34-final-kitchen-empty-1280
+ok   VM-34-final-history-1280
+ok   VM-34-final-kitchen-1280-dark
+ok   VM-34-final-kitchen-empty-1280-dark
+ok   VM-34-final-history-1280-dark
+# ONLY=VM-34 final (2026-11-24T04:02:32.078Z)
+ok   VM-34-final-kitchen-360
+ok   VM-34-final-kitchen-empty-360
+ok   VM-34-final-history-360
+ok   VM-34-final-kitchen-360-dark
+ok   VM-34-final-kitchen-empty-360-dark
+ok   VM-34-final-history-360-dark
+ok   VM-34-final-kitchen-1280
+ok   VM-34-final-kitchen-empty-1280
+ok   VM-34-final-history-1280
+ok   VM-34-final-kitchen-1280-dark
+ok   VM-34-final-kitchen-empty-1280-dark
+ok   VM-34-final-history-1280-dark
+# ONLY=VM-35 final (2026-11-24T04:29:27.879Z)
+ok   VM-35-final-cashier-overview-360
+ok   VM-35-final-cashier-tables-360
+ok   VM-35-final-cashier-orders-360
+ok   VM-35-final-cashier-menu-360
+ok   VM-35-final-owner-overview-360
+ok   VM-35-final-owner-menu-360
+ok   VM-35-final-owner-tables-360
+ok   VM-35-final-cashier-overview-360-dark
+ok   VM-35-final-cashier-tables-360-dark
+ok   VM-35-final-cashier-orders-360-dark
+ok   VM-35-final-cashier-menu-360-dark
+ok   VM-35-final-owner-overview-360-dark
+ok   VM-35-final-owner-menu-360-dark
+ok   VM-35-final-owner-tables-360-dark
+ok   VM-35-final-cashier-overview-1280
+ok   VM-35-final-cashier-tables-1280
+ok   VM-35-final-cashier-orders-1280
+ok   VM-35-final-cashier-menu-1280
+ok   VM-35-final-owner-overview-1280
+ok   VM-35-final-owner-menu-1280
+ok   VM-35-final-owner-tables-1280
+ok   VM-35-final-cashier-overview-1280-dark
+ok   VM-35-final-cashier-tables-1280-dark
+ok   VM-35-final-cashier-orders-1280-dark
+ok   VM-35-final-cashier-menu-1280-dark
+ok   VM-35-final-owner-overview-1280-dark
+ok   VM-35-final-owner-menu-1280-dark
+ok   VM-35-final-owner-tables-1280-dark
+# ONLY=VM-35 final (2026-11-24T04:30:22.499Z)
+ok   VM-35-final-cashier-overview-360
+ok   VM-35-final-cashier-tables-360
+ok   VM-35-final-cashier-orders-360
+ok   VM-35-final-cashier-menu-360
+ok   VM-35-final-owner-overview-360
+ok   VM-35-final-owner-menu-360
+ok   VM-35-final-owner-tables-360
+ok   VM-35-final-cashier-overview-360-dark
+ok   VM-35-final-cashier-tables-360-dark
+ok   VM-35-final-cashier-orders-360-dark
+ok   VM-35-final-cashier-menu-360-dark
+ok   VM-35-final-owner-overview-360-dark
+ok   VM-35-final-owner-menu-360-dark
+ok   VM-35-final-owner-tables-360-dark
+ok   VM-35-final-cashier-overview-1280
+ok   VM-35-final-cashier-tables-1280
+ok   VM-35-final-cashier-orders-1280
+ok   VM-35-final-cashier-menu-1280
+ok   VM-35-final-owner-overview-1280
+ok   VM-35-final-owner-menu-1280
+ok   VM-35-final-owner-tables-1280
+ok   VM-35-final-cashier-overview-1280-dark
+ok   VM-35-final-cashier-tables-1280-dark
+ok   VM-35-final-cashier-orders-1280-dark
+ok   VM-35-final-cashier-menu-1280-dark
+ok   VM-35-final-owner-overview-1280-dark
+ok   VM-35-final-owner-menu-1280-dark
+ok   VM-35-final-owner-tables-1280-dark
+# ONLY=VM-36 final (2026-11-24T05:16:40.202Z)
+ok   VM-36-final-signup-360
+ok   VM-36-final-login-360
+ok   VM-36-final-cashier-login-360
+ok   VM-36-final-landing-360
+ok   VM-36-final-no-table-360
+ok   VM-36-final-owner-menu-360
+ok   VM-36-final-signup-360-dark
+ok   VM-36-final-login-360-dark
+ok   VM-36-final-cashier-login-360-dark
+ok   VM-36-final-landing-360-dark
+ok   VM-36-final-no-table-360-dark
+ok   VM-36-final-owner-menu-360-dark
+ok   VM-36-final-signup-1280
+ok   VM-36-final-login-1280
+ok   VM-36-final-cashier-login-1280
+ok   VM-36-final-landing-1280
+ok   VM-36-final-no-table-1280
+ok   VM-36-final-signup-1280-dark
+ok   VM-36-final-login-1280-dark
+ok   VM-36-final-cashier-login-1280-dark
+ok   VM-36-final-landing-1280-dark
+ok   VM-36-final-no-table-1280-dark

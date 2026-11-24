@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3400",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.3.0",
@@ -23,6 +24,7 @@
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.510.0",
     "next": "^15.5.29",
+    "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-to-print": "^3.3.0",
@@ -32,13 +34,24 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
     "@types/node": "^26",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.3.0",
+    "@vitest/coverage-v8": "^5.1.1",
     "eslint": "^9",
     "eslint-config-next": "^15.5.29",
+    "jsdom": "^31.0.1",
+    "msw": "^2.15.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.1.1",
+    "zod": "^4.6.7"
   },
   "overrides": {
     "@grpc/grpc-js": "^1.14.7",

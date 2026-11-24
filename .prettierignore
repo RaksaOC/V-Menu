@@ -1,0 +1,20 @@
+# Generated, vendored or recorded files
+node_modules/
+dist/
+build/
+.next/
+coverage/
+playwright-report/
+test-results/
+**/package-lock.json
+frontend/next-env.d.ts
+docs/showcase/before/
+docs/showcase/after/
+# Prose, workflow and infrastructure files are formatted by hand
+*.md
+*.yml
+*.yaml
+*.html
+infra/
+# B5: recorded API data for the screenshot tests, written by the tests
+e2e/screens/data/

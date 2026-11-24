@@ -1,0 +1,66 @@
+# SEC-09: static analysis with Semgrep (rule sets p/typescript, p/nodejs, p/react) on every PR
+# and on pushes to staging and main.
+#   - A PR fails when it adds a new high-severity finding (a Semgrep ERROR). Findings that were
+#     already on the base branch don't block it (--baseline-commit).
+#   - The findings also go to the Security tab (code scanning), and the job summary shows the
+#     counts.
+name: Code scanning
+
+on:
+  pull_request:
+  push:
+    branches: [staging, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: code-scanning-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write # upload the results to code scanning
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # --baseline-commit needs the PR's base commit
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install Semgrep
+        run: pip install semgrep==1.186.0
+
+      - name: Scan
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          baseline=()
+          if [[ -n "$BASE" ]]; then baseline=(--baseline-commit "$BASE"); fi
+          semgrep scan --config p/typescript --config p/nodejs --config p/react \
+            --metrics=off --sarif --output semgrep.sarif \
+            --exclude docs --exclude e2e "${baseline[@]}" .
+
+      # On a PR, fails on a new high finding; on staging and main it only reports.
+      - name: Security summary
+        if: always()
+        run: node scripts/security-summary.mjs semgrep semgrep.sarif ${{ github.event_name == 'pull_request' && '--fail-on-high' || '' }}
+
+      - name: Upload to code scanning
+        if: always() && hashFiles('semgrep.sarif') != ''
+        continue-on-error: true # PRs from forks can't write security events
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep

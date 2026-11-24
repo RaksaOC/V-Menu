@@ -4,9 +4,8 @@ version: 2
 updates:
   - package-ecosystem: npm
     directories:
-      - /services/restaurant-service
-      - /services/menu-service
-      - /services/order-service
+      # backend/ is one workspace (CL-02): the services and packages/common share its lockfile.
+      - /backend
       - /frontend
       - /e2e
       - /
@@ -35,9 +34,9 @@ updates:
   # Base images in the Dockerfiles (node:22-alpine, node:26-slim)
   - package-ecosystem: docker
     directories:
-      - /services/restaurant-service
-      - /services/menu-service
-      - /services/order-service
+      - /backend/services/restaurant
+      - /backend/services/menu
+      - /backend/services/order
       - /frontend
     schedule:
       interval: weekly

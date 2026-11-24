@@ -1,0 +1,14 @@
+# PHOTOS-S3, optional (STORAGE_NETWORK set): object storage (MinIO) runs in Docker on the server,
+# on its own network (e.g. Coolify's "coolify"). menu-service joins that network and reaches MinIO
+# by its container name, the S3_ENDPOINT of the environment (e.g. http://<minio-container>:9000).
+# Browsers use MinIO's public address (S3_PUBLIC_URL), never this network.
+# Only menu-service joins; the other services and the frontend stay on the stack's own networks.
+
+services:
+  menu-service:
+    networks: [backend, frontend, storage]
+
+networks:
+  storage:
+    external: true
+    name: ${STORAGE_NETWORK:?set STORAGE_NETWORK to the Docker network MinIO is on}

@@ -3,20 +3,40 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-/* Only the landing page and the sign-in / sign-up screens have dark styles. The working
-   screens (owner, cashier, kitchen, customer) were built light-only, so they always render
-   light, even when the saved choice is dark. The same rule runs before first paint in
-   layout.tsx; this component re-applies it on client-side navigation. */
-export const DARK_READY = `p==="/"||p==="/login"||p==="/signup"||/\\/login$/.test(p)`;
+/* The pages with dark styles: the landing page, a restaurant's page (/<slug>, VM-32), the sign-in and sign-up screens, the
+   UI kit page, the customer's menu, cart and order pages (VM-33), the kitchen screen (VM-34), and the cashier and owner
+   dashboards (VM-35). Any other page renders light, even when the saved choice is dark. The same rule runs before first
+   paint (themeScript, in layout.tsx); this component re-applies it on client-side navigation. */
+export const DARK_READY = `p==="/"||p==="/ui-kit"||p==="/login"||p==="/signup"||/\\/login$/.test(p)||/^\\/(?!owner$)[^/]+$/.test(p)||/^\\/[^/]+\\/(customer|t)\\/[^/]+(\\/cart|\\/orders\\/[^/]+)?$/.test(p)||/^\\/[^/]+\\/kitchen(\\/history)?$/.test(p)||p==="/owner"||/^\\/[^/]+\\/cashier(\\/dashboard)?$/.test(p)`;
+
+/* VM-34: the kitchen screen is dark unless the kitchen picked light, and keeps its own choice
+   (vm-kitchen-theme), so a kitchen tablet's setting doesn't change the other pages. */
+const KITCHEN = /^\/[^/]+\/kitchen(\/history)?$/;
+export const KITCHEN_THEME_KEY = "vm-kitchen-theme";
+
+/** Sets the theme before first paint; layout.tsx puts it in an inline script. */
+export const themeScript = `try{var p=location.pathname;var k=${KITCHEN}.test(p);var s=localStorage.getItem(k?"${KITCHEN_THEME_KEY}":"vm-theme");var t=(k?s!=="light":s==="dark")&&(${DARK_READY})?"dark":"light";var d=document.documentElement;d.dataset.theme=t;d.classList.toggle("dark",t==="dark")}catch(e){}`;
 
 export function applyTheme(pathname: string) {
     const p = pathname;
-    let saved = "light";
+    const kitchen = KITCHEN.test(p);
+    let saved: string | null = null;
     try {
-        saved = localStorage.getItem("vm-theme") === "dark" ? "dark" : "light";
+        saved = localStorage.getItem(kitchen ? KITCHEN_THEME_KEY : "vm-theme");
     } catch {}
-    const supportsDark = p === "/" || p === "/login" || p === "/signup" || /\/login$/.test(p);
-    const theme = supportsDark ? saved : "light";
+    const supportsDark =
+        p === "/" ||
+        p === "/ui-kit" ||
+        p === "/login" ||
+        p === "/signup" ||
+        /\/login$/.test(p) ||
+        /^\/(?!owner$)[^/]+$/.test(p) ||
+        /^\/[^/]+\/(customer|t)\/[^/]+(\/cart|\/orders\/[^/]+)?$/.test(p) || // VM-33
+        kitchen || // VM-34
+        p === "/owner" ||
+        /^\/[^/]+\/cashier(\/dashboard)?$/.test(p); // VM-35
+    const dark = kitchen ? saved !== "light" : saved === "dark";
+    const theme = supportsDark && dark ? "dark" : "light";
     const root = document.documentElement;
     root.dataset.theme = theme;
     root.classList.toggle("dark", theme === "dark");

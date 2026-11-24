@@ -1,0 +1,6 @@
+# Commits that only reformat code. git blame skips them when you run
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# (GitHub's blame view reads this file automatically.)
+
+# CL-12: Prettier over the whole repo
+92b72b5088b5b708a2fb6c2d4939a9b42ccf7756

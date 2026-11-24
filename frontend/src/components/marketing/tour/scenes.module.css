@@ -1,0 +1,478 @@
+/* Building blocks for the tour illustrations (deep-lab tokens only). */
+
+.scene {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+}
+.svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.svgScroll {
+    overflow-x: auto;
+}
+.svgScroll .svg {
+    min-width: 520px;
+}
+.small {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: var(--f-mono);
+    overflow-wrap: anywhere;
+}
+.label {
+    font-family: var(--f-label);
+    text-transform: var(--label-tt);
+    letter-spacing: var(--label-track);
+    font-size: calc(0.74rem * var(--label-scale));
+    color: var(--muted);
+}
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+.chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    font-family: var(--f-label);
+    text-transform: var(--label-tt);
+    letter-spacing: var(--label-track);
+    font-size: calc(0.76rem * var(--label-scale));
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+}
+.chipAccent {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+}
+.chipOk {
+    background: var(--ok-soft);
+    color: var(--ok);
+}
+.chipBad {
+    background: var(--bad-soft);
+    color: var(--bad);
+}
+.chipMuted {
+    color: var(--muted);
+}
+.panel {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    min-width: 0;
+}
+.code {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--code-bg);
+    color: #d7e3f0;
+    font: 0.74rem/1.55 var(--f-mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.centerRow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.arrow {
+    color: var(--muted);
+    font-size: 1.1rem;
+}
+.db {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: var(--r-chip);
+    background: var(--card);
+    color: var(--ok);
+    font-size: 0.74rem;
+    max-width: 100%;
+}
+.db code {
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+
+/* intro */
+.introRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 3vw, 32px);
+    flex-wrap: wrap;
+}
+.phone {
+    width: min(290px, 100%);
+    background: var(--bg);
+    border: 6px solid var(--ink);
+    border-radius: 30px;
+    padding: 14px 12px;
+    display: grid;
+    gap: 10px;
+    box-shadow: var(--pop);
+}
+.phoneTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--ink);
+    font-family: var(--f-display);
+}
+.dishGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.dish {
+    display: grid;
+    gap: 2px;
+    background: var(--card);
+    border-radius: 10px;
+    padding: 6px;
+}
+.dishImg {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 7px;
+}
+.dishName {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+.dishPrice {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: var(--f-mono);
+}
+.cartBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.74rem;
+    color: var(--ink);
+}
+.cartBtn {
+    padding: 6px 12px;
+    border-radius: var(--r-pill);
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+}
+.qrCard {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 14px;
+}
+.qrImg {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+/* roles */
+.grid2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-content: center;
+}
+.roleHead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink);
+}
+.iconDot {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+}
+.grid2 .chips {
+    justify-content: flex-start;
+}
+
+/* flow */
+.flow {
+    display: grid;
+    gap: 8px;
+    align-content: center;
+}
+.flowRow {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--bg);
+    opacity: 0.55;
+    transition:
+        opacity 0.3s,
+        box-shadow 0.3s;
+}
+.flowDone {
+    opacity: 0.85;
+}
+.flowActive {
+    opacity: 1;
+    box-shadow: 0 0 0 2px var(--accent);
+}
+.flowNum {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--card);
+    font-family: var(--f-mono);
+    font-size: 0.8rem;
+    color: var(--ink);
+}
+.flowActive .flowNum {
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+.flowText {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    color: var(--ink);
+    font-size: 0.9rem;
+}
+
+/* before */
+.monolith {
+    display: grid;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 2px dashed var(--ctl);
+    background: var(--bg);
+}
+.monolith .chips {
+    justify-content: flex-start;
+}
+.routeList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 6px;
+}
+.routeItem .small {
+    white-space: nowrap;
+}
+.routeItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--card);
+    font-size: 0.78rem;
+    color: var(--ink);
+}
+.arrowDown {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+/* architecture and ownership */
+.node {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.nodeDark {
+    background: var(--btn-bg);
+    color: var(--btn-ink);
+}
+.nodeDark .small {
+    color: inherit;
+    opacity: 0.75;
+}
+.fan {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    height: 18px;
+}
+.fan span {
+    border-left: 1.5px solid var(--ctl);
+    margin-left: 50%;
+}
+.three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+.svc {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    justify-items: start;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--ink);
+    min-width: 0;
+}
+.svc > strong {
+    font-family: var(--f-display);
+    font-size: 0.95rem;
+}
+.svc .chips {
+    justify-content: flex-start;
+}
+.pathList {
+    display: grid;
+    gap: 3px;
+    font-size: 0.74rem;
+    color: var(--accent-text);
+}
+.miniList {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 0.8rem;
+    color: var(--body);
+    display: grid;
+    gap: 2px;
+}
+
+/* security */
+.chain {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+.chainItem {
+    position: relative;
+    display: grid;
+    gap: 3px;
+    align-content: start;
+    justify-items: start;
+    padding: 10px 11px;
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 0.78rem;
+    min-width: 0;
+}
+.chainItem + .chainItem::before {
+    content: "→";
+    position: absolute;
+    left: -13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+/* health */
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--f-label);
+    text-transform: var(--label-tt);
+    letter-spacing: var(--label-track);
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ctl);
+}
+.statusUp {
+    color: var(--ok);
+}
+.statusUp .dot {
+    background: var(--ok);
+    box-shadow: 0 0 0 3px var(--ok-soft);
+}
+.statusDown {
+    color: var(--bad);
+}
+.statusDown .dot {
+    background: var(--bad);
+}
+
+/* try */
+.action {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--ink);
+    text-decoration: none;
+    padding-right: 34px;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+.action:hover {
+    border-color: var(--accent);
+}
+.actionArrow {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    color: var(--accent-text);
+}
+
+@media (max-width: 640px) {
+    .three,
+    .grid2 {
+        grid-template-columns: 1fr;
+    }
+    .fan {
+        display: none;
+    }
+    .chain {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .chainItem:nth-child(3)::before {
+        content: none;
+    }
+}

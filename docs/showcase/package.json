@@ -1,0 +1,13 @@
+{
+  "name": "v-menu-showcase",
+  "private": true,
+  "description": "Captures the before/after screenshots for the QA showcase (B11)",
+  "type": "module",
+  "scripts": {
+    "capture": "node capture.ts"
+  },
+  "devDependencies": {
+    "jose": "^6.0.11",
+    "playwright": "^1.65.1"
+  }
+}

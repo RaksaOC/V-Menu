@@ -1,0 +1,214 @@
+#!/usr/bin/env bash
+# SC2029: remote commands are built on this side on purpose (every value is validated first).
+# SC2153: SSH_HOST and the other inputs come from the environment.
+# shellcheck disable=SC2029,SC2153
+# V-Menu: the GitHub Actions side of a deploy. Runs ON the runner, called by
+# .github/workflows/deploy.yml (and by deploy-test.yml against a throwaway runner).
+#
+# It writes the server's env files from GitHub secrets, copies them with the compose
+# files to /srv/vmenu/<target>/ over SSH, then runs remote-deploy.sh there.
+# Nobody edits files on the server by hand.
+#
+# Inputs, all as environment variables:
+#   TARGET            staging | prod
+#   DEPLOY_ACTION     an image tag (sha-1a2b3c4, 1.2.0), --rollback, --seed or --check-failed
+#   EXPECTED_SHA      optional: full git sha every /version must report
+#   SSH_HOST SSH_USER SSH_KEY        secrets; SSH_PORT (default 22)
+#   SSH_KNOWN_HOSTS   optional secret: the server's host key line(s). Recommended.
+#   MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY
+#   FIREBASE_PROJECT_ID LOG_LEVEL FRONTEND_PORT MONGO_MODE MONGO_NETWORK PROXY_NETWORK   (variables)
+#   PHOTOS-S3, menu photos in object storage (MinIO):
+#   S3_ACCESS_KEY S3_SECRET_KEY (secrets); S3_ENDPOINT S3_PUBLIC_URL S3_BUCKET S3_REGION
+#   STORAGE_NETWORK (variables; STORAGE_NETWORK is the Docker network MinIO is on, if any)
+#   VMENU_SKIP_PULL   1 only in the CI test (images are built on the host)
+set -Eeuo pipefail
+
+die() { echo "::error::$*" >&2; exit 1; }
+
+case ${TARGET:-} in staging | prod) ;; *) die "TARGET must be staging or prod" ;; esac
+ACTION=${DEPLOY_ACTION:-}
+[[ $ACTION =~ ^(--rollback|--seed|--check-failed|[A-Za-z0-9._-]{1,128})$ ]] || die "invalid DEPLOY_ACTION: '$ACTION'"
+[[ $ACTION != --check-failed || $TARGET == staging ]] || die "--check-failed is for staging only (the post-deploy checks run there)"
+[[ -z ${EXPECTED_SHA:-} || $EXPECTED_SHA =~ ^[0-9a-f]{7,40}$ ]] || die "invalid EXPECTED_SHA"
+
+: "${SSH_PORT:=22}"
+: "${LOG_LEVEL:=info}"
+: "${MONGO_MODE:=host}"
+: "${MONGO_NETWORK:=}"
+: "${PROXY_NETWORK:=}"
+: "${STORAGE_NETWORK:=}"
+: "${S3_PUBLIC_URL:=}"
+: "${S3_REGION:=us-east-1}"
+: "${FIREBASE_PROJECT_ID:=}"
+if [[ -z ${FRONTEND_PORT:-} ]]; then
+    if [[ $TARGET == prod ]]; then FRONTEND_PORT=3400; else FRONTEND_PORT=3401; fi
+fi
+[[ $FRONTEND_PORT =~ ^[0-9]{2,5}$ ]] || die "FRONTEND_PORT must be a port number"
+[[ $SSH_PORT =~ ^[0-9]{1,5}$ ]] || die "SSH_PORT must be a port number"
+[[ -z $PROXY_NETWORK || $PROXY_NETWORK =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || die "PROXY_NETWORK must be a Docker network name"
+[[ -z $STORAGE_NETWORK || $STORAGE_NETWORK =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || die "STORAGE_NETWORK must be a Docker network name"
+
+# Not set up yet (no server secrets at all): skip, like M3's placeholder did, so releases on
+# main stay green until Raksa adds the secrets. Partly set up is a mistake and fails below.
+if [[ -z ${SSH_HOST:-}${SSH_USER:-}${SSH_KEY:-} ]]; then
+    echo "::notice::No server configured for '$TARGET' yet (SSH_HOST/SSH_USER/SSH_KEY are empty). Skipping the deploy."
+    if [[ -n ${GITHUB_STEP_SUMMARY:-} ]]; then
+        echo "### ⏭️ $TARGET: skipped, no server configured yet (see infra/deploy/README.md)" >>"$GITHUB_STEP_SUMMARY"
+    fi
+    exit 0
+fi
+
+# Fail early, by name, when a secret was never added to the GitHub Environment.
+# B7: --check-failed only adds a history line. It copies nothing: the copy replaces the server's
+# .env, which holds the running TAG, and this action runs outside the deploy queue.
+copy_files=true
+needed=(SSH_HOST SSH_USER SSH_KEY MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY
+    S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY S3_SECRET_KEY)
+if [[ $ACTION == --check-failed ]]; then
+    copy_files=false
+    needed=(SSH_HOST SSH_USER SSH_KEY)
+fi
+missing=()
+for name in "${needed[@]}"; do
+    [[ -n ${!name:-} ]] || missing+=("$name")
+done
+((${#missing[@]} == 0)) || die "missing secrets or variables in the '$TARGET' environment: ${missing[*]}"
+
+if [[ $copy_files == true ]]; then
+# PHOTOS-S3: storage addresses are http(s) URLs (menu-service refuses anything else at startup)
+for name in S3_ENDPOINT S3_PUBLIC_URL; do
+    value=${!name}
+    [[ -z $value || $value =~ ^https?://[^[:space:]]+$ ]] || die "$name must be an http(s) URL"
+done
+# The services refuse to start with a shorter one (backend/services/*/src/lib/config.ts).
+((${#JWT_SECRET} >= 32)) || die "JWT_SECRET in the '$TARGET' environment is ${#JWT_SECRET} characters; it must be at least 32 (openssl rand -hex 32)"
+
+# Values are written single-quoted, so compose takes them literally ($ is not expanded).
+# That only breaks on a single quote or a newline, so refuse those.
+for name in MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY FIREBASE_PROJECT_ID LOG_LEVEL MONGO_NETWORK \
+    S3_ENDPOINT S3_PUBLIC_URL S3_BUCKET S3_REGION S3_ACCESS_KEY S3_SECRET_KEY; do
+    value=${!name}
+    [[ $value != *"'"* && $value != *$'\n'* ]] || die "$name contains a single quote or a newline; change that value"
+done
+fi
+
+# ---- build the bundle the server gets ----
+umask 077
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+bundle=$work/bundle
+if [[ $copy_files == true ]]; then
+# Server layout, not the repo's: docker-compose.prod.yml reads services/<service-name>/.env.
+mkdir -p "$bundle"/services/{restaurant-service,menu-service,order-service}
+
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+cp "$here/../compose/docker-compose.prod.yml" "$here/compose.deploy.yml" "$here/compose.mongo-host.yml" \
+    "$here/compose.mongo-container.yml" "$here/compose.proxy-network.yml" "$here/compose.storage-network.yml" \
+    "$here/remote-deploy.sh" "$bundle/"
+
+# TAG is added by remote-deploy.sh; it owns that line.
+cat >"$bundle/.env" <<EOF
+# Written by the deploy workflow. Do not edit on the server: the next deploy replaces it.
+FRONTEND_PORT=$FRONTEND_PORT
+MONGO_MODE=$MONGO_MODE
+MONGO_NETWORK=$MONGO_NETWORK
+PROXY_NETWORK=$PROXY_NETWORK
+STORAGE_NETWORK=$STORAGE_NETWORK
+EOF
+
+common() {
+    cat <<EOF
+JWT_SECRET='$JWT_SECRET'
+INTERNAL_API_KEY='$INTERNAL_API_KEY'
+LOG_LEVEL='$LOG_LEVEL'
+EOF
+}
+{
+    echo "SERVICE_NAME=restaurant-service"
+    echo "PORT=4101"
+    echo "MONGODB_URI='$MONGODB_URI_RESTAURANT'"
+    common
+    echo "FIREBASE_PROJECT_ID='$FIREBASE_PROJECT_ID'"
+    echo "COOKIE_SECURE=true"
+} >"$bundle/services/restaurant-service/.env"
+{
+    echo "SERVICE_NAME=menu-service"
+    echo "PORT=4102"
+    echo "MONGODB_URI='$MONGODB_URI_MENU'"
+    common
+    # PHOTOS-S3
+    echo "S3_ENDPOINT='$S3_ENDPOINT'"
+    echo "S3_PUBLIC_URL='$S3_PUBLIC_URL'"
+    echo "S3_ACCESS_KEY='$S3_ACCESS_KEY'"
+    echo "S3_SECRET_KEY='$S3_SECRET_KEY'"
+    echo "S3_BUCKET='$S3_BUCKET'"
+    echo "S3_REGION='$S3_REGION'"
+} >"$bundle/services/menu-service/.env"
+{
+    echo "SERVICE_NAME=order-service"
+    echo "PORT=4103"
+    echo "MONGODB_URI='$MONGODB_URI_ORDER'"
+    common
+} >"$bundle/services/order-service/.env"
+fi
+
+# ---- SSH ----
+key=$work/id_deploy
+printf '%s\n' "$SSH_KEY" | tr -d '\r' >"$key"
+chmod 600 "$key"
+known=$work/known_hosts
+if [[ -n ${SSH_KNOWN_HOSTS:-} ]]; then
+    printf '%s\n' "$SSH_KNOWN_HOSTS" >"$known"
+else
+    echo "::warning::SSH_KNOWN_HOSTS is not set, trusting the server's key on first sight. Add it as a secret."
+    ssh-keyscan -p "$SSH_PORT" -T 15 "$SSH_HOST" >"$known" 2>/dev/null || die "cannot reach $SSH_HOST:$SSH_PORT"
+fi
+ssh_opts=(-i "$key" -p "$SSH_PORT" -o UserKnownHostsFile="$known" -o StrictHostKeyChecking=yes
+    -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15)
+remote_dir=/srv/vmenu/$TARGET
+
+if [[ $copy_files == true ]]; then
+    echo "Copying compose and env files to $remote_dir"
+    tar -C "$bundle" -czf - . | ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" "test -d '$remote_dir' && tar -xzf - -C '$remote_dir'" ||
+        die "copy failed. Does $remote_dir exist and belong to $SSH_USER? (infra/deploy/setup-server.sh creates it)"
+fi
+
+# For the DORA lead time: the average commit time of what this deploy ships. A merge commit
+# ships the commits of its second parent; any other commit ships itself. Empty if unknown.
+commit_time=""
+if [[ -n ${EXPECTED_SHA:-} ]] && git cat-file -e "$EXPECTED_SHA^{commit}" 2>/dev/null; then
+    range="$EXPECTED_SHA^!"
+    if git rev-parse -q --verify "$EXPECTED_SHA^2" >/dev/null; then range="$EXPECTED_SHA^1..$EXPECTED_SHA^2"; fi
+    commit_time=$(git log --no-merges --format=%ct "$range" | awk '{s += $1} END {if (NR) printf "%.0f", s / NR}') || commit_time=""
+fi
+
+echo "Running remote-deploy.sh $TARGET $ACTION"
+log=$work/remote.log
+set +e
+ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" \
+    "EXPECTED_SHA='${EXPECTED_SHA:-}' COMMIT_TIME='$commit_time' VMENU_SKIP_PULL='${VMENU_SKIP_PULL:-0}' bash '$remote_dir/remote-deploy.sh' '$TARGET' '$ACTION'" 2>&1 | tee "$log"
+status=${PIPESTATUS[0]}
+set -e
+
+# ---- job summary ----
+if [[ -n ${GITHUB_STEP_SUMMARY:-} ]]; then
+    line=$(grep '^RESULT ' "$log" | tail -n1 || true)
+    {
+        if ((status == 0)); then echo "### ✅ $TARGET: $ACTION"; else echo "### ❌ $TARGET: $ACTION failed"; fi
+        echo
+        if [[ -n $line ]]; then
+            echo "| | |"
+            echo "|---|---|"
+            for kv in ${line#RESULT }; do echo "| ${kv%%=*} | \`${kv#*=}\` |"; done
+        fi
+        echo
+        echo "<details><summary>Server log</summary>"
+        echo
+        echo '```'
+        grep -v '^RESULT ' "$log" || true
+        echo '```'
+        echo "</details>"
+    } >>"$GITHUB_STEP_SUMMARY"
+fi
+
+exit "$status"

@@ -9,95 +9,390 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: var(--f-body);
-  --font-mono: var(--f-mono);
-  --font-display: var(--f-display);
+    --font-sans: var(--f-body);
+    --font-mono: var(--f-mono);
+    --font-display: var(--f-display);
 
-  /* neutrals: gray / slate / zinc / neutral / stone */
-  --color-gray-50: var(--n-50); --color-gray-100: var(--n-100); --color-gray-200: var(--n-200); --color-gray-300: var(--n-300); --color-gray-400: var(--n-400); --color-gray-500: var(--n-500); --color-gray-600: var(--n-600); --color-gray-700: var(--n-700); --color-gray-800: var(--n-800); --color-gray-900: var(--n-900); --color-gray-950: var(--n-950);
-  --color-slate-50: var(--n-50); --color-slate-100: var(--n-100); --color-slate-200: var(--n-200); --color-slate-300: var(--n-300); --color-slate-400: var(--n-400); --color-slate-500: var(--n-500); --color-slate-600: var(--n-600); --color-slate-700: var(--n-700); --color-slate-800: var(--n-800); --color-slate-900: var(--n-900); --color-slate-950: var(--n-950);
-  --color-zinc-50: var(--n-50); --color-zinc-100: var(--n-100); --color-zinc-200: var(--n-200); --color-zinc-300: var(--n-300); --color-zinc-400: var(--n-400); --color-zinc-500: var(--n-500); --color-zinc-600: var(--n-600); --color-zinc-700: var(--n-700); --color-zinc-800: var(--n-800); --color-zinc-900: var(--n-900); --color-zinc-950: var(--n-950);
-  --color-neutral-50: var(--n-50); --color-neutral-100: var(--n-100); --color-neutral-200: var(--n-200); --color-neutral-300: var(--n-300); --color-neutral-400: var(--n-400); --color-neutral-500: var(--n-500); --color-neutral-600: var(--n-600); --color-neutral-700: var(--n-700); --color-neutral-800: var(--n-800); --color-neutral-900: var(--n-900); --color-neutral-950: var(--n-950);
-  --color-stone-50: var(--n-50); --color-stone-100: var(--n-100); --color-stone-200: var(--n-200); --color-stone-300: var(--n-300); --color-stone-400: var(--n-400); --color-stone-500: var(--n-500); --color-stone-600: var(--n-600); --color-stone-700: var(--n-700); --color-stone-800: var(--n-800); --color-stone-900: var(--n-900); --color-stone-950: var(--n-950);
-  /* accent: the old blue / indigo / purple / violet / sky / cyan become coral */
-  --color-blue-50: var(--a-50); --color-blue-100: var(--a-100); --color-blue-200: var(--a-200); --color-blue-300: var(--a-300); --color-blue-400: var(--a-400); --color-blue-500: var(--a-500); --color-blue-600: var(--a-600); --color-blue-700: var(--a-700); --color-blue-800: var(--a-800); --color-blue-900: var(--a-900); --color-blue-950: var(--a-950);
-  --color-indigo-50: var(--a-50); --color-indigo-100: var(--a-100); --color-indigo-200: var(--a-200); --color-indigo-300: var(--a-300); --color-indigo-400: var(--a-400); --color-indigo-500: var(--a-500); --color-indigo-600: var(--a-600); --color-indigo-700: var(--a-700); --color-indigo-800: var(--a-800); --color-indigo-900: var(--a-900); --color-indigo-950: var(--a-950);
-  --color-purple-50: var(--a-50); --color-purple-100: var(--a-100); --color-purple-200: var(--a-200); --color-purple-300: var(--a-300); --color-purple-400: var(--a-400); --color-purple-500: var(--a-500); --color-purple-600: var(--a-600); --color-purple-700: var(--a-700); --color-purple-800: var(--a-800); --color-purple-900: var(--a-900); --color-purple-950: var(--a-950);
-  --color-violet-50: var(--a-50); --color-violet-100: var(--a-100); --color-violet-200: var(--a-200); --color-violet-300: var(--a-300); --color-violet-400: var(--a-400); --color-violet-500: var(--a-500); --color-violet-600: var(--a-600); --color-violet-700: var(--a-700); --color-violet-800: var(--a-800); --color-violet-900: var(--a-900); --color-violet-950: var(--a-950);
-  --color-sky-50: var(--a-50); --color-sky-100: var(--a-100); --color-sky-200: var(--a-200); --color-sky-300: var(--a-300); --color-sky-400: var(--a-400); --color-sky-500: var(--a-500); --color-sky-600: var(--a-600); --color-sky-700: var(--a-700); --color-sky-800: var(--a-800); --color-sky-900: var(--a-900); --color-sky-950: var(--a-950);
-  --color-cyan-50: var(--a-50); --color-cyan-100: var(--a-100); --color-cyan-200: var(--a-200); --color-cyan-300: var(--a-300); --color-cyan-400: var(--a-400); --color-cyan-500: var(--a-500); --color-cyan-600: var(--a-600); --color-cyan-700: var(--a-700); --color-cyan-800: var(--a-800); --color-cyan-900: var(--a-900); --color-cyan-950: var(--a-950);
-  /* success: green / emerald / teal become deep-lab forest */
-  --color-green-50: var(--g-50); --color-green-100: var(--g-100); --color-green-200: var(--g-200); --color-green-300: var(--g-300); --color-green-400: var(--g-400); --color-green-500: var(--g-500); --color-green-600: var(--g-600); --color-green-700: var(--g-700); --color-green-800: var(--g-800); --color-green-900: var(--g-900); --color-green-950: var(--g-950);
-  --color-emerald-50: var(--g-50); --color-emerald-100: var(--g-100); --color-emerald-200: var(--g-200); --color-emerald-300: var(--g-300); --color-emerald-400: var(--g-400); --color-emerald-500: var(--g-500); --color-emerald-600: var(--g-600); --color-emerald-700: var(--g-700); --color-emerald-800: var(--g-800); --color-emerald-900: var(--g-900); --color-emerald-950: var(--g-950);
-  --color-teal-50: var(--g-50); --color-teal-100: var(--g-100); --color-teal-200: var(--g-200); --color-teal-300: var(--g-300); --color-teal-400: var(--g-400); --color-teal-500: var(--g-500); --color-teal-600: var(--g-600); --color-teal-700: var(--g-700); --color-teal-800: var(--g-800); --color-teal-900: var(--g-900); --color-teal-950: var(--g-950);
-  /* danger: red / rose / pink become deep-lab red */
-  --color-red-50: var(--r-50); --color-red-100: var(--r-100); --color-red-200: var(--r-200); --color-red-300: var(--r-300); --color-red-400: var(--r-400); --color-red-500: var(--r-500); --color-red-600: var(--r-600); --color-red-700: var(--r-700); --color-red-800: var(--r-800); --color-red-900: var(--r-900); --color-red-950: var(--r-950);
-  --color-rose-50: var(--r-50); --color-rose-100: var(--r-100); --color-rose-200: var(--r-200); --color-rose-300: var(--r-300); --color-rose-400: var(--r-400); --color-rose-500: var(--r-500); --color-rose-600: var(--r-600); --color-rose-700: var(--r-700); --color-rose-800: var(--r-800); --color-rose-900: var(--r-900); --color-rose-950: var(--r-950);
-  --color-pink-50: var(--r-50); --color-pink-100: var(--r-100); --color-pink-200: var(--r-200); --color-pink-300: var(--r-300); --color-pink-400: var(--r-400); --color-pink-500: var(--r-500); --color-pink-600: var(--r-600); --color-pink-700: var(--r-700); --color-pink-800: var(--r-800); --color-pink-900: var(--r-900); --color-pink-950: var(--r-950);
+    /* neutrals: gray / slate / zinc / neutral / stone */
+    --color-gray-50: var(--n-50);
+    --color-gray-100: var(--n-100);
+    --color-gray-200: var(--n-200);
+    --color-gray-300: var(--n-300);
+    --color-gray-400: var(--n-400);
+    --color-gray-500: var(--n-500);
+    --color-gray-600: var(--n-600);
+    --color-gray-700: var(--n-700);
+    --color-gray-800: var(--n-800);
+    --color-gray-900: var(--n-900);
+    --color-gray-950: var(--n-950);
+    --color-slate-50: var(--n-50);
+    --color-slate-100: var(--n-100);
+    --color-slate-200: var(--n-200);
+    --color-slate-300: var(--n-300);
+    --color-slate-400: var(--n-400);
+    --color-slate-500: var(--n-500);
+    --color-slate-600: var(--n-600);
+    --color-slate-700: var(--n-700);
+    --color-slate-800: var(--n-800);
+    --color-slate-900: var(--n-900);
+    --color-slate-950: var(--n-950);
+    --color-zinc-50: var(--n-50);
+    --color-zinc-100: var(--n-100);
+    --color-zinc-200: var(--n-200);
+    --color-zinc-300: var(--n-300);
+    --color-zinc-400: var(--n-400);
+    --color-zinc-500: var(--n-500);
+    --color-zinc-600: var(--n-600);
+    --color-zinc-700: var(--n-700);
+    --color-zinc-800: var(--n-800);
+    --color-zinc-900: var(--n-900);
+    --color-zinc-950: var(--n-950);
+    --color-neutral-50: var(--n-50);
+    --color-neutral-100: var(--n-100);
+    --color-neutral-200: var(--n-200);
+    --color-neutral-300: var(--n-300);
+    --color-neutral-400: var(--n-400);
+    --color-neutral-500: var(--n-500);
+    --color-neutral-600: var(--n-600);
+    --color-neutral-700: var(--n-700);
+    --color-neutral-800: var(--n-800);
+    --color-neutral-900: var(--n-900);
+    --color-neutral-950: var(--n-950);
+    --color-stone-50: var(--n-50);
+    --color-stone-100: var(--n-100);
+    --color-stone-200: var(--n-200);
+    --color-stone-300: var(--n-300);
+    --color-stone-400: var(--n-400);
+    --color-stone-500: var(--n-500);
+    --color-stone-600: var(--n-600);
+    --color-stone-700: var(--n-700);
+    --color-stone-800: var(--n-800);
+    --color-stone-900: var(--n-900);
+    --color-stone-950: var(--n-950);
+    /* accent: the old blue / indigo / purple / violet / sky / cyan become coral */
+    --color-blue-50: var(--a-50);
+    --color-blue-100: var(--a-100);
+    --color-blue-200: var(--a-200);
+    --color-blue-300: var(--a-300);
+    --color-blue-400: var(--a-400);
+    --color-blue-500: var(--a-500);
+    --color-blue-600: var(--a-600);
+    --color-blue-700: var(--a-700);
+    --color-blue-800: var(--a-800);
+    --color-blue-900: var(--a-900);
+    --color-blue-950: var(--a-950);
+    --color-indigo-50: var(--a-50);
+    --color-indigo-100: var(--a-100);
+    --color-indigo-200: var(--a-200);
+    --color-indigo-300: var(--a-300);
+    --color-indigo-400: var(--a-400);
+    --color-indigo-500: var(--a-500);
+    --color-indigo-600: var(--a-600);
+    --color-indigo-700: var(--a-700);
+    --color-indigo-800: var(--a-800);
+    --color-indigo-900: var(--a-900);
+    --color-indigo-950: var(--a-950);
+    --color-purple-50: var(--a-50);
+    --color-purple-100: var(--a-100);
+    --color-purple-200: var(--a-200);
+    --color-purple-300: var(--a-300);
+    --color-purple-400: var(--a-400);
+    --color-purple-500: var(--a-500);
+    --color-purple-600: var(--a-600);
+    --color-purple-700: var(--a-700);
+    --color-purple-800: var(--a-800);
+    --color-purple-900: var(--a-900);
+    --color-purple-950: var(--a-950);
+    --color-violet-50: var(--a-50);
+    --color-violet-100: var(--a-100);
+    --color-violet-200: var(--a-200);
+    --color-violet-300: var(--a-300);
+    --color-violet-400: var(--a-400);
+    --color-violet-500: var(--a-500);
+    --color-violet-600: var(--a-600);
+    --color-violet-700: var(--a-700);
+    --color-violet-800: var(--a-800);
+    --color-violet-900: var(--a-900);
+    --color-violet-950: var(--a-950);
+    --color-sky-50: var(--a-50);
+    --color-sky-100: var(--a-100);
+    --color-sky-200: var(--a-200);
+    --color-sky-300: var(--a-300);
+    --color-sky-400: var(--a-400);
+    --color-sky-500: var(--a-500);
+    --color-sky-600: var(--a-600);
+    --color-sky-700: var(--a-700);
+    --color-sky-800: var(--a-800);
+    --color-sky-900: var(--a-900);
+    --color-sky-950: var(--a-950);
+    --color-cyan-50: var(--a-50);
+    --color-cyan-100: var(--a-100);
+    --color-cyan-200: var(--a-200);
+    --color-cyan-300: var(--a-300);
+    --color-cyan-400: var(--a-400);
+    --color-cyan-500: var(--a-500);
+    --color-cyan-600: var(--a-600);
+    --color-cyan-700: var(--a-700);
+    --color-cyan-800: var(--a-800);
+    --color-cyan-900: var(--a-900);
+    --color-cyan-950: var(--a-950);
+    /* success: green / emerald / teal become deep-lab forest */
+    --color-green-50: var(--g-50);
+    --color-green-100: var(--g-100);
+    --color-green-200: var(--g-200);
+    --color-green-300: var(--g-300);
+    --color-green-400: var(--g-400);
+    --color-green-500: var(--g-500);
+    --color-green-600: var(--g-600);
+    --color-green-700: var(--g-700);
+    --color-green-800: var(--g-800);
+    --color-green-900: var(--g-900);
+    --color-green-950: var(--g-950);
+    --color-emerald-50: var(--g-50);
+    --color-emerald-100: var(--g-100);
+    --color-emerald-200: var(--g-200);
+    --color-emerald-300: var(--g-300);
+    --color-emerald-400: var(--g-400);
+    --color-emerald-500: var(--g-500);
+    --color-emerald-600: var(--g-600);
+    --color-emerald-700: var(--g-700);
+    --color-emerald-800: var(--g-800);
+    --color-emerald-900: var(--g-900);
+    --color-emerald-950: var(--g-950);
+    --color-teal-50: var(--g-50);
+    --color-teal-100: var(--g-100);
+    --color-teal-200: var(--g-200);
+    --color-teal-300: var(--g-300);
+    --color-teal-400: var(--g-400);
+    --color-teal-500: var(--g-500);
+    --color-teal-600: var(--g-600);
+    --color-teal-700: var(--g-700);
+    --color-teal-800: var(--g-800);
+    --color-teal-900: var(--g-900);
+    --color-teal-950: var(--g-950);
+    /* danger: red / rose / pink become deep-lab red */
+    --color-red-50: var(--r-50);
+    --color-red-100: var(--r-100);
+    --color-red-200: var(--r-200);
+    --color-red-300: var(--r-300);
+    --color-red-400: var(--r-400);
+    --color-red-500: var(--r-500);
+    --color-red-600: var(--r-600);
+    --color-red-700: var(--r-700);
+    --color-red-800: var(--r-800);
+    --color-red-900: var(--r-900);
+    --color-red-950: var(--r-950);
+    --color-rose-50: var(--r-50);
+    --color-rose-100: var(--r-100);
+    --color-rose-200: var(--r-200);
+    --color-rose-300: var(--r-300);
+    --color-rose-400: var(--r-400);
+    --color-rose-500: var(--r-500);
+    --color-rose-600: var(--r-600);
+    --color-rose-700: var(--r-700);
+    --color-rose-800: var(--r-800);
+    --color-rose-900: var(--r-900);
+    --color-rose-950: var(--r-950);
+    --color-pink-50: var(--r-50);
+    --color-pink-100: var(--r-100);
+    --color-pink-200: var(--r-200);
+    --color-pink-300: var(--r-300);
+    --color-pink-400: var(--r-400);
+    --color-pink-500: var(--r-500);
+    --color-pink-600: var(--r-600);
+    --color-pink-700: var(--r-700);
+    --color-pink-800: var(--r-800);
+    --color-pink-900: var(--r-900);
+    --color-pink-950: var(--r-950);
 }
 
 /* Light ramps. Every step keeps Tailwind's light-to-dark order, so pairs like
    bg-gray-100 text-gray-800 stay readable. */
 :root {
-  --n-50: #faf9f6; --n-100: #f4f2ee; --n-200: #e8e6e0; --n-300: #d9d9dd; --n-400: #93939f; --n-500: #63637a;
-  --n-600: #4b4b5c; --n-700: #34343f; --n-800: #212121; --n-900: #17171c; --n-950: #000000;
-  --a-50: #fff4f1; --a-100: #ffe4dc; --a-200: #ffc9b9; --a-300: #ffa48c; --a-400: #ff8a70; --a-500: #ff7759;
-  --a-600: #d4512f; --a-700: #b03f22; --a-800: #8a321c; --a-900: #642616; --a-950: #3d170c;
-  --g-50: #e9f6f2; --g-100: #cdebe2; --g-200: #9fd8c6; --g-300: #6cc2a8; --g-400: #3fae8b; --g-500: #1a8f71;
-  --g-600: #00695a; --g-700: #005548; --g-800: #004237; --g-900: #003129; --g-950: #00211c;
-  --r-50: #fff1f0; --r-100: #ffe0dd; --r-200: #ffc2bc; --r-300: #ff9c8f; --r-400: #f2685a; --r-500: #db3b2b;
-  --r-600: #c21a10; --r-700: #b30000; --r-800: #8c0000; --r-900: #660000; --r-950: #3d0000;
+    --n-50: #faf9f6;
+    --n-100: #f4f2ee;
+    --n-200: #e8e6e0;
+    --n-300: #d9d9dd;
+    --n-400: #93939f;
+    --n-500: #63637a;
+    --n-600: #4b4b5c;
+    --n-700: #34343f;
+    --n-800: #212121;
+    --n-900: #17171c;
+    --n-950: #000000;
+    --a-50: #fff4f1;
+    --a-100: #ffe4dc;
+    --a-200: #ffc9b9;
+    --a-300: #ffa48c;
+    --a-400: #ff8a70;
+    --a-500: #ff7759;
+    --a-600: #bb4420; /* VM-36: white text on it is 5.3:1 */
+    --a-700: #b03f22;
+    --a-800: #8a321c;
+    --a-900: #642616;
+    --a-950: #3d170c;
+    --g-50: #e9f6f2;
+    --g-100: #cdebe2;
+    --g-200: #9fd8c6;
+    --g-300: #6cc2a8;
+    --g-400: #3fae8b;
+    --g-500: #1a8f71;
+    --g-600: #00695a;
+    --g-700: #005548;
+    --g-800: #004237;
+    --g-900: #003129;
+    --g-950: #00211c;
+    --r-50: #fff1f0;
+    --r-100: #ffe0dd;
+    --r-200: #ffc2bc;
+    --r-300: #ff9c8f;
+    --r-400: #f2685a;
+    --r-500: #db3b2b;
+    --r-600: #c21a10;
+    --r-700: #b30000;
+    --r-800: #8c0000;
+    --r-900: #660000;
+    --r-950: #3d0000;
 }
 
 /* Dark: the neutral ramp turns into deep-lab's forest greens (950 = page, 800 = cards). */
 :root.dark {
-  --n-50: #f2f7f5; --n-100: #e6efec; --n-200: #cfe0da; --n-300: #a7bfb8; --n-400: #7fa39a; --n-500: #5b9185;
-  --n-600: #23685c; --n-700: #14554a; --n-800: #003c33; --n-900: #002c25; --n-950: #00211c;
-  --g-300: #7fe0bf; --g-400: #4fd1a5; --g-500: #3fbf95;
-  --r-300: #ffab9c; --r-400: #ff8a75;
+    --n-50: #f2f7f5;
+    --n-100: #e6efec;
+    --n-200: #cfe0da;
+    --n-300: #a7bfb8;
+    --n-400: #7fa39a;
+    --n-500: #5b9185;
+    --n-600: #23685c;
+    --n-700: #14554a;
+    --n-800: #003c33;
+    --n-900: #002c25;
+    --n-950: #00211c;
+    --g-300: #7fe0bf;
+    --g-400: #4fd1a5;
+    --g-500: #3fbf95;
+    --r-300: #ffab9c;
+    --r-400: #ff8a75;
 }
 
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html {
-  scroll-behavior: smooth;
+    scroll-behavior: smooth;
 }
 
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--body);
-  font-family: var(--f-body);
-  font-size: var(--fs);
-  line-height: var(--lh);
-  -webkit-font-smoothing: antialiased;
+    margin: 0;
+    background: var(--bg);
+    color: var(--body);
+    font-family: var(--f-body);
+    font-size: var(--fs);
+    line-height: var(--lh);
+    -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2,
-h3 {
-  font-family: var(--f-display);
-  letter-spacing: var(--d-track);
+/* VM-34: in the base layer, so a heading's own font class (a mono label, say) wins over it */
+@layer base {
+    h1,
+    h2,
+    h3 {
+        font-family: var(--f-display);
+        letter-spacing: var(--d-track);
+    }
 }
 
 code {
-  font-family: var(--f-mono);
+    font-family: var(--f-mono);
 }
 
 a,
 button {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 
 ::selection {
-  background: var(--accent-soft);
+    background: var(--accent-soft);
+}
+
+/* CL-10: the one toast style (lib/toast.ts). Deep Lab tokens, so it follows light and dark. */
+.Toastify__toast.vm-toast {
+    background: var(--bg, #fff);
+    color: var(--ink, #000);
+    border: 1px solid var(--line, #d9d9dd);
+    border-radius: var(--r-chip, 8px);
+    box-shadow: var(--pop, 0 8px 24px rgba(0, 0, 0, 0.1));
+    font-family: var(--f-body, inherit);
+    font-size: 0.95rem;
+    min-height: 0;
+    padding: 10px 14px;
+}
+.Toastify__toast--success.vm-toast {
+    border-left: 4px solid var(--ok, #00695a);
+}
+.Toastify__toast--info.vm-toast {
+    border-left: 4px solid var(--accent, #ff7759);
+}
+.Toastify__toast--error.vm-toast {
+    border-left: 4px solid var(--bad, #b30000);
+}
+.Toastify__toast--success.vm-toast .Toastify__toast-icon svg {
+    fill: var(--ok, #00695a);
+}
+.Toastify__toast--info.vm-toast .Toastify__toast-icon svg {
+    fill: var(--accent, #ff7759);
+}
+.Toastify__toast--error.vm-toast .Toastify__toast-icon svg {
+    fill: var(--bad, #b30000);
+}
+.Toastify__toast.vm-toast .Toastify__close-button {
+    color: var(--muted, #63637a);
+    opacity: 1;
+}
+
+/* VM-24: printing while an invoice is open prints only the invoice, in black on white. */
+@media print {
+    body:has([data-print]) * {
+        visibility: hidden;
+    }
+    body:has([data-print]) [data-print],
+    body:has([data-print]) [data-print] * {
+        visibility: visible;
+    }
+    body:has([data-print]) [data-print] {
+        position: fixed;
+        inset: 0 0 auto 0;
+        width: 100%;
+        background: #fff;
+        color: #000;
+    }
+}
+
+/* VM-29: a new order's card flashes its border once. With reduced motion it gets a still ring instead. */
+@keyframes vm-flash {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+    20%,
+    60% {
+        box-shadow: 0 0 0 6px var(--accent);
+    }
+}
+.vm-flash {
+    animation: vm-flash 1.6s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+    .vm-flash {
+        animation: none;
+        box-shadow: 0 0 0 4px var(--accent);
+    }
 }

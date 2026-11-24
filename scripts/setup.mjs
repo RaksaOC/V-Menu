@@ -5,7 +5,7 @@ import { randomBytes } from "node:crypto";
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-const services = ["restaurant-service", "menu-service", "order-service"];
+const services = ["restaurant", "menu", "order"];
 const secret = () => randomBytes(32).toString("base64url");
 const shared = { JWT_SECRET: secret(), INTERNAL_API_KEY: secret() };
 
@@ -13,21 +13,25 @@ const shared = { JWT_SECRET: secret(), INTERNAL_API_KEY: secret() };
 const frontEnv = existsSync("frontend/.env.local") ? readFileSync("frontend/.env.local", "utf8") : "";
 const projectId = frontEnv.match(/^NEXT_PUBLIC_FIREBASE_PROJECT_ID=(.+)$/m)?.[1]?.trim();
 
-for (const dir of ["frontend", ...services.map((s) => `services/${s}`)]) {
+// backend/ is one npm workspace (the services and packages/common), so it installs once.
+for (const dir of ["frontend", "backend"]) {
     console.log(`\n> npm install (${dir})`);
     execSync("npm install --no-audit --no-fund", { cwd: dir, stdio: "inherit" });
 }
 
 for (const s of services) {
-    const target = `services/${s}/.env`;
+    const target = `backend/services/${s}/.env`;
     if (existsSync(target)) {
         console.log(`kept ${target}`);
         continue;
     }
-    let env = readFileSync(`services/${s}/.env.example`, "utf8");
+    let env = readFileSync(`backend/services/${s}/.env.example`, "utf8");
     for (const [k, v] of Object.entries(shared)) env = env.replace(new RegExp(`^${k}=.*$`, "m"), `${k}=${v}`);
     if (projectId) env = env.replace(/^FIREBASE_PROJECT_ID=.*$/m, `FIREBASE_PROJECT_ID=${projectId}`);
+    // SEC-04: on your own machine, tables can also be opened by name (/<slug>/customer/T1)
+    env = env.replace(/^ALLOW_TABLE_NAME_LINKS=.*$/m, "ALLOW_TABLE_NAME_LINKS=true");
     writeFileSync(target, env, { mode: 0o600 });
     console.log(`wrote ${target}`);
 }
-if (!existsSync("frontend/.env.local")) console.log("\nfrontend/.env.local is missing: copy frontend/.env.example and add your Firebase web config.");
+if (!existsSync("frontend/.env.local"))
+    console.log("\nfrontend/.env.local is missing: copy frontend/.env.example and add your Firebase web config.");
