@@ -1,13 +1,5 @@
-import type {
-    Category,
-    CreateItemBody,
-    CreateTableBody,
-    MenuItem,
-    Overview,
-    PhotoUploadForm,
-    Table,
-    UploadedPhoto,
-} from "@vmenu/contracts";
+import type { Category, CreateItemBody, CreateTableBody, MenuItem, Overview, Table } from "@vmenu/contracts";
+import type { PhotoUploadForm, UploadedPhoto } from "@vmenu/contracts";
 import api, { postToStorage, seg } from "@/lib/api";
 
 // CL-09: the calls the owner and the cashier both make about one restaurant (tables, menu,

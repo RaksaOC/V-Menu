@@ -21,6 +21,14 @@ function api() {
             current = { ...current, ...body };
             return HttpResponse.json(current);
         }),
+        // PHOTOS-S3: a signed form, the post to storage, then the confirm that answers the URL
+        http.post("*/api/menu/demo-bistro/images/uploads", () =>
+            HttpResponse.json(
+                { key: "incoming/k", url: "http://storage.test/vmenu-photos", fields: { key: "incoming/k" } },
+                { status: 201 },
+            ),
+        ),
+        http.post("http://storage.test/vmenu-photos", () => new HttpResponse(null, { status: 204 })),
         http.post("*/api/menu/demo-bistro/images", () => HttpResponse.json({ url: QR }, { status: 201 })),
     );
     return saved;
