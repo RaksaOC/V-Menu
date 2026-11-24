@@ -53,6 +53,10 @@ jobs:
     environment:
       name: ${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
       url: ${{ vars.PUBLIC_URL }}
+    # For the ZAP scan after a staging deploy (SEC-09).
+    outputs:
+      environment: ${{ steps.done.outputs.environment }}
+      url: ${{ steps.done.outputs.url }}
     # Secrets and variables come from the GitHub Environment (staging or production).
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -135,3 +139,49 @@ jobs:
           TARGET: staging
           DEPLOY_ACTION: --seed
         run: bash infra/deploy/ci-deploy.sh
+
+      - name: Deployed
+        id: done
+        env:
+          ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
+          URL: ${{ vars.PUBLIC_URL }}
+        run: |
+          echo "environment=$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+  # SEC-09: a passive OWASP ZAP baseline scan of staging after each staging deploy (and not
+  # after a rollback). Baseline = spider plus passive checks only: no attacks, no forms sent.
+  # Fails on a High alert that isn't in .zap/known-high.txt. The HTML and JSON reports are kept
+  # as the zap-baseline artifact. B7 will run this together with the other post-deploy checks.
+  zap:
+    name: ZAP baseline (staging)
+    needs: deploy
+    if: needs.deploy.outputs.environment == 'staging' && !inputs.rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Scan (passive checks only)
+        env:
+          TARGET: ${{ needs.deploy.outputs.url }}
+        run: |
+          mkdir -p zap && chmod 777 zap
+          # -I: don't fail on warnings here; the summary step below decides. -m 3: spider 3 minutes.
+          docker run --rm -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t "$TARGET" -m 3 -I -J report.json -r report.html -w report.md
+
+      - name: Security summary
+        if: always()
+        run: node scripts/security-summary.mjs zap zap/report.json --label staging --known .zap/known-high.txt --fail-on-high
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: zap-baseline
+          path: zap/
+          retention-days: 30

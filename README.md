@@ -166,6 +166,18 @@ The frontend only needs the public Firebase web config, plus the three service U
 - `helmet` headers, a 100 kB body limit, rate limiting on `/api/auth`, and a 5-second timeout on calls between services.
 - The firebase-admin service-account key is no longer used. Any old key should be revoked in the Firebase console.
 
+## Security checks in the pipeline
+
+| Check | When | Fails on |
+|---|---|---|
+| `npm audit --audit-level=high` | every PR (ci.yml) | a high or critical advisory |
+| Semgrep (`p/typescript`, `p/nodejs`, `p/react`) | every PR, and pushes to staging and main (code-scanning.yml) | a new high finding in the PR (results also in the Security tab) |
+| GitGuardian | every PR | a committed secret |
+| Trivy | each image build (release.yml) | a fixable HIGH or CRITICAL CVE |
+| OWASP ZAP baseline (passive) | after each staging deploy (deploy.yml) | a High alert not listed in `.zap/known-high.txt` (report kept as the `zap-baseline` artifact) |
+
+Each one writes a "Security" section in its job summary (`scripts/security-summary.mjs`). Secret scanning push protection is on for the repository.
+
 ## Layout
 
 The services import their shared code from `@vmenu/common` (`backend/packages/common`), so a fix there applies to all three. `npm run dev`, `build`, `typecheck`, `test` and `seed` in a service first compile `@vmenu/common` to `dist/`. The service images build with `backend/` as the context: `docker build -f backend/services/menu/Dockerfile backend`.

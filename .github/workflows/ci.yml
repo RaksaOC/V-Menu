@@ -181,6 +181,14 @@ jobs:
       - run: npm audit --audit-level=high
         working-directory: ${{ matrix.dir }}
 
+      # SEC-09: the counts in the job summary, pass or fail.
+      - name: Security summary
+        if: always()
+        working-directory: ${{ matrix.dir }}
+        run: |
+          npm audit --json > "$RUNNER_TEMP/audit.json" || true
+          node "$GITHUB_WORKSPACE"/scripts/security-summary.mjs npm-audit "$RUNNER_TEMP/audit.json" --label "${{ matrix.name }}"
+
   # ---------------------------------------------------------------- real services
   integration:
     needs: test
