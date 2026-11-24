@@ -195,7 +195,7 @@ Each one writes a "Security" section in its job summary (`scripts/security-summa
 
 ## Layout
 
-The services import their shared code from `@vmenu/common` (`backend/packages/common`), so a fix there applies to all three. `npm run dev`, `build`, `typecheck`, `test` and `seed` in a service first compile `@vmenu/common` to `dist/`. The service images build with `backend/` as the context: `docker build -f backend/services/menu/Dockerfile backend`.
+The services import their shared code from `@vmenu/common` (`backend/packages/common`), so a fix there applies to all three. The shapes they exchange (request bodies, responses, calls between services) are zod schemas in `@vmenu/contracts` (`backend/packages/contracts`, CL-05). Routes check bodies with `validate(schema)` from `@vmenu/common`, and a bad body is a `400 INVALID_INPUT` that names the fields: `{ fields: { price: "Must be a number" } }`. `npm run dev`, `build`, `typecheck`, `test` and `seed` in a service first compile `@vmenu/contracts` and `@vmenu/common` to `dist/`. The service images build with `backend/` as the context: `docker build -f backend/services/menu/Dockerfile backend`.
 
 ```
 frontend/                    Next.js app (no database access)
@@ -210,12 +210,13 @@ frontend/                    Next.js app (no database access)
   src/theme/deep-lab.css     design tokens
 backend/                     one npm workspace with one package-lock.json (npm install here installs all of it)
   packages/
-    common/                  @vmenu/common: server setup, errors, logger, metrics, auth, internal calls, config
-  services/
-    restaurant/              restaurant-service: src/app.ts routes, src/models.ts
-    menu/                    menu-service
-    order/                   order-service, in layers (CL-04): src/routes (HTTP only) -> src/services (rules)
-                             -> src/repositories (MongoDB) -> src/models; src/clients: its calls to the other two
+    common/                  @vmenu/common: server setup, errors, validate(), logger, metrics, auth, internal calls, config
+    contracts/               @vmenu/contracts: zod schemas and types for bodies, responses and internal calls (CL-05)
+  services/                  each in layers (CL-04): src/routes (HTTP only) -> src/services (rules)
+                             -> src/repositories (MongoDB) -> src/models; tests in test/unit and test/api
+    restaurant/              restaurant-service: sign-in, restaurants, staff; src/clients/firebase.ts
+    menu/                    menu-service: dishes, tables, photos
+    order/                   order-service: orders, bills, dashboards; src/clients: its calls to the other two
 e2e/                         Playwright end-to-end tests (frontend and services together)
 infra/
   compose/                   docker-compose.yml (local stack), docker-compose.prod.yml (server)

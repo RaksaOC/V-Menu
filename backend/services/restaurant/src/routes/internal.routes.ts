@@ -10,7 +10,7 @@ export function internalRoutes({ services }: RouteContext) {
         res.json(await services.restaurants.bySlug(String(req.params.slug)));
     });
     r.get("/restaurants", async (req, res) => {
-        res.json(await services.restaurants.forOwner(req.query.ownerId));
+        res.json(await services.restaurants.forOwner(req.query));
     });
     return r;
 }

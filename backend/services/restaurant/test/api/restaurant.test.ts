@@ -148,3 +148,18 @@ describe("session length (VM-03)", () => {
         }
     });
 });
+
+describe("input checks name the fields (CL-05, VM-17)", () => {
+    it("a bad staff member is a 400 with the fields to fix", async () => {
+        const token = await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" });
+        const auth = { authorization: `Bearer ${token}` };
+        const { body: r } = await request(app).post("/api/restaurants").set(auth).send({ name: "Fields" });
+        const res = await request(app)
+            .post(`/api/restaurants/${r.slug}/staff`)
+            .set(auth)
+            .send({ name: "Bob", email: "bob", tenantId: "b", role: "owner" });
+        expect(res.status).toBe(400);
+        expect(res.body.code).toBe("INVALID_INPUT");
+        expect(Object.keys(res.body.fields).sort()).toEqual(["email", "role"]);
+    });
+});

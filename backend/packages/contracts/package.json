@@ -1,0 +1,33 @@
+{
+  "name": "@vmenu/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The shapes the V-Menu services and the frontend agree on: zod schemas for request bodies, responses and internal calls, and the types inferred from them (CL-05)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

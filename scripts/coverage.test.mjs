@@ -9,6 +9,7 @@ const read = (f) => readFileSync(f, "utf8");
 // Today's numbers, rounded down (2026-11-23). Raise them as tickets add tests; never lower them.
 const MINIMUM_LINES = {
     "backend/packages/common/vitest.config.ts": 94,
+    "backend/packages/contracts/vitest.config.ts": 95,
     "backend/services/restaurant/vitest.config.ts": 87,
     "backend/services/menu/vitest.config.ts": 98,
     "backend/services/order/vitest.config.ts": 96,

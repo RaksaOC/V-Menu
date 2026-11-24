@@ -1,6 +1,6 @@
 import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
 import type { TablesRepo } from "../repositories/tables.repo.js";
-import { flag, str, type Body } from "./input.js";
+import type { CreateTableBody, UpdateTableBody } from "@vmenu/contracts";
 
 /** Tables, and whether a customer can order from one (CL-04). */
 export function tablesService({ tables }: { tables: TablesRepo }) {
@@ -24,11 +24,10 @@ export function tablesService({ tables }: { tables: TablesRepo }) {
         list: (resId: string) => tables.list(resId),
 
         // "manual" uses the given name; anything else takes the next free number, as before.
-        async create(resId: string, body: Body) {
+        async create(resId: string, body: CreateTableBody) {
             let name: string;
-            if (body?.type === "manual") {
-                const given = str(body.name, 40);
-                if (!given) throw badRequest("Table name is required");
+            if (body.type === "manual") {
+                const given = body.name!.trim(); // the schema requires it for a manual table
                 if (await tables.findByName(resId, given)) throw badRequest("Name is taken");
                 name = given;
             } else {
@@ -40,15 +39,14 @@ export function tablesService({ tables }: { tables: TablesRepo }) {
             return tables.create(resId, { name, isEnabled: false });
         },
 
-        async update(resId: string, id: string, body: Body) {
+        async update(resId: string, id: string, body: UpdateTableBody) {
             const table = await existing(resId, id);
-            const fields: { name?: string; isEnabled?: boolean } = {};
-            const name = str(body?.name, 40);
-            if (name && name !== table.name) {
-                if (await tables.findByName(resId, name)) throw badRequest("Name is taken");
-                fields.name = name;
+            const fields: UpdateTableBody = {};
+            if (body.name && body.name !== table.name) {
+                if (await tables.findByName(resId, body.name)) throw badRequest("Name is taken");
+                fields.name = body.name;
             }
-            if (typeof body?.isEnabled === "boolean") fields.isEnabled = body.isEnabled;
+            if (body.isEnabled !== undefined) fields.isEnabled = body.isEnabled;
             return (await tables.update(resId, id, fields)) ?? table;
         },
 
@@ -60,9 +58,9 @@ export function tablesService({ tables }: { tables: TablesRepo }) {
         },
 
         /** Cashier or owner opens or closes a table. */
-        async setEnabled(resId: string, id: string, body: Body) {
+        async setEnabled(resId: string, id: string, isEnabled: boolean) {
             await existing(resId, id); // 400 for a bad id, 404 for another restaurant's, as before
-            const table = await tables.update(resId, id, { isEnabled: flag(body) });
+            const table = await tables.update(resId, id, { isEnabled });
             if (!table) throw notFound("Table not found");
             return table;
         },

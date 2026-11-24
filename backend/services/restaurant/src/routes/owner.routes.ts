@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { requireRole } from "@vmenu/common";
+import { requireRole, validate } from "@vmenu/common";
+import { CreateRestaurantBody } from "@vmenu/contracts";
 import type { RouteContext } from "./context.js";
 
 /** /api: an owner's restaurants and staff. Owners only. */
@@ -9,7 +10,7 @@ export function ownerRoutes({ services }: RouteContext) {
     r.get("/restaurants", async (req, res) => {
         res.json(await services.restaurants.listOwned(req.user!.uid));
     });
-    r.post("/restaurants", async (req, res) => {
+    r.post("/restaurants", validate(CreateRestaurantBody), async (req, res) => {
         res.status(201).json(await services.restaurants.create(req.user!, req.body));
     });
     r.get("/staff", async (req, res) => {

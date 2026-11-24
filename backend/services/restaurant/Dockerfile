@@ -8,6 +8,7 @@ FROM node:26-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/common/package.json packages/common/
+COPY packages/contracts/package.json packages/contracts/
 COPY services/restaurant/package.json services/restaurant/
 COPY services/menu/package.json services/menu/
 COPY services/order/package.json services/order/
@@ -15,6 +16,8 @@ RUN npm ci -w services/restaurant --no-audit --no-fund
 
 # ---- build: TypeScript -> dist/ (common first, through the service's prebuild script) ----
 FROM deps AS build
+COPY packages/contracts/tsconfig*.json packages/contracts/
+COPY packages/contracts/src packages/contracts/src
 COPY packages/common/tsconfig*.json packages/common/
 COPY packages/common/src packages/common/src
 COPY services/restaurant/tsconfig*.json services/restaurant/
@@ -29,6 +32,7 @@ ENV NODE_ENV=production \
     PORT=4101
 COPY package.json package-lock.json ./
 COPY packages/common/package.json packages/common/
+COPY packages/contracts/package.json packages/contracts/
 COPY services/restaurant/package.json services/restaurant/
 COPY services/menu/package.json services/menu/
 COPY services/order/package.json services/order/
@@ -36,6 +40,7 @@ COPY services/order/package.json services/order/
 # from the runtime image. The service runs with plain node.
 RUN npm ci --omit=dev -w services/restaurant --no-audit --no-fund && npm cache clean --force \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+COPY --from=build --chown=node:node /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=build --chown=node:node /app/packages/common/dist ./packages/common/dist
 COPY --from=build --chown=node:node /app/services/restaurant/dist ./services/restaurant/dist
 

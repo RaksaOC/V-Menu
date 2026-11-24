@@ -32,7 +32,7 @@ describe("items", () => {
     it("creates with the required fields, only this restaurant's photo, and lists them", async () => {
         const { menu, images } = setup();
         const photo = imageUrl(A.slug, await images.save(Buffer.from("x"), A._id));
-        const item = await menu.create(A, { name: " Amok ", price: 5, image: photo, resId: B._id, _id: "x" });
+        const item = await menu.create(A, { name: "Amok", price: 5, image: photo });
         expect(item).toMatchObject({ name: "Amok", price: 5, image: photo, resId: A._id, isEnabled: true });
         await menu.create(A, { name: "Hidden", price: 1, image: PLACEHOLDER, isEnabled: false });
         expect((await menu.list(A._id)).map((i) => i.name)).toEqual(["Amok", "Hidden"]);
@@ -40,14 +40,12 @@ describe("items", () => {
         expect(await menu.list(B._id)).toEqual([]);
     });
 
-    it("refuses missing fields, a bad price, and someone else's image", async () => {
+    it("refuses an image that isn't this restaurant's own photo (SEC-05); the body's shape is the route's job (CL-05)", async () => {
         const { menu } = setup();
-        expect(await status(menu.create(A, { name: "No price", image: PLACEHOLDER }))).toBe(400);
-        expect(await status(menu.create(A, { name: "Negative", price: -1, image: PLACEHOLDER }))).toBe(400);
-        expect(await status(menu.create(A, { price: 2, image: PLACEHOLDER }))).toBe(400);
-        expect(await status(menu.create(A, { name: "x".repeat(121), price: 2, image: PLACEHOLDER }))).toBe(400);
         expect(await status(menu.create(A, { name: "Outside", price: 2, image: "https://evil.example/x.png" }))).toBe(400);
         expect(await status(menu.create(A, { name: "B's photo", price: 2, image: imageUrl(B.slug, "a".repeat(24)) }))).toBe(400);
+        const item = await menu.create(A, { name: "A", price: 1, image: PLACEHOLDER });
+        expect(await status(menu.update(A, item._id, { image: "https://evil.example/y.png" }))).toBe(400);
     });
 
     it("updates only what is sent, and removes the old photo when it's replaced", async () => {
@@ -58,7 +56,7 @@ describe("items", () => {
         expect(same).toMatchObject({ name: "Amok", price: 6 });
         expect(images.files.has(oldId)).toBe(true);
         const newId2 = await images.save(Buffer.from("new"), A._id);
-        await menu.update(A, item._id, { image: imageUrl(A.slug, newId2), isEnabled: false, price: "abc" });
+        await menu.update(A, item._id, { image: imageUrl(A.slug, newId2), isEnabled: false });
         expect(images.files.has(oldId)).toBe(false);
         expect((await menu.list(A._id))[0]).toMatchObject({ price: 6, isEnabled: false, image: imageUrl(A.slug, newId2) });
     });
@@ -80,14 +78,13 @@ describe("items", () => {
     it("switches an item on and off; ids must be valid and this restaurant's", async () => {
         const { menu } = setup();
         const item = await menu.create(A, { name: "A", price: 1, image: PLACEHOLDER });
-        expect((await menu.setEnabled(A._id, item._id, { isEnabled: false })).isEnabled).toBe(false);
-        expect(await status(menu.setEnabled(A._id, item._id, { isEnabled: "no" }))).toBe(400);
-        expect(await status(menu.setEnabled(B._id, item._id, { isEnabled: true }))).toBe(404);
+        expect((await menu.setEnabled(A._id, item._id, false)).isEnabled).toBe(false);
+        expect(await status(menu.setEnabled(B._id, item._id, true))).toBe(404);
         expect(await status(menu.update(B, item._id, { price: 2 }))).toBe(404);
         expect(await status(menu.remove(B, item._id))).toBe(404);
         expect(await status(menu.update(A, "bad", {}))).toBe(400);
         expect(await status(menu.remove(A, "bad"))).toBe(400);
-        expect(await status(menu.setEnabled(A._id, "bad", { isEnabled: true }))).toBe(400);
+        expect(await status(menu.setEnabled(A._id, "bad", true))).toBe(400);
     });
 });
 
@@ -97,10 +94,9 @@ describe("tables", () => {
         expect(await seating.create(A._id, {})).toMatchObject({ name: "1", isEnabled: false });
         expect((await seating.create(A._id, {})).name).toBe("2");
         expect((await seating.create(A._id, { type: "manual", name: "Patio" })).name).toBe("Patio");
-        expect((await seating.create(A._id, undefined)).name).toBe("3"); // "Patio" isn't a number
+        expect((await seating.create(A._id, {})).name).toBe("3"); // "Patio" isn't a number
         expect((await seating.create(B._id, {})).name).toBe("1");
         expect(await status(seating.create(A._id, { type: "manual", name: "Patio" }))).toBe(400);
-        expect(await status(seating.create(A._id, { type: "manual", name: "" }))).toBe(400);
         expect((await seating.list(A._id)).length).toBe(4);
     });
 
@@ -111,14 +107,13 @@ describe("tables", () => {
         expect((await seating.update(A._id, t1._id, { name: "Window", isEnabled: true })).name).toBe("Window");
         expect((await seating.update(A._id, t1._id, { name: "Window" })).isEnabled).toBe(true); // same name is fine
         expect(await status(seating.update(A._id, t1._id, { name: "2" }))).toBe(400);
-        expect((await seating.update(A._id, t1._id, undefined)).name).toBe("Window");
-        expect((await seating.setEnabled(A._id, t1._id, { isEnabled: false })).isEnabled).toBe(false);
-        expect(await status(seating.setEnabled(A._id, t1._id, {}))).toBe(400);
+        expect((await seating.update(A._id, t1._id, {})).name).toBe("Window");
+        expect((await seating.setEnabled(A._id, t1._id, false)).isEnabled).toBe(false);
         expect((await seating.remove(A._id, t1._id)).name).toBe("Window");
         expect(await status(seating.remove(A._id, t1._id))).toBe(404);
         expect(await status(seating.update(B._id, "bad", {}))).toBe(400);
         expect(await status(seating.update(B._id, newId(), {}))).toBe(404);
-        expect(await status(seating.setEnabled(A._id, newId(), { isEnabled: true }))).toBe(404);
+        expect(await status(seating.setEnabled(A._id, newId(), true))).toBe(404);
     });
 
     it("tells a customer whether their table is open, with a code the page can explain", async () => {
@@ -126,7 +121,7 @@ describe("tables", () => {
         const t = await seating.create(A._id, {});
         expect(await code(seating.check(A._id, "1"))).toBe("TABLE_CLOSED");
         expect(await code(seating.check(A._id, "9"))).toBe("TABLE_NOT_FOUND");
-        await seating.setEnabled(A._id, t._id, { isEnabled: true });
+        await seating.setEnabled(A._id, t._id, true);
         expect(await seating.check(A._id, "1")).toEqual({ message: "Table is available" });
     });
 });
@@ -154,7 +149,7 @@ describe("internal: counts and the order check", () => {
     async function seeded() {
         const s = setup();
         const open = await s.seating.create(A._id, {});
-        await s.seating.setEnabled(A._id, open._id, { isEnabled: true });
+        await s.seating.setEnabled(A._id, open._id, true);
         await s.seating.create(A._id, {}); // table 2, closed
         const dish = await s.menu.create(A, { name: "Amok", price: 5, image: PLACEHOLDER });
         const off = await s.menu.create(A, { name: "Off", price: 1, image: PLACEHOLDER, isEnabled: false });
@@ -172,17 +167,10 @@ describe("internal: counts and the order check", () => {
         expect(res.items).toEqual([{ item: { _id: dish._id, name: "Amok", price: 5, image: PLACEHOLDER, isEnabled: true }, quantity: 2 }]);
     });
 
-    it("refuses a bad cart, a closed table and dishes that are off", async () => {
+    it("refuses a closed table and dishes that are off (a bad cart is refused by the route, CL-05)", async () => {
         const { internal, dish, off } = await seeded();
-        const check = (body: unknown) => internal.orderCheck(A._id, body);
-        expect(await status(check({ table: "1", items: [] }))).toBe(400);
-        expect(await status(check({ items: [{ _id: dish._id, quantity: 1 }] }))).toBe(400);
-        expect(await status(check(undefined))).toBe(400);
-        expect(await status(check({ table: "1", items: Array(101).fill({ _id: dish._id, quantity: 1 }) }))).toBe(400);
-        expect(await status(check({ table: "1", items: [{ _id: "bad", quantity: 1 }] }))).toBe(400);
-        expect(await status(check({ table: "1", items: [{ _id: dish._id, quantity: 0 }] }))).toBe(400);
-        expect(await status(check({ table: "1", items: [{ _id: dish._id, quantity: 1.5 }] }))).toBe(400);
-        expect(await code(check({ table: "2", items: [{ _id: dish._id, quantity: 1 }] }))).toBe("TABLE_CLOSED");
-        expect(await code(check({ table: "1", items: [{ _id: off._id, quantity: 1 }] }))).toBe("ITEMS_UNAVAILABLE");
+        expect(await code(internal.orderCheck(A._id, { table: "2", items: [{ _id: dish._id, quantity: 1 }] }))).toBe("TABLE_CLOSED");
+        expect(await code(internal.orderCheck(A._id, { table: "9", items: [{ _id: dish._id, quantity: 1 }] }))).toBe("TABLE_CLOSED");
+        expect(await code(internal.orderCheck(A._id, { table: "1", items: [{ _id: off._id, quantity: 1 }] }))).toBe("ITEMS_UNAVAILABLE");
     });
 });

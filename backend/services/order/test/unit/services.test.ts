@@ -1,3 +1,4 @@
+import { PlaceOrderBody } from "@vmenu/contracts";
 import { describe, expect, it } from "vitest";
 import { HttpError } from "@vmenu/common";
 import { ordersService } from "../../src/services/orders.service.js";
@@ -36,18 +37,10 @@ const line = (quantity = 1, price = 0) => ({ item: { _id: DISH._id, price }, qua
 describe("placing an order", () => {
     it("takes the menu's dish and price, not the browser's", async () => {
         const { placing } = setup();
-        const order = await placing.place(R1._id, { table: " 1 ", orderedItems: [line(2, 0)] });
+        // the route parses the body with PlaceOrderBody first (CL-05): trimmed, the browser's price dropped
+        const order = await placing.place(R1._id, PlaceOrderBody.parse({ table: " 1 ", orderedItems: [line(2, 0)] }));
         expect(order.table).toBe("1");
         expect(order.orderedItems).toEqual([{ item: DISH, quantity: 2 }]);
-    });
-
-    it("needs a table and at least one item", async () => {
-        const { placing } = setup();
-        expect(await status(placing.place(R1._id, { orderedItems: [line()] }))).toBe(400);
-        expect(await status(placing.place(R1._id, { table: "1", orderedItems: [] }))).toBe(400);
-        expect(await status(placing.place(R1._id, { table: "1" }))).toBe(400);
-        expect(await status(placing.place(R1._id, { table: "x".repeat(41), orderedItems: [line()] }))).toBe(400);
-        expect(await status(placing.place(R1._id, null))).toBe(400);
     });
 
     it("groups a table's orders into one open bill, and starts a new one after it's paid", async () => {
@@ -77,7 +70,10 @@ describe("placing an order", () => {
                 return { items: body.items.map((l) => ({ item: DISH, quantity: l.quantity })) };
             },
         });
-        await placing.place(R1._id, { table: "1", orderedItems: [{ item: { _id: DISH._id, name: "Free?", price: 0 }, quantity: 3 }] });
+        await placing.place(
+            R1._id,
+            PlaceOrderBody.parse({ table: "1", orderedItems: [{ item: { _id: DISH._id, name: "Free?", price: 0 }, quantity: 3 }] }),
+        );
         expect(sent).toEqual({ table: "1", items: [{ _id: DISH._id, quantity: 3 }] });
     });
 });
