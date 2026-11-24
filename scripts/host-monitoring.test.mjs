@@ -46,6 +46,8 @@ test("the monitoring deploy gives a slow server time to start Alloy", () => {
     assert.match(alloy, /start_interval: \ds/, "keep polling every few seconds while it starts");
     const cpus = Number(/cpus: "([\d.]+)"/.exec(alloy)?.[1]);
     assert.ok(cpus >= 0.5, `Alloy is capped at ${cpus} CPU; give it at least 0.5 to start up`);
+});
+
 // On 24 Nov a staging deploy rolled back because menu-service needed about 75s to boot on the busy
 // server and its health check gave it 20s. Every image gets 3 minutes, still polled every few seconds.
 test("the app images give a slow server time to start before a failed check counts", () => {
