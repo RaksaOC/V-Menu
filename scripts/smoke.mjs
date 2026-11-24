@@ -53,7 +53,8 @@ const menu = await call("GET", `/api/menu/${slug}/public/items`);
 const items = (Array.isArray(menu) ? menu : (menu?.categories ?? []).flatMap((c) => c.items)).filter((i) => i.isEnabled !== false);
 if (!items.length) throw new Error(`No dishes for "${slug}": seed the stack first`);
 // SEC-04: a customer has the table's QR link, not its name. Staff can see it; so this reads it as a cashier.
-const cashier = signAppToken({ uid: "smoke-cashier", email: "cashier@smoke.local", role: "cashier", resId, resSlug: slug });
+// SEC-03: the token must belong to a real membership; the seeded owner is also the demo's cashier.
+const cashier = signAppToken({ uid: "demo-owner", email: "owner@demo.local", role: "cashier", resId, resSlug: slug });
 const { qrToken } = (await call("GET", `/api/menu/${slug}/tables`, { token: cashier })).find((t) => t.name === table) ?? {};
 if (!qrToken) throw new Error(`No table "${table}" with a QR link: seed the stack first`);
 const link = await call("GET", `/api/menu/${slug}/public/t/${qrToken}`);
