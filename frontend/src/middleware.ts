@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtDecode } from "jwt-decode";
+import { roleForPath, sessionCookieNames } from "@/lib/session";
 
 interface DecodedToken {
     role?: string;
@@ -11,7 +12,13 @@ interface DecodedToken {
 
 export function middleware(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
-    const token = req.cookies.get("token")?.value;
+    // SEC-12: each role has its own cookie, so a cashier sign-in doesn't hide the owner's
+    const role = roleForPath(pathname);
+    const token = role
+        ? sessionCookieNames(role)
+              .map((name) => req.cookies.get(name)?.value)
+              .find(Boolean)
+        : undefined;
 
     // Matches paths like /resSlug/cashier, /resSlug/kitchen, /resSlug/cashier/something
     const match = pathname.match(/^\/([^\/]+)\/(cashier|kitchen)(\/.*)?$/) || pathname.match(/^\/owner(\/.*)?$/);

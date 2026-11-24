@@ -25,7 +25,7 @@ const cashier = process.env.CASHIER_TOKEN;
 
 async function get(path, { token } = {}) {
     const url = new URL(path, base).href;
-    const headers = { accept: "application/json", ...(token ? { cookie: `token=${token}` } : {}) }; // SEC-01: a cookie, as in a browser
+    const headers = { accept: "application/json", ...(token ? { cookie: `__Host-vmenu_cashier=${token}` } : {}) }; // SEC-01/12: the cashier's cookie, as in a browser
     try {
         const res = await fetch(url, { headers });
         return { status: res.status, body: await res.json().catch(() => null) };

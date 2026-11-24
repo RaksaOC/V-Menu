@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
-import { SLUG, staffToken } from "./support/auth";
+import { SLUG, sessionHeader } from "./support/auth";
 
 // B7: the short suite that runs against staging after every staging deploy (deploy.yml,
 // post-deploy job: `npx playwright test --grep @post-deploy`). It also runs in the e2e job with
@@ -22,7 +22,7 @@ interface Order {
 
 test("a customer orders at the demo table and the kitchen sees it", { tag: "@post-deploy" }, async ({ page, playwright, baseURL }) => {
     const as = async (role: "chef" | "cashier"): Promise<APIRequestContext> =>
-        playwright.request.newContext({ baseURL, extraHTTPHeaders: { cookie: `token=${await staffToken(role)}` } });
+        playwright.request.newContext({ baseURL, extraHTTPHeaders: { cookie: await sessionHeader(role) } });
 
     // T1's QR link token: only staff can read it
     const cashierApi = await as("cashier");

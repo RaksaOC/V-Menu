@@ -23,14 +23,14 @@ describe("sign-up and sign-in", () => {
         const slug = await signUp();
         const res = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "cashier", resSlug: slug });
         expect(res.status).toBe(200);
-        expect(res.headers["set-cookie"]![0]).toMatch(/^token=.*HttpOnly/);
+        expect(res.headers["set-cookie"]![0]).toMatch(/^vmenu_cashier=.*HttpOnly/);
     });
 
     it("answers the sign-in with the httpOnly cookie only, never the token in the body (SEC-01)", async () => {
         const slug = await signUp();
         const res = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "cashier", resSlug: slug });
         expect(res.status).toBe(200);
-        expect(res.headers["set-cookie"]![0]).toMatch(/^token=[^;]+;.*HttpOnly.*SameSite=Lax/i);
+        expect(res.headers["set-cookie"]![0]).toMatch(/^vmenu_cashier=[^;]+;.*HttpOnly.*SameSite=Lax/i);
         expect(JSON.stringify(res.body)).not.toMatch(/eyJ/); // no JWT anywhere in the answer
         expect(res.body.appToken).toBeUndefined();
     });
@@ -74,7 +74,7 @@ describe("who am I (VM-20)", () => {
 describe("session length (VM-03)", () => {
     // SEC-01: the token is only in the httpOnly cookie
     const cookieToken = (res: { headers: Record<string, unknown> }) =>
-        decodeURIComponent(/^token=([^;]+)/.exec((res.headers["set-cookie"] as string[])[0]!)![1]!);
+        decodeURIComponent(/^vmenu_[a-z]+=([^;]+)/.exec((res.headers["set-cookie"] as string[])[0]!)![1]!);
     const lifetime = (token: string) => {
         const { iat, exp } = JSON.parse(Buffer.from(token.split(".")[1]!, "base64url").toString());
         return exp - iat;

@@ -3,6 +3,21 @@
 /** Wrapped so tests can watch navigation; jsdom can't change pages. */
 export const navigation = { to: (url: string) => window.location.assign(url) };
 
+export type StaffRole = "owner" | "cashier" | "chef";
+
+/** SEC-12: the header that tells the API which of this browser's sign-ins a request is for. */
+export const ROLE_HEADER = "x-vmenu-role";
+
+/** The role whose page this is (the kitchen is the chef's), or null on customer and public pages. */
+export function roleForPath(path: string): StaffRole | null {
+    const staff = /^\/[^/]+\/(kitchen|cashier)(\/|$)/.exec(path);
+    if (staff) return staff[1] === "kitchen" ? "chef" : "cashier";
+    return /^\/owner(\/|$)/.test(path) ? "owner" : null;
+}
+
+/** SEC-12: the role's session cookie; "__Host-" on https, the bare name on plain http (local dev). */
+export const sessionCookieNames = (role: StaffRole) => [`__Host-vmenu_${role}`, `vmenu_${role}`];
+
 /** The login page for the role whose page this is, or null on customer and public pages. */
 export function loginPathFor(path: string): string | null {
     const staff = /^\/([^/]+)\/(kitchen|cashier)(\/|$)/.exec(path);
@@ -39,7 +54,9 @@ export async function forgetSignIn() {
  */
 export async function signOut(): Promise<boolean> {
     try {
-        const res = await fetch("/api/auth/logout", { method: "POST" });
+        // SEC-12: signs out of this screen's role only; the owner's other screens stay signed in
+        const role = roleForPath(window.location.pathname);
+        const res = await fetch("/api/auth/logout", { method: "POST", headers: role ? { [ROLE_HEADER]: role } : {} });
         if (!res.ok) return false;
     } catch {
         return false;

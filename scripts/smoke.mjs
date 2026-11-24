@@ -18,7 +18,9 @@ if (!secret) throw new Error("JWT_SECRET must be set (the same value the service
 async function call(method, path, { body, token } = {}) {
     const headers = {};
     if (body) headers["content-type"] = "application/json";
-    if (token) headers.cookie = `token=${token}`; // SEC-01: the session is a cookie, as in a browser
+    // SEC-01: the session is a cookie, as in a browser. SEC-12: one cookie per role; the server reads the
+    // one the route allows and still checks the role inside the token, so every name can carry it here.
+    if (token) headers.cookie = ["owner", "cashier", "chef"].map((r) => `__Host-vmenu_${r}=${token}`).join("; ");
     const res = await fetch(`${base}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
     const data = await res.json().catch(() => null);
     if (!res.ok) throw new Error(`${method} ${path} -> ${res.status} ${JSON.stringify(data)}`);
