@@ -87,11 +87,12 @@ export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] }
         async get(resId, id) {
             return copy(find(resId, id));
         },
-        async update(resId, id, fields, { endSessions = false } = {}) {
+        async update(resId, id, fields, { endSessions = false, unlink = false } = {}) {
             const t = find(resId, id);
             if (!t) return null;
             Object.assign(t, fields);
-            if (endSessions) t.tokenVersion = (t.tokenVersion ?? 0) + 1;
+            if (unlink) t.tenantId = null;
+            if (endSessions || unlink) t.tokenVersion = (t.tokenVersion ?? 0) + 1;
             return { ...t };
         },
         async rowFor(uid, role, resId) {

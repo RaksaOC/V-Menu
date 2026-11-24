@@ -10,10 +10,11 @@ export interface MembershipRecord {
     email: string;
     role: TenantRole;
     resId: string;
-    /** SEC-03: tokens issued with an older number no longer work; missing on old rows, meaning 0 */
+    /** SEC-03: tokens issued with another number no longer work; missing on old rows, meaning 0 */
     tokenVersion?: number;
 }
-type NewTenant = Omit<MembershipRecord, "_id" | "tokenVersion">;
+/** SEC-03: tokenVersion is where the row starts; 0 when not given (see staff.service for invites). */
+type NewTenant = Omit<MembershipRecord, "_id">;
 /** Who is signing in. VM-13: an email match counts only when Firebase verified the email. */
 export interface Person {
     uid: string;
@@ -46,12 +47,15 @@ export interface MembershipsRepo {
     inRestaurants(resIds: string[]): Promise<MembershipRecord[]>;
     createMany(list: NewTenant[]): Promise<MembershipRecord[]>;
     get(resId: string, id: string): Promise<MembershipRecord | null>;
-    /** null when there's no such membership in this restaurant */
+    /**
+     * null when there's no such membership in this restaurant. `endSessions` raises the row's
+     * version (SEC-03); `unlink` also detaches it from its account, so it's an invite again (VM-12).
+     */
     update(
         resId: string,
         id: string,
         fields: Partial<Pick<MembershipRecord, "name" | "email" | "role">>,
-        opts?: { endSessions?: boolean },
+        opts?: { endSessions?: boolean; unlink?: boolean },
     ): Promise<MembershipRecord | null>;
     remove(resId: string, id: string): Promise<MembershipRecord | null>;
     /** VM-20: this account's row for this role (and restaurant), to show their name */
@@ -88,10 +92,10 @@ export const mongoMembershipsRepo: MembershipsRepo = {
         return (await Membership.insertMany(list)).map((t) => t.toObject() as unknown as MembershipRecord);
     },
     get: (resId, id) => Membership.findOne({ _id: id, resId }).lean<MembershipRecord>(),
-    update: (resId, id, fields, { endSessions = false } = {}) =>
+    update: (resId, id, fields, { endSessions = false, unlink = false } = {}) =>
         Membership.findOneAndUpdate(
             { _id: id, resId },
-            { $set: fields, ...(endSessions ? { $inc: { tokenVersion: 1 } } : {}) },
+            { $set: { ...fields, ...(unlink ? { tenantId: null } : {}) }, ...(endSessions || unlink ? { $inc: { tokenVersion: 1 } } : {}) },
             {
                 new: true,
                 runValidators: true,

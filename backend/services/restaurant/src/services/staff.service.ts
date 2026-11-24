@@ -38,8 +38,12 @@ export function staffService({ restaurants, memberships }: { restaurants: Restau
             const { name, email, role } = parse(AddStaffBody, body);
             // VM-12: an invite. The email arrives lowercased, so this is a case-insensitive match.
             if (await memberships.emailHasRole(resId, role, email)) throw new HttpError(409, "This person already has that role here");
-            // no account yet: the person's first verified sign-in links it (auth.service)
-            const [created] = await memberships.createMany([{ name, email, tenantId: null, role, resId }]);
+            // No account yet: the person's first verified sign-in links it (auth.service).
+            // SEC-03: the row starts at the current time in milliseconds. Versions only go up by one
+            // per change a person makes (a role change, "sign out everywhere"), so every version
+            // issued before is below it. Someone removed and invited again can't use a token that
+            // was ended while they were staff: it doesn't match the new row.
+            const [created] = await memberships.createMany([{ name, email, tenantId: null, role, resId, tokenVersion: Date.now() }]);
             return created;
         },
 
@@ -48,14 +52,15 @@ export function staffService({ restaurants, memberships }: { restaurants: Restau
             const fields = parse(UpdateStaffBody, body);
             const role = fields.role ?? m.role;
             const email = fields.email ?? m.email;
+            // VM-12: a row linked to an account belongs to that person. A new email means another
+            // person, so the row goes back to being an invite, for the new email.
+            const unlink = email !== m.email && m.tenantId !== null;
+            const tenantId = unlink ? null : m.tenantId;
             // VM-18: only when this edit changes who or what the row is, so old duplicates can still be renamed
-            if (
-                (role !== m.role || email !== m.email) &&
-                (await memberships.otherRowHasRole(resId, id, role, { email, tenantId: m.tenantId }))
-            )
+            if ((role !== m.role || email !== m.email) && (await memberships.otherRowHasRole(resId, id, role, { email, tenantId })))
                 throw new HttpError(409, "This person already has that role here");
-            // SEC-03: a new role means a new sign-in; the old token stops working
-            return (await memberships.update(resId, id, fields, { endSessions: role !== m.role })) ?? m;
+            // SEC-03: a new role, or another person, means a new sign-in; the old tokens stop working
+            return (await memberships.update(resId, id, fields, { endSessions: role !== m.role, unlink })) ?? m;
         },
 
         async remove(user: AppUser, slug: string, id: string) {
