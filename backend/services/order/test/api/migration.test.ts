@@ -39,12 +39,15 @@ describe("prepareDatabase: the isPayed → isPaid migration (CL-06)", () => {
         await seedLikeProduction();
         expect((await prepareDatabase()).bills).toEqual({
             renamed: 3,
+            backfilled: 0,
             droppedIndexes: ["one_open_bill_per_table", "resId_1_isPayed_1_updatedAt_-1"],
+            tablesWithTwoOpenBills: [],
         });
 
-        expect(await bills().countDocuments({ isPayed: { $exists: true } })).toBe(0);
-        expect(await bills().countDocuments({ isPaid: false })).toBe(1);
-        expect(await bills().countDocuments({ isPaid: true })).toBe(2);
+        // VM-27 review: isPayed stays for one release, so the previous version still works after a rollback
+        expect(await bills().countDocuments({ isPayed: { $exists: true } })).toBe(3);
+        expect(await bills().countDocuments({ isPaid: false, isPayed: false })).toBe(1);
+        expect(await bills().countDocuments({ isPaid: true, isPayed: true })).toBe(2);
 
         const indexes = await bills().indexes();
         expect(indexes.find((i) => i.name === "one_open_bill_per_table")).toMatchObject({
@@ -64,11 +67,13 @@ describe("prepareDatabase: the isPayed → isPaid migration (CL-06)", () => {
     });
 
     it("is safe to run again, and on a new, empty database", async () => {
-        expect((await prepareDatabase()).bills).toEqual({ renamed: 0, droppedIndexes: [] });
+        const nothing = { renamed: 0, backfilled: 0, droppedIndexes: [], tablesWithTwoOpenBills: [] };
+        expect((await prepareDatabase()).bills).toEqual(nothing);
         await mongoose.connection.db!.dropDatabase();
         await seedLikeProduction();
         await prepareDatabase();
-        expect((await prepareDatabase()).bills).toEqual({ renamed: 0, droppedIndexes: [] });
+        expect((await prepareDatabase()).bills).toEqual(nothing);
+        expect(await bills().countDocuments({ isPayed: { $exists: true } })).toBe(3);
     });
 });
 
@@ -85,8 +90,8 @@ describe("prepareDatabase: isDone → status (VM-27)", () => {
 
     it("done orders are served, the rest pending, each with one history entry; the queue index is rebuilt", async () => {
         await seedOrders();
-        expect((await prepareDatabase()).orders).toEqual({ migrated: 2, droppedIndexes: ["resId_1_isDone_1_createdAt_1"] });
-        expect(await orders().countDocuments({ isDone: { $exists: true } })).toBe(0);
+        expect((await prepareDatabase()).orders).toEqual({ migrated: 2, backfilled: 0, droppedIndexes: ["resId_1_isDone_1_createdAt_1"] });
+        expect(await orders().countDocuments({ isDone: { $exists: true } })).toBe(2); // kept for one release (rollback)
         const byTable = Object.fromEntries((await orders().find().toArray()).map((o) => [o.table, o]));
         expect(byTable["1"]).toMatchObject({ status: "served", statusHistory: [{ status: "served", at, by: "migration" }] });
         expect(byTable["2"]).toMatchObject({ status: "pending", statusHistory: [{ status: "pending", at, by: "migration" }] });
@@ -98,6 +103,7 @@ describe("prepareDatabase: isDone → status (VM-27)", () => {
     it("is safe to run again", async () => {
         await seedOrders();
         await prepareDatabase();
-        expect((await prepareDatabase()).orders).toEqual({ migrated: 0, droppedIndexes: [] });
+        expect((await prepareDatabase()).orders).toEqual({ migrated: 0, backfilled: 0, droppedIndexes: [] });
+        expect(await orders().countDocuments({ isDone: { $exists: true } })).toBe(2);
     });
 });

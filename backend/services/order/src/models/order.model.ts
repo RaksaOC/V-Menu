@@ -19,6 +19,10 @@ const orderSchema = new mongoose.Schema(
         orderedAt: { type: Date, default: Date.now },
         // VM-27: pending → preparing → ready → served, or cancelled by the cashier (was isDone)
         status: { type: String, enum: ORDER_STATUSES, default: "pending" },
+        // VM-27: the old "done" flag (the kitchen finished it: ready or served), written with status
+        // for one release so the previous version still works after a rollback. Remove it (and its
+        // writes in orders.repo.ts and the back-fill in migrations/order-status.ts) in the release after.
+        isDone: Boolean,
         statusHistory: [{ _id: false, status: { type: String, enum: ORDER_STATUSES }, at: Date, by: String }],
         cancelReason: { type: String, maxlength: 200 },
         resId: { type: String, required: true, index: true },

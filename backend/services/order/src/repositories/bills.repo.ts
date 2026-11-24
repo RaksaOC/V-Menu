@@ -68,7 +68,7 @@ export const mongoBillsRepo: BillsRepo = {
         const open = () =>
             Bill.findOneAndUpdate(
                 { table, resId, isPaid: false },
-                { $setOnInsert: { table, resId, isPaid: false } },
+                { $setOnInsert: { table, resId, isPaid: false, isPayed: false } }, // CL-06: both names for one release
                 { upsert: true, new: true, projection: { _id: 1 } },
             ).lean();
         try {
@@ -118,7 +118,10 @@ export const mongoBillsRepo: BillsRepo = {
     async setPaid(resId, id, isPaid) {
         try {
             // VM-30: paying clears the customer's requests
-            const update = isPaid ? { isPaid, $unset: { billRequestedAt: "", staffCalledAt: "" } } : { isPaid };
+            // CL-06: isPayed too, for one release, so the previous version still sees it after a rollback
+            const update = isPaid
+                ? { isPaid, isPayed: isPaid, $unset: { billRequestedAt: "", staffCalledAt: "" } }
+                : { isPaid, isPayed: isPaid };
             return await Bill.findOneAndUpdate({ _id: id, resId }, update, { new: true }).populate("orders").lean<BillRecord>();
         } catch (err) {
             if (isDuplicateKey(err)) throw new OpenBillExists(); // re-opened while another bill opened
