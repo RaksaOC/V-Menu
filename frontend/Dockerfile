@@ -41,11 +41,11 @@ ARG S3_PUBLIC_URL=
 ENV S3_PUBLIC_URL=$S3_PUBLIC_URL
 
 # Configure microservice URLs
-ARG RESTAURANT_SERVICE_URL=http://restaurant-service:4101
+ARG RESTAURANT_SERVICE_URL=http://vmenu-restaurant-api:4101
 ENV RESTAURANT_SERVICE_URL=$RESTAURANT_SERVICE_URL
-ARG MENU_SERVICE_URL=http://menu-service:4102
+ARG MENU_SERVICE_URL=http://vmenu-menu-api:4102
 ENV MENU_SERVICE_URL=$MENU_SERVICE_URL
-ARG ORDER_SERVICE_URL=http://order-service:4103
+ARG ORDER_SERVICE_URL=http://vmenu-order-api:4103
 ENV ORDER_SERVICE_URL=$ORDER_SERVICE_URL
 
 # Copy dependencies from the previous stage
