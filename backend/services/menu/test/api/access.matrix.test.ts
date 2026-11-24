@@ -22,8 +22,9 @@ process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 process.env.INTERNAL_API_KEY = "internal-test-key";
 trackRoutes();
 const { createApp } = await import("../../src/app.js");
-const { Item, Table } = await import("../../src/models.js");
-const { saveImage } = await import("../../src/images.js");
+const { Item } = await import("../../src/models/item.model.js");
+const { Table } = await import("../../src/models/table.model.js");
+const { mongoImagesRepo } = await import("../../src/repositories/images.repo.js");
 
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
@@ -81,7 +82,7 @@ beforeEach(async () => {
     ids.tableA = String((await Table.create({ name: "T1", resId: A._id, isEnabled: true }))._id);
     ids.itemB = String((await Item.create({ name: "B dish", price: 3, image: img, resId: B._id }))._id);
     ids.tableB = String((await Table.create({ name: "B1", resId: B._id, isEnabled: true }))._id);
-    ids.imageB = await saveImage(Buffer.from("RIFF0000WEBPVP8 "), B._id);
+    ids.imageB = await mongoImagesRepo.save(Buffer.from("RIFF0000WEBPVP8 "), B._id);
 });
 
 /** The route with A's slug and A's real ids filled in. */
