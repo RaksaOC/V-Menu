@@ -94,6 +94,16 @@ describe("checking the session version (SEC-03)", () => {
         expect(await call({ ...cashier, tv: 0 })).toBe(200);
     });
 
+    it("a re-invited person's version (a time stamp, far above the old one) works at once; their old tokens don't, cached or not", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        expect(await call({ ...cashier, tv: 3 })).toBe(200); // the old version is now cached
+        current = 1_795_500_000_000; // removed, invited again: the row starts at Date.now()
+        expect(await call({ ...cashier, tv: current })).toBe(200);
+        expect(await call({ ...cashier, tv: 3 })).toBe(401);
+        expect(await call({ ...cashier, tv: 0 })).toBe(401);
+        expect(await call(cashier)).toBe(401); // a token with no version counts as 0
+    });
+
     it("keeps one answer per person, role and restaurant", async () => {
         expect(await call({ ...cashier, tv: 3 })).toBe(200);
         expect(await call({ ...cashier, resId: "r2", tv: 3 })).toBe(200);
