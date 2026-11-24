@@ -9,5 +9,8 @@ const tableSchema = new mongoose.Schema(
     },
     { timestamps: true },
 );
+// VM-16: one name per table in a restaurant. The database enforces it, so two requests at the
+// same moment can't both create table "5"; the loser gets a duplicate-key error (11000).
+tableSchema.index({ resId: 1, name: 1 }, { unique: true });
 
 export const Table = mongoose.model("Table", tableSchema, "tables");

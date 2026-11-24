@@ -5,7 +5,7 @@ import { Plus, Printer, Table as TableIcon } from "lucide-react";
 import { Button, Chip, Skeleton, toast } from "@/components/ui";
 import { printQrCards } from "@/components/qr/print";
 import { tableUrl } from "@/lib/table-url";
-import { apiStatus } from "@/lib/api";
+import { apiErrorCode, apiStatus } from "@/lib/api";
 import { createTable, deleteTable, getTables, setTableAvailability, updateTable } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 import TableCard from "./TableCard";
@@ -54,8 +54,10 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
             await createTable(slug, input);
             setEditing(null);
             await load();
-        } catch {
-            toast.error("Could not add the table");
+            return "ok" as const;
+        } catch (err) {
+            // VM-16: a taken name is 409, said in the popup next to the name
+            return apiErrorCode(err) === "NAME_TAKEN" && input.type === "manual" ? ("taken" as const) : ("error" as const);
         }
     }
 

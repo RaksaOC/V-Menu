@@ -1,6 +1,28 @@
-import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
-import type { TablesRepo } from "../repositories/tables.repo.js";
+import { assertId, HttpError, notFound } from "@vmenu/common";
+import { TableNameTaken, type TableRecord, type TablesRepo } from "../repositories/tables.repo.js";
 import type { CreateTableBody, UpdateTableBody } from "@vmenu/contracts";
+
+/** VM-16: 409, with the field, so the form can say it next to the name. */
+const nameTaken = () => new HttpError(409, "Name is taken", "NAME_TAKEN", { name: "Name is taken" });
+
+/** How often an automatic name is tried again when another request took that number first. */
+const AUTO_NAME_TRIES = 10;
+
+/** The next free number: one more than the highest table name that is a number. */
+async function nextNumber(tables: TablesRepo, resId: string) {
+    const numbers = (await tables.list(resId)).map((t) => parseInt(t.name)).filter((n) => !isNaN(n));
+    return String(numbers.length ? Math.max(...numbers) + 1 : 1);
+}
+
+/** Turns the repository's "name is taken" into the 409 the owner sees. */
+async function orTaken<T>(write: () => Promise<T>): Promise<T> {
+    try {
+        return await write();
+    } catch (err) {
+        if (err instanceof TableNameTaken) throw nameTaken();
+        throw err;
+    }
+}
 
 /** Tables, and whether a customer can order from one (CL-04). */
 export function tablesService({ tables }: { tables: TablesRepo }) {
@@ -24,30 +46,35 @@ export function tablesService({ tables }: { tables: TablesRepo }) {
         list: (resId: string) => tables.list(resId),
 
         // "manual" uses the given name; anything else takes the next free number, as before.
-        async create(resId: string, body: CreateTableBody) {
-            let name: string;
+        // New tables start closed (decided for VM-04): the cashier opens a table when guests sit
+        // down. Scanning a closed table's QR code says so instead of showing the menu.
+        async create(resId: string, body: CreateTableBody): Promise<TableRecord> {
             if (body.type === "manual") {
-                const given = body.name!.trim(); // the schema requires it for a manual table
-                if (await tables.findByName(resId, given)) throw badRequest("Name is taken");
-                name = given;
-            } else {
-                const numbers = (await tables.list(resId)).map((t) => parseInt(t.name)).filter((n) => !isNaN(n));
-                name = String(numbers.length ? Math.max(...numbers) + 1 : 1);
+                const name = body.name!.trim(); // the schema requires it for a manual table
+                if (await tables.findByName(resId, name)) throw nameTaken();
+                return orTaken(() => tables.create(resId, { name, isEnabled: false })); // VM-16: or someone was faster
             }
-            // New tables start closed (decided for VM-04): the cashier opens a table when guests sit
-            // down. Scanning a closed table's QR code says so instead of showing the menu.
-            return tables.create(resId, { name, isEnabled: false });
+            // VM-16: two clicks at once both see "5" as the next number. The unique index lets one
+            // of them have it; the other works the number out again and tries once more.
+            for (let attempt = 1; attempt <= AUTO_NAME_TRIES; attempt++) {
+                try {
+                    return await tables.create(resId, { name: await nextNumber(tables, resId), isEnabled: false });
+                } catch (err) {
+                    if (!(err instanceof TableNameTaken)) throw err;
+                }
+            }
+            throw new HttpError(409, "Many tables are being added at the same time. Please try again.", "NAME_TAKEN");
         },
 
         async update(resId: string, id: string, body: UpdateTableBody) {
             const table = await existing(resId, id);
             const fields: UpdateTableBody = {};
             if (body.name && body.name !== table.name) {
-                if (await tables.findByName(resId, body.name)) throw badRequest("Name is taken");
+                if (await tables.findByName(resId, body.name)) throw nameTaken();
                 fields.name = body.name;
             }
             if (body.isEnabled !== undefined) fields.isEnabled = body.isEnabled;
-            return (await tables.update(resId, id, fields)) ?? table;
+            return (await orTaken(() => tables.update(resId, id, fields))) ?? table;
         },
 
         async remove(resId: string, id: string) {

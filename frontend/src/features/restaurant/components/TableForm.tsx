@@ -7,11 +7,14 @@ import type { CreateTableBody, Table } from "@vmenu/contracts";
 
 type Result = "ok" | "taken" | "error" | undefined;
 
+const message = (result: Result) =>
+    result === "taken" ? "Table name is taken." : result === "error" ? "Could not save the table. Please try again." : "";
+
 interface Props {
     /** Without a table the form adds one; with a table it renames or deletes it. */
     table?: Table;
     onClose: () => void;
-    onCreate?: (table: CreateTableBody) => void;
+    onCreate?: (table: CreateTableBody) => Promise<Result>;
     onRename?: (id: string, name: string) => Promise<Result>;
     onDelete?: (id: string) => void;
 }
@@ -32,10 +35,13 @@ export default function TableForm({ table, onClose, onCreate, onRename, onDelete
             setSaving(true);
             const result = await onRename?.(table._id, name.trim());
             setSaving(false);
-            setError(result === "taken" ? "Table name is taken." : result === "error" ? "Could not save the table. Please try again." : "");
+            setError(message(result));
         } else {
             if (!auto && !name.trim()) return setError("Table name is required.");
-            onCreate?.({ name: auto ? "" : name.trim(), type: auto ? "auto" : "manual" }); // a new table starts closed (VM-04)
+            setSaving(true);
+            const result = await onCreate?.({ name: auto ? "" : name.trim(), type: auto ? "auto" : "manual" }); // a new table starts closed (VM-04)
+            setSaving(false);
+            setError(message(result)); // VM-16: a taken name is said next to it, and the popup stays open
         }
     }
 
@@ -83,6 +89,11 @@ export default function TableForm({ table, onClose, onCreate, onRename, onDelete
                             <input type="radio" name="kind" checked={!auto} onChange={() => setAuto(false)} /> Choose a name
                         </label>
                     </fieldset>
+                )}
+                {!table && auto && error && (
+                    <p role="alert" className="text-sm text-[var(--bad)]">
+                        {error}
+                    </p>
                 )}
                 {(table || !auto) && (
                     <Input
