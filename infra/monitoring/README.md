@@ -22,7 +22,7 @@ On the test laptop the agent and its helpers use about 130 MB of memory in total
 | Container CPU, memory, network | Docker stats | Overview dashboard, alerts |
 | Server CPU, memory, network, disk | `/proc`, `/sys`, Docker's disk | Overview dashboard, alerts |
 | Service and frontend logs | Docker logs, with customer IPs removed | Overview dashboard |
-| Deploys, rollbacks, results | `deploy-history.log` | DORA dashboard, alerts |
+| Deploys, rollbacks, results, failed post-deploy checks of staging | `deploy-history.log` | DORA dashboard, alerts |
 
 ## Files
 

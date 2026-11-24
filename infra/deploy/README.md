@@ -38,7 +38,7 @@ Nobody logs into the server to deploy. The workflow writes the env files from Gi
 | `ci-deploy.sh` | Runs in GitHub Actions: writes env files from secrets, copies them, calls `remote-deploy.sh` |
 | `backup-mongo.sh` | Daily `mongodump`, installed by `setup-server.sh` |
 | `staging.env.example`, `prod.env.example` | Every secret and variable, and where it goes |
-| `../../.github/workflows/deploy.yml` | The deploy job (called by M3's release workflow, or run by hand) |
+| `../../.github/workflows/deploy.yml` | The deploy job (called by M3's release workflow, or run by hand), then the post-deploy checks of staging |
 | `../../.github/workflows/rollback.yml` | One-click rollback |
 | `../../.github/workflows/deploy-test.yml` | Tests all of the above on a throwaway runner |
 
@@ -200,6 +200,23 @@ Add each hostname under its project's Firebase → Authentication → Settings �
 
 `docker compose stop` sends SIGTERM and the services shut down gracefully, so requests in flight finish.
 
+### After a staging deploy: the post-deploy checks (B7)
+
+Once a staging deploy has passed its smoke test, the `post-deploy` job in `deploy.yml` tests staging from the outside, through Caddy and HTTPS, like a customer would. It doesn't run after a rollback, for production, or when no server is configured yet.
+
+| Step | What it checks | If it fails |
+|---|---|---|
+| Demo data | `scripts/check-demo-data.mjs`: `demo-bistro` exists, has dishes and has table `T1` | The message says how to load the demo data (see below). The browser tests are skipped. |
+| Security headers | `scripts/check-headers.mjs` (SEC-02) on `/`, a customer page and the staff logins | The job summary lists the missing headers per page |
+| Browser tests | The e2e specs tagged `@post-deploy`: a customer orders at `T1`, the kitchen API sees the order, then the cashier cancels it so the kitchen queue stays clean | The Playwright report is in the `post-deploy` artifact |
+| ZAP baseline | Passive OWASP ZAP scan (SEC-09): spider plus passive checks only, no attacks | Fails on a High alert not listed in `.zap/known-high.txt`; the reports are in the `post-deploy` artifact |
+
+- **Every check runs**, even when an earlier one failed, so one run shows everything that's wrong.
+- **Staff tokens.** The browser tests need a chef and a cashier. One step signs two 10-minute tokens for the demo restaurant with staging's `JWT_SECRET` (`scripts/staff-token.mjs`) and passes only the tokens on. Playwright never sees the secret, and no server secret reaches this job.
+- **On failure** the run turns red, and the `post-deploy-failed` job adds a `post-deploy-check <tag> failed` line to staging's `deploy-history.log` (`remote-deploy.sh staging --check-failed`). The monitoring agent ships it, and the **Deploy failed** alert fires. Staging keeps the new version: this is a signal for a person, not a rollback. Roll back by hand if the version is broken.
+- **Demo data missing?** Run it once: Actions → **Deploy** → Run workflow on `staging`, environment `staging`, the current tag, tick **Load demo data**. The post-deploy checks run again after it.
+- **Run the same browser test locally** against your own stack: `cd e2e && BASE_URL=http://localhost:3400 npx playwright test --grep @post-deploy`. It also runs in CI's `e2e` job with the other specs. Never point it at production.
+
 ### Rollback
 
 `rollback.yml` runs `remote-deploy.sh <env> --rollback`, which redeploys the tag in `.previous_tag`. It uses the images already on the server and downloads only missing ones, so it doesn't wait on GHCR, and it gets the build that actually ran even if that tag was pushed again since. The same applies when a failed deploy puts the previous tag back.
@@ -226,4 +243,5 @@ Every push to an `infra/**` branch that touches these files runs **Deploy test**
 - deploys two versions, seeds, rolls back, and deploys prod next to staging;
 - checks HTTPS through Caddy;
 - checks that a missing image and a wrong commit are both refused while staging stays up;
+- records a failed post-deploy check, and refuses one for production;
 - runs a backup.

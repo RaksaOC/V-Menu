@@ -53,7 +53,7 @@ jobs:
     environment:
       name: ${{ inputs.environment != '' && inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
       url: ${{ vars.PUBLIC_URL }}
-    # For the ZAP scan after a staging deploy (SEC-09).
+    # For the post-deploy checks of staging (B7).
     outputs:
       environment: ${{ steps.done.outputs.environment }}
       url: ${{ steps.done.outputs.url }}
@@ -147,34 +147,78 @@ jobs:
           URL: ${{ vars.PUBLIC_URL }}
         run: |
           echo "environment=$ENVIRONMENT" >> "$GITHUB_OUTPUT"
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          # No URL when ci-deploy.sh skipped (no server configured yet): nothing to test then.
+          if [[ -n "$SSH_HOST" ]]; then echo "url=$URL" >> "$GITHUB_OUTPUT"; fi
 
-  # SEC-09: a passive OWASP ZAP baseline scan of staging after each staging deploy (and not
-  # after a rollback), after checking the pages send the security headers (SEC-02). Baseline = spider plus passive checks only: no attacks, no forms sent.
-  # Fails on a High alert that isn't in .zap/known-high.txt. The HTML and JSON reports are kept
-  # as the zap-baseline artifact. B7 will run this together with the other post-deploy checks.
-  zap:
-    name: ZAP baseline (staging)
+  # B7: test staging after every staging deploy (not after a rollback, never production).
+  # Absorbs SEC-09's ZAP job and SEC-02's header check. In order:
+  #   1. demo data: demo-bistro, its dishes and table T1 exist (fails with how to load them);
+  #   2. security headers on the landing, a customer page and the staff logins (SEC-02);
+  #   3. a short browser suite (e2e specs tagged @post-deploy): a customer orders at the demo
+  #      table, the kitchen API sees it, then the test order is cancelled;
+  #   4. the passive OWASP ZAP baseline (SEC-09): spider plus passive checks only, no attacks.
+  #      Fails on a High alert that isn't in .zap/known-high.txt; reports kept as an artifact.
+  # Every check runs even if an earlier one failed. Any failure fails this run, and the
+  # post-deploy-failed job below records it on the server so the "Deploy failed" alert fires.
+  post-deploy:
+    name: post-deploy checks (staging)
     needs: deploy
-    if: needs.deploy.outputs.environment == 'staging' && !inputs.rollback
+    if: needs.deploy.outputs.environment == 'staging' && needs.deploy.outputs.url != '' && !inputs.rollback
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    # For JWT_SECRET (step "Staff tokens" only). No server secrets are used in this job.
+    environment: staging
+    env:
+      TARGET: ${{ needs.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Demo data
+        id: demo
+        run: node scripts/check-demo-data.mjs "$TARGET"
 
       # SEC-02: the pages must send the security headers (landing, a customer page, staff logins).
       - name: Security headers
-        env:
-          TARGET: ${{ needs.deploy.outputs.url }}
+        if: '!cancelled()'
         run: node scripts/check-headers.mjs "$TARGET" / /demo-bistro/customer/T1 /owner/login /demo-bistro/cashier/login
 
-      - name: Scan (passive checks only)
+      # Short-lived (10 min) chef and cashier tokens for the demo restaurant, so the browser tests
+      # can read the kitchen queue and cancel their test order. Only this step sees JWT_SECRET.
+      - name: Staff tokens
+        if: steps.demo.outcome == 'success' && !cancelled()
         env:
-          TARGET: ${{ needs.deploy.outputs.url }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          for role in chef cashier; do
+            token=$(node scripts/staff-token.mjs "$role")
+            echo "::add-mask::$token"
+            echo "${role^^}_TOKEN=$token" >> "$GITHUB_ENV"
+          done
+
+      - name: Install the browser tests
+        if: steps.demo.outcome == 'success' && !cancelled()
+        working-directory: e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      # Skipped without the demo data: the check above already says what's missing.
+      - name: Browser tests (@post-deploy)
+        if: steps.demo.outcome == 'success' && !cancelled()
+        working-directory: e2e
+        env:
+          BASE_URL: ${{ needs.deploy.outputs.url }}
+          CI: "true"
+        run: npx playwright test --grep @post-deploy
+
+      - name: Scan (passive checks only)
+        if: '!cancelled()'
         run: |
           mkdir -p zap && chmod 777 zap
           # -I: don't fail on warnings here; the summary step below decides. -m 3: spider 3 minutes.
@@ -182,12 +226,42 @@ jobs:
             zap-baseline.py -t "$TARGET" -m 3 -I -J report.json -r report.html -w report.md
 
       - name: Security summary
-        if: always()
+        if: '!cancelled()'
         run: node scripts/security-summary.mjs zap zap/report.json --label staging --known .zap/known-high.txt --fail-on-high
 
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: '!cancelled()'
         with:
-          name: zap-baseline
-          path: zap/
+          name: post-deploy
+          path: |
+            zap/
+            e2e/playwright-report/
+            e2e/test-results/
+          if-no-files-found: ignore
           retention-days: 30
+
+  # B7: a failed post-deploy check goes into staging's deploy-history.log as
+  # "post-deploy-check <tag> failed". The monitoring agent ships that line to Grafana, and the
+  # "Deploy failed" alert fires. Staging keeps running the new version: this is a signal for a
+  # person, not an automatic rollback.
+  post-deploy-failed:
+    name: record failed post-deploy checks
+    needs: [deploy, post-deploy]
+    if: always() && needs.post-deploy.result == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      SSH_PORT: ${{ vars.SSH_PORT }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Record it in the deploy history
+        env:
+          TARGET: staging
+          DEPLOY_ACTION: --check-failed
+        run: bash infra/deploy/ci-deploy.sh
