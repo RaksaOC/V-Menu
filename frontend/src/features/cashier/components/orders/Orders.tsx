@@ -1,4 +1,5 @@
 import OrderCard from "./OrderCard";
+import { orderNumber } from "./order-number";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
@@ -8,7 +9,8 @@ import { apiErrorMessage } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { useConnectionStatus } from "@/lib/use-connection-status";
 import { useParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, Clock, RefreshCw, ShoppingCart } from "lucide-react";
+import { Clock, RefreshCw, ShoppingCart } from "lucide-react";
+import HistoryPager from "./HistoryPager";
 import type { Bill } from "@vmenu/contracts";
 
 /** VM-11: the open bills refresh themselves this often. */
@@ -90,7 +92,7 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
     const handleCancelOrder = async (billId: string, orderId: string, reason: string) => {
         try {
             await cancelOrder(slug, billId, orderId, reason);
-            toast.success(`Order #${orderId.slice(-6).toUpperCase()} cancelled`);
+            toast.success(`Order #${orderNumber(orderId)} cancelled`);
             await loadOpen();
         } catch (err) {
             toast.error(apiErrorMessage(err, "Couldn't cancel the order. Try again."));
@@ -186,31 +188,7 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
                             </div>
                         )}
                         {history && history.total > 0 && (
-                            <nav
-                                aria-label="History pages"
-                                className="flex w-full items-center justify-between gap-4 px-4 pb-6 text-slate-700 dark:text-slate-200"
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => setHistoryPage((p) => p - 1)}
-                                    disabled={historyPage <= 1}
-                                    className="flex items-center gap-1 rounded-xl border border-slate-300 px-4 py-2 font-medium disabled:opacity-40 dark:border-slate-600"
-                                >
-                                    <ChevronLeft size={18} aria-hidden /> Previous
-                                </button>
-                                <p className="text-sm">
-                                    Page {history.page} of {history.pages}
-                                    <span className="block text-slate-500 dark:text-slate-400">{history.total} paid bills</span>
-                                </p>
-                                <button
-                                    type="button"
-                                    onClick={() => setHistoryPage((p) => p + 1)}
-                                    disabled={historyPage >= history.pages}
-                                    className="flex items-center gap-1 rounded-xl border border-slate-300 px-4 py-2 font-medium disabled:opacity-40 dark:border-slate-600"
-                                >
-                                    Next <ChevronRight size={18} aria-hidden />
-                                </button>
-                            </nav>
+                            <HistoryPager history={history} historyPage={historyPage} setHistoryPage={setHistoryPage} />
                         )}
                     </>
                 )}

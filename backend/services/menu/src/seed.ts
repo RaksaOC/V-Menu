@@ -38,5 +38,5 @@ for (const { name, category, ...rest } of items) {
         { upsert: true },
     );
 }
-console.log(`seeded ${tables.length} tables, ${categories.length} categories and ${items.length} dishes`);
+process.stdout.write(`seeded ${tables.length} tables, ${categories.length} categories and ${items.length} dishes\n`);
 await mongoose.disconnect();

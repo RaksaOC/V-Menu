@@ -25,5 +25,5 @@ for (const role of ["owner", "cashier", "chef"] as const) {
         { upsert: true },
     );
 }
-console.log(`seeded restaurant "${DEMO_SLUG}" (owner ${owner.email})`);
+process.stdout.write(`seeded restaurant "${DEMO_SLUG}" (owner ${owner.email})\n`);
 await mongoose.disconnect();
