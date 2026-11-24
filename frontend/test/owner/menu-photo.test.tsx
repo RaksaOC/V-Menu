@@ -12,18 +12,18 @@ const AddItemPopup = (p: { onClose: () => void; onSave: (i: unknown) => void }) 
 const EditItemPopup = ({
     id,
     name,
-    price,
+    priceCents,
     image,
     ...p
 }: {
     id: string;
     name: string;
-    price: number;
+    priceCents: number;
     image: string;
     onClose: () => void;
     onSave: (i: unknown) => void;
     onDelete: (id: string) => void;
-}) => <ItemForm item={{ _id: id, name, price, image, isEnabled: true }} {...p} />;
+}) => <ItemForm item={{ _id: id, name, priceCents, image, isEnabled: true }} {...p} />;
 
 URL.createObjectURL = vi.fn(() => "blob:preview");
 URL.revokeObjectURL = vi.fn();
@@ -62,7 +62,14 @@ describe("adding an item with a photo", () => {
         // (jsdom sends the file as an empty "blob"; a browser sends the real name and bytes)
         expect(seen[0].body).toMatch(/name="image"; filename="[^"]+"\r\nContent-Type: image\/jpeg/);
         expect(seen[0].body).not.toContain("base64");
-        expect(onSave).toHaveBeenCalledWith({ name: "Fish Amok", price: 5.5, image: URL_OK, isEnabled: true, description: "", tags: [] });
+        expect(onSave).toHaveBeenCalledWith({
+            name: "Fish Amok",
+            priceCents: 550,
+            image: URL_OK,
+            isEnabled: true,
+            description: "",
+            tags: [],
+        });
     });
 
     it("shows the server's reason when the upload is refused, and does not save", async () => {
@@ -88,7 +95,7 @@ describe("adding an item with a photo", () => {
 });
 
 describe("editing an item's photo", () => {
-    const item = { id: "i1", name: "Amok", price: 5, image: "https://images.example/old.jpg" };
+    const item = { id: "i1", name: "Amok", priceCents: 500, image: "https://images.example/old.jpg" };
 
     it("uploads a new photo and saves the item with its URL", async () => {
         const seen = uploads();

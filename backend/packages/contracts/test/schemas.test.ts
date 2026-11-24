@@ -36,30 +36,39 @@ describe("shared", () => {
 describe("menu", () => {
     it("CreateItemBody: name, price (a number from 0, numeric text too) and image; unknown fields dropped", () => {
         const item = C.CreateItemBody.parse({ name: " Amok ", price: "5.5", image: "/x.png", resId: "smuggled" });
-        expect(item).toEqual({ name: "Amok", price: 5.5, image: "/x.png" });
-        expect(fieldsOf(C.CreateItemBody, { name: "", price: -1 }).sort()).toEqual(["image", "name", "price"]);
-        expect(fieldsOf(C.CreateItemBody, { name: "A", price: "abc", image: "/x" })).toEqual(["price"]);
-        expect(fieldsOf(C.CreateItemBody, { name: "A", price: 1, image: "/x", isEnabled: "yes" })).toEqual(["isEnabled"]);
+        expect(item).toEqual({ name: "Amok", priceCents: 550, image: "/x.png" });
+        expect(fieldsOf(C.CreateItemBody, { name: "", priceCents: -1 }).sort()).toEqual(["image", "name", "priceCents"]);
+        expect(fieldsOf(C.CreateItemBody, { name: "A", priceCents: "abc", image: "/x" })).toEqual(["priceCents"]);
+        expect(fieldsOf(C.CreateItemBody, { name: "A", priceCents: 100, image: "/x", isEnabled: "yes" })).toEqual(["isEnabled"]);
     });
 
-    it("a price is a number from 0, or numeric text; anything else is refused, never turned into 0 (VM-17)", () => {
+    it("a price is whole cents from 0; anything else is refused, never turned into 0 (VM-17, CL-07)", () => {
+        const cents = (value: unknown) => C.UpdateItemBody.safeParse({ priceCents: value });
+        expect(cents(0).data).toEqual({ priceCents: 0 });
+        expect(cents(235).data).toEqual({ priceCents: 235 });
+        for (const bad of ["", "  ", null, true, [], "abc", "250", -5, 2.5]) expect(cents(bad).success, JSON.stringify(bad)).toBe(false);
+        expect(cents(-5).error?.issues[0].message).toBe("Can't be negative");
+        expect(cents(2.5).error?.issues[0].message).toBe("Must be a whole number of cents");
+    });
+
+    it("the old dollar price is still strict: a number from 0 or numeric text, at most 2 decimal places (VM-17, CL-07)", () => {
         const price = (value: unknown) => C.UpdateItemBody.safeParse({ price: value });
-        expect(price(0).data).toEqual({ price: 0 });
-        expect(price(" 2.5 ").data).toEqual({ price: 2.5 });
-        for (const bad of ["", "  ", null, true, [], "abc", "1e999", -5, "-1"]) expect(price(bad).success, JSON.stringify(bad)).toBe(false);
-        expect(price(-5).error?.issues[0].message).toBe("Must be 0 or more");
-        expect(price("").error?.issues[0].message).toBe("Required");
+        expect(price(0).data).toEqual({ priceCents: 0 });
+        expect(price(" 2.5 ").data).toEqual({ priceCents: 250 });
+        expect(price(2.35).data).toEqual({ priceCents: 235 });
+        for (const bad of ["", "  ", null, true, [], "abc", "1e999", -5, "-1", 1e300])
+            expect(price(bad).success, JSON.stringify(bad)).toBe(false);
+        expect(price(-5).error?.issues[0].message).toBe("Can't be negative");
         expect(price("abc").error?.issues[0].message).toBe("Must be a number");
         // money has cents: the form's old step="0.01" stopped this only in the browser
-        expect(price(2.35).success).toBe(true);
-        expect(price(1e300).success).toBe(true);
-        expect(price(2.555).error?.issues[0].message).toBe("At most 2 decimal places");
+        expect(price(2.555).error?.issues[0].message).toBe("Must be a whole number of cents");
+        expect(price(10_000_000).error?.issues[0].message).toBe("At most $1,000,000");
     });
 
     it("UpdateItemBody: any subset, each still checked", () => {
         ok(C.UpdateItemBody, {});
-        ok(C.UpdateItemBody, { price: 6 });
-        expect(fieldsOf(C.UpdateItemBody, { price: "abc" })).toEqual(["price"]);
+        ok(C.UpdateItemBody, { priceCents: 600 });
+        expect(fieldsOf(C.UpdateItemBody, { priceCents: "abc" })).toEqual(["priceCents"]);
     });
 
     it("AvailabilityBody: true or false", () => {
@@ -80,8 +89,8 @@ describe("menu", () => {
     it("UpdateTableBody, and the response shapes", () => {
         ok(C.UpdateTableBody, { name: "Window", isEnabled: true });
         expect(fieldsOf(C.UpdateTableBody, { name: "" })).toEqual(["name"]);
-        ok(C.MenuItem, { _id: ID, name: "A", price: 1, image: "/x", isEnabled: true });
-        fieldsOf(C.MenuItem, { _id: ID, name: "A", price: "1", image: "/x", isEnabled: true });
+        ok(C.MenuItem, { _id: ID, name: "A", priceCents: 100, image: "/x", isEnabled: true });
+        fieldsOf(C.MenuItem, { _id: ID, name: "A", priceCents: "1", image: "/x", isEnabled: true });
         ok(C.Table, { _id: ID, name: "1", isEnabled: false, qrToken: "AbCdEfGhIjKlMnOpQrSt_-" });
         ok(C.UploadedPhoto, { url: "/api/menu/x/images/" + ID });
     });
@@ -167,14 +176,14 @@ describe("menu categories (VM-25)", () => {
     });
 
     it("an item may name a category, or none (Other)", () => {
-        expect(C.CreateItemBody.parse({ name: "Tea", price: 1, image: "/x", categoryId: ID }).categoryId).toBe(ID);
+        expect(C.CreateItemBody.parse({ name: "Tea", priceCents: 100, image: "/x", categoryId: ID }).categoryId).toBe(ID);
         expect(C.UpdateItemBody.parse({ categoryId: null })).toEqual({ categoryId: null });
         expect(fieldsOf(C.UpdateItemBody, { categoryId: "drinks" })).toEqual(["categoryId"]);
-        ok(C.MenuItem, { _id: ID, name: "Tea", price: 1, image: "/x", isEnabled: true, categoryId: null });
+        ok(C.MenuItem, { _id: ID, name: "Tea", priceCents: 100, image: "/x", isEnabled: true, categoryId: null });
     });
 
     it("the public menu is sections of dishes; Other has no id", () => {
-        const tea = { _id: ID, name: "Tea", price: 1, image: "/x", isEnabled: true };
+        const tea = { _id: ID, name: "Tea", priceCents: 100, image: "/x", isEnabled: true };
         ok(C.PublicMenu, {
             categories: [
                 { _id: ID, name: "Drinks", items: [tea] },
@@ -186,7 +195,7 @@ describe("menu categories (VM-25)", () => {
 });
 
 describe("internal calls", () => {
-    const line = { item: { _id: ID, name: "Amok", price: 5, image: "/x", isEnabled: true }, quantity: 2 };
+    const line = { item: { _id: ID, name: "Amok", priceCents: 500, image: "/x", isEnabled: true }, quantity: 2 };
 
     it("OrderCheckRequest: a table and 1 to 100 lines of an id and 1 to 99", () => {
         ok(C.OrderCheckRequest, { table: "1", items: [{ _id: ID, quantity: 1 }] });
@@ -202,8 +211,8 @@ describe("internal calls", () => {
 
     it("OrderCheckResponse, MenuCounts and RestaurantRef", () => {
         ok(C.OrderCheckResponse, { items: [line] });
-        expect(fieldsOf(C.OrderCheckResponse, { items: [{ ...line, item: { ...line.item, price: "5" } }] })).toEqual([
-            "items.0.item.price",
+        expect(fieldsOf(C.OrderCheckResponse, { items: [{ ...line, item: { ...line.item, priceCents: "5" } }] })).toEqual([
+            "items.0.item.priceCents",
         ]);
         fieldsOf(C.OrderCheckResponse, { items: [] });
         ok(C.MenuCounts, { numOfTables: 4, numOfActiveTables: 2, numOfItems: 10 });
@@ -220,11 +229,11 @@ describe("orders", () => {
         table: "1",
         status: "pending",
         createdAt: "2026-11-23T10:00:00.000Z",
-        orderedItems: [{ item: { _id: ID, name: "Amok", price: 5, image: "/x", isEnabled: true }, quantity: 1 }],
+        orderedItems: [{ item: { _id: ID, name: "Amok", priceCents: 500, image: "/x", isEnabled: true }, quantity: 1 }],
     };
 
     it("PlaceOrderBody: the table (text or number) and lines of an item id and 1 to 99; the browser's price is dropped", () => {
-        const body = C.PlaceOrderBody.parse({ table: 7, isDone: true, orderedItems: [{ item: { _id: ID, price: 0 }, quantity: 2 }] });
+        const body = C.PlaceOrderBody.parse({ table: 7, isDone: true, orderedItems: [{ item: { _id: ID, priceCents: 0 }, quantity: 2 }] });
         expect(body).toEqual({ table: "7", orderedItems: [{ item: { _id: ID }, quantity: 2 }] });
         expect(fieldsOf(C.PlaceOrderBody, { table: "", orderedItems: [] }).sort()).toEqual(["orderedItems", "table"]);
         expect(fieldsOf(C.PlaceOrderBody, { table: "1", orderedItems: [{ item: {}, quantity: 100 }] }).sort()).toEqual([
@@ -239,8 +248,26 @@ describe("orders", () => {
         expect(C.UpdateBillBody.parse({ isPaid: true, isPayed: false })).toEqual({ isPaid: true });
         expect(fieldsOf(C.UpdateBillBody, {})).toEqual(["isPaid"]);
         expect(fieldsOf(C.UpdateBillBody, { isPayed: "yes" })).toEqual(["isPaid"]);
-        ok(C.Bill, { _id: ID, table: "1", isPaid: true, orders: [], createdAt: "2026-11-23T10:00:00.000Z" });
-        fieldsOf(C.Bill, { _id: ID, table: "1", isPayed: true, orders: [], createdAt: "2026-11-23T10:00:00.000Z" });
+        ok(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPaid: true,
+            orders: [],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: "2026-11-23T10:00:00.000Z",
+        });
+        fieldsOf(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPayed: true,
+            orders: [],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: "2026-11-23T10:00:00.000Z",
+        });
     });
 
     it("UpdateBillBody, Order, Bill and the pages", () => {
@@ -248,7 +275,16 @@ describe("orders", () => {
         expect(fieldsOf(C.UpdateBillBody, { isPaid: "yes" })).toEqual(["isPaid"]);
         ok(C.Order, order);
         fieldsOf(C.Order, { ...order, status: "done" });
-        ok(C.Bill, { _id: ID, table: "1", isPaid: false, orders: [order], createdAt: order.createdAt });
+        ok(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPaid: false,
+            orders: [order],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: order.createdAt,
+        });
         ok(C.KitchenHistoryPage, { orders: [order], page: 1, limit: 20, total: 1, pages: 1 });
         fieldsOf(C.PaidBillsPage, { bills: [], page: 1, limit: 20, total: 1 });
     });
@@ -260,25 +296,55 @@ describe("orders", () => {
             status: "pending",
             table: "1",
             placedAt: order.createdAt,
-            lines: [{ name: "Amok", price: 5, quantity: 1, total: 5 }],
-            total: 5,
+            lines: [{ name: "Amok", priceCents: 500, quantity: 1, totalCents: 500 }],
+            totalCents: 500,
         };
         ok(C.TableOrderView, view);
-        ok(C.TableBill, { table: "1", orders: [view], total: 5 });
-        const six = { numOfTables: 1, numOfActiveTables: 1, numOfItems: 1, numOfOrders: 1, numOfUnpaidOrders: 0, numOfPayments: 1 };
+        ok(C.TableBill, { table: "1", orders: [view], lines: [], subtotalCents: 500, totalCents: 500 });
+        // VM-09: the counts are named xCount, and the revenue comes with the range it covers
+        const six = {
+            tableCount: 1,
+            activeTableCount: 1,
+            itemCount: 1,
+            orderCount: 1,
+            unpaidBillCount: 0,
+            paymentCount: 1,
+            revenueCents: 500,
+            from: null,
+            to: null,
+        };
         ok(C.Overview, six);
+        fieldsOf(C.Overview, { ...six, numOfTables: 1, tableCount: undefined });
         ok(C.OwnerRestaurantOverview, { ...six, resId: ID, resName: "A" });
         fieldsOf(C.OwnerRestaurantOverview, six);
         ok(C.OwnerOverview, {
-            numOfUnpaidOrders: 0,
-            numOfItems: 1,
-            numOfOrders: 1,
-            numOfPayments: 1,
-            numOfMoneyEarned: 5,
-            totalItemsSold: 1,
+            unpaidBillCount: 0,
+            itemCount: 1,
+            orderCount: 1,
+            paymentCount: 1,
+            revenueCents: 500,
+            itemsSoldCount: 1,
             avgItemsPerOrder: 1,
-            topSellingItems: [{ name: "Amok", quantity: 1 }],
+            topSellingItems: [{ _id: ID, name: "Amok", quantity: 1 }],
+            from: "2026-11-01T00:00:00.000Z",
+            to: null,
         });
+    });
+
+    it("a date range for the dashboards: optional dates, from before to (VM-09)", () => {
+        ok(C.DateRangeQuery, {});
+        expect(C.DateRangeQuery.parse({ from: "2026-11-01T00:00:00.000Z" })).toEqual({ from: new Date("2026-11-01T00:00:00.000Z") });
+        expect(fieldsOf(C.DateRangeQuery, { from: "yesterday" })).toEqual(["from"]);
+        expect(fieldsOf(C.DateRangeQuery, { from: "2026-11-10", to: "2026-11-01" })).toEqual(["to"]);
+    });
+});
+
+describe("the size of one order (VM-22)", () => {
+    const lines = (n: number) => Array.from({ length: n }, () => ({ item: { _id: ID }, quantity: 1 }));
+    it("is at most 50 lines", () => {
+        expect(C.MAX_ORDER_LINES).toBe(50);
+        ok(C.PlaceOrderBody, { table: "1", orderedItems: lines(50) });
+        expect(fieldsOf(C.PlaceOrderBody, { table: "1", orderedItems: lines(51) })).toEqual(["orderedItems"]);
     });
 });
 

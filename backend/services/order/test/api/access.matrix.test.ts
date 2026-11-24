@@ -20,6 +20,7 @@ import type { Clients } from "../../src/clients/index.js";
 // SEC-07: every order-service route, tried as every kind of caller. A new route fails the
 // inventory test until it's added here with its rule.
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
+process.env.INTERNAL_API_KEY = "internal-test-key";
 trackRoutes();
 const { createApp } = await import("../../src/app.js");
 const { Order } = await import("../../src/models/order.model.js");
@@ -27,7 +28,7 @@ const { Bill } = await import("../../src/models/bill.model.js");
 
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
-const DISH = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
+const DISH = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 const clients: Clients = {
     listOwnerRestaurants: async (_req, ownerId) => [A, B].filter((r) => r.ownerId === ownerId),
     menuCounts: async () => ({ numOfTables: 1, numOfActiveTables: 1, numOfItems: 1 }),
@@ -51,6 +52,7 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/orders/:slug", PUBLIC], // customers order without signing in
     ["GET /api/orders/:slug/tables/:table/orders/:id", PUBLIC], // only that table's order (VM-07)
     ["GET /api/orders/:slug/tables/:table/open-bill", PUBLIC],
+    ["POST /api/orders/:slug/tables/:table/requests", PUBLIC], // VM-30: Request bill, Call staff (no sign-in, like ordering)
     ["GET /api/orders/:slug/t/:token/orders/:id", PUBLIC], // SEC-04: the link token is the proof
     ["GET /api/orders/:slug/t/:token/open-bill", PUBLIC],
     ["GET /api/orders/:slug/kitchen", only(["chef"])],
@@ -59,10 +61,12 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /api/orders/:slug/bills", only(["cashier"])],
     ["PATCH /api/orders/:slug/bills/:id", only(["cashier"])],
     ["PATCH /api/orders/:slug/bills/:id/orders/:orderId/cancel", only(["cashier"])],
+    ["DELETE /api/orders/:slug/bills/:id/requests/:kind", only(["cashier"])], // VM-30: dismiss
     ["GET /api/orders/:slug/overview", only(["owner", "cashier"])],
     ["GET /api/orders/owner/restaurants", only(["owner"], { ownData: true })],
     ["GET /api/orders/owner/overview", only(["owner"], { ownData: true })],
     ["GET /internal/restaurants/:resId/tables/:name/open-bill", NO_APP_TOKEN], // VM-15, for menu-service
+    ["GET /internal/orders/without-bill", NO_APP_TOKEN], // VM-23: the internal key only
 ];
 
 let mongo: MongoMemoryServer;
@@ -97,6 +101,7 @@ function urlFor(route: string) {
         .replace(":table", "1")
         .replace(":token", "AbCdEfGhIjKlMnOpQrSt_-")
         .replace(":orderId", ids.orderA)
+        .replace(":kind", "bill")
         .replace(/orders\/:id/, `orders/${ids.orderA}`)
         .replace(/kitchen\/:id/, `kitchen/${ids.orderA}`)
         .replace(/bills\/:id/, `bills/${ids.billA}`);
@@ -121,6 +126,13 @@ describe("order-service access matrix (SEC-07)", () => {
         for (const caller of [...CALLERS].sort((x, y) => Number(row[x] === "ok") - Number(row[y] === "ok")))
             got[caller] = (await send(method, urlFor(route), caller)).status;
         expect(mismatches(row, got)).toEqual([]);
+    });
+});
+
+describe("internal routes (VM-23)", () => {
+    it("answers with the internal key", async () => {
+        const res = await request(app).get("/internal/orders/without-bill").set("x-internal-key", "internal-test-key");
+        expect(res.status).toBe(200);
     });
 });
 

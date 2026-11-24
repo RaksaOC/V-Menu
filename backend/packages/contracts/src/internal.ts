@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ObjectId, QrToken, Role, label, text } from "./common.js";
+import { Cents, ObjectId, QrToken, Role, label, text } from "./common.js";
 
 // Calls between services (CL-05): if either side changes a shape, the contract tests fail.
 
@@ -42,19 +42,28 @@ export const OrderCheckRequest = withOneTable(
 export type OrderCheckRequest = z.infer<typeof OrderCheckRequest>;
 
 /** A dish as it was when ordered: the menu's name and price, not the browser's. */
-export const OrderedDish = z.object({ _id: z.string(), name: z.string(), price: z.number(), image: z.string(), isEnabled: z.boolean() });
-export const OrderLine = z.object({ item: OrderedDish, quantity: z.number().int().min(1) });
+export const OrderedDish = z.object({
+    _id: z.string(),
+    name: z.string(),
+    priceCents: Cents,
+    /** @deprecated CL-07: priceCents / 100, kept on stored orders so a rollback still works; gone in the next release. */
+    price: z.number().optional(),
+    image: z.string(),
+    isEnabled: z.boolean(),
+});
+/** VM-28: the customer's note on the line, kept with the order (menu-service never sees it). */
+export const OrderLine = z.object({ item: OrderedDish, quantity: z.number().int().min(1), note: z.string().optional() });
 export type OrderLine = z.infer<typeof OrderLine>;
 
 /** `table` is the table's current name (SEC-04: the caller may only have its link token). */
 export const OrderCheckResponse = z.object({ table: z.string().optional(), items: z.array(OrderLine).min(1) });
 export type OrderCheckResponse = z.infer<typeof OrderCheckResponse>;
 
-/** SEC-04: menu-service → order-service: the table a link token belongs to. */
 /** VM-15: order-service answers menu-service: does this table have an unpaid bill? */
 export const OpenBillCheck = z.object({ open: z.boolean() });
 export type OpenBillCheck = z.infer<typeof OpenBillCheck>;
 
+/** SEC-04: menu-service → order-service: the table a link token belongs to. */
 export const TableByToken = z.object({ name: z.string() });
 export type TableByToken = z.infer<typeof TableByToken>;
 

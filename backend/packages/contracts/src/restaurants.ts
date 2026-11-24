@@ -28,11 +28,40 @@ export type AddStaffBody = z.infer<typeof AddStaffBody>;
 export const UpdateStaffBody = z.object({ name: text(120).optional(), email: Email.optional(), role: StaffRole.optional() });
 export type UpdateStaffBody = z.infer<typeof UpdateStaffBody>;
 
+/** VM-24: how the restaurant shows prices: US dollars, riel, or both. */
+export const Currency = z.enum(["USD", "KHR", "both"], "Choose USD, KHR or both");
+export const KhrPerUsd = z
+    .number("Must be a number")
+    .int("Must be a whole number")
+    .min(1000, "Must be between 1,000 and 10,000")
+    .max(10000, "Must be between 1,000 and 10,000");
+/** A payment QR is a photo uploaded for the restaurant (VM-02): never a link to another site. */
+export const PAYMENT_QR_URL = /^\/api\/menu\/[a-z0-9-]+\/images\/[0-9a-f]{24}$/;
+
+/** VM-24: what any page may know to show prices and print an invoice. */
+export const RestaurantSettings = z.object({
+    name: z.string(),
+    currency: Currency,
+    khrPerUsd: KhrPerUsd,
+    paymentQrUrl: z.string().nullable(),
+});
+export type RestaurantSettings = z.infer<typeof RestaurantSettings>;
+
+/** The owner changes some or all of them. null removes the payment QR. */
+export const UpdateSettingsBody = z.object({
+    currency: Currency.optional(),
+    khrPerUsd: KhrPerUsd.optional(),
+    paymentQrUrl: z.string().regex(PAYMENT_QR_URL, "Upload the QR code as a photo").nullable().optional(),
+});
+export type UpdateSettingsBody = z.infer<typeof UpdateSettingsBody>;
+
 export const Restaurant = z.object({
     _id: z.string(),
     name: z.string(),
     slug: z.string(),
     ownerId: z.string(),
+    /** VM-24: missing on a restaurant that never set them */
+    settings: UpdateSettingsBody.optional(),
     createdAt: IsoDate.optional(),
     updatedAt: IsoDate.optional(),
 });

@@ -89,11 +89,11 @@ afterAll(async () => {
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
     const img = `/api/menu/${A.slug}/images/${"a".repeat(24)}`;
-    ids.itemA = String((await Item.create({ name: "Amok", price: 5, image: img, resId: A._id }))._id);
+    ids.itemA = String((await Item.create({ name: "Amok", priceCents: 500, image: img, resId: A._id }))._id);
     const tableA = await Table.create({ name: "T1", resId: A._id, isEnabled: true });
     ids.tableA = String(tableA._id);
     ids.tokenA = String(tableA.get("qrToken")); // SEC-04
-    ids.itemB = String((await Item.create({ name: "B dish", price: 3, image: img, resId: B._id }))._id);
+    ids.itemB = String((await Item.create({ name: "B dish", priceCents: 300, image: img, resId: B._id }))._id);
     ids.tableB = String((await Table.create({ name: "B1", resId: B._id, isEnabled: true }))._id);
     ids.imageB = await mongoImagesRepo.save(Buffer.from("RIFF0000WEBPVP8 "), B._id);
     ids.categoryA = String((await Category.create({ name: "Mains", sortOrder: 0, resId: A._id }))._id);
@@ -160,7 +160,7 @@ describe("another restaurant's ids, through your own restaurant (SEC-07)", () =>
         const body = url().endsWith("/availability") ? { isEnabled: false } : method === "PUT" ? { name: "Renamed" } : {};
         const res = await send(method, url(), caller, {}, body);
         expect(res.status).toBe(404);
-        expect(await Item.findById(ids.itemB).lean()).toMatchObject({ name: "B dish", price: 3, isEnabled: true });
+        expect(await Item.findById(ids.itemB).lean()).toMatchObject({ name: "B dish", priceCents: 300, isEnabled: true });
         expect(await Table.findById(ids.tableB).lean()).toMatchObject({ name: "B1", isEnabled: true });
         expect(await Category.findById(ids.categoryB).lean()).toMatchObject({ name: "B drinks" });
     });

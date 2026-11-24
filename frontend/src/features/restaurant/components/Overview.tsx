@@ -5,12 +5,14 @@ import { AlertTriangle, CheckCircle, CreditCard, Table as TableIcon, TrendingUp,
 import { Card, Skeleton } from "@/components/ui";
 import { getOverview } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
+import { useMoney } from "@/components/money/MoneyProvider";
 import type { Overview as OverviewData } from "@vmenu/contracts";
 
 const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
 /** One restaurant's numbers, the same for the owner and the cashier (CL-09; was two copies). */
 export default function Overview() {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const slug = useRestaurantSlug();
     const [data, setData] = useState<OverviewData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -34,21 +36,21 @@ export default function Overview() {
         );
     }
 
-    const tables = data.numOfTables ?? 0;
+    const tables = data.tableCount ?? 0;
     const cards = [
-        { label: "Active Tables", value: data.numOfActiveTables ?? 0, icon: Users, of: tables },
-        { label: "Unpaid Orders", value: data.numOfUnpaidOrders ?? 0, icon: AlertTriangle, of: tables, urgent: true },
+        { label: "Active Tables", value: data.activeTableCount ?? 0, icon: Users, of: tables },
+        { label: "Unpaid Bills", value: data.unpaidBillCount ?? 0, icon: AlertTriangle, of: tables, urgent: true },
         { label: "Total Tables", value: tables, icon: TableIcon },
-        { label: "Menu Items", value: data.numOfItems ?? 0, icon: UtensilsCrossed },
-        { label: "Orders Completed", value: data.numOfOrders ?? 0, icon: CheckCircle },
-        { label: "Payments Completed", value: data.numOfPayments ?? 0, icon: CreditCard },
+        { label: "Menu Items", value: data.itemCount ?? 0, icon: UtensilsCrossed },
+        { label: "Orders", value: data.orderCount ?? 0, icon: CheckCircle },
+        { label: "Payments Completed", value: data.paymentCount ?? 0, icon: CreditCard },
     ];
 
     return (
         <div className="w-full space-y-6">
             <div>
                 <h2 className="text-xl font-semibold text-[var(--ink)]">Overview</h2>
-                <p className="text-sm text-[var(--muted)]">Today&apos;s tables, orders and payments</p>
+                <p className="text-sm text-[var(--muted)]">Tables right now; orders, payments and revenue so far</p>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {cards.map(({ label, value, icon: Icon, of, urgent }) => (
@@ -86,15 +88,15 @@ export default function Overview() {
             <Card className="grid gap-4 sm:grid-cols-3">
                 <div>
                     <p className="text-sm text-[var(--muted)]">Table Occupancy</p>
-                    <p className="text-lg font-bold">{pct(data.numOfActiveTables ?? 0, tables)}%</p>
+                    <p className="text-lg font-bold">{pct(data.activeTableCount ?? 0, tables)}%</p>
                 </div>
                 <div>
                     <p className="text-sm text-[var(--muted)]">Payment Completion</p>
-                    <p className="text-lg font-bold">{pct(data.numOfPayments ?? 0, data.numOfOrders ?? 0)}%</p>
+                    <p className="text-lg font-bold">{pct(data.paymentCount ?? 0, data.orderCount ?? 0)}%</p>
                 </div>
                 <div>
-                    <p className="text-sm text-[var(--muted)]">Pending Actions</p>
-                    <p className="text-lg font-bold">{data.numOfUnpaidOrders ?? 0}</p>
+                    <p className="text-sm text-[var(--muted)]">Revenue (paid bills)</p>
+                    <p className="text-lg font-bold">{money(data.revenueCents ?? 0)}</p>
                 </div>
             </Card>
         </div>

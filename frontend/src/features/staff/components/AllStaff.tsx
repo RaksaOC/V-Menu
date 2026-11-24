@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getAllStaff, type RestaurantStaff } from "@/features/staff/api";
 import { Calendar, ChevronsUpDown, CreditCard, Crown, Mail, Pencil, Search, Users, Utensils, Building2, House } from "lucide-react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
-import { prettyDate } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
 import InvitePending from "@/features/staff/components/InvitePending";
 import type { StaffMember } from "@vmenu/contracts";
 
@@ -379,9 +379,7 @@ export default function AllStaff() {
                                                     <td className="py-4 px-1">
                                                         <div className="flex items-center gap-2 justify-center">
                                                             <Calendar size={16} className="text-gray-400" />
-                                                            <span className="text-gray-900">
-                                                                {prettyDate(member.createdAt.toString(), false)}
-                                                            </span>
+                                                            <span className="text-gray-900">{formatDate(member.createdAt)}</span>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -428,9 +426,7 @@ export default function AllStaff() {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Calendar size={16} className="text-gray-400" />
-                                                    <span className="text-gray-900 text-sm">
-                                                        {prettyDate(member.createdAt.toString(), false)}
-                                                    </span>
+                                                    <span className="text-gray-900 text-sm">{formatDate(member.createdAt)}</span>
                                                 </div>
                                             </div>
                                         </div>

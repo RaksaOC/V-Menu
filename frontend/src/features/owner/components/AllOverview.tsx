@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line } from "recharts";
 import { DollarSign, ShoppingCart, Users, TrendingUp, Package, CreditCard, AlertTriangle, Trophy, Target, Activity } from "lucide-react";
-import { getOwnerOverview, type OwnerOverview, type TopItem } from "@/features/owner/api";
+import { getOwnerOverview, PERIODS, type OwnerOverview, type Period, type TopSeller } from "@/features/owner/api";
+import { useMoney } from "@/components/money/MoneyProvider";
 
 interface StatCardProps {
     title: string;
@@ -47,7 +48,9 @@ const StatCard = ({ title, value, icon: Icon, color, bgColor, textColor, subtitl
             <div>
                 <h3 className={`text-sm font-semibold ${textColor} uppercase tracking-wide mb-2`}>{title}</h3>
                 <div className="flex items-baseline space-x-2">
-                    <span className="text-3xl font-bold text-gray-800">{typeof value === "number" ? value.toLocaleString() : value}</span>
+                    <span className="text-3xl font-bold text-gray-800">
+                        {typeof value === "number" ? value.toLocaleString("en-US") : value}
+                    </span>
                     {subtitle && <span className="text-sm text-gray-500">{subtitle}</span>}
                 </div>
             </div>
@@ -56,7 +59,7 @@ const StatCard = ({ title, value, icon: Icon, color, bgColor, textColor, subtitl
 };
 
 interface TopSellingChartProps {
-    data: TopItem[];
+    data: TopSeller[];
     isVisible: boolean;
 }
 
@@ -85,7 +88,7 @@ const TopSellingChart: React.FC<TopSellingChartProps> = ({ data, isVisible }) =>
                 <div className="space-y-4">
                     {data.map((item, index) => (
                         <div
-                            key={item.name}
+                            key={item._id}
                             className={`
                 flex items-center justify-between p-4
                 transition-all duration-500 ease-out transform border-b border-b-gray-500 mb-2.5
@@ -137,10 +140,10 @@ interface MetricsChartProps {
 
 const MetricsChart: React.FC<MetricsChartProps> = ({ data, isVisible }) => {
     const chartData = [
-        { name: "Orders", value: data.numOfOrders, color: "#3B82F6" },
-        { name: "Payments", value: data.numOfPayments, color: "#10B981" },
-        { name: "Items Sold", value: data.totalItemsSold, color: "#8B5CF6" },
-        { name: "Menu Items", value: data.numOfItems, color: "#F59E0B" },
+        { name: "Orders", value: data.orderCount, color: "#3B82F6" },
+        { name: "Payments", value: data.paymentCount, color: "#10B981" },
+        { name: "Items Sold", value: data.itemsSoldCount, color: "#8B5CF6" },
+        { name: "Menu Items", value: data.itemCount, color: "#F59E0B" },
     ];
 
     return (
@@ -182,15 +185,16 @@ const MetricsChart: React.FC<MetricsChartProps> = ({ data, isVisible }) => {
 };
 
 export default function AllOverview() {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [data, setData] = useState<OwnerOverview | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [cardsVisible, setCardsVisible] = useState(false);
+    const [period, setPeriod] = useState<Period>("all"); // VM-09
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                setIsLoading(true);
-                setData(await getOwnerOverview());
+                setData(await getOwnerOverview(period));
 
                 // Trigger card animations after data loads
                 setTimeout(() => setCardsVisible(true), 100);
@@ -202,7 +206,7 @@ export default function AllOverview() {
         };
 
         fetchData();
-    }, []);
+    }, [period]);
 
     if (isLoading) {
         return (
@@ -237,7 +241,7 @@ export default function AllOverview() {
 
     if (!data) return null;
 
-    const paymentRate = data.numOfOrders > 0 ? (data.numOfPayments / data.numOfOrders) * 100 : 0;
+    const paymentRate = data.orderCount > 0 ? (data.paymentCount / data.orderCount) * 100 : 0;
 
     return (
         <div className="min-h-screen">
@@ -249,15 +253,36 @@ export default function AllOverview() {
           ${cardsVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}
         `}
                 >
-                    <h1 className="text-xl font-bold text-gray-800 mb-2">Dashboard Overview</h1>
-                    <p className="text-gray-600 text-sm">Real-time business insights and analytics</p>
+                    <div className="flex flex-wrap items-end justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-800 mb-2">Dashboard Overview</h1>
+                            <p className="text-gray-600 text-sm">Revenue and items sold come from paid bills</p>
+                        </div>
+                        <div role="group" aria-label="Period" className="flex flex-wrap gap-2">
+                            {PERIODS.map((p) => (
+                                <button
+                                    key={p.id}
+                                    type="button"
+                                    aria-pressed={period === p.id}
+                                    onClick={() => setPeriod(p.id)}
+                                    className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
+                                        period === p.id
+                                            ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]"
+                                            : "border-[var(--line)] text-[var(--ink)] hover:bg-[var(--card)]"
+                                    }`}
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <StatCard
                         title="Revenue"
-                        value={`$${data.numOfMoneyEarned.toLocaleString()}`}
+                        value={money(data.revenueCents)}
                         icon={DollarSign}
                         color="from-green-500 to-emerald-600"
                         bgColor="bg-green-50"
@@ -267,7 +292,7 @@ export default function AllOverview() {
 
                     <StatCard
                         title="Total Orders"
-                        value={data.numOfOrders}
+                        value={data.orderCount}
                         icon={ShoppingCart}
                         color="from-blue-500 to-indigo-600"
                         bgColor="bg-blue-50"
@@ -276,19 +301,19 @@ export default function AllOverview() {
                     />
 
                     <StatCard
-                        title="Unpaid Orders"
-                        value={data.numOfUnpaidOrders}
+                        title="Unpaid Bills"
+                        value={data.unpaidBillCount}
                         icon={AlertTriangle}
                         color="from-amber-500 to-orange-600"
                         bgColor="bg-amber-50"
                         textColor="text-amber-700"
-                        isUrgent={data.numOfUnpaidOrders > 0}
+                        isUrgent={data.unpaidBillCount > 0}
                         delay={200}
                     />
 
                     <StatCard
                         title="Payments"
-                        value={data.numOfPayments}
+                        value={data.paymentCount}
                         icon={CreditCard}
                         color="from-cyan-500 to-blue-600"
                         bgColor="bg-cyan-50"
@@ -298,7 +323,7 @@ export default function AllOverview() {
 
                     <StatCard
                         title="Menu Items"
-                        value={data.numOfItems}
+                        value={data.itemCount}
                         icon={Package}
                         color="from-purple-500 to-violet-600"
                         bgColor="bg-purple-50"
@@ -308,7 +333,7 @@ export default function AllOverview() {
 
                     <StatCard
                         title="Items Sold"
-                        value={data.totalItemsSold}
+                        value={data.itemsSoldCount}
                         icon={Target}
                         color="from-pink-500 to-rose-600"
                         bgColor="bg-pink-50"

@@ -1232,6 +1232,438 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-09: the owner's numbers. Table T4 gets one bill that's paid but whose order the kitchen never
+// marked served (revenue after the fix, nothing before) and one served order on an open bill (revenue
+// before the fix, not after). Then the owner's overview, the restaurants list and one restaurant.
+const VM09 = { ready: false };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-09 ${vp.width} ${theme}`, async () => {
+        const shots: [string, string][] = [
+            ["overview", "VM-09-owner-overview"],
+            ["restaurants", "VM-09-owner-restaurants"],
+            ["management", "VM-09-restaurant-overview"],
+        ];
+        if (!VM09.ready) {
+            VM09.ready = true;
+            const cashier = await newPage(browser, DESKTOP, "light", "cashier");
+            const chef = await newPage(browser, DESKTOP, "light", "chef");
+            const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+            const openT4 = async () =>
+                ((await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[]).filter(
+                    (b) => b.table === "T4",
+                );
+            for (const b of await openT4()) await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            const place = (quantity: number) =>
+                cashier.page.request.post(api(""), { data: { table: "T4", orderedItems: [{ item: { _id: menu[1]._id }, quantity }] } });
+            await place(2); // paid below, never served
+            for (const b of await openT4()) await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const served = (await (await place(3)).json()) as { _id: string }; // served, bill left open
+            for (const status of ["preparing", "ready", "served"])
+                await chef.page.request.patch(api(`/kitchen/${served._id}/status`), { data: { status } });
+            await cashier.context.close();
+            await chef.context.close();
+        }
+        for (const [tab, name] of shots) {
+            const { context, page } = await newPage(browser, vp, theme, "owner");
+            await context.addInitScript((t) => localStorage.setItem("activeTab", t), tab);
+            await page.goto(`${BASE}/owner`);
+            await settle(page);
+            await page.waitForTimeout(1200); // the cards fade in
+            await shot({ page, theme, width: vp.width }, name, vp === PHONE);
+            await context.close();
+        }
+    });
+}
+
+// VM-22: the message on the cart page when too many orders were placed. A real 429 from a stack on
+// the default limits: each run uses its own address (as Caddy would send it) and places 10 orders
+// first, so the 11th, from the cart, is refused. The screen is new: no "before" shot.
+for (const [vp, theme, n] of [
+    [DESKTOP, "light", 1],
+    [DESKTOP, "dark", 2],
+    [PHONE, "light", 3],
+] as const) {
+    await step(`VM-22 ${vp.width} ${theme}`, async () => {
+        if (PHASE !== "after") return;
+        const client = `198.18.22.${(Date.now() % 200) + n}`;
+        const context = await browser.newContext({
+            viewport: vp,
+            colorScheme: theme,
+            reducedMotion: "reduce",
+            extraHTTPHeaders: { "X-Forwarded-For": client },
+        });
+        await context.addInitScript((th) => localStorage.setItem("vm-theme", th), theme);
+        const page = await context.newPage();
+        const menu = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+        for (let i = 0; i < 10; i++) {
+            const placed = await page.request.post(`${BASE}/api/orders/${SLUG}`, {
+                data: { table: `T${(i % 4) + 1}`, orderedItems: [{ item: { _id: menu[0]._id }, quantity: 1 }] },
+            });
+            if (placed.status() !== 201) throw new Error(`order ${i + 1} answered ${placed.status()}`);
+        }
+        const lines = menu.slice(0, 2).map((item, i) => ({ item, quantity: i + 1 }));
+        await context.addInitScript(([key, value]) => localStorage.setItem(key, value), [`cart:${SLUG}:T2`, JSON.stringify(lines)]);
+        await page.goto(`${BASE}/${SLUG}/customer/T2/cart`);
+        await settle(page);
+        await page.getByRole("button", { name: /place order/i }).click();
+        await page.getByRole("alert").filter({ hasText: "wait a minute" }).waitFor({ timeout: 10_000 });
+        await shot({ page, theme, width: vp.width }, "VM-22-cart-too-many-orders", false);
+        await context.close();
+    });
+}
+
+// CL-07: the same order on the screens that show money and dates: the kitchen card, the cashier's
+// bill and invoice, and the customer's confirmation. Dates and times now read the same everywhere,
+// in the restaurant's time zone.
+const CL07: { id?: string } = {};
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`CL-07 ${vp.width} ${theme}`, async () => {
+        const kitchen = await newPage(browser, vp, theme, "chef");
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!CL07.id) {
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open.filter((b) => b.table === "T2"))
+                await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const queue = (await (await kitchen.page.request.get(api("/kitchen"))).json()) as { _id: string; status: string }[];
+            for (const o of queue)
+                for (const status of ["preparing", "ready", "served"].slice(["pending", "preparing", "ready"].indexOf(o.status)))
+                    await kitchen.page.request.patch(api(`/kitchen/${o._id}/status`), { data: { status } });
+            const menu = dishesOf(await (await kitchen.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            const placed = await kitchen.page.request.post(api(""), {
+                data: {
+                    table: "T2",
+                    orderedItems: [
+                        { item: { _id: menu[0]._id }, quantity: 3 },
+                        { item: { _id: menu[1]._id }, quantity: 1 },
+                    ],
+                },
+            });
+            CL07.id = ((await placed.json()) as { _id: string })._id;
+        }
+        await kitchen.page.goto(`${BASE}/${SLUG}/kitchen`);
+        await settle(kitchen.page);
+        await shot({ page: kitchen.page, theme, width: vp.width }, "CL-07-kitchen", false);
+        await kitchen.page.goto(`${BASE}/${SLUG}/customer/T2/orders/${CL07.id}`);
+        await settle(kitchen.page);
+        await shot({ page: kitchen.page, theme, width: vp.width }, "CL-07-customer-order", false);
+        await kitchen.context.close();
+
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T2" }) });
+        await card.scrollIntoViewIfNeeded();
+        await shot({ page: cashier.page, theme, width: vp.width }, "CL-07-cashier-bill", false);
+        await cashier.context.close();
+    });
+}
+
+// VM-31: the cashier's bill and invoice for a table with the same dish on two orders. The bill's
+// total and the invoice's merged lines come from the server.
+const VM31 = { ready: false };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-31 ${vp.width} ${theme}`, async () => {
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM31.ready) {
+            VM31.ready = true;
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open) await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            for (const lines of [
+                [{ item: { _id: menu[0]._id }, quantity: 2 }],
+                [
+                    { item: { _id: menu[0]._id }, quantity: 1 },
+                    { item: { _id: menu[3]._id }, quantity: 3 },
+                ],
+            ])
+                await cashier.page.request.post(api(""), { data: { table: "T3", orderedItems: lines } });
+        }
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T3" }) });
+        await card.getByRole("button", { name: "View Invoice" }).scrollIntoViewIfNeeded();
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-31-cashier-bill", false);
+        await card.getByRole("button", { name: "View Invoice" }).click();
+        await cashier.page.getByRole("dialog").waitFor();
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-31-invoice", false);
+        await cashier.context.close();
+    });
+}
+
+// VM-24: the invoice, the owner's Preferences (currency and payment QR), and a customer's menu.
+// The "after" run sets "Both" and uploads a QR that says DEMO ONLY (not a payment account) through
+// the real form, then puts the demo restaurant back to US dollars.
+const VM24 = { ready: false, set: false };
+async function paymentQrFixture(): Promise<string> {
+    const file = join(OUT, "..", "fixture-payment-qr.png");
+    if (!existsSync(file)) {
+        const { createRequire } = await import("node:module");
+        const QRCode = createRequire(import.meta.url)("../../frontend/node_modules/qrcode");
+        await QRCode.toFile(file, "DEMO ONLY - not a payment account", { width: 480, margin: 2 });
+    }
+    return file;
+}
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-24 ${vp.width} ${theme}`, async () => {
+        const owner = await newPage(browser, vp, theme, "owner");
+        await owner.page.goto(`${BASE}/owner`);
+        await settle(owner.page);
+        await owner.page.getByRole("button", { name: "Preferences" }).click({ timeout: 5000 });
+        await settle(owner.page);
+        if (PHASE === "after" && !VM24.set) {
+            VM24.set = true;
+            await owner.page.getByRole("radio", { name: /Both/ }).check();
+            await owner.page.getByLabel("Riel per US dollar").fill("4100");
+            await owner.page.getByLabel("Upload payment QR").setInputFiles(await paymentQrFixture());
+            await owner.page.getByRole("img", { name: "Payment QR" }).waitFor({ timeout: 15_000 });
+            await owner.page.getByRole("button", { name: "Save settings" }).click();
+            await owner.page.getByText("Saved").waitFor({ timeout: 10_000 });
+        }
+        // a viewport shot: a full-page one paints the owner's sticky header halfway down
+        await owner.page.getByRole("heading", { name: "Preferences" }).scrollIntoViewIfNeeded();
+        await owner.page.mouse.wheel(0, vp === PHONE ? 0 : 280);
+        await settle(owner.page);
+        await shot({ page: owner.page, theme, width: vp.width }, "VM-24-preferences", false);
+        await owner.context.close();
+
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM24.ready) {
+            VM24.ready = true;
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open.filter((b) => b.table === "T3"))
+                await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            for (const lines of [
+                [{ item: { _id: menu[0]._id }, quantity: 2 }],
+                [
+                    { item: { _id: menu[0]._id }, quantity: 1 },
+                    { item: { _id: menu[3]._id }, quantity: 3 },
+                ],
+            ])
+                await cashier.page.request.post(api(""), { data: { table: "T3", orderedItems: lines } });
+        }
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T3" }) });
+        await card.getByRole("button", { name: "View Invoice" }).click();
+        await cashier.page.getByRole("dialog").waitFor();
+        await settle(cashier.page);
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-24-invoice", false);
+        await cashier.context.close();
+
+        const customer = await newPage(browser, vp, theme);
+        await customer.page.goto(`${BASE}/${SLUG}/customer/T1`);
+        await settle(customer.page);
+        await customer.page.getByText(/^\$\d/).first().scrollIntoViewIfNeeded();
+        await customer.page.mouse.wheel(0, 120);
+        await settle(customer.page);
+        await shot({ page: customer.page, theme, width: vp.width }, "VM-24-customer-menu", false);
+        await customer.context.close();
+    });
+}
+if (PHASE === "after" && VM24.set) {
+    await step("VM-24 reset to US dollars", async () => {
+        const owner = await newPage(browser, DESKTOP, "light", "owner");
+        const res = await owner.page.request.put(`${BASE}/api/restaurants/${SLUG}/settings`, {
+            data: { currency: "USD", khrPerUsd: 4100, paymentQrUrl: null },
+        });
+        if (!res.ok()) throw new Error(`reset failed: ${res.status()}`);
+        await owner.context.close();
+    });
+}
+
+// VM-28: notes in the cart ("no chilli") and on the kitchen card, highlighted.
+const VM28 = { number: "" };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-28 ${vp.width} ${theme}`, async () => {
+        const customer = await newPage(browser, vp, theme);
+        const menu = dishesOf(await (await customer.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+        const dish = menu[2] ?? menu[0];
+        await customer.context.addInitScript(([key, lines]) => localStorage.setItem(key, lines), [
+            `cart:${SLUG}:T2`,
+            JSON.stringify([
+                { item: dish, quantity: 1 },
+                { item: dish, quantity: 2 },
+            ]),
+        ] as const);
+        await customer.page.goto(`${BASE}/${SLUG}/customer/T2/cart`);
+        await settle(customer.page);
+        const lineNote = customer.page.getByRole("textbox", { name: /^Note for / }).first();
+        if (await lineNote.count()) {
+            await lineNote.fill("No chilli");
+            await customer.page.getByRole("textbox", { name: "Note for the kitchen" }).fill("Birthday, please bring a candle");
+        }
+        await shot({ page: customer.page, theme, width: vp.width }, "VM-28-cart", false);
+        if (!VM28.number) {
+            const res = await customer.page.request.post(`${BASE}/api/orders/${SLUG}`, {
+                data: {
+                    table: "T2",
+                    note: "Birthday, please bring a candle",
+                    orderedItems: [
+                        { item: { _id: dish._id }, quantity: 1, note: "No chilli" },
+                        { item: { _id: dish._id }, quantity: 2 },
+                    ],
+                },
+            });
+            VM28.number = String((await res.json())._id)
+                .slice(-6)
+                .toUpperCase();
+        }
+        await customer.context.close();
+
+        const chef = await newPage(browser, vp, theme, "chef");
+        await chef.page.goto(`${BASE}/${SLUG}/kitchen`);
+        await settle(chef.page);
+        const card = chef.page.locator("article").filter({ hasText: `Order #${VM28.number}` });
+        await card.scrollIntoViewIfNeeded();
+        await settle(chef.page);
+        await shot({ page: chef.page, theme, width: vp.width }, "VM-28-kitchen-card", false);
+        await chef.context.close();
+    });
+}
+
+// VM-29: the kitchen board with orders of three ages (just now, 7 min, 20 min), and kiosk mode.
+// Making orders older changes the local database: only when backend/services/order/.env is there.
+async function ageOrders(ages: Record<string, number>) {
+    const envFile = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "backend", "services", "order", ".env");
+    if (!existsSync(envFile)) return;
+    const uri = readFileSync(envFile, "utf8")
+        .match(/^MONGODB_URI=(.*)$/m)?.[1]
+        ?.trim();
+    if (!uri) return;
+    const { createRequire } = await import("node:module");
+    const mongoose = createRequire(import.meta.url)("../../backend/node_modules/mongoose");
+    const conn = await mongoose.createConnection(uri).asPromise();
+    try {
+        for (const [id, minutes] of Object.entries(ages)) {
+            const at = new Date(Date.now() - minutes * 60_000);
+            await conn.collection("orders").updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: { createdAt: at, orderedAt: at } });
+        }
+    } finally {
+        await conn.close();
+    }
+}
+const VM29 = { ready: false };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-29 ${vp.width} ${theme}`, async () => {
+        const chef = await newPage(browser, vp, theme, "chef");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM29.ready) {
+            VM29.ready = true;
+            // start from an empty board: serve what's there (this lane's demo data only)
+            const next: Record<string, string> = { pending: "preparing", preparing: "ready", ready: "served" };
+            for (const o of (await (await chef.page.request.get(api("/kitchen"))).json()) as { _id: string; status: string }[]) {
+                for (let s = next[o.status]; s; s = next[s])
+                    await chef.page.request.patch(api(`/kitchen/${o._id}/status`), { data: { status: s } });
+            }
+            const menu = dishesOf(await (await chef.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            const ids: string[] = [];
+            for (const [table, lines] of [
+                ["T3", [{ item: { _id: menu[1]._id }, quantity: 2 }]],
+                [
+                    "T1",
+                    [
+                        { item: { _id: menu[0]._id }, quantity: 1 },
+                        { item: { _id: menu[3]._id }, quantity: 2 },
+                    ],
+                ],
+                ["T2", [{ item: { _id: menu[2]._id }, quantity: 1 }]],
+            ] as const) {
+                const res = await chef.page.request.post(api(""), { data: { table, orderedItems: lines } });
+                ids.push(String((await res.json())._id));
+            }
+            await ageOrders({ [ids[0]]: 20, [ids[1]]: 7 });
+        }
+        await chef.page.goto(`${BASE}/${SLUG}/kitchen`);
+        await settle(chef.page);
+        await shot({ page: chef.page, theme, width: vp.width }, "VM-29-kitchen-board");
+        const kiosk = chef.page.getByRole("button", { name: "Kiosk mode" });
+        if (theme === "light" && (await kiosk.count())) {
+            await chef.page.getByRole("button", { name: "Start service" }).click();
+            await kiosk.click();
+            await settle(chef.page);
+            await shot({ page: chef.page, theme, width: vp.width }, "VM-29-kiosk", false);
+        }
+        await chef.context.close();
+    });
+}
+
+// VM-30: the customer's "Request bill" and "Call staff" buttons, and the badge on the cashier's card.
+const VM30 = { ready: false, asked: false };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-30 ${vp.width} ${theme}`, async () => {
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM30.ready) {
+            VM30.ready = true;
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open.filter((b) => b.table === "T4"))
+                await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await cashier.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            await cashier.page.request.post(api(""), {
+                data: { table: "T4", orderedItems: [{ item: { _id: menu[0]._id }, quantity: 2 }] },
+            });
+        }
+
+        const customer = await newPage(browser, vp, theme);
+        await customer.page.goto(`${BASE}/${SLUG}/customer/T4`);
+        await settle(customer.page);
+        const requestBill = customer.page.getByRole("button", { name: "Request bill" });
+        if (!VM30.asked && (await requestBill.count())) {
+            VM30.asked = true;
+            await requestBill.click();
+            await customer.page.getByText(/We've told the staff/).waitFor({ timeout: 10_000 });
+            await customer.page.getByRole("button", { name: "Call staff" }).click();
+            await settle(customer.page);
+        }
+        await shot({ page: customer.page, theme, width: vp.width }, "VM-30-customer-menu", false);
+        await customer.context.close();
+
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T4" }) });
+        await card.scrollIntoViewIfNeeded();
+        await settle(cashier.page);
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-30-cashier-card", false);
+        await cashier.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

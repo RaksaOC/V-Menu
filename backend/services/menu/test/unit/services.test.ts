@@ -32,9 +32,9 @@ describe("items", () => {
     it("creates with the required fields, only this restaurant's photo, and lists them", async () => {
         const { menu, images } = setup();
         const photo = imageUrl(A.slug, await images.save(Buffer.from("x"), A._id));
-        const item = await menu.create(A, { name: "Amok", price: 5, image: photo });
-        expect(item).toMatchObject({ name: "Amok", price: 5, image: photo, resId: A._id, isEnabled: true });
-        await menu.create(A, { name: "Hidden", price: 1, image: PLACEHOLDER, isEnabled: false });
+        const item = await menu.create(A, { name: "Amok", priceCents: 500, image: photo });
+        expect(item).toMatchObject({ name: "Amok", priceCents: 500, image: photo, resId: A._id, isEnabled: true });
+        await menu.create(A, { name: "Hidden", priceCents: 100, image: PLACEHOLDER, isEnabled: false });
         expect((await menu.list(A._id)).map((i) => i.name)).toEqual(["Amok", "Hidden"]);
         // VM-26: a dish that's off stays on the customer's menu, as sold out, after the others
         expect((await menu.publicMenu(A._id)).categories.flatMap((c) => c.items.map((i) => [i.name, i.isEnabled]))).toEqual([
@@ -46,45 +46,45 @@ describe("items", () => {
 
     it("refuses an image that isn't this restaurant's own photo (SEC-05); the body's shape is the route's job (CL-05)", async () => {
         const { menu } = setup();
-        expect(await status(menu.create(A, { name: "Outside", price: 2, image: "https://evil.example/x.png" }))).toBe(400);
-        expect(await status(menu.create(A, { name: "B's photo", price: 2, image: imageUrl(B.slug, "a".repeat(24)) }))).toBe(400);
-        const item = await menu.create(A, { name: "A", price: 1, image: PLACEHOLDER });
+        expect(await status(menu.create(A, { name: "Outside", priceCents: 200, image: "https://evil.example/x.png" }))).toBe(400);
+        expect(await status(menu.create(A, { name: "B's photo", priceCents: 200, image: imageUrl(B.slug, "a".repeat(24)) }))).toBe(400);
+        const item = await menu.create(A, { name: "A", priceCents: 100, image: PLACEHOLDER });
         expect(await status(menu.update(A, item._id, { image: "https://evil.example/y.png" }))).toBe(400);
     });
 
     it("updates only what is sent, and removes the old photo when it's replaced", async () => {
         const { menu, images } = setup();
         const oldId = await images.save(Buffer.from("old"), A._id);
-        const item = await menu.create(A, { name: "Amok", price: 5, image: imageUrl(A.slug, oldId) });
-        const same = await menu.update(A, item._id, { price: 6, image: imageUrl(A.slug, oldId) }); // image sent back unchanged
-        expect(same).toMatchObject({ name: "Amok", price: 6 });
+        const item = await menu.create(A, { name: "Amok", priceCents: 500, image: imageUrl(A.slug, oldId) });
+        const same = await menu.update(A, item._id, { priceCents: 600, image: imageUrl(A.slug, oldId) }); // image sent back unchanged
+        expect(same).toMatchObject({ name: "Amok", priceCents: 600 });
         expect(images.files.has(oldId)).toBe(true);
         const newId2 = await images.save(Buffer.from("new"), A._id);
         await menu.update(A, item._id, { image: imageUrl(A.slug, newId2), isEnabled: false });
         expect(images.files.has(oldId)).toBe(false);
-        expect((await menu.list(A._id))[0]).toMatchObject({ price: 6, isEnabled: false, image: imageUrl(A.slug, newId2) });
+        expect((await menu.list(A._id))[0]).toMatchObject({ priceCents: 600, isEnabled: false, image: imageUrl(A.slug, newId2) });
     });
 
     it("deletes the item and its photo; a failed photo delete doesn't fail the request", async () => {
         const { menu, images } = setup();
         const id = await images.save(Buffer.from("p"), A._id);
-        const a = await menu.create(A, { name: "A", price: 1, image: imageUrl(A.slug, id) });
+        const a = await menu.create(A, { name: "A", priceCents: 100, image: imageUrl(A.slug, id) });
         expect((await menu.remove(A, a._id)).name).toBe("A");
         expect(images.files.has(id)).toBe(false);
         const id2 = await images.save(Buffer.from("q"), A._id);
-        const b = await menu.create(A, { name: "B", price: 1, image: imageUrl(A.slug, id2) });
+        const b = await menu.create(A, { name: "B", priceCents: 100, image: imageUrl(A.slug, id2) });
         images.failRemove = true;
         expect((await menu.remove(A, b._id)).name).toBe("B");
-        const c = await menu.create(A, { name: "C", price: 1, image: PLACEHOLDER });
+        const c = await menu.create(A, { name: "C", priceCents: 100, image: PLACEHOLDER });
         expect((await menu.remove(A, c._id)).name).toBe("C"); // the placeholder is not ours to delete
     });
 
     it("switches an item on and off; ids must be valid and this restaurant's", async () => {
         const { menu } = setup();
-        const item = await menu.create(A, { name: "A", price: 1, image: PLACEHOLDER });
+        const item = await menu.create(A, { name: "A", priceCents: 100, image: PLACEHOLDER });
         expect((await menu.setEnabled(A._id, item._id, false)).isEnabled).toBe(false);
         expect(await status(menu.setEnabled(B._id, item._id, true))).toBe(404);
-        expect(await status(menu.update(B, item._id, { price: 2 }))).toBe(404);
+        expect(await status(menu.update(B, item._id, { priceCents: 200 }))).toBe(404);
         expect(await status(menu.remove(B, item._id))).toBe(404);
         expect(await status(menu.update(A, "bad", {}))).toBe(400);
         expect(await status(menu.remove(A, "bad"))).toBe(400);
@@ -195,8 +195,8 @@ describe("internal: counts and the order check", () => {
         const open = await s.seating.create(A._id, {});
         await s.seating.setEnabled(A._id, open._id, true);
         await s.seating.create(A._id, {}); // table 2, closed
-        const dish = await s.menu.create(A, { name: "Amok", price: 5, image: PLACEHOLDER });
-        const off = await s.menu.create(A, { name: "Off", price: 1, image: PLACEHOLDER, isEnabled: false });
+        const dish = await s.menu.create(A, { name: "Amok", priceCents: 500, image: PLACEHOLDER });
+        const off = await s.menu.create(A, { name: "Off", priceCents: 100, image: PLACEHOLDER, isEnabled: false });
         return { ...s, dish, off };
     }
 
@@ -208,7 +208,9 @@ describe("internal: counts and the order check", () => {
     it("prices the cart from the menu", async () => {
         const { internal, dish } = await seeded();
         const res = await internal.orderCheck(A._id, { table: "1", items: [{ _id: dish._id, quantity: 2 }] });
-        expect(res.items).toEqual([{ item: { _id: dish._id, name: "Amok", price: 5, image: PLACEHOLDER, isEnabled: true }, quantity: 2 }]);
+        expect(res.items).toEqual([
+            { item: { _id: dish._id, name: "Amok", priceCents: 500, price: 5, image: PLACEHOLDER, isEnabled: true }, quantity: 2 },
+        ]);
     });
 
     it("refuses a closed table and dishes that are off (a bad cart is refused by the route, CL-05)", async () => {

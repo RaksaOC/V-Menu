@@ -1,5 +1,6 @@
 import { CheckCircle, Pencil, XCircle } from "lucide-react";
 import { Card, Chip, DishTags } from "@/components/ui";
+import { useMoney } from "@/components/money/MoneyProvider";
 import type { MenuItem } from "@vmenu/contracts";
 
 type Props = { item: MenuItem } & (
@@ -8,6 +9,7 @@ type Props = { item: MenuItem } & (
 
 /** One dish, for the owner (edit) and the cashier (switch it on or off) (CL-09). */
 export default function MenuCard(props: Props) {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const { item } = props;
     return (
         <Card as="article" padded={false} className="flex flex-col overflow-hidden">
@@ -25,7 +27,7 @@ export default function MenuCard(props: Props) {
                 {item.description && <p className="line-clamp-2 text-sm text-[var(--muted)]">{item.description}</p>}
                 <DishTags tags={item.tags} />
                 <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-                    <p className="text-lg font-bold text-[var(--ok)]">${item.price.toFixed(2)}</p>
+                    <p className="text-lg font-bold text-[var(--ok)]">{money(item.priceCents)}</p>
                     {props.role === "owner" ? (
                         <button
                             type="button"

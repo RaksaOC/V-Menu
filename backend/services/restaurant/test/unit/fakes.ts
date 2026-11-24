@@ -24,6 +24,12 @@ export function fakeRestaurants(): RestaurantsRepo & { all: RestaurantRecord[] }
                 .sort((a, b) => +a.createdAt - +b.createdAt)
                 .map((r) => ({ ...r }));
         },
+        async updateSettings(id, settings) {
+            const r = all.find((x) => x._id === id);
+            if (!r) return null;
+            r.settings = { ...r.settings, ...settings };
+            return { ...r, settings: { ...r.settings } };
+        },
         async create(fields) {
             const r = { _id: newId(), ...fields, createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, clock++)) };
             all.push(r);

@@ -1,19 +1,24 @@
 import { z } from "zod";
-import { IsoDate, ObjectId, text } from "./common.js";
+import { Cents, IsoDate, ObjectId, text } from "./common.js";
+import { toCents } from "./money.js";
 
 // menu-service: dishes and tables (CL-05).
 
-// VM-17: a number from 0, or numeric text (a form field). Anything else is refused, never quietly
-// turned into a number: "", null and true used to become 0 or 1.
-const Price = z.preprocess(
-    (v) => (typeof v === "string" && v.trim() !== "" ? Number(v) : v),
-    z
-        .number({
-            error: ({ input }) => (input === undefined || (typeof input === "string" && !input.trim()) ? "Required" : "Must be a number"),
-        })
-        .min(0, "Must be 0 or more")
-        .refine((v) => Number(v.toFixed(2)) === v, "At most 2 decimal places"),
-);
+/**
+ * CL-07: the field is `priceCents`. For one release the old `price` in dollars is still accepted,
+ * for a page opened before the deploy. Something that isn't a number is left for the check to refuse.
+ *
+ * VM-17: the old field is still strict: a number from 0, or numeric text (a form field). "", null and
+ * true are refused, never quietly turned into 0 or 1, and so is a price with more than 2 decimal
+ * places (it is passed on as a fraction of a cent, which `Cents` refuses).
+ */
+function oldPriceToCents(body: unknown) {
+    if (!body || typeof body !== "object" || "priceCents" in body || !("price" in body)) return body;
+    const { price, ...rest } = body as { price: unknown };
+    const dollars = typeof price === "number" || (typeof price === "string" && price.trim() !== "") ? Number(price) : NaN;
+    if (!Number.isFinite(dollars)) return { ...rest, priceCents: price };
+    return { ...rest, priceCents: Number(dollars.toFixed(2)) === dollars ? toCents(dollars) : dollars * 100 };
+}
 
 /** VM-26: the labels a dish can carry. The browser has a copy (item-rules.ts); a test compares them. */
 export const DISH_TAGS = [
@@ -27,9 +32,9 @@ export const DISH_TAGS = [
 ] as const;
 const DishTag = z.enum(DISH_TAGS, "Not one of the dish tags");
 
-export const CreateItemBody = z.object({
+const ItemFields = z.object({
     name: text(120),
-    price: Price,
+    priceCents: Cents,
     image: text(2000),
     isEnabled: z.boolean("Must be true or false").optional(),
     /** VM-25: one of this restaurant's categories, or null for "Other". */
@@ -43,9 +48,11 @@ export const CreateItemBody = z.object({
         .transform((tags) => [...new Set(tags)])
         .optional(),
 });
+
+export const CreateItemBody = z.preprocess(oldPriceToCents, ItemFields);
 export type CreateItemBody = z.infer<typeof CreateItemBody>;
 
-export const UpdateItemBody = CreateItemBody.partial();
+export const UpdateItemBody = z.preprocess(oldPriceToCents, ItemFields.partial());
 export type UpdateItemBody = z.infer<typeof UpdateItemBody>;
 
 /** Switching a dish or a table on or off. */
@@ -69,7 +76,9 @@ export type UpdateTableBody = z.infer<typeof UpdateTableBody>;
 export const MenuItem = z.object({
     _id: z.string(),
     name: z.string(),
-    price: z.number(),
+    priceCents: Cents,
+    /** @deprecated CL-07: priceCents / 100, for pages opened before the deploy; gone in the next release. */
+    price: z.number().optional(),
     image: z.string(),
     isEnabled: z.boolean(),
     categoryId: z.string().nullable().optional(),

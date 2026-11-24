@@ -6,7 +6,7 @@ import { Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, Chevr
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import StaffForm from "@/features/staff/components/StaffForm";
 import InvitePending from "@/features/staff/components/InvitePending";
-import { prettyDate } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
 import type { AddStaffBody, StaffMember } from "@vmenu/contracts";
 
 export default function Staff() {
@@ -399,7 +399,7 @@ export default function Staff() {
                                             <td className="py-4 px-1">
                                                 <div className="flex items-center gap-2 justify-center">
                                                     <Calendar size={16} className="text-gray-400" />
-                                                    <span className="text-gray-900">{prettyDate(member.createdAt.toString(), false)}</span>
+                                                    <span className="text-gray-900">{formatDate(member.createdAt)}</span>
                                                 </div>
                                             </td>
                                             <td className="py-4 px-1">
@@ -471,7 +471,7 @@ export default function Staff() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Calendar size={16} className="text-gray-400" />
-                                            <span className="text-gray-900 text-sm">{prettyDate(member.createdAt.toString(), false)}</span>
+                                            <span className="text-gray-900 text-sm">{formatDate(member.createdAt)}</span>
                                         </div>
                                     </div>
 

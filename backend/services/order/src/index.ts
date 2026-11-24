@@ -14,6 +14,7 @@ const migrated = await prepareDatabase();
 if (migrated.bills.renamed || migrated.bills.droppedIndexes.length) logger.info(migrated.bills, "migrated bills from isPayed to isPaid");
 if (migrated.orders.migrated || migrated.orders.droppedIndexes.length)
     logger.info(migrated.orders, "migrated orders from isDone to status");
+if (migrated.money.migrated) logger.info(migrated.money, "migrated order lines to cents");
 
 const server = createApp().listen(port, () => logger.info({ port }, "order-service listening"));
 

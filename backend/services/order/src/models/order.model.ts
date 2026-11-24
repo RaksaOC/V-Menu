@@ -9,16 +9,21 @@ const orderSchema = new mongoose.Schema(
         orderedItems: [
             {
                 _id: false,
-                item: { _id: String, name: String, price: Number, image: String, isEnabled: Boolean },
+                // CL-07: priceCents is the price; `price` (dollars) stays for one release, for a rollback
+                item: { _id: String, name: String, priceCents: Number, price: Number, image: String, isEnabled: Boolean },
                 quantity: { type: Number, required: true, min: 1 },
+                note: { type: String, maxlength: 100 }, // VM-28: "no chilli"
             },
         ],
+        note: { type: String, maxlength: 200 }, // VM-28: the customer's note for the whole order
         orderedAt: { type: Date, default: Date.now },
         // VM-27: pending → preparing → ready → served, or cancelled by the cashier (was isDone)
         status: { type: String, enum: ORDER_STATUSES, default: "pending" },
         statusHistory: [{ _id: false, status: { type: String, enum: ORDER_STATUSES }, at: Date, by: String }],
         cancelReason: { type: String, maxlength: 200 },
         resId: { type: String, required: true, index: true },
+        // VM-23: the bill it was placed on. Orders from before VM-23 have none.
+        billId: { type: mongoose.Schema.Types.ObjectId, ref: "TableOrder" },
     },
     { timestamps: true },
 );

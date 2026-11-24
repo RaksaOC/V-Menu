@@ -2,7 +2,7 @@ import type { Bill, MenuItem, Order, Overview, Restaurant, StaffMember, Table } 
 
 // API answers the frontend tests mock, typed by @vmenu/contracts and checked against its schemas
 // (test/contracts.test.ts), so a mock can't drift from what the services really send (CL-05).
-export const dish: MenuItem = { _id: "665f00000000000000000011", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
+export const dish: MenuItem = { _id: "665f00000000000000000011", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
 export const table: Table = { _id: "665f00000000000000000021", name: "T1", isEnabled: true, qrToken: "AbCdEfGhIjKlMnOpQrSt_-" };
 export const order: Order = {
     _id: "665f00000000000000000031",
@@ -17,14 +17,20 @@ export const bill: Bill = {
     isPaid: false,
     createdAt: "2026-11-23T10:00:00.000Z",
     orders: [order],
+    lines: [{ _id: dish._id, name: dish.name, priceCents: dish.priceCents, quantity: 2, totalCents: 500 }],
+    subtotalCents: 500,
+    totalCents: 500,
 };
 export const overview: Overview = {
-    numOfActiveTables: 1,
-    numOfUnpaidOrders: 0,
-    numOfTables: 4,
-    numOfItems: 4,
-    numOfOrders: 2,
-    numOfPayments: 1,
+    activeTableCount: 1,
+    unpaidBillCount: 0,
+    tableCount: 4,
+    itemCount: 4,
+    orderCount: 2,
+    paymentCount: 1,
+    revenueCents: 500,
+    from: null,
+    to: null,
 };
 export const restaurant: Restaurant = { _id: "665f00000000000000000001", name: "Demo Bistro", slug: "demo-bistro", ownerId: "owner1" };
 export const staffMember: StaffMember = {

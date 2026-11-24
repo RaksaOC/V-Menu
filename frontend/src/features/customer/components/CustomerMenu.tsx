@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui";
 import { apiErrorCode } from "@/lib/api";
 import { useRestaurantName } from "@/lib/public-restaurant";
 import TableProblem, { type TableProblemKind } from "@/features/customer/components/TableProblem";
+import TableRequests from "@/features/customer/components/TableRequests";
 import { checkTable, getMenu, getTableByToken } from "@/features/customer/api";
 import { useTableLink } from "@/features/customer/table-link";
 import { reconcileCart } from "@/features/customer/cart";
@@ -89,7 +90,7 @@ export default function CustomerPage() {
             _id={item._id}
             name={item.name}
             image={item.image}
-            price={item.price}
+            priceCents={item.priceCents}
             description={item.description}
             tags={item.tags}
             soldOut={!item.isEnabled}
@@ -120,6 +121,8 @@ export default function CustomerPage() {
                             </div>
                             <p className={`text-emerald-100 text-lg font-medium ${table ? "" : "invisible"}`}>Table {table}</p>
                             <p className="text-emerald-50/80 text-sm mt-1">Browse our delicious menu and order with ease</p>
+                            {/* VM-30: once the table has ordered */}
+                            <TableRequests slug={resSlug} table={table} />
                         </div>
                     </div>
 

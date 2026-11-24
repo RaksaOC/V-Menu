@@ -2,19 +2,20 @@ import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
 import type { CancelOrderBody } from "@vmenu/contracts";
 import { OpenBillExists, type BillsRepo } from "../repositories/bills.repo.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
+import { withTotals } from "./bill-totals.js";
 import { pages, paging } from "./paging.js";
 
 /** The cashier's bills, one per table visit. */
 export function billsService({ bills, orders }: { bills: BillsRepo; orders: OrdersRepo }) {
     return {
         /** What the cashier works on: the open bills, newest first (VM-11). */
-        open: (resId: string) => bills.listOpen(resId),
+        open: async (resId: string) => (await bills.listOpen(resId)).map(withTotals),
 
         /** Paid bills, most recently paid first, a page at a time (VM-11). */
         async paid(resId: string, query: { page?: unknown; limit?: unknown }) {
             const { page, limit, skip } = paging(query);
             const { bills: list, total } = await bills.pagePaid(resId, skip, limit);
-            return { bills: list, page, limit, total, pages: pages(total, limit) };
+            return { bills: list.map(withTotals), page, limit, total, pages: pages(total, limit) };
         },
 
         /** VM-27: the cashier cancels an order on an open bill, with a reason. It stays on the bill,
@@ -48,12 +49,15 @@ export function billsService({ bills, orders }: { bills: BillsRepo; orders: Orde
             if (!isPaid) {
                 const current = await bills.get(resId, id);
                 if (!current) throw notFound("Bill not found");
-                if (current.isPaid && (await bills.hasOtherOpenBill(resId, current.table, id))) throw tableHasOpenBill();
+                if (current.isPaid) {
+                    await bills.removeEmptyOpen(resId, current.table); // VM-23: an empty bill has nothing to protect
+                    if (await bills.hasOtherOpenBill(resId, current.table, id)) throw tableHasOpenBill();
+                }
             }
             try {
                 const bill = await bills.setPaid(resId, id, isPaid);
                 if (!bill) throw notFound("Bill not found");
-                return bill;
+                return withTotals(bill);
             } catch (err) {
                 if (err instanceof OpenBillExists) throw tableHasOpenBill(); // lost a race with a new order
                 throw err;

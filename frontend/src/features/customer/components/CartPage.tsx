@@ -4,7 +4,17 @@ import { useEffect, useState } from "react";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import { getMenu, placeOrder as sendOrder } from "@/features/customer/api";
-import { clearCart, readCart, reconcileCart, saveCart, toOrderBody } from "@/features/customer/cart";
+import {
+    clearCart,
+    MAX_ORDER_LINES,
+    ORDER_NOTE_MAX,
+    readCart,
+    readOrderNote,
+    reconcileCart,
+    saveCart,
+    saveOrderNote,
+    toOrderBody,
+} from "@/features/customer/cart";
 import { orderableDishes } from "@/features/customer/menu";
 import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
@@ -14,8 +24,10 @@ import { AlertCircle, ArrowLeft, ShoppingBag, Receipt, Plus, RotateCcw } from "l
 import { addToCart } from "@/features/customer/cart";
 import type { MenuItem } from "@vmenu/contracts";
 import type { CartItem } from "@/features/customer/cart";
+import { useMoney } from "@/components/money/MoneyProvider";
 
 export default function CartPage() {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const router = useRouter();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -26,9 +38,19 @@ export default function CartPage() {
     const link = useTableLink();
     const { slug, cartId: table } = link;
 
+    // VM-28: the customer's note for the whole order
+    const [orderNote, setOrderNote] = useState("");
+
     useEffect(() => {
         setCartItems(readCart(slug, table));
+        setOrderNote(readOrderNote(slug, table));
     }, [slug, table]);
+
+    const setNote = (index: number, note: string) => {
+        const updatedItems = [...cartItems];
+        updatedItems[index] = { ...updatedItems[index], note };
+        updateCart(updatedItems);
+    };
 
     const updateCart = (updatedItems: CartItem[]) => {
         setCartItems(updatedItems);
@@ -57,7 +79,7 @@ export default function CartPage() {
         toast.info("Item removed from cart");
     };
 
-    const total = cartItems.reduce((sum, item) => sum + item.item.price * item.quantity, 0);
+    const totalCents = cartItems.reduce((sum, item) => sum + item.item.priceCents * item.quantity, 0);
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
     /** Reloads the menu, removes the dishes that are no longer on it, and says which. */
@@ -83,12 +105,21 @@ export default function CartPage() {
             return;
         }
 
+        if (cartItems.length > MAX_ORDER_LINES) {
+            setOrderError({
+                message: `An order can have at most ${MAX_ORDER_LINES} different dishes. Remove some, or place two orders.`,
+                retry: false,
+            });
+            return;
+        }
+
         setIsPlacingOrder(true);
 
         try {
-            const order = await sendOrder(slug, toOrderBody(link, cartItems));
+            const order = await sendOrder(slug, toOrderBody(link, cartItems, orderNote));
             clearCart(slug, table); // straight away, so the same cart can't be sent twice
             setCartItems([]);
+            setOrderNote("");
             // VM-07: the order's confirmation, with its number and the server's prices
             router.push(`${link.base}/orders/${order._id}`);
         } catch (error) {
@@ -162,7 +193,7 @@ export default function CartPage() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-bold text-emerald-600">${total.toFixed(2)}</p>
+                                            <p className="text-2xl font-bold text-emerald-600">{money(totalCents)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -177,9 +208,25 @@ export default function CartPage() {
                                             increaseQuantity={increaseQuantity}
                                             decreaseQuantity={decreaseQuantity}
                                             removeItem={removeItem}
+                                            setNote={setNote}
                                         />
                                     ))}
                                 </div>
+                                <label className="mt-6 block">
+                                    <span className="mb-1 block text-sm font-semibold text-gray-700">Note for the kitchen (optional)</span>
+                                    <textarea
+                                        aria-label="Note for the kitchen"
+                                        maxLength={ORDER_NOTE_MAX}
+                                        rows={2}
+                                        value={orderNote}
+                                        onChange={(e) => {
+                                            setOrderNote(e.target.value);
+                                            saveOrderNote(slug, table, e.target.value);
+                                        }}
+                                        placeholder="e.g. it's a birthday, or bring the drinks first"
+                                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                    />
+                                </label>
                                 <div className={"w-full flex justify-center items-center mt-6"}>
                                     <button
                                         onClick={() => router.push(link.base)}
@@ -242,7 +289,7 @@ export default function CartPage() {
                                 {cartItems.length > 0 && (
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <p className="text-lg font-bold text-gray-800">Total: ${total.toFixed(2)}</p>
+                                            <p className="text-lg font-bold text-gray-800">Total: {money(totalCents)}</p>
                                             <p className="text-sm text-gray-500">
                                                 {itemCount} item{itemCount !== 1 ? "s" : ""}
                                             </p>

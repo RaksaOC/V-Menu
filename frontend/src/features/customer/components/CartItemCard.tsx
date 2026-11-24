@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { useMoney } from "@/components/money/MoneyProvider";
 import { toast } from "@/lib/toast";
 import type { MenuItem } from "@vmenu/contracts";
-import type { CartItem } from "@/features/customer/cart";
+import { LINE_NOTE_MAX, type CartItem } from "@/features/customer/cart";
 
 type CartItemProps = {
     cartItem: CartItem;
@@ -10,11 +11,14 @@ type CartItemProps = {
     increaseQuantity: (index: number) => void;
     decreaseQuantity: (index: number) => void;
     removeItem: (index: number) => void;
+    /** VM-28: the customer's note on this line */
+    setNote: (index: number, note: string) => void;
 };
 
-const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, removeItem }: CartItemProps) => {
+const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, removeItem, setNote }: CartItemProps) => {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [isRemoving, setIsRemoving] = useState(false);
-    const menuItem: Pick<MenuItem, "name" | "image" | "price"> = cartItem.item;
+    const menuItem: Pick<MenuItem, "name" | "image" | "priceCents"> = cartItem.item;
 
     const handleRemove = () => {
         setIsRemoving(true);
@@ -39,13 +43,9 @@ const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, rem
 
                     {/* Item Details */}
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-lg text-gray-800 mb-1 truncate">{menuItem.name}</h3>
+                        <h3 className="font-bold text-lg leading-snug text-gray-800 mb-1 line-clamp-2 break-words">{menuItem.name}</h3>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">${menuItem.price.toFixed(2)} each</span>
-                            {/*<span className="text-xs text-gray-400">•</span>*/}
-                            {/*<span className="text-sm font-medium text-emerald-600">*/}
-                            {/*    ${(menuItem.price * cartItem.quantity).toFixed(2)} total*/}
-                            {/*</span>*/}
+                            <span className="text-sm text-gray-500">{money(menuItem.priceCents)} each</span>
                         </div>
                     </div>
 
@@ -78,6 +78,16 @@ const CartItemCard = ({ cartItem, index, increaseQuantity, decreaseQuantity, rem
                         </button>
                     </div>
                 </div>
+                {/* VM-28: "no chilli": the kitchen sees it under the dish */}
+                <input
+                    type="text"
+                    aria-label={`Note for ${menuItem.name}`}
+                    maxLength={LINE_NOTE_MAX}
+                    value={cartItem.note ?? ""}
+                    onChange={(e) => setNote(index, e.target.value)}
+                    placeholder="Add a note, e.g. no chilli"
+                    className="mt-3 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                />
             </div>
         </div>
     );

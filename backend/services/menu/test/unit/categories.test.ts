@@ -22,7 +22,7 @@ function setup() {
 }
 const dish = (name: string, categoryId?: string | null, isEnabled = true) => ({
     name,
-    price: 2,
+    priceCents: 200,
     image: PLACEHOLDER,
     categoryId,
     isEnabled,

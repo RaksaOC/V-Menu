@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { logger } from "@vmenu/common";
+import { priceToCents } from "./migrations/price-cents.js";
 import { Table } from "./models/table.model.js";
 import { newQrToken } from "./qr-token.js";
 
@@ -19,15 +20,10 @@ async function giveTablesTokens() {
     logger.info({ tables: missing.length }, "gave tables their QR link tokens");
 }
 
-/**
- * Runs at startup, after connecting: gives older tables a link token (SEC-04), then builds the
- * indexes, among them "one name per table" (VM-16). That one can't be
- * built while two tables of a restaurant already share a name (made before the index existed).
- * Then this says so plainly and the service keeps serving; rename one of them and restart.
- * Answers whether the index is in place.
- */
-export async function prepareDatabase(): Promise<boolean> {
-    await giveTablesTokens();
+/** VM-16: "one name per table". It can't be built while two tables of a restaurant already share a
+ *  name (made before the index existed). Then this says so plainly and the service keeps serving;
+ *  rename one of them and restart. Answers whether the index is in place. */
+async function buildIndexes() {
     try {
         await Table.createIndexes();
         return true;
@@ -38,4 +34,17 @@ export async function prepareDatabase(): Promise<boolean> {
         );
         return false;
     }
+}
+
+/**
+ * Runs at startup, after connecting and before taking requests, in this order:
+ * 1. dish prices in cents (CL-07), the data migration;
+ * 2. a link token for older tables (SEC-04);
+ * 3. the indexes, among them one name per table (VM-16).
+ */
+export async function prepareDatabase() {
+    const prices = await priceToCents(mongoose.connection.db!);
+    await giveTablesTokens();
+    const tableNameIndex = await buildIndexes();
+    return { prices, tableNameIndex };
 }

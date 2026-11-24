@@ -34,6 +34,13 @@ export const Email = z
     .max(200, "At most 200 characters")
     .email("Must be an email address");
 
+/** CL-07: an amount of money: whole cents, never negative, at most $1,000,000. */
+export const Cents = z
+    .number("Must be a number")
+    .int("Must be a whole number of cents")
+    .min(0, "Can't be negative")
+    .max(100_000_000, "At most $1,000,000");
+
 /** Dates arrive as ISO strings in JSON. */
 export const IsoDate = z.string();
 

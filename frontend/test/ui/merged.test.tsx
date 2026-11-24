@@ -12,7 +12,7 @@ const { default: TableCard } = await import("@/features/restaurant/components/Ta
 const { default: MenuCard } = await import("@/features/restaurant/components/MenuCard");
 
 const table = { _id: "t1", name: "T1", isEnabled: true, qrToken: "AbCdEfGhIjKlMnOpQrSt_-" };
-const dish = { _id: "i1", name: "Fish Amok", price: 5.5, image: "/images/img.png", isEnabled: true };
+const dish = { _id: "i1", name: "Fish Amok", priceCents: 550, image: "/images/img.png", isEnabled: true };
 
 describe("one TableCard and one MenuCard, role by props", () => {
     it("gives the cashier Open/Close and the owner Edit; both get the QR code", () => {

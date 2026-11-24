@@ -10,6 +10,8 @@ const ORDER = process.env.ORDER_SERVICE_URL ?? "http://127.0.0.1:4103";
 
 const nextConfig: NextConfig = {
     poweredByHeader: false,
+    // CL-07: formatMoney and toCents come from @vmenu/contracts/money, outside this folder
+    experimental: { externalDir: true },
     // small self-contained server for the Docker image (frontend/Dockerfile)
     output: "standalone",
     devIndicators: false,

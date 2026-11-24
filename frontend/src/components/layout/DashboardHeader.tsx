@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Clock, LogOut, Menu as MenuIcon, MonitorX, User, UtensilsCrossed } from "lucide-react";
+import { formatDate, formatTime } from "@/lib/dates";
 import { navigation, signOut } from "@/lib/session";
 import { signOutEverywhere } from "@/lib/sign-out-everywhere";
 import { toast } from "@/lib/toast";
@@ -69,12 +70,8 @@ export default function DashboardHeader({
                 <div className="hidden items-center gap-3 rounded-[var(--r-chip)] border border-[var(--line)] px-4 py-2 md:flex">
                     <Clock size={16} aria-hidden className="text-[var(--accent-text)]" />
                     <div className="text-center">
-                        <div className="font-mono text-sm font-semibold">
-                            {now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}
-                        </div>
-                        <div className="text-xs text-[var(--muted)]">
-                            {now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                        </div>
+                        <div className="font-mono text-sm font-semibold">{formatTime(now, { seconds: true })}</div>
+                        <div className="text-xs text-[var(--muted)]">{formatDate(now, { weekday: true })}</div>
                     </div>
                 </div>
             )}

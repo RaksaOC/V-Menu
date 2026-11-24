@@ -5,6 +5,7 @@ import { addToCart } from "../cart";
 import { Plus } from "lucide-react";
 import { DishTags } from "@/components/ui";
 import type { MenuItem } from "@vmenu/contracts";
+import { useMoney } from "@/components/money/MoneyProvider";
 
 // A description longer than this is folded to three lines, with a "More" button.
 const LONG_DESCRIPTION = 90;
@@ -15,7 +16,7 @@ interface CardProps {
     table: string;
     _id: string;
     name: string;
-    price: number;
+    priceCents: number;
     image: string;
     /** VM-26: optional details. */
     description?: string;
@@ -24,8 +25,9 @@ interface CardProps {
     soldOut?: boolean;
 }
 
-export default function Card({ slug, table, _id, name, price, image, description, tags, soldOut = false }: CardProps) {
+export default function Card({ slug, table, _id, name, priceCents, image, description, tags, soldOut = false }: CardProps) {
     const [expanded, setExpanded] = useState(false);
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     return (
         <article
             data-sold-out={soldOut ? "true" : undefined}
@@ -75,7 +77,7 @@ export default function Card({ slug, table, _id, name, price, image, description
                     )}
                     <DishTags tags={tags} />
                     <div className="flex items-center gap-2">
-                        <span className={`text-2xl font-bold ${soldOut ? "text-gray-400" : "text-emerald-600"}`}>${price.toFixed(2)}</span>
+                        <span className={`text-2xl font-bold ${soldOut ? "text-gray-400" : "text-emerald-600"}`}>{money(priceCents)}</span>
                     </div>
                 </div>
 
@@ -87,7 +89,7 @@ export default function Card({ slug, table, _id, name, price, image, description
                                 _id,
                                 image,
                                 name,
-                                price, // was parseInt(price.toFixed(2)), which dropped the cents
+                                priceCents,
                                 isEnabled: true,
                             };
 

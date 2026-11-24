@@ -12,8 +12,8 @@ vi.mock("next/navigation", () => ({ useParams: () => ({ res: "demo-bistro", tabl
 
 const { default: CartPage } = await import("@/features/customer/components/CartPage");
 
-const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
-const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", price: 4, image: "/l.jpg", isEnabled: true };
+const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
+const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", priceCents: 400, image: "/l.jpg", isEnabled: true };
 const KEY = "cart:demo-bistro:1";
 const seed = () =>
     localStorage.setItem(
@@ -35,6 +35,35 @@ async function placeOrder() {
 }
 
 describe("order errors", () => {
+    it("too many orders (VM-22): shows the server's message and keeps the cart", async () => {
+        seed();
+        order(429, { message: "You're ordering very quickly. Please wait a minute and try again.", code: "TOO_MANY_ORDERS" });
+        const alert = await placeOrder();
+        expect(alert).toHaveTextContent("Please wait a minute");
+        expect(within(alert).queryByRole("button", { name: /try again/i })).toBeNull(); // trying right away would fail again
+        expect(cart()).toHaveLength(2);
+        expect(router.push).not.toHaveBeenCalledWith(expect.stringContaining("/orders/"));
+    });
+
+    it("more than 50 different dishes (VM-22): says so and sends nothing", async () => {
+        const dishes = Array.from({ length: 51 }, (_, i) => ({
+            item: { ...kuyTeav, _id: `665f0000000000000000${(0x1000 + i).toString(16)}`, name: i ? `Dish ${i}` : "Kuy Teav" },
+            quantity: 1,
+        }));
+        localStorage.setItem(KEY, JSON.stringify(dishes));
+        let sent = 0;
+        server.use(
+            http.post("*/api/orders/demo-bistro", () => {
+                sent++;
+                return HttpResponse.json({}, { status: 400 });
+            }),
+        );
+        const alert = await placeOrder();
+        expect(alert).toHaveTextContent("at most 50 different dishes");
+        expect(sent).toBe(0);
+        expect(cart()).toHaveLength(51);
+    });
+
     it("a closed table: says so, keeps the cart, no retry", async () => {
         seed();
         order(409, { message: "Table is not available", code: "TABLE_CLOSED" });

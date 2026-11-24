@@ -346,3 +346,100 @@ ok   VM-15-rename-1280-dark
 ok   VM-15-delete-1280-dark
 ok   VM-15-rename-360
 ok   VM-15-delete-360
+# ONLY=VM-09 (2026-11-23T17:12:01.021Z)
+ok   VM-09-owner-overview-1280
+ok   VM-09-owner-restaurants-1280
+ok   VM-09-restaurant-overview-1280
+ok   VM-09-owner-overview-1280-dark
+ok   VM-09-owner-restaurants-1280-dark
+ok   VM-09-restaurant-overview-1280-dark
+ok   VM-09-owner-overview-360
+ok   VM-09-owner-restaurants-360
+ok   VM-09-restaurant-overview-360
+# ONLY=VM-22 (2026-11-23T17:29:35.918Z)
+ok   VM-22-cart-too-many-orders-1280
+ok   VM-22-cart-too-many-orders-1280-dark
+ok   VM-22-cart-too-many-orders-360
+# ONLY=CL-07 (2026-11-23T17:50:29.556Z)
+ok   CL-07-kitchen-1280
+ok   CL-07-customer-order-1280
+ok   CL-07-cashier-bill-1280
+ok   CL-07-kitchen-1280-dark
+ok   CL-07-customer-order-1280-dark
+ok   CL-07-cashier-bill-1280-dark
+ok   CL-07-kitchen-360
+ok   CL-07-customer-order-360
+ok   CL-07-cashier-bill-360
+# ONLY=VM-31 (2026-11-23T17:56:43.866Z)
+ok   VM-31-cashier-bill-1280
+ok   VM-31-invoice-1280
+ok   VM-31-cashier-bill-1280-dark
+ok   VM-31-invoice-1280-dark
+ok   VM-31-cashier-bill-360
+ok   VM-31-invoice-360
+# ONLY=VM-24 (2026-11-23T19:15:02.915Z)
+ok   VM-24-preferences-1280
+ok   VM-24-invoice-1280
+ok   VM-24-customer-menu-1280
+ok   VM-24-preferences-1280-dark
+ok   VM-24-invoice-1280-dark
+ok   VM-24-customer-menu-1280-dark
+ok   VM-24-preferences-360
+ok   VM-24-invoice-360
+ok   VM-24-customer-menu-360
+# ONLY=VM-24 (2026-11-23T19:18:35.306Z)
+ok   VM-24-preferences-1280
+ok   VM-24-invoice-1280
+ok   VM-24-customer-menu-1280
+ok   VM-24-preferences-1280-dark
+ok   VM-24-invoice-1280-dark
+ok   VM-24-customer-menu-1280-dark
+ok   VM-24-preferences-360
+ok   VM-24-invoice-360
+ok   VM-24-customer-menu-360
+# ONLY=VM-28 (2026-11-23T19:27:14.046Z)
+ok   VM-28-cart-1280
+ok   VM-28-kitchen-card-1280
+ok   VM-28-cart-1280-dark
+ok   VM-28-kitchen-card-1280-dark
+ok   VM-28-cart-360
+ok   VM-28-kitchen-card-360
+# ONLY=VM-28 (2026-11-23T19:27:38.459Z)
+ok   VM-28-cart-1280
+ok   VM-28-kitchen-card-1280
+ok   VM-28-cart-1280-dark
+ok   VM-28-kitchen-card-1280-dark
+ok   VM-28-cart-360
+ok   VM-28-kitchen-card-360
+# ONLY=VM-29 (2026-11-23T19:36:01.264Z)
+ok   VM-29-kitchen-board-1280
+ok   VM-29-kiosk-1280
+ok   VM-29-kitchen-board-1280-dark
+ok   VM-29-kitchen-board-360
+ok   VM-29-kiosk-360
+# ONLY=VM-29 (2026-11-23T19:36:28.763Z)
+ok   VM-29-kitchen-board-1280
+ok   VM-29-kiosk-1280
+ok   VM-29-kitchen-board-1280-dark
+ok   VM-29-kitchen-board-360
+ok   VM-29-kiosk-360
+# ONLY=VM-29 (2026-11-23T19:36:48.429Z)
+ok   VM-29-kitchen-board-1280
+ok   VM-29-kiosk-1280
+ok   VM-29-kitchen-board-1280-dark
+ok   VM-29-kitchen-board-360
+ok   VM-29-kiosk-360
+# ONLY=VM-30 (2026-11-23T19:49:01.594Z)
+ok   VM-30-customer-menu-1280
+ok   VM-30-cashier-card-1280
+ok   VM-30-customer-menu-1280-dark
+ok   VM-30-cashier-card-1280-dark
+ok   VM-30-customer-menu-360
+ok   VM-30-cashier-card-360
+# ONLY=VM-30 (2026-11-23T19:49:33.077Z)
+ok   VM-30-customer-menu-1280
+ok   VM-30-cashier-card-1280
+ok   VM-30-customer-menu-1280-dark
+ok   VM-30-cashier-card-1280-dark
+ok   VM-30-customer-menu-360
+ok   VM-30-cashier-card-360

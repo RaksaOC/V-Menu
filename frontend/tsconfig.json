@@ -21,6 +21,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@vmenu/contracts": ["../backend/packages/contracts/src/index.ts"],
+      "@vmenu/contracts/money": ["../backend/packages/contracts/src/money.ts"],
       "zod": ["./node_modules/zod"]
     }
   },

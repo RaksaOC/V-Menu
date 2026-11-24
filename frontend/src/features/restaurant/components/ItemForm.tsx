@@ -3,6 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { ImageIcon, Trash2, Upload, X } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
+import { toCents } from "@/lib/money";
 import { PHOTO_TYPES, usePhoto } from "./use-photo";
 import { checkItem, DISH_TAGS, ITEM_DESCRIPTION_MAX, type ItemFieldErrors } from "../item-rules";
 import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
@@ -30,7 +31,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
     const fileId = useId();
     const photo = usePhoto(item?.image ?? "");
     const [name, setName] = useState(item?.name ?? "");
-    const [price, setPrice] = useState(item ? String(item.price) : "");
+    const [price, setPrice] = useState(item ? String(item.priceCents / 100) : ""); // typed in dollars, saved in cents (CL-07);
     const [categoryId, setCategoryId] = useState(item?.categoryId ?? "");
     const [description, setDescription] = useState(item?.description ?? ""); // VM-26
     const [tags, setTags] = useState<string[]>(item?.tags ?? []);
@@ -49,7 +50,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
             const uploaded = await photo.upload();
             const fields = {
                 name: name.trim(),
-                price: Number(price),
+                priceCents: toCents(Number(price)), // checkItem has refused anything that isn't a price (VM-17)
                 image: uploaded ?? item?.image ?? PLACEHOLDER,
                 isEnabled: item?.isEnabled ?? true,
                 ...(categories && { categoryId: categoryId || null }),

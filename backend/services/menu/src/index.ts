@@ -10,6 +10,10 @@ await mongoose.connect(process.env.MONGODB_URI!);
 logger.info("connected to MongoDB");
 await prepareDatabase(); // VM-16: the unique table-name index
 
+// CL-07: the data migration, before the first request.
+const migrated = await prepareDatabase();
+if (migrated.migrated) logger.info(migrated, "migrated dish prices to cents");
+
 const server = createApp().listen(port, () => logger.info({ port }, "menu-service listening"));
 
 // Docker sends SIGTERM on stop: drain open requests, close MongoDB, exit (lib/server.ts).

@@ -1,5 +1,5 @@
 import api, { seg } from "@/lib/api";
-import type { PlaceOrderBody, PublicMenu, TableBill, TableLink as TableLinkInfo, TableOrderView } from "@vmenu/contracts";
+import type { PlaceOrderBody, PublicMenu, TableBill, TableLink as TableLinkInfo, TableOrderView, TableRequestKind } from "@vmenu/contracts";
 import type { TableLink } from "./table-link";
 
 /** The dishes a customer can order, by category (public, no sign-in; VM-25). */
@@ -39,5 +39,11 @@ export async function getTableOrder(link: TableLink, orderId: string): Promise<T
 
 export async function getTableBill(link: TableLink): Promise<TableBill> {
     const { data } = await api.get<TableBill>(`${tablePath(link)}/open-bill`);
+    return data;
+}
+
+/** VM-30: "Request bill" or "Call staff": flags the table's open bill for the cashier. */
+export async function askStaff(link: TableLink, kind: TableRequestKind): Promise<{ kind: TableRequestKind; at: string }> {
+    const { data } = await api.post(`${tablePath(link)}/requests`, { kind });
     return data;
 }
