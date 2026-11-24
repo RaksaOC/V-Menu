@@ -1,9 +1,10 @@
-# Local full stack: MongoDB, the three services and the frontend.
+# Local full stack: MongoDB, MinIO (menu photos, PHOTOS-S3), the three services and the frontend.
 # Run from the repo root. Paths below are relative to this file (infra/compose/), and
 # --env-file .env passes the root .env (Firebase web config) to the frontend build.
 # With `export COMPOSE_FILE=infra/compose/docker-compose.yml` the -f part can be left out.
 #   docker compose --env-file .env -f infra/compose/docker-compose.yml up --build -d   build and start (http://localhost:3400)
-#   docker compose -f infra/compose/docker-compose.yml ps           status; all 5 should show (healthy)
+#   docker compose -f infra/compose/docker-compose.yml ps           status; all 6 should show (healthy)
+#   docker compose -f infra/compose/docker-compose.yml up -d minio  only MinIO, for `npm run dev` (photos)
 #   docker compose -f infra/compose/docker-compose.yml logs -f      follow every container's logs
 #   docker compose -f infra/compose/docker-compose.yml down         stop (the mongo-data volume keeps the data)
 #   docker compose -f infra/compose/docker-compose.yml exec restaurant-service node dist/seed.js   demo restaurant
@@ -34,6 +35,29 @@ services:
       retries: 5
       start_period: 20s
 
+  # PHOTOS-S3: menu photos. S3-compatible object storage; the browser uploads photos straight to
+  # it with a form menu-service signs, and loads them from it with signed links. Its S3 port is
+  # published on 127.0.0.1 for that (S3_PORT, default 9400). Local and CI only: the credentials
+  # below are not secret. menu-service makes the bucket and its clean-up rule at startup.
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z # minio/minio is no longer published on Docker Hub
+    restart: unless-stopped
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: vmenu-local
+      MINIO_ROOT_PASSWORD: vmenu-local-only
+    ports:
+      - "127.0.0.1:${S3_PORT:-9400}:9000"
+    volumes:
+      - minio-data:/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
   restaurant-service:
     <<: *service
     build:
@@ -60,8 +84,16 @@ services:
       MONGODB_URI: mongodb://mongo:27017/vmenu_menu
       RESTAURANT_SERVICE_URL: http://restaurant-service:4101
       ORDER_SERVICE_URL: http://order-service:4103 # VM-15
+      # PHOTOS-S3: the service reaches MinIO inside the network; browsers on the published port
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_URL: http://localhost:${S3_PORT:-9400}
+      S3_ACCESS_KEY: vmenu-local
+      S3_SECRET_KEY: vmenu-local-only
+      S3_BUCKET: vmenu-photos
     depends_on:
       mongo:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   order-service:
@@ -100,6 +132,8 @@ services:
         RESTAURANT_SERVICE_URL: http://restaurant-service:4101
         MENU_SERVICE_URL: http://menu-service:4102
         ORDER_SERVICE_URL: http://order-service:4103
+        # PHOTOS-S3: the CSP lets the browser post photos to MinIO and load them from it
+        S3_PUBLIC_URL: http://localhost:${S3_PORT:-9400}
     restart: unless-stopped
     networks: [frontend]
     ports:
@@ -139,3 +173,4 @@ networks:
 
 volumes:
   mongo-data:
+  minio-data:

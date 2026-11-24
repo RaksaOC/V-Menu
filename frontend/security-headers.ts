@@ -10,6 +10,15 @@ interface PolicyOptions {
     analytics: boolean;
     /** B6: e2e builds sign in against the Firebase Auth emulator at this URL */
     authEmulator?: string | null;
+    /** PHOTOS-S3: object storage's public address (S3_PUBLIC_URL); only its origin is used */
+    storage?: string | null;
+}
+
+/** The http(s) origin of a URL, or null for anything else. */
+function originOf(url: string | null | undefined): string | null {
+    if (!url || !URL.canParse(url)) return null;
+    const u = new URL(url);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.origin : null;
 }
 
 /**
@@ -17,10 +26,13 @@ interface PolicyOptions {
  * - Firebase Auth calls *.googleapis.com and may open a frame on <project>.firebaseapp.com.
  * - Images: our own (uploaded photos, VM-02), data: and blob: (QR codes, photo previews) and
  *   images.unsplash.com for the demo seed's photos.
+ * - PHOTOS-S3: object storage, when configured: the owner's browser posts photos to it
+ *   (connect-src), and photo links redirect to it (img-src).
  * - Next and the theme script (layout.tsx) need inline scripts until we move to nonces.
  */
-export function contentSecurityPolicy({ dev, analytics, authEmulator }: PolicyOptions): string {
+export function contentSecurityPolicy({ dev, analytics, authEmulator, storage }: PolicyOptions): string {
     const ga = analytics;
+    const files = originOf(storage);
     const policy: Record<string, string[]> = {
         "default-src": ["'self'"],
         "script-src": ["'self'", "'unsafe-inline'", ...(dev ? ["'unsafe-eval'"] : []), ...(ga ? ["https://www.googletagmanager.com"] : [])],
@@ -30,6 +42,7 @@ export function contentSecurityPolicy({ dev, analytics, authEmulator }: PolicyOp
             "data:",
             "blob:",
             "https://images.unsplash.com",
+            ...(files ? [files] : []),
             ...(ga ? ["https://*.google-analytics.com", "https://*.googletagmanager.com"] : []),
         ],
         "font-src": ["'self'", "data:"],
@@ -39,6 +52,7 @@ export function contentSecurityPolicy({ dev, analytics, authEmulator }: PolicyOp
             ...(ga ? ["https://*.google-analytics.com", "https://*.analytics.google.com", "https://*.googletagmanager.com"] : []),
             ...(dev ? ["ws:"] : []),
             ...(authEmulator ? [authEmulator] : []),
+            ...(files ? [files] : []),
         ],
         "frame-src": ["https://*.firebaseapp.com"],
         "worker-src": ["'self'", "blob:"],

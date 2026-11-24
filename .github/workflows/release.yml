@@ -96,6 +96,7 @@ jobs:
             NEXT_PUBLIC_FIREBASE_APP_ID=${{ vars.NEXT_PUBLIC_FIREBASE_APP_ID }}
             NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ github.ref_name == 'main' && vars.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '' }}
             CSP_MODE=${{ vars.CSP_MODE || 'report-only' }}
+            S3_PUBLIC_URL=${{ vars.S3_PUBLIC_URL }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 

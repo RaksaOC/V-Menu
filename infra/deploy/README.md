@@ -34,6 +34,7 @@ Nobody logs into the server to deploy. The workflow writes the env files from Gi
 | `compose.deploy.yml` | Added on top of `infra/compose/docker-compose.prod.yml`: frontend on 127.0.0.1 only, log size limits |
 | `compose.mongo-host.yml` / `compose.mongo-container.yml` | How the services reach MongoDB (`MONGO_MODE`) |
 | `compose.proxy-network.yml` | Only with `PROXY_NETWORK`: the frontend joins an existing Docker reverse proxy's network |
+| `compose.storage-network.yml` | Only with `STORAGE_NETWORK`: menu-service joins the Docker network MinIO is on (menu photos, PHOTOS-S3) |
 | `remote-deploy.sh` | Runs on the server: pull, start, wait for healthy, smoke test, auto-rollback on failure |
 | `ci-deploy.sh` | Runs in GitHub Actions: writes env files from secrets, copies them, calls `remote-deploy.sh` |
 | `backup-mongo.sh` | Daily `mongodump`, installed by `setup-server.sh` |
@@ -170,6 +171,65 @@ http:
 
 Put the backup user's URI in `/etc/vmenu/backup.env` (`MONGO_BACKUP_URI=mongodb://vmenu_backup:PASSWORD@127.0.0.1:27017/?authSource=admin`), then test it with `sudo /usr/local/bin/vmenu-backup`. Backups go to `/srv/vmenu/backups`, and 7 days are kept. Restore instructions are at the top of `backup-mongo.sh`.
 
+### 4b. Photo storage (MinIO, PHOTOS-S3)
+
+Menu photos live in S3-compatible object storage, not in MongoDB. The server's MinIO is a container on Coolify's `coolify` network, public at `https://files.chanraksa.com` (its CORS already allows browser POST). Each environment gets its own bucket and its own MinIO user, which can reach only that bucket. The buckets stay **private**: photos are shown through signed links that menu-service hands out.
+
+Do this once, on the server, before the first deploy that has PHOTOS-S3 (without it, menu-service never becomes ready and the deploy rolls back by itself):
+
+```bash
+# MinIO's container, and its root user and password (Coolify shows them in the MinIO service's settings)
+docker ps --format '{{.Names}}\t{{.Image}}\t{{.Networks}}' | grep -i minio
+M=<the MinIO container name>
+docker exec -it "$M" mc alias set local http://127.0.0.1:9000 '<root user>' '<root password>'
+docker exec "$M" mc admin info local        # check: the alias works
+
+for env in staging prod; do
+  # the bucket
+  docker exec "$M" mc mb --ignore-existing "local/vmenu-$env"
+  # a policy for that bucket only: read, write and delete objects, and read and set its lifecycle rule
+  cat > "/tmp/vmenu-$env.json" <<JSON
+{"Version":"2012-10-17","Statement":[
+ {"Effect":"Allow","Action":["s3:GetBucketLocation","s3:ListBucket","s3:GetLifecycleConfiguration","s3:PutLifecycleConfiguration"],"Resource":["arn:aws:s3:::vmenu-$env"]},
+ {"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":["arn:aws:s3:::vmenu-$env/*"]}]}
+JSON
+  docker cp "/tmp/vmenu-$env.json" "$M:/tmp/vmenu-$env.json" && rm "/tmp/vmenu-$env.json"
+  docker exec "$M" mc admin policy create local "vmenu-$env" "/tmp/vmenu-$env.json"
+  # the user: its secret goes into the GitHub Environment as S3_SECRET_KEY, nowhere else
+  secret=$(openssl rand -hex 24); echo "vmenu-$env secret key: $secret"
+  docker exec "$M" mc admin user add local "vmenu-$env" "$secret"
+  docker exec "$M" mc admin policy attach local "vmenu-$env" --user "vmenu-$env"
+  # uploads nobody confirmed expire after a day (menu-service also sets this at startup)
+  docker exec "$M" mc ilm rule add --prefix incoming/ --expire-days 1 "local/vmenu-$env"
+  docker exec "$M" mc ilm rule ls "local/vmenu-$env"
+  docker exec "$M" mc anonymous get "local/vmenu-$env"   # must say "none": the bucket is private
+done
+docker exec "$M" mc admin config get local region    # S3_REGION; empty means us-east-1
+```
+
+Then, in GitHub (Settings → Environments), for **staging** and **production**:
+
+| Secrets | Variables |
+|---|---|
+| `S3_ACCESS_KEY` (`vmenu-staging` / `vmenu-prod`) | `S3_ENDPOINT` = `http://<MinIO container name>:9000` |
+| `S3_SECRET_KEY` (the secret printed above) | `S3_BUCKET` (`vmenu-staging` / `vmenu-prod`) |
+| | `S3_PUBLIC_URL` = `https://files.chanraksa.com`, `S3_REGION`, `STORAGE_NETWORK` = `coolify` |
+
+And a **repository** variable `S3_PUBLIC_URL` = `https://files.chanraksa.com`: the release workflow builds it into the frontend's CSP, so browsers may post photos to storage and load them from it.
+
+With `STORAGE_NETWORK` set, menu-service also joins that network (`compose.storage-network.yml`) and reaches MinIO by its container name. Its `/ready` answers 503 while it can't reach MinIO, so a wrong setting fails the deploy and rolls it back.
+
+**Photos from before.** At its first start, menu-service copies every photo from MongoDB GridFS to the bucket, under the same ids, and logs `moved photos from GridFS to object storage`. Links saved on dishes keep working. GridFS keeps its copy for one release, in case of a rollback. A rollback to a version from before PHOTOS-S3 still shows the old photos, but not the ones uploaded since.
+
+**Dropping the GridFS copies** (one release later, after a backup), for each environment's menu database:
+
+```js
+// mongosh, in vmenu_staging_menu (then vmenu_prod_menu)
+db.getCollection("images.files").countDocuments({ "metadata.movedTo": { $exists: false } })  // must be 0
+db.getCollection("images.chunks").drop()
+db.getCollection("images.files").drop()
+```
+
 ### 5. GitHub settings (Settings → Environments)
 
 Create **`staging`**:
@@ -215,6 +275,7 @@ Add these to **both** environments, with different values for each (see `staging
 | `SSH_KNOWN_HOSTS` (printed at the end of `setup-server.sh`) | `PUBLIC_URL` |
 | `MONGODB_URI_RESTAURANT`, `MONGODB_URI_MENU`, `MONGODB_URI_ORDER` | `MONGO_MODE`, `MONGO_NETWORK` (container mode only), `PROXY_NETWORK` (optional) |
 | `JWT_SECRET`, `INTERNAL_API_KEY` (`openssl rand -hex 32`) | `FIREBASE_PROJECT_ID`, `LOG_LEVEL` |
+| `S3_ACCESS_KEY`, `S3_SECRET_KEY` (PHOTOS-S3, section 4b) | `S3_ENDPOINT`, `S3_PUBLIC_URL`, `S3_BUCKET`, `S3_REGION`, `STORAGE_NETWORK` (section 4b) |
 
 Missing secrets make the deploy fail at once, with the missing names listed.
 

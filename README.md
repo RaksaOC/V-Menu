@@ -18,12 +18,15 @@ restaurant-service  menu-service     order-service
  tenants, sign-in
      │                  │                  │
 vmenu_restaurants   vmenu_menu        vmenu_orders      (one MongoDB database each)
+                        │
+                  MinIO (S3): menu photos. The browser uploads to it with a form
+                  menu-service signs, and loads photos from it with signed links.
 ```
 
 | Service | Owns | Public paths | Calls |
 | --- | --- | --- | --- |
 | `restaurant-service` | restaurants, staff (tenants), sign-in | `/api/auth/*`, `/api/restaurants/*`, `/api/staff` | none |
-| `menu-service` | dishes, tables | `/api/menu/:slug/*` | restaurant-service |
+| `menu-service` | dishes, tables, menu photos (in MinIO) | `/api/menu/:slug/*` | restaurant-service, order-service, MinIO |
 | `order-service` | orders, bills, kitchen queue, stats | `/api/orders/*` | restaurant-service, menu-service |
 
 - The browser only talks to the frontend. `frontend/next.config.ts` forwards each `/api` prefix to the service that owns it.
@@ -65,7 +68,7 @@ cp .env.example .env   # then fill in your Firebase web config (read by docker c
 # set FIREBASE_PROJECT_ID in backend/services/restaurant/.env to the same project
 
 # 2. build and start
-docker compose --env-file .env -f infra/compose/docker-compose.yml up --build -d   # mongo + 3 services + frontend (or: npm run docker:up)
+docker compose --env-file .env -f infra/compose/docker-compose.yml up --build -d   # mongo + MinIO + 3 services + frontend (or: npm run docker:up)
 
 # 3. demo data, then one order end to end
 npm run docker:seed    # restaurant "demo-bistro", tables T1-T4, four dishes
@@ -86,7 +89,8 @@ How the containers are wired (`infra/compose/docker-compose.yml`). Run `docker c
 
 - **One database per service on one MongoDB server** (`mongo:7`): `vmenu_restaurants`, `vmenu_menu`, `vmenu_orders`. Data lives in the `mongo-data` volume, so it survives restarts.
 - **Two networks.** `backend` joins MongoDB and the services; `frontend` joins the frontend and the services. The frontend is not on `backend`, so it cannot reach MongoDB.
-- **Only the frontend publishes a port** (`3400`). The services are reachable only inside Docker, by their Compose names (`http://restaurant-service:4101`).
+- **Only the frontend publishes a port** (`3400`), and MinIO its S3 port on `127.0.0.1:9400` (`S3_PORT`), because browsers upload menu photos straight to it and load them from it. The services are reachable only inside Docker, by their Compose names (`http://restaurant-service:4101`).
+- **Menu photos** (PHOTOS-S3) are in MinIO (`pgsty/minio`), in the `minio-data` volume. menu-service makes the bucket and a rule that deletes unconfirmed uploads after a day. The MinIO credentials in the compose file are for your machine only.
 - **Images.** Each service is a multi-stage build on `node:22-alpine` with production deps and `dist/` only. It runs as `node` and has a `HEALTHCHECK` on `/health`; `/version` returns the `GIT_SHA` it was built from.
 - The root `.env` holds the Firebase web config for the frontend build. It has the same values as `frontend/.env.local`, which `npm run dev` uses, so update both if a key changes.
 - The `backend/services/*/.env.example` secrets are placeholders that work locally. Run `npm run setup` (below) to generate real ones.
@@ -107,9 +111,12 @@ Requires Node 22+.
 npm install            # root tools (concurrently, local MongoDB)
 npm run setup          # installs every package, writes backend/services/*/.env with fresh shared secrets
 cp frontend/.env.example frontend/.env.local   # then fill in your Firebase web config
+docker compose -f infra/compose/docker-compose.yml up -d minio   # menu photos (PHOTOS-S3), on 127.0.0.1:9400
 npm run dev            # MongoDB + 3 services + frontend
 npm run seed           # demo data (in another terminal)
 ```
+
+- Menu photos go to MinIO. The `S3_*` values in `backend/services/menu/.env.example` and `S3_PUBLIC_URL` in `frontend/.env.example` match the compose file's MinIO. menu-service's `/ready` stays 503 until it can reach it.
 
 - `npm run dev` starts a local MongoDB on `127.0.0.1:27017`, with data in `.data/mongo`. To use Atlas instead, set `MONGODB_URI` in each `backend/services/*/.env`, using a separate database name per service, and run `npm run dev:services` plus `npm --prefix frontend run dev`.
 
@@ -179,8 +186,12 @@ Each service reads its own `backend/services/<name>/.env` (see its `.env.example
 | `RESTAURANT_SERVICE_URL` | menu, order | |
 | `MENU_SERVICE_URL` | order | |
 | `ORDER_SERVICE_URL` | menu | asked before a table is renamed or deleted (VM-15) |
+| `S3_ENDPOINT` | menu | PHOTOS-S3: where menu-service reaches object storage (in Docker: `http://minio:9000`) |
+| `S3_PUBLIC_URL` | menu, frontend | where browsers reach it (photo uploads and links); empty means `S3_ENDPOINT`. The frontend puts its origin in the CSP (a build argument) |
+| `S3_ACCESS_KEY`, `S3_SECRET_KEY` | menu | the storage user; on the servers, one per environment that can reach only its bucket |
+| `S3_BUCKET`, `S3_REGION` | menu | one bucket per environment; `us-east-1` unless MinIO says otherwise |
 
-The frontend only needs the public Firebase web config, plus the three service URLs if they are not on the defaults.
+The frontend only needs the public Firebase web config, the three service URLs if they are not on the defaults, and `S3_PUBLIC_URL`.
 
 ## Security changes in this refactor
 

@@ -35,6 +35,10 @@ ENV NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL=$NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_U
 # SEC-02: report-only (default) or enforce for the Content-Security-Policy
 ARG CSP_MODE=report-only
 ENV CSP_MODE=$CSP_MODE
+# PHOTOS-S3: object storage's public address (https://files.example.com). The CSP lets the
+# browser post photos to it and load them from it. Empty: not in the CSP.
+ARG S3_PUBLIC_URL=
+ENV S3_PUBLIC_URL=$S3_PUBLIC_URL
 
 # Configure microservice URLs
 ARG RESTAURANT_SERVICE_URL=http://restaurant-service:4101

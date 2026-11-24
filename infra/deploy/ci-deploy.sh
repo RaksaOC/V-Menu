@@ -17,6 +17,9 @@
 #   SSH_KNOWN_HOSTS   optional secret: the server's host key line(s). Recommended.
 #   MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY
 #   FIREBASE_PROJECT_ID LOG_LEVEL FRONTEND_PORT MONGO_MODE MONGO_NETWORK PROXY_NETWORK   (variables)
+#   PHOTOS-S3, menu photos in object storage (MinIO):
+#   S3_ACCESS_KEY S3_SECRET_KEY (secrets); S3_ENDPOINT S3_PUBLIC_URL S3_BUCKET S3_REGION
+#   STORAGE_NETWORK (variables; STORAGE_NETWORK is the Docker network MinIO is on, if any)
 #   VMENU_SKIP_PULL   1 only in the CI test (images are built on the host)
 set -Eeuo pipefail
 
@@ -33,6 +36,9 @@ ACTION=${DEPLOY_ACTION:-}
 : "${MONGO_MODE:=host}"
 : "${MONGO_NETWORK:=}"
 : "${PROXY_NETWORK:=}"
+: "${STORAGE_NETWORK:=}"
+: "${S3_PUBLIC_URL:=}"
+: "${S3_REGION:=us-east-1}"
 : "${FIREBASE_PROJECT_ID:=}"
 if [[ -z ${FRONTEND_PORT:-} ]]; then
     if [[ $TARGET == prod ]]; then FRONTEND_PORT=3400; else FRONTEND_PORT=3401; fi
@@ -40,6 +46,7 @@ fi
 [[ $FRONTEND_PORT =~ ^[0-9]{2,5}$ ]] || die "FRONTEND_PORT must be a port number"
 [[ $SSH_PORT =~ ^[0-9]{1,5}$ ]] || die "SSH_PORT must be a port number"
 [[ -z $PROXY_NETWORK || $PROXY_NETWORK =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || die "PROXY_NETWORK must be a Docker network name"
+[[ -z $STORAGE_NETWORK || $STORAGE_NETWORK =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || die "STORAGE_NETWORK must be a Docker network name"
 
 # Not set up yet (no server secrets at all): skip, like M3's placeholder did, so releases on
 # main stay green until Raksa adds the secrets. Partly set up is a mistake and fails below.
@@ -55,7 +62,8 @@ fi
 # B7: --check-failed only adds a history line. It copies nothing: the copy replaces the server's
 # .env, which holds the running TAG, and this action runs outside the deploy queue.
 copy_files=true
-needed=(SSH_HOST SSH_USER SSH_KEY MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY)
+needed=(SSH_HOST SSH_USER SSH_KEY MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY
+    S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY S3_SECRET_KEY)
 if [[ $ACTION == --check-failed ]]; then
     copy_files=false
     needed=(SSH_HOST SSH_USER SSH_KEY)
@@ -64,15 +72,21 @@ missing=()
 for name in "${needed[@]}"; do
     [[ -n ${!name:-} ]] || missing+=("$name")
 done
-((${#missing[@]} == 0)) || die "missing secrets in the '$TARGET' environment: ${missing[*]}"
+((${#missing[@]} == 0)) || die "missing secrets or variables in the '$TARGET' environment: ${missing[*]}"
 
 if [[ $copy_files == true ]]; then
+# PHOTOS-S3: storage addresses are http(s) URLs (menu-service refuses anything else at startup)
+for name in S3_ENDPOINT S3_PUBLIC_URL; do
+    value=${!name}
+    [[ -z $value || $value =~ ^https?://[^[:space:]]+$ ]] || die "$name must be an http(s) URL"
+done
 # The services refuse to start with a shorter one (backend/services/*/src/lib/config.ts).
 ((${#JWT_SECRET} >= 32)) || die "JWT_SECRET in the '$TARGET' environment is ${#JWT_SECRET} characters; it must be at least 32 (openssl rand -hex 32)"
 
 # Values are written single-quoted, so compose takes them literally ($ is not expanded).
 # That only breaks on a single quote or a newline, so refuse those.
-for name in MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY FIREBASE_PROJECT_ID LOG_LEVEL MONGO_NETWORK; do
+for name in MONGODB_URI_RESTAURANT MONGODB_URI_MENU MONGODB_URI_ORDER JWT_SECRET INTERNAL_API_KEY FIREBASE_PROJECT_ID LOG_LEVEL MONGO_NETWORK \
+    S3_ENDPOINT S3_PUBLIC_URL S3_BUCKET S3_REGION S3_ACCESS_KEY S3_SECRET_KEY; do
     value=${!name}
     [[ $value != *"'"* && $value != *$'\n'* ]] || die "$name contains a single quote or a newline; change that value"
 done
@@ -89,7 +103,8 @@ mkdir -p "$bundle"/services/{restaurant-service,menu-service,order-service}
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 cp "$here/../compose/docker-compose.prod.yml" "$here/compose.deploy.yml" "$here/compose.mongo-host.yml" \
-    "$here/compose.mongo-container.yml" "$here/compose.proxy-network.yml" "$here/remote-deploy.sh" "$bundle/"
+    "$here/compose.mongo-container.yml" "$here/compose.proxy-network.yml" "$here/compose.storage-network.yml" \
+    "$here/remote-deploy.sh" "$bundle/"
 
 # TAG is added by remote-deploy.sh; it owns that line.
 cat >"$bundle/.env" <<EOF
@@ -98,6 +113,7 @@ FRONTEND_PORT=$FRONTEND_PORT
 MONGO_MODE=$MONGO_MODE
 MONGO_NETWORK=$MONGO_NETWORK
 PROXY_NETWORK=$PROXY_NETWORK
+STORAGE_NETWORK=$STORAGE_NETWORK
 EOF
 
 common() {
@@ -120,6 +136,13 @@ EOF
     echo "PORT=4102"
     echo "MONGODB_URI='$MONGODB_URI_MENU'"
     common
+    # PHOTOS-S3
+    echo "S3_ENDPOINT='$S3_ENDPOINT'"
+    echo "S3_PUBLIC_URL='$S3_PUBLIC_URL'"
+    echo "S3_ACCESS_KEY='$S3_ACCESS_KEY'"
+    echo "S3_SECRET_KEY='$S3_SECRET_KEY'"
+    echo "S3_BUCKET='$S3_BUCKET'"
+    echo "S3_REGION='$S3_REGION'"
 } >"$bundle/services/menu-service/.env"
 {
     echo "SERVICE_NAME=order-service"
