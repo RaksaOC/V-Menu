@@ -33,7 +33,15 @@ export async function staffToken(role: "owner" | "cashier" | "chef"): Promise<st
         .sign(new TextEncoder().encode(jwtSecret()));
 }
 
+/** SEC-12: each role's session cookie; browsers take the "__Host-" name only on https (Secure). */
+export const sessionCookie = (role: "owner" | "cashier" | "chef", baseURL: string) =>
+    `${new URL(baseURL).protocol === "https:" ? "__Host-" : ""}vmenu_${role}`;
+
+/** A cookie header for API calls made outside a browser (the server reads either name). */
+export const sessionHeader = async (role: "owner" | "cashier" | "chef") => `__Host-vmenu_${role}=${await staffToken(role)}`;
+
 export async function signInAs(context: BrowserContext, baseURL: string, role: "owner" | "cashier" | "chef") {
     const token = await staffToken(role);
-    await context.addCookies([{ name: "token", value: token, url: baseURL, httpOnly: true, sameSite: "Lax" }]);
+    const secure = new URL(baseURL).protocol === "https:";
+    await context.addCookies([{ name: sessionCookie(role, baseURL), value: token, url: baseURL, httpOnly: true, secure, sameSite: "Lax" }]);
 }

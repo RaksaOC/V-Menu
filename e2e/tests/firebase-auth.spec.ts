@@ -53,7 +53,7 @@ test.describe("Firebase sign-in, against the Auth emulator (B6)", () => {
         await page.getByLabel("Password", { exact: true }).fill(password);
         await page.locator("form [type=submit]").click();
         await expect(page).toHaveURL(/\/owner$/, { timeout: 15_000 });
-        expect((await context.cookies()).some((c) => c.name === "token")).toBe(true); // the app's session cookie
+        expect((await context.cookies()).some((c) => /vmenu_owner$/.test(c.name))).toBe(true); // the owner's session cookie (SEC-12)
     });
 
     test("a wrong password is refused, and no session starts", async ({ page, context }) => {
@@ -63,7 +63,7 @@ test.describe("Firebase sign-in, against the Auth emulator (B6)", () => {
         await page.getByLabel("Password", { exact: true }).fill("not-the-password");
         await page.locator("form [type=submit]").click();
         await expect(page.getByText("Incorrect email or password")).toBeVisible();
-        expect((await context.cookies()).some((c) => c.name === "token")).toBe(false);
+        expect((await context.cookies()).some((c) => /vmenu_/.test(c.name))).toBe(false);
     });
 
     test("the helper reads verification and password-reset emails", async () => {

@@ -52,7 +52,7 @@ describe("app tokens", () => {
 
     it("reads the token from the cookie too", async () => {
         const token = await signAppToken(owner);
-        expect((await request(app).get("/owner").set("cookie", `theme=dark; token=${token}`)).status).toBe(200);
+        expect((await request(app).get("/owner").set("cookie", `theme=dark; __Host-vmenu_owner=${token}`)).status).toBe(200);
     });
 
     it("answers 401 without a token or with a bad one, 403 for the wrong role", async () => {

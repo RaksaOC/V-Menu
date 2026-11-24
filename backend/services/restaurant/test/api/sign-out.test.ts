@@ -17,7 +17,7 @@ describe("sign-out isn't held back by the sign-in rate limit (SEC-01)", () => {
         await useUpTheLimit();
         const res = await request(app).post("/api/auth/logout");
         expect(res.status).toBe(200);
-        expect(res.headers["set-cookie"]![0]).toMatch(/^token=;/);
+        expect(res.headers["set-cookie"]![0]).toMatch(/^vmenu_owner=;/);
     });
 
     it("POST /api/auth/sign-out-everywhere still ends the sessions when the limit is used up", async () => {
@@ -27,7 +27,7 @@ describe("sign-out isn't held back by the sign-in rate limit (SEC-01)", () => {
         await useUpTheLimit();
         const out = await request(app).post("/api/auth/sign-out-everywhere").set("cookie", cookie);
         expect(out.status).toBe(200);
-        expect(out.headers["set-cookie"]![0]).toMatch(/^token=;/);
+        expect(out.headers["set-cookie"]![0]).toMatch(/^vmenu_owner=;/);
         expect((await request(app).get("/api/auth/me").set("cookie", cookie)).status).toBe(401);
     });
 

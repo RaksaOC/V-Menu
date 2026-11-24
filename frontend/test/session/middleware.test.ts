@@ -8,8 +8,11 @@ const token = (claims: object) => `${b64({ alg: "HS256" })}.${b64({ exp: Math.fl
 const cashierOfA = token({ role: "cashier", resSlug: "rest-a" });
 const chefOfA = token({ role: "chef", resSlug: "rest-a" });
 
+// SEC-12: the token under every role's cookie name, so these cases test the token, not the name
+const asEveryRole = (t: string) => ["owner", "cashier", "chef"].map((r) => `vmenu_${r}=${t}`).join("; ");
+
 function visit(path: string, cookie?: string) {
-    const res = middleware(new NextRequest(`http://localhost${path}`, { headers: cookie ? { cookie: `token=${cookie}` } : {} }));
+    const res = middleware(new NextRequest(`http://localhost${path}`, { headers: cookie ? { cookie: asEveryRole(cookie) } : {} }));
     const to = res.headers.get("location");
     return to ? new URL(to).pathname : "stays";
 }

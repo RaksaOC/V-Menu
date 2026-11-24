@@ -33,17 +33,48 @@ export async function signAppToken(user: AppUser, ttl = "1h") {
         .sign(secret());
 }
 
-// SEC-01: browsers carry the session in the httpOnly "token" cookie, which page scripts can't
-// read. A Bearer header is accepted only when AUTH_ALLOW_BEARER=true (tests and internal tools);
-// a browser never sends one.
+// SEC-01: browsers carry the session in an httpOnly cookie, which page scripts can't read. A Bearer
+// header is accepted only when AUTH_ALLOW_BEARER=true (tests and internal tools); a browser never sends one.
 export const bearerAllowed = () => process.env.AUTH_ALLOW_BEARER === "true";
 
-function readToken(req: Request): string | null {
-    const cookie = req.headers.cookie
-        ?.split(";")
-        .map((c) => c.trim())
-        .find((c) => c.startsWith("token="));
-    if (cookie) return decodeURIComponent(cookie.slice(6));
+export const ROLES: readonly Role[] = ["owner", "cashier", "chef"];
+
+/**
+ * SEC-12: one session cookie per role, so signing in to the cashier or kitchen screen doesn't end the
+ * owner's session in the same browser. On https the name has the "__Host-" prefix: browsers accept
+ * such a cookie only from this exact site, so another app on the same parent domain can't set or
+ * replace it. Browsers refuse that prefix on a cookie that isn't Secure, so plain http (local dev,
+ * e2e) uses the bare name. A cookie called "token" (the old shared name) is never read.
+ */
+export const sessionCookieName = (role: Role, secure: boolean) => `${secure ? "__Host-" : ""}vmenu_${role}`;
+
+/** The header a page sends to say which of its sign-ins a request is for (owner, cashier or chef). */
+export const ROLE_HEADER = "x-vmenu-role";
+
+function cookieJar(header: string | undefined): Map<string, string> {
+    const jar = new Map<string, string>();
+    for (const part of header?.split(";") ?? []) {
+        const at = part.indexOf("=");
+        if (at < 1) continue;
+        const name = part.slice(0, at).trim();
+        if (!jar.has(name)) jar.set(name, part.slice(at + 1).trim());
+    }
+    return jar;
+}
+
+/** The roles to try, the page's own role first when the route allows it. */
+function rolesInOrder(req: Request, allowed: readonly Role[]): Role[] {
+    const asked = req.headers[ROLE_HEADER];
+    const first = typeof asked === "string" && (allowed as string[]).includes(asked) ? (asked as Role) : undefined;
+    return first ? [first, ...allowed.filter((r) => r !== first)] : [...allowed];
+}
+
+function readToken(req: Request, allowed: readonly Role[]): string | null {
+    const jar = cookieJar(req.headers.cookie);
+    for (const role of rolesInOrder(req, allowed)) {
+        const value = jar.get(sessionCookieName(role, true)) ?? jar.get(sessionCookieName(role, false));
+        if (value) return decodeURIComponent(value);
+    }
     const header = req.headers.authorization;
     if (bearerAllowed() && header?.startsWith("Bearer ")) return header.slice(7);
     return null;
@@ -99,7 +130,7 @@ async function currentVersion(req: Request, user: AppUser) {
 // Restaurant-level checks happen in the routes.
 export function requireRole(...roles: Role[]) {
     return async (req: Request, _res: Response, next: NextFunction) => {
-        const token = readToken(req);
+        const token = readToken(req, roles);
         if (!token) return next(unauthorized(undefined, "no_token"));
         let user: AppUser;
         try {

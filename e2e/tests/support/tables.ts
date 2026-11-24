@@ -1,5 +1,5 @@
 import { request as playwrightRequest, type APIRequestContext } from "@playwright/test";
-import { SLUG, staffToken } from "./auth";
+import { SLUG, sessionHeader } from "./auth";
 
 // CL-14: a table of the spec's own, so specs running side by side never share a table's bill.
 // The demo restaurant has four tables and several specs order at them; a spec that watches a
@@ -15,7 +15,7 @@ export interface OwnTable {
 }
 
 async function as(role: "owner" | "cashier", baseURL: string): Promise<APIRequestContext> {
-    return playwrightRequest.newContext({ baseURL, extraHTTPHeaders: { cookie: `token=${await staffToken(role)}` } });
+    return playwrightRequest.newContext({ baseURL, extraHTTPHeaders: { cookie: await sessionHeader(role) } });
 }
 
 /** `open: false` leaves it closed, as a new table starts (VM-04). */

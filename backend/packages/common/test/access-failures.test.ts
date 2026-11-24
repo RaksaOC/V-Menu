@@ -50,7 +50,8 @@ const failures = async (reason: string) => {
     const line = text.split("\n").find((l) => l.startsWith("vmenu_auth_failures_total{") && l.includes(`reason="${reason}"`));
     return line ? Number(line.split(" ").pop()) : 0;
 };
-const cookie = (token: string) => ({ cookie: `token=${token}` });
+// SEC-12: the same value under every role's cookie name, so each case tests the token, not the name
+const cookie = (token: string) => ({ cookie: ["owner", "cashier", "chef"].map((r) => `__Host-vmenu_${r}=${token}`).join("; ") });
 const KITCHEN = "/api/orders/mee-keav/kitchen";
 
 beforeAll(async () => {

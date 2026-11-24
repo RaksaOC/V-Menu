@@ -20,7 +20,7 @@ const call = async (user: AppUser) =>
     (
         await request(app)
             .get("/staff")
-            .set("cookie", `token=${await signAppToken(user)}`)
+            .set("cookie", `__Host-vmenu_${user.role}=${await signAppToken(user)}`)
     ).status;
 
 let current: number | null;
@@ -61,7 +61,8 @@ describe("checking the session version (SEC-03)", () => {
     it("the wrong role is refused without asking for the version", async () => {
         const res = await request(app)
             .get("/staff")
-            .set("cookie", `token=${await signAppToken({ ...cashier, role: "chef", tv: 3 })}`);
+            // a chef token in the cashier cookie: the name doesn't change the role inside (SEC-12)
+            .set("cookie", `__Host-vmenu_cashier=${await signAppToken({ ...cashier, role: "chef", tv: 3 })}`);
         expect(res.status).toBe(403);
         expect(lookup).not.toHaveBeenCalled();
     });
