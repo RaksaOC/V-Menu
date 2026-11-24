@@ -79,6 +79,15 @@ jobs:
       - name: Stand-in for the server's own MongoDB
         run: docker run -d --name host-mongo --network host mongo:7 --bind_ip_all
 
+      # PHOTOS-S3: like the server, MinIO runs in Docker on its own network (Coolify's "coolify");
+      # menu-service joins it (compose.storage-network.yml) and its /ready checks it.
+      - name: Stand-in for the server's MinIO
+        run: |
+          docker network create vmenu-storage-test
+          docker run -d --name test-minio --network vmenu-storage-test \
+            -e MINIO_ROOT_USER=vmenu-test -e MINIO_ROOT_PASSWORD=vmenu-test-only \
+            pgsty/minio:RELEASE.2026-08-04T00-00-00Z server /data
+
       - name: Start an SSH server and make the CI key pair
         run: |
           set -euo pipefail
@@ -106,13 +115,19 @@ jobs:
           SSH_KEY=$(cat "$RUNNER_TEMP/ci_key"); export SSH_KEY
           SSH_KNOWN_HOSTS=$(ssh-keyscan -T 10 127.0.0.1 2>/dev/null); export SSH_KNOWN_HOSTS
           export JWT_SECRET=test-jwt-secret-test-jwt-secret-0001 INTERNAL_API_KEY=test-internal-key FIREBASE_PROJECT_ID=v-menu-test
+          # PHOTOS-S3: the stand-in MinIO, one bucket per environment (menu-service makes it here)
+          export S3_ENDPOINT=http://test-minio:9000 S3_PUBLIC_URL=https://files.localhost S3_ACCESS_KEY=vmenu-test S3_SECRET_KEY=vmenu-test-only
+          export STORAGE_NETWORK=vmenu-storage-test
           uris() {
             export MONGODB_URI_RESTAURANT="mongodb://host.docker.internal:27017/vmenu_$1_restaurants"
             export MONGODB_URI_MENU="mongodb://host.docker.internal:27017/vmenu_$1_menu"
             export MONGODB_URI_ORDER="mongodb://host.docker.internal:27017/vmenu_$1_orders"
+            export S3_BUCKET="vmenu-$1"
           }
           deploy() { TARGET=$1 DEPLOY_ACTION=$2 EXPECTED_SHA=${3:-} bash infra/deploy/ci-deploy.sh; }
           running() { docker exec "vmenu-$1-menu-service-1" wget -qO- http://127.0.0.1:4102/version; echo; }
+          # PHOTOS-S3: menu-service reaches MinIO over the storage network (its /ready says so)
+          storage_ready() { docker exec "vmenu-$1-menu-service-1" wget -qO- http://127.0.0.1:4102/ready | grep -q '"storage":true'; }
           expect_tag() {
             got=$(sudo cat "/srv/vmenu/$1/.current_tag")
             [[ "$got" == "$2" ]] || { echo "::error::$1 runs $got, expected $2"; exit 1; }
@@ -124,6 +139,7 @@ jobs:
           uris staging
           deploy staging "$V1" "$SHA1"
           expect_tag staging "$V1"
+          storage_ready staging || { echo "::error::staging's menu-service can't reach MinIO"; exit 1; }
           echo "::endgroup::"
 
           echo "::group::2. demo data"
@@ -150,6 +166,7 @@ jobs:
           uris prod
           deploy prod "$V2" "$SHA2"
           expect_tag prod "$V2"
+          storage_ready prod || { echo "::error::prod's menu-service can't reach MinIO"; exit 1; }
           https prod.localhost
           expect_tag staging "$V1"
           echo "::endgroup::"

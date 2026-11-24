@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { categoriesService } from "../../src/services/categories.service.js";
 import { itemsService } from "../../src/services/items.service.js";
 import { PLACEHOLDER } from "../../src/services/photos.js";
-import { fakeCategories, fakeImages, fakeItems, newId } from "./fakes.js";
+import { imagesService } from "../../src/services/images.service.js";
+import { fakeCategories, fakeImages, fakeItems, fakePhotoStore, newId } from "./fakes.js";
 
 // VM-25: menu categories. In-memory repositories, no MongoDB.
 const A = { _id: "665f00000000000000000001", slug: "rest-a" };
@@ -17,7 +18,7 @@ function setup() {
         items,
         categories,
         sections: categoriesService({ categories, items }),
-        menu: itemsService({ items, images: fakeImages(), categories }),
+        menu: itemsService({ items, photos: imagesService({ images: fakeImages(), photos: fakePhotoStore() }), categories }),
     };
 }
 const dish = (name: string, categoryId?: string | null, isEnabled = true) => ({

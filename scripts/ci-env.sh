@@ -40,5 +40,8 @@ sed -e "s|^NEXT_PUBLIC_FIREBASE_API_KEY=.*|NEXT_PUBLIC_FIREBASE_API_KEY=ci-dummy
     -e "s|^NEXT_PUBLIC_FIREBASE_APP_ID=.*|NEXT_PUBLIC_FIREBASE_APP_ID=1:000000000000:web:0000000000000000|" \
     .env.example > .env
 printf 'NEXT_PUBLIC_E2E=1\nNEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL=http://127.0.0.1:9099\n' >> .env
+# PHOTOS-S3: compose's MinIO publishes its S3 port here; the browser in the e2e job uploads photos
+# to it and loads them from it (menu-service's S3_* settings come from the compose file).
+printf 'S3_PORT=9400\n' >> .env
 
 echo "wrote CI .env files (dummy secrets)"

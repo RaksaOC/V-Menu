@@ -1,6 +1,5 @@
 import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
 import { OTHER_CATEGORY, type CreateItemBody, type MenuSection, type PublicMenu, type UpdateItemBody } from "@vmenu/contracts";
-import type { ImagesRepo } from "../repositories/images.repo.js";
 import type { CategoriesRepo } from "../repositories/categories.repo.js";
 import type { ItemRecord, ItemsRepo } from "../repositories/items.repo.js";
 import { imageIdOf, isOwnImage, PLACEHOLDER } from "./photos.js";
@@ -18,7 +17,12 @@ function checkPhoto(image: string, slug: string) {
 }
 
 /** The menu: dishes, their prices and photos, and whether they're on (CL-04). */
-export function itemsService({ items, images, categories }: { items: ItemsRepo; images: ImagesRepo; categories: CategoriesRepo }) {
+/** PHOTOS-S3: deletes one of the restaurant's photos, wherever it is kept (images.service.ts). */
+interface PhotoRemover {
+    remove(resId: string, id: string): Promise<void>;
+}
+
+export function itemsService({ items, photos, categories }: { items: ItemsRepo; photos: PhotoRemover; categories: CategoriesRepo }) {
     /** VM-25: a dish's category must be one of this restaurant's (null is "Other"). */
     async function checkCategory(resId: string, categoryId: string | null | undefined) {
         if (!categoryId) return;
@@ -26,11 +30,13 @@ export function itemsService({ items, images, categories }: { items: ItemsRepo; 
             throw new HttpError(400, "Unknown category", "INVALID_INPUT", { categoryId: "Unknown category" });
     }
 
-    /** Deletes a replaced or removed item's photo if it is one of ours. Never fails the request. */
+    /** Deletes a replaced or removed item's photo if it is one of ours and no other dish shows it.
+     *  Never fails the request. */
     async function dropPhoto(url: string, restaurant: Restaurant) {
         if (!isOwnImage(url, restaurant.slug)) return;
         try {
-            await images.remove(restaurant._id, imageIdOf(url));
+            if ((await items.countWithImage(restaurant._id, url)) > 0) return;
+            await photos.remove(restaurant._id, imageIdOf(url));
         } catch {
             /* a leftover file is harmless */
         }

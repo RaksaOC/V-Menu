@@ -1,5 +1,6 @@
 import type { Category, CreateItemBody, CreateTableBody, MenuItem, Overview, Table } from "@vmenu/contracts";
-import api, { seg } from "@/lib/api";
+import type { PhotoUploadForm, UploadedPhoto } from "@vmenu/contracts";
+import api, { postToStorage, seg } from "@/lib/api";
 
 // CL-09: the calls the owner and the cashier both make about one restaurant (tables, menu,
 // overview), in one place. owner/api.ts and cashier/api.ts re-export what each role uses.
@@ -72,16 +73,16 @@ export async function deleteTable(slug: string, tableId: string): Promise<void> 
 
 /**
  * Uploads a menu photo (VM-02) and returns its short URL, which is then saved on the item.
- * The server checks the type, re-encodes it and refuses files over 5 MB (413) or non-photos (415).
+ * PHOTOS-S3, in three steps:
+ * 1. menu-service signs a form for one upload (this file's type, at most 5 MB, for 10 minutes);
+ * 2. the file goes straight to object storage with it, which enforces all three;
+ * 3. menu-service checks the upload, re-encodes it and answers its URL. It refuses non-photos
+ *    (415) and uploads that expired (410).
  */
 export async function uploadMenuPhoto(slug: string, file: File, onProgress?: (percent: number) => void): Promise<string> {
-    const form = new FormData();
-    form.append("image", file);
-    const { data } = await api.post<{ url: string }>(`/api/menu/${seg(slug)}/images`, form, {
-        onUploadProgress: (e) => {
-            if (e.total) onProgress?.(Math.round((e.loaded * 100) / e.total));
-        },
-    });
+    const { data: form } = await api.post<PhotoUploadForm>(`/api/menu/${seg(slug)}/images/uploads`, { contentType: file.type });
+    await postToStorage(form, file, onProgress);
+    const { data } = await api.post<UploadedPhoto>(`/api/menu/${seg(slug)}/images`, { key: form.key });
     return data.url;
 }
 

@@ -1906,6 +1906,48 @@ for (const vp of [PHONE, DESKTOP]) {
     }
 }
 
+// PHOTOS-S3: the owner's photo picker. A photo is chosen (preview), saved (the dish shows in the
+// menu with its photo), and a file over 5 MB is refused. Light and dark, phone and desktop.
+for (const vp of [PHONE, DESKTOP]) {
+    for (const theme of ["light", "dark"] as const) {
+        await step(`PHOTOS-S3 ${vp.width} ${theme}`, async () => {
+            const { context, page } = await newPage(browser, vp, theme, "owner");
+            const c = { page, theme, width: vp.width };
+            const openForm = async () => {
+                await page.goto(`${BASE}/owner`);
+                await settle(page);
+                await page.getByRole("button", { name: "Menu", exact: true }).first().click({ timeout: 5000 });
+                await settle(page);
+                await page.getByRole("button", { name: "Add Item" }).click({ timeout: 5000 });
+            };
+            await openForm();
+            await page.locator('input[type="file"]').setInputFiles(await photoFixture(page));
+            await page.getByPlaceholder("Enter item name").fill("Storage Dish");
+            await page.getByPlaceholder("0.00").fill("4.5");
+            await shot(c, "PHOTOS-S3-picker", false);
+            const saved = page.waitForResponse((r) => r.url().endsWith("/items") && r.request().method() === "POST", { timeout: 20_000 });
+            await page.getByRole("button", { name: "Save" }).click();
+            const res = await saved.catch(() => null);
+            await settle(page);
+            await page
+                .getByRole("img", { name: "Storage Dish" })
+                .first()
+                .scrollIntoViewIfNeeded({ timeout: 3000 })
+                .catch(() => {});
+            await page.waitForTimeout(1200);
+            await shot(c, "PHOTOS-S3-saved", false);
+            const created = res && res.ok() ? await res.json() : null;
+            if (created) await page.request.delete(`${BASE}/api/menu/${SLUG}/items/${created._id}`); // keep the demo data the same
+            await openForm();
+            const big = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(6 * 1024 * 1024)]);
+            await page.locator('input[type="file"]').setInputFiles({ name: "huge.jpg", mimeType: "image/jpeg", buffer: big });
+            await page.waitForTimeout(500);
+            await shot(c, "PHOTOS-S3-too-big", false);
+            await context.close();
+        });
+    }
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

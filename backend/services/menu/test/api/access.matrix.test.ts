@@ -15,7 +15,7 @@ import {
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { NO_OPEN_BILLS } from "../unit/fakes.js";
+import { fakePhotoStore, NO_OPEN_BILLS } from "../unit/fakes.js";
 
 // SEC-07: every menu-service route, tried as every kind of caller. A new route fails the
 // inventory test until it's added here with its rule.
@@ -26,11 +26,13 @@ const { createApp } = await import("../../src/app.js");
 const { Item } = await import("../../src/models/item.model.js");
 const { Table } = await import("../../src/models/table.model.js");
 const { Category } = await import("../../src/models/category.model.js");
-const { mongoImagesRepo } = await import("../../src/repositories/images.repo.js");
+const { photoKey } = await import("../../src/services/photos.js");
 
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
+const photos = fakePhotoStore(); // PHOTOS-S3: object storage in memory
 const app = createApp({
+    photos,
     openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
     lookupRestaurant: fakeRestaurantLookup([A, B]),
 });
@@ -56,6 +58,7 @@ const MATRIX: [string, AccessRow][] = [
     ["PUT /api/menu/:slug/items/:id", owner],
     ["DELETE /api/menu/:slug/items/:id", owner],
     ["POST /api/menu/:slug/images", owner],
+    ["POST /api/menu/:slug/images/uploads", owner], // PHOTOS-S3: the signed upload form
     ["POST /api/menu/:slug/tables", owner],
     ["PUT /api/menu/:slug/tables/:id", owner],
     ["DELETE /api/menu/:slug/tables/:id", owner],
@@ -89,7 +92,8 @@ beforeEach(async () => {
     ids.tokenA = String(tableA.get("qrToken")); // SEC-04
     ids.itemB = String((await Item.create({ name: "B dish", priceCents: 300, image: img, resId: B._id }))._id);
     ids.tableB = String((await Table.create({ name: "B1", resId: B._id, isEnabled: true }))._id);
-    ids.imageB = await mongoImagesRepo.save(Buffer.from("RIFF0000WEBPVP8 "), B._id);
+    ids.imageB = "c".repeat(24);
+    await photos.put(photoKey(B._id, ids.imageB), Buffer.from("RIFF0000WEBPVP8 "), "image/webp");
     ids.categoryA = String((await Category.create({ name: "Mains", sortOrder: 0, resId: A._id }))._id);
     ids.categoryB = String((await Category.create({ name: "B drinks", sortOrder: 0, resId: B._id }))._id);
 });

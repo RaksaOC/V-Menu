@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { imagesService } from "../../src/services/images.service.js";
 import { internalService } from "../../src/services/internal.service.js";
 import { itemsService } from "../../src/services/items.service.js";
-import { imageUrl, isOwnImage, PLACEHOLDER, sniff } from "../../src/services/photos.js";
+import { imageUrl, isOwnImage, photoKey, PLACEHOLDER, sniff } from "../../src/services/photos.js";
 import { tablesService } from "../../src/services/tables.service.js";
-import { fakeCategories, fakeImages, fakeItems, fakeTables, newId, NO_OPEN_BILLS } from "./fakes.js";
+import { fakeCategories, fakeImages, fakeItems, fakePhotoStore, fakeTables, newId, NO_OPEN_BILLS } from "./fakes.js";
 
 // CL-04: menu-service's business rules, with in-memory repositories (no MongoDB, no HTTP).
 const A = { _id: "665f00000000000000000001", slug: "rest-a" };
@@ -17,13 +17,16 @@ function setup() {
     const items = fakeItems();
     const tables = fakeTables();
     const images = fakeImages();
+    const store = fakePhotoStore();
+    const photos = imagesService({ images, photos: store });
     return {
         items,
         tables,
         images,
-        menu: itemsService({ items, images, categories: fakeCategories() }),
+        store,
+        menu: itemsService({ items, photos, categories: fakeCategories() }),
         seating: tablesService({ tables }),
-        photos: imagesService({ images }),
+        photos,
         internal: internalService({ items, tables }),
     };
 }
@@ -53,30 +56,50 @@ describe("items", () => {
     });
 
     it("updates only what is sent, and removes the old photo when it's replaced", async () => {
-        const { menu, images } = setup();
-        const oldId = await images.save(Buffer.from("old"), A._id);
+        const { menu, store, images } = setup();
+        const oldId = newId();
+        await store.put(photoKey(A._id, oldId), Buffer.from("old"), "image/webp");
+        const legacyId = await images.save(Buffer.from("old"), A._id); // PHOTOS-S3: from before; its GridFS copy goes too
         const item = await menu.create(A, { name: "Amok", priceCents: 500, image: imageUrl(A.slug, oldId) });
         const same = await menu.update(A, item._id, { priceCents: 600, image: imageUrl(A.slug, oldId) }); // image sent back unchanged
         expect(same).toMatchObject({ name: "Amok", priceCents: 600 });
-        expect(images.files.has(oldId)).toBe(true);
-        const newId2 = await images.save(Buffer.from("new"), A._id);
+        expect(store.objects.has(photoKey(A._id, oldId))).toBe(true);
+        const newId2 = newId();
         await menu.update(A, item._id, { image: imageUrl(A.slug, newId2), isEnabled: false });
-        expect(images.files.has(oldId)).toBe(false);
+        expect(store.objects.has(photoKey(A._id, oldId))).toBe(false);
         expect((await menu.list(A._id))[0]).toMatchObject({ priceCents: 600, isEnabled: false, image: imageUrl(A.slug, newId2) });
+        await menu.update(A, item._id, { image: imageUrl(A.slug, legacyId) });
+        await menu.update(A, item._id, { image: PLACEHOLDER });
+        expect(images.files.has(legacyId)).toBe(false);
     });
 
     it("deletes the item and its photo; a failed photo delete doesn't fail the request", async () => {
-        const { menu, images } = setup();
-        const id = await images.save(Buffer.from("p"), A._id);
+        const { menu, store, images } = setup();
+        const id = newId();
+        await store.put(photoKey(A._id, id), Buffer.from("p"), "image/webp");
         const a = await menu.create(A, { name: "A", priceCents: 100, image: imageUrl(A.slug, id) });
         expect((await menu.remove(A, a._id)).name).toBe("A");
-        expect(images.files.has(id)).toBe(false);
-        const id2 = await images.save(Buffer.from("q"), A._id);
+        expect(store.objects.has(photoKey(A._id, id))).toBe(false);
+        const id2 = newId();
+        await store.put(photoKey(A._id, id2), Buffer.from("q"), "image/webp");
         const b = await menu.create(A, { name: "B", priceCents: 100, image: imageUrl(A.slug, id2) });
+        store.failDelete = true;
         images.failRemove = true;
         expect((await menu.remove(A, b._id)).name).toBe("B");
         const c = await menu.create(A, { name: "C", priceCents: 100, image: PLACEHOLDER });
         expect((await menu.remove(A, c._id)).name).toBe("C"); // the placeholder is not ours to delete
+    });
+
+    it("keeps a photo another dish of the restaurant still uses (PHOTOS-S3)", async () => {
+        const { menu, store } = setup();
+        const id = newId();
+        await store.put(photoKey(A._id, id), Buffer.from("p"), "image/webp");
+        const a = await menu.create(A, { name: "A", priceCents: 100, image: imageUrl(A.slug, id) });
+        const b = await menu.create(A, { name: "B", priceCents: 100, image: imageUrl(A.slug, id) });
+        await menu.remove(A, a._id);
+        expect(store.objects.has(photoKey(A._id, id))).toBe(true);
+        await menu.update(A, b._id, { image: PLACEHOLDER });
+        expect(store.objects.has(photoKey(A._id, id))).toBe(false);
     });
 
     it("switches an item on and off; ids must be valid and this restaurant's", async () => {
@@ -170,22 +193,65 @@ describe("table names stay unique when requests race (VM-16)", () => {
     });
 });
 
-describe("photos", () => {
-    it("re-encodes an upload to WebP and answers its URL; serves only this restaurant's photos", async () => {
-        const { photos, images } = setup();
-        const png = await sharp({ create: { width: 4, height: 4, channels: 3, background: "red" } })
+describe("photos (PHOTOS-S3)", () => {
+    const png = () =>
+        sharp({ create: { width: 4, height: 4, channels: 3, background: "red" } })
             .png()
             .toBuffer();
-        const { url } = await photos.upload(A, png);
+
+    it("signs a form for a new incoming key of this restaurant, for photo types only", async () => {
+        const { photos, store } = setup();
+        const form = await photos.signUpload(A, "image/png");
+        expect(form.key).toMatch(new RegExp(`^incoming/${A._id}/[0-9a-f]{32}$`));
+        expect(store.signed[0]).toMatchObject({ key: form.key, maxBytes: 5 * 1024 * 1024 });
+        expect(await status(photos.signUpload(A, "image/svg+xml"))).toBe(415);
+    });
+
+    it("confirms an upload: re-encoded to WebP under photos/<restaurant>/<id>.webp; serves only this restaurant's photos", async () => {
+        const { photos, store } = setup();
+        const form = await photos.signUpload(A, "image/png");
+        store.browserPost(form.key, await png(), "image/png");
+        const { url } = await photos.confirm(A, form.key);
         expect(isOwnImage(url, A.slug)).toBe(true);
         const id = url.slice(url.lastIndexOf("/") + 1);
-        expect(sniff(images.files.get(id)!.data)).toBe("webp");
-        const file = await photos.open(A._id, id);
-        expect(file.length).toBeGreaterThan(0);
-        expect(file.stream).toBeTruthy();
+        expect(sniff(store.objects.get(photoKey(A._id, id))!.data)).toBe("webp");
+        expect(store.objects.has(form.key)).toBe(false);
+        expect(await photos.open(A._id, id)).toEqual({ redirect: expect.stringContaining(photoKey(A._id, id)) });
         expect(await status(photos.open(B._id, id))).toBe(404);
         expect(await status(photos.open(A._id, "nope"))).toBe(400);
-        expect(await status(photos.upload(A, Buffer.from("<svg/>")))).toBe(415);
+    });
+
+    it("refuses another restaurant's key, a non-upload key, an expired one, a non-photo and a big file", async () => {
+        const { photos, store } = setup();
+        const form = await photos.signUpload(A, "image/png");
+        store.browserPost(form.key, await png(), "image/png");
+        expect(await status(photos.confirm(B, form.key))).toBe(404);
+        expect(store.objects.has(form.key)).toBe(true);
+        expect(await status(photos.confirm(A, "photos/x"))).toBe(400);
+        expect(await status(photos.confirm(A, `incoming/${A._id}/${"0".repeat(32)}`))).toBe(410);
+        const svg = await photos.signUpload(A, "image/png");
+        store.browserPost(svg.key, Buffer.from("<svg/>"));
+        expect(await status(photos.confirm(A, svg.key))).toBe(415);
+        expect(store.objects.has(svg.key)).toBe(false);
+        const big = await photos.signUpload(A, "image/jpeg");
+        store.browserPost(big.key, Buffer.alloc(5 * 1024 * 1024 + 1));
+        expect(await status(photos.confirm(A, big.key))).toBe(413);
+        expect(store.objects.has(big.key)).toBe(false);
+    });
+
+    it("a photo not yet moved from GridFS is streamed from there", async () => {
+        const { photos, images } = setup();
+        const id = await images.save(Buffer.from("RIFF0000WEBP"), A._id);
+        const file = await photos.open(A._id, id);
+        expect(file).toMatchObject({ length: 12 });
+        expect(await status(photos.open(B._id, id))).toBe(404);
+    });
+
+    it("is ready only when storage answers", async () => {
+        const { photos, store } = setup();
+        expect(await photos.isUp()).toBe(true);
+        store.down = true;
+        expect(await photos.isUp()).toBe(false);
     });
 });
 

@@ -75,6 +75,33 @@ describe("liveness and readiness", () => {
         expect(ready.body.status).toBe("ok");
     });
 
+    it("/ready also waits for a service's own checks (PHOTOS-S3: object storage), each named in the answer", async () => {
+        let storageUp = true;
+        const withStorage = finish(baseApp({ ready: { storage: async () => storageUp } }));
+        expect((await request(withStorage).get("/ready")).body).toMatchObject({ status: "ok", db: true, storage: true });
+        storageUp = false;
+        const down = await request(withStorage).get("/ready");
+        expect(down.status).toBe(503);
+        expect(down.body).toMatchObject({ status: "not ready", db: true, storage: false });
+        // a check that throws or hangs counts as not ready, and /ready still answers quickly
+        const broken = finish(
+            baseApp({
+                ready: {
+                    storage: async () => {
+                        throw new Error("no route to host");
+                    },
+                    slow: () => new Promise<boolean>(() => {}),
+                },
+                readyTimeoutMs: 200,
+            }),
+        );
+        const started = Date.now();
+        const res = await request(broken).get("/ready");
+        expect(res.status).toBe(503);
+        expect(res.body).toMatchObject({ storage: false, slow: false });
+        expect(Date.now() - started).toBeLessThan(1500);
+    });
+
     it("/ready answers 503 once shutdown starts, /health stays 200", async () => {
         markShuttingDown();
         const ready = await request(app).get("/ready");

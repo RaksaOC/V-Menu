@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
                     dev: process.env.NODE_ENV !== "production",
                     analytics: Boolean(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID),
                     authEmulator: AUTH_EMULATOR_URL, // B6: e2e builds only
+                    storage: process.env.S3_PUBLIC_URL, // PHOTOS-S3: photo uploads and image links (a build argument)
                     mode: process.env.CSP_MODE === "enforce" ? "enforce" : "report-only",
                 }),
             },

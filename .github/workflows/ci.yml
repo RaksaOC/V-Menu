@@ -91,9 +91,21 @@ jobs:
           key: mongodb-binaries-${{ runner.os }}-${{ hashFiles(matrix.lock) }}
           restore-keys: mongodb-binaries-${{ runner.os }}-
 
+      # PHOTOS-S3: menu-service's tests also run against a real MinIO (test/api/minio.test.ts),
+      # the same one the compose stack uses.
+      - name: Start MinIO (menu photos)
+        if: matrix.name == 'menu-service'
+        working-directory: .
+        run: docker compose -f infra/compose/docker-compose.yml -p vmenu-test up -d --wait --wait-timeout 120 minio
+
       - name: Test with coverage
         if: matrix.kind == 'service'
         run: npm test -- --coverage
+        env:
+          # PHOTOS-S3: compose's MinIO, local-only credentials (infra/compose/docker-compose.yml)
+          S3_TEST_ENDPOINT: ${{ matrix.name == 'menu-service' && 'http://127.0.0.1:9400' || '' }}
+          S3_TEST_ACCESS_KEY: vmenu-local
+          S3_TEST_SECRET_KEY: vmenu-local-only
 
       # ---- frontend: unit tests (B1) with coverage (B3), then lint and the production build ----
       - name: Unit tests with coverage
