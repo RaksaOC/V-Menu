@@ -5,7 +5,7 @@ import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
 import { getOpenBills, getPaidBills, setBillPaid, type PaidBillsPage } from "@/features/cashier/api";
 import { apiErrorMessage } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { useConnectionStatus } from "@/lib/useConnectionStatus";
+import { useConnectionStatus } from "@/lib/use-connection-status";
 import { useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Clock, RefreshCw, ShoppingCart } from "lucide-react";
 import type { Bill } from "@vmenu/contracts";
@@ -76,7 +76,7 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
         const bill = orders.find((o) => o._id === billId);
         if (!bill) return;
         try {
-            await setBillPaid(slug, billId, !bill.isPayed);
+            await setBillPaid(slug, billId, !bill.isPaid);
             markSeen(billId);
             toast.success(`Table ${bill.table} paid`);
             await loadOpen();

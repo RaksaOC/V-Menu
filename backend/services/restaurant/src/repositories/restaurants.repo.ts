@@ -25,7 +25,7 @@ export const mongoRestaurantsRepo: RestaurantsRepo = {
         const r = await Restaurant.findOne({ slug }).lean();
         return r ? withStringId(r) : null;
     },
-    // the ids come from our own tenants, not from a request; sanitizeFilter would strip the $in
+    // the ids come from our own memberships, not from a request; sanitizeFilter would strip the $in
     byIds: (ids) => Restaurant.find({ _id: mongoose.trusted({ $in: ids }) }).lean<RestaurantRecord[]>(),
     ownedBy: (ownerId) => Restaurant.find({ ownerId }).sort({ createdAt: 1 }).lean<RestaurantRecord[]>(),
     async create(fields) {

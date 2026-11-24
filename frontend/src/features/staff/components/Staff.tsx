@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { addStaff, getStaff, removeStaff, updateStaff } from "@/features/staff/api";
-import { ResContext } from "@/lib/restaurantContext";
+import { ResContext } from "@/lib/restaurant-context";
 import { Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, ChevronsUpDown, Pencil } from "lucide-react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import StaffForm from "@/features/staff/components/StaffForm";

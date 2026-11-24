@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// restaurant-service owns restaurants and tenants. No other service reads them directly.
+// restaurant-service owns restaurants and memberships. No other service reads them directly.
 const restaurantSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true, maxlength: 120 },

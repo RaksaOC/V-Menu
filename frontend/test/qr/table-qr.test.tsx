@@ -8,7 +8,7 @@ const printing = vi.hoisted(() => ({ printQrCards: vi.fn(async () => {}) }));
 vi.mock("@/components/qr/print", async (orig) => ({ ...(await orig<object>()), printQrCards: printing.printQrCards }));
 vi.mock("@/lib/firebase", () => ({ auth: {} }));
 
-const { tableUrl } = await import("@/lib/tableUrl");
+const { tableUrl } = await import("@/lib/table-url");
 const { default: TableQrModal } = await import("@/components/qr/TableQrModal");
 const { qrSheetHtml } = await import("@/components/qr/print");
 
@@ -89,7 +89,7 @@ describe("View QR Code buttons", () => {
 describe("Print all QR codes", () => {
     it("prints one card per table from the owner's Tables page", async () => {
         const { answer } = await import("../api/helpers");
-        const { ResContext } = await import("@/lib/restaurantContext");
+        const { ResContext } = await import("@/lib/restaurant-context");
         const { default: Tables } = await import("@/features/restaurant/components/Tables");
         answer("get", "/api/menu/demo-bistro/tables", [
             { _id: "t1", name: "T1", isEnabled: true },

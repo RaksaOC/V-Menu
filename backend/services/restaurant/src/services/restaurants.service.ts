@@ -1,7 +1,7 @@
 import { notFound, parse, type AppUser } from "@vmenu/common";
 import { OwnerIdQuery, type CreateRestaurantBody } from "@vmenu/contracts";
 import type { RestaurantRecord, RestaurantsRepo } from "../repositories/restaurants.repo.js";
-import type { TenantsRepo } from "../repositories/tenants.repo.js";
+import type { MembershipsRepo } from "../repositories/memberships.repo.js";
 
 function slugify(name: string) {
     return name
@@ -21,11 +21,11 @@ export function generateSlug(name: string) {
 const publicShape = (r: RestaurantRecord) => ({ _id: String(r._id), name: r.name, slug: r.slug, ownerId: r.ownerId });
 
 /** Restaurants: creating them, and finding them for other services (CL-04). */
-export function restaurantsService({ restaurants, tenants }: { restaurants: RestaurantsRepo; tenants: TenantsRepo }) {
+export function restaurantsService({ restaurants, memberships }: { restaurants: RestaurantsRepo; memberships: MembershipsRepo }) {
     // A new restaurant gives its owner all three roles, as the original signup did.
     async function createForOwner(name: string, owner: { uid: string; email: string; name: string }) {
         const restaurant = await restaurants.create({ name, slug: generateSlug(name), ownerId: owner.uid });
-        await tenants.createMany(
+        await memberships.createMany(
             (["owner", "cashier", "chef"] as const).map((role) => ({
                 tenantId: owner.uid,
                 name: owner.name,
@@ -42,7 +42,7 @@ export function restaurantsService({ restaurants, tenants }: { restaurants: Rest
 
         /** An owner adds another restaurant. */
         async create(user: AppUser, { name }: CreateRestaurantBody) {
-            const me = await tenants.firstFor(user.uid);
+            const me = await memberships.firstFor(user.uid);
             return createForOwner(name, { uid: user.uid, email: user.email, name: me?.name ?? user.email });
         },
 

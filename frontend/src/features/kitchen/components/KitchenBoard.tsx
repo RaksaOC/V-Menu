@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ChefHat, Clock, History, Bell } from "lucide-react";
 import { getActiveOrders, markOrderDone } from "@/features/kitchen/api";
-import { useConnectionStatus } from "@/lib/useConnectionStatus";
+import { useConnectionStatus } from "@/lib/use-connection-status";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
 import type { Order } from "@vmenu/contracts";
 

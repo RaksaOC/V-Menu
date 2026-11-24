@@ -4,7 +4,7 @@
 import mongoose from "mongoose";
 import { requireEnv } from "@vmenu/common";
 import { Restaurant } from "./models/restaurant.model.js";
-import { Tenant } from "./models/tenant.model.js";
+import { Membership } from "./models/membership.model.js";
 
 const DEMO_RES_ID = "64b000000000000000000001";
 const DEMO_SLUG = "demo-bistro";
@@ -19,7 +19,7 @@ const owner = {
 await mongoose.connect(process.env.MONGODB_URI!);
 await Restaurant.updateOne({ _id: DEMO_RES_ID }, { $set: { name: "Demo Bistro", slug: DEMO_SLUG, ownerId: owner.uid } }, { upsert: true });
 for (const role of ["owner", "cashier", "chef"] as const) {
-    await Tenant.updateOne(
+    await Membership.updateOne(
         { resId: DEMO_RES_ID, role, tenantId: owner.uid },
         { $set: { name: owner.name, email: owner.email } },
         { upsert: true },

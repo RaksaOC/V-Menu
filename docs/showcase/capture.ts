@@ -296,10 +296,10 @@ for (const [vp, theme] of [
         const all = (await (await page.request.get(`${BASE}/api/orders/${SLUG}/bills`)).json()) as {
             _id: string;
             table: string;
-            isPayed: boolean;
+            isPaid: boolean;
         }[];
-        for (const b of all.filter((b) => b.table === "T2" && !b.isPayed))
-            await page.request.patch(`${BASE}/api/orders/${SLUG}/bills/${b._id}`, { data: { isPayed: true } });
+        for (const b of all.filter((b) => b.table === "T2" && !b.isPaid))
+            await page.request.patch(`${BASE}/api/orders/${SLUG}/bills/${b._id}`, { data: { isPaid: true } });
         await context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
         await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
         await settle(page);
@@ -545,10 +545,10 @@ for (const [vp, theme] of [
         const bills = (await (await staff.page.request.get(`${BASE}/api/orders/${SLUG}/bills`)).json()) as {
             _id: string;
             table: string;
-            isPayed: boolean;
+            isPaid: boolean;
         }[];
-        for (const b of bills.filter((b) => b.table === "T2" && !b.isPayed))
-            await staff.page.request.patch(`${BASE}/api/orders/${SLUG}/bills/${b._id}`, { data: { isPayed: true } });
+        for (const b of bills.filter((b) => b.table === "T2" && !b.isPaid))
+            await staff.page.request.patch(`${BASE}/api/orders/${SLUG}/bills/${b._id}`, { data: { isPaid: true } });
         await staff.context.close();
 
         const { context, page } = await newPage(browser, vp, theme);

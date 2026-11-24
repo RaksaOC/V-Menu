@@ -19,7 +19,14 @@ export const PlaceOrderBody = z.object({
 });
 export type PlaceOrderBody = z.infer<typeof PlaceOrderBody>;
 
-export const UpdateBillBody = z.object({ isPayed: z.boolean("Must be true or false") });
+/** CL-06: the field is `isPaid`. The old `isPayed` is still accepted for one release. */
+export const UpdateBillBody = z.preprocess(
+    (body) =>
+        body && typeof body === "object" && !("isPaid" in body) && "isPayed" in body
+            ? { isPaid: (body as { isPayed: unknown }).isPayed }
+            : body,
+    z.object({ isPaid: z.boolean("Must be true or false") }),
+);
 export type UpdateBillBody = z.infer<typeof UpdateBillBody>;
 
 export const Order = z.object({
@@ -37,7 +44,9 @@ export type Order = z.infer<typeof Order>;
 export const Bill = z.object({
     _id: z.string(),
     table: z.string(),
-    isPayed: z.boolean(),
+    isPaid: z.boolean(),
+    /** @deprecated CL-06: the same as isPaid, for clients not yet updated; gone in the next release. */
+    isPayed: z.boolean().optional(),
     orders: z.array(Order),
     resId: z.string().optional(),
     createdAt: IsoDate,

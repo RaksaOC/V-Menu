@@ -3,7 +3,7 @@ import { authService } from "../../src/services/auth.service.js";
 import { generateSlug, restaurantsService } from "../../src/services/restaurants.service.js";
 import { sessionHours } from "../../src/services/session.js";
 import { staffService } from "../../src/services/staff.service.js";
-import { fakeRestaurants, fakeTenants, newId } from "./fakes.js";
+import { fakeRestaurants, fakeMemberships, newId } from "./fakes.js";
 
 // CL-04: restaurant-service's business rules, with in-memory repositories (no MongoDB, no HTTP).
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123"; // login signs app tokens
@@ -13,20 +13,20 @@ const owner = (uid = ALICE.uid) => ({ uid, email: `${uid}@x.test`, role: "owner"
 
 function setup() {
     const restaurants = fakeRestaurants();
-    const tenants = fakeTenants();
+    const memberships = fakeMemberships();
     // the fake Firebase: an ID token "id:<uid>" is <uid>; anything else is refused
     const verifyIdToken = async (t: string) => {
         if (!t.startsWith("id:")) throw new Error("bad token");
         const uid = t.slice(3);
         return { uid, email: `${uid}@x.test` };
     };
-    const places = restaurantsService({ restaurants, tenants });
+    const places = restaurantsService({ restaurants, memberships });
     return {
         restaurants,
-        tenants,
+        memberships,
         places,
-        auth: authService({ restaurants, tenants, verifyIdToken, places }),
-        staff: staffService({ restaurants, tenants }),
+        auth: authService({ restaurants, memberships, verifyIdToken, places }),
+        staff: staffService({ restaurants, memberships }),
     };
 }
 
@@ -37,11 +37,11 @@ describe("restaurants", () => {
     });
 
     it("a new restaurant gives its owner all three roles", async () => {
-        const { places, tenants } = setup();
+        const { places, memberships } = setup();
         const r = await places.createForOwner("Mee Keav", { uid: "alice", email: "alice@x.test", name: "Alice" });
         expect(r.ownerId).toBe("alice");
-        expect(tenants.all.map((t) => t.role).sort()).toEqual(["cashier", "chef", "owner"]);
-        expect(tenants.all.every((t) => t.resId === String(r._id) && t.name === "Alice")).toBe(true);
+        expect(memberships.all.map((t) => t.role).sort()).toEqual(["cashier", "chef", "owner"]);
+        expect(memberships.all.every((t) => t.resId === String(r._id) && t.name === "Alice")).toBe(true);
     });
 
     it("an owner adds another restaurant (named after their earlier sign-up) and lists theirs, oldest first", async () => {
@@ -82,9 +82,9 @@ describe("sign-up and sign-in", () => {
     });
 
     it("lists a person's restaurants and roles, by account or by email", async () => {
-        const { auth, places, tenants } = setup();
+        const { auth, places, memberships } = setup();
         const r = await places.createForOwner("Mee Keav", { ...ALICE, name: "Alice" });
-        await tenants.createMany([
+        await memberships.createMany([
             { name: "Bob", tenantId: "pending", email: "bob@x.test", role: "chef", resId: String(r._id) }, // invited by email
             { name: "Bob", tenantId: "bob", email: "bob@x.test", role: "chef", resId: String(r._id) }, // same role twice
             { name: "Bob", tenantId: "bob", email: "bob@x.test", role: "cashier", resId: "gone-restaurant" },
@@ -94,9 +94,9 @@ describe("sign-up and sign-in", () => {
     });
 
     it("an owner gets an owner token; staff get a token for one restaurant they belong to", async () => {
-        const { auth, places, tenants } = setup();
+        const { auth, places, memberships } = setup();
         const r = await places.createForOwner("Mee Keav", { ...ALICE, name: "Alice" });
-        await tenants.createMany([{ name: "Bob", tenantId: "bob", email: "bob@x.test", role: "chef", resId: String(r._id) }]);
+        await memberships.createMany([{ name: "Bob", tenantId: "bob", email: "bob@x.test", role: "chef", resId: String(r._id) }]);
         expect((await auth.login({ idToken: "id:alice", role: "owner" })).role).toBe("owner");
         const chef = await auth.login({ idToken: "id:bob", role: "chef", resSlug: r.slug });
         expect(chef.role).toBe("chef");
@@ -150,13 +150,13 @@ describe("staff", () => {
     });
 
     it("edits and removes staff, but never the owner role, and only in your own restaurant", async () => {
-        const { staff, tenants, r, other } = await seeded();
+        const { staff, memberships, r, other } = await seeded();
         const added = await staff.add(owner(), r.slug, bob);
         const edited = await staff.update(owner(), r.slug, added._id, { name: "Robert", email: "ROB@x.test", role: "cashier" });
         expect(edited).toMatchObject({ name: "Robert", email: "rob@x.test", role: "cashier" });
         expect((await staff.update(owner(), r.slug, added._id, {})).name).toBe("Robert");
         expect(await status(staff.update(owner(), r.slug, added._id, { role: "owner" }))).toBe(400);
-        const ownerRow = tenants.all.find((t) => t.resId === String(r._id) && t.role === "owner")!;
+        const ownerRow = memberships.all.find((t) => t.resId === String(r._id) && t.role === "owner")!;
         expect(await status(staff.update(owner(), r.slug, ownerRow._id, { name: "x" }))).toBe(400);
         expect(await status(staff.remove(owner(), r.slug, ownerRow._id))).toBe(400);
         expect(await status(staff.list(owner(), other.slug))).toBe(403); // Zed's restaurant

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, Printer } from "lucide-react";
 import { Button, Modal } from "@/components/ui";
-import { tableUrl } from "@/lib/tableUrl";
+import { tableUrl } from "@/lib/table-url";
 import { printQrCards, qrDataUrl } from "@/components/qr/print";
 
 interface Props {

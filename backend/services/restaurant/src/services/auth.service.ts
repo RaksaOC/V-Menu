@@ -2,19 +2,19 @@ import { badRequest, HttpError, parse, signAppToken, unauthorized } from "@vmenu
 import { IdTokenBody, LoginBody, SignupBody } from "@vmenu/contracts";
 import type { VerifyIdToken } from "../clients/firebase.js";
 import type { RestaurantsRepo } from "../repositories/restaurants.repo.js";
-import type { TenantsRepo } from "../repositories/tenants.repo.js";
+import type { MembershipsRepo } from "../repositories/memberships.repo.js";
 import type { restaurantsService } from "./restaurants.service.js";
 import { sessionHours } from "./session.js";
 
 interface Deps {
     restaurants: RestaurantsRepo;
-    tenants: TenantsRepo;
+    memberships: MembershipsRepo;
     verifyIdToken: VerifyIdToken;
     places: ReturnType<typeof restaurantsService>;
 }
 
 /** Sign-up and sign-in: a verified Firebase sign-in becomes an app token (CL-04). */
-export function authService({ restaurants, tenants, verifyIdToken, places }: Deps) {
+export function authService({ restaurants, memberships, verifyIdToken, places }: Deps) {
     // The browser signs in with Firebase, then sends the Firebase ID token here.
     async function identity(body: unknown) {
         const given = IdTokenBody.safeParse(body ?? {});
@@ -31,7 +31,7 @@ export function authService({ restaurants, tenants, verifyIdToken, places }: Dep
         async signup(body: unknown) {
             const who = await identity(body);
             const { ownerName, resName } = parse(SignupBody, body); // after the identity: 401 before 400
-            if (await tenants.isOwner(who.uid)) throw new HttpError(409, "This account already has a restaurant");
+            if (await memberships.isOwner(who.uid)) throw new HttpError(409, "This account already has a restaurant");
             const restaurant = await places.createForOwner(resName, { uid: who.uid, email: who.email, name: ownerName });
             return { message: "Account created", slug: restaurant.slug };
         },
@@ -39,7 +39,7 @@ export function authService({ restaurants, tenants, verifyIdToken, places }: Dep
         /** Which restaurants and roles this person has: { "Name - slug": ["owner", "cashier"] } */
         async memberships(body: unknown) {
             const who = await identity(body);
-            const roles = await tenants.forPerson(who.uid, who.email);
+            const roles = await memberships.forPerson(who.uid, who.email);
             const byId = new Map((await restaurants.byIds([...new Set(roles.map((t) => t.resId))])).map((r) => [String(r._id), r]));
             const map: Record<string, string[]> = {};
             for (const t of roles) {
@@ -58,12 +58,12 @@ export function authService({ restaurants, tenants, verifyIdToken, places }: Dep
             const { role, resSlug: slug } = parse(LoginBody, body);
             const hours = sessionHours();
             if (role === "owner") {
-                if (!(await tenants.isOwner(who.uid))) throw unauthorized("This account is not a restaurant owner");
+                if (!(await memberships.isOwner(who.uid))) throw unauthorized("This account is not a restaurant owner");
                 return { role, hours, token: await signAppToken({ uid: who.uid, email: who.email, role }, `${hours}h`) };
             }
             if (!slug) throw badRequest("Restaurant is required");
             const restaurant = await places.find(slug);
-            if (!(await tenants.hasRole(String(restaurant._id), role, who)))
+            if (!(await memberships.hasRole(String(restaurant._id), role, who)))
                 throw unauthorized("You do not have this role at this restaurant");
             const token = await signAppToken(
                 { uid: who.uid, email: who.email, role, resId: String(restaurant._id), resSlug: restaurant.slug },

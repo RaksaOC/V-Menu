@@ -23,8 +23,8 @@ export async function getPaidBills(slug: string, page: number): Promise<PaidBill
     return data;
 }
 
-export async function setBillPaid(slug: string, billId: string, isPayed: boolean): Promise<void> {
-    await api.patch(`/api/orders/${seg(slug)}/bills/${seg(billId)}`, { isPayed });
+export async function setBillPaid(slug: string, billId: string, isPaid: boolean): Promise<void> {
+    await api.patch(`/api/orders/${seg(slug)}/bills/${seg(billId)}`, { isPaid });
 }
 
 export { getTables, setTableAvailability, getMenuItems, setItemAvailability, getOverview } from "@/features/restaurant/api";

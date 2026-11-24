@@ -119,12 +119,22 @@ describe("orders", () => {
         ]);
     });
 
+    it("UpdateBillBody takes isPaid, or the old isPayed for one release (CL-06)", () => {
+        expect(C.UpdateBillBody.parse({ isPaid: true })).toEqual({ isPaid: true });
+        expect(C.UpdateBillBody.parse({ isPayed: false })).toEqual({ isPaid: false });
+        expect(C.UpdateBillBody.parse({ isPaid: true, isPayed: false })).toEqual({ isPaid: true });
+        expect(fieldsOf(C.UpdateBillBody, {})).toEqual(["isPaid"]);
+        expect(fieldsOf(C.UpdateBillBody, { isPayed: "yes" })).toEqual(["isPaid"]);
+        ok(C.Bill, { _id: ID, table: "1", isPaid: true, orders: [], createdAt: "2026-11-23T10:00:00.000Z" });
+        fieldsOf(C.Bill, { _id: ID, table: "1", isPayed: true, orders: [], createdAt: "2026-11-23T10:00:00.000Z" });
+    });
+
     it("UpdateBillBody, Order, Bill and the pages", () => {
-        ok(C.UpdateBillBody, { isPayed: true });
-        expect(fieldsOf(C.UpdateBillBody, { isPayed: "yes" })).toEqual(["isPayed"]);
+        ok(C.UpdateBillBody, { isPaid: true });
+        expect(fieldsOf(C.UpdateBillBody, { isPaid: "yes" })).toEqual(["isPaid"]);
         ok(C.Order, order);
         fieldsOf(C.Order, { ...order, isDone: "no" });
-        ok(C.Bill, { _id: ID, table: "1", isPayed: false, orders: [order], createdAt: order.createdAt });
+        ok(C.Bill, { _id: ID, table: "1", isPaid: false, orders: [order], createdAt: order.createdAt });
         ok(C.KitchenHistoryPage, { orders: [order], page: 1, limit: 20, total: 1, pages: 1 });
         fieldsOf(C.PaidBillsPage, { bills: [], page: 1, limit: 20, total: 1 });
     });

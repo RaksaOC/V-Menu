@@ -228,3 +228,14 @@ docs/showcase/               before/after screenshots for each PR (capture.ts)
 ```
 
 Photo credits for the tour images are in `frontend/public/images/tour/CREDITS.md`.
+
+## Naming
+
+One style, checked by `scripts/naming.test.mjs` (CL-06):
+
+- **Component files** are `PascalCase.tsx`, named after the component they export: `OrderCard.tsx`, `TableQrModal.tsx`. A dialog is a `Popup`, never a `PopUp`. Next.js's own files keep their names (`page.tsx`, `layout.tsx`).
+- **Every other file** is kebab-case, with dots for its role: `orders.service.ts`, `bills.repo.ts`, `use-photo.ts`, `table-url.ts`. What a file exports stays camelCase (`usePhoto`, `tableUrl`).
+- **Data:**
+  - A bill is `isPaid`. It used to be `isPayed`. order-service renames the stored field at startup (`src/migrations/is-paid.ts`). For one release the API also accepts `isPayed` and sends it alongside `isPaid`.
+  - A person's role at one restaurant is a `Membership` (it used to be `Tenant`). The collection keeps its name, `tenants`, and `tenantId` is still the person's Firebase uid.
+  - The dashboard counts move from `numOfX` to `xCount` with VM-09.
