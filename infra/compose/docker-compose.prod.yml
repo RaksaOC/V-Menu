@@ -1,5 +1,8 @@
 # Production (M4): pulls prebuilt images from GHCR instead of building.
 #   TAG=<image tag> docker compose -f docker-compose.prod.yml up -d
+# This file runs on the server, not in the repo: infra/deploy/ci-deploy.sh copies it to
+# /srv/vmenu/<env>/ next to services/<service-name>/.env, so the env_file paths below are
+# the server's layout (services/restaurant-service/.env ...), not the repo's backend/ folders.
 # Tags pushed by .github/workflows/release.yml: sha-<7-char sha> (every main commit), main
 # (latest main), and <version> plus latest on a v* git tag. Roll back by redeploying an
 # older sha- tag.

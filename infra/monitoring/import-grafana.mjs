@@ -1,7 +1,7 @@
 // Loads the dashboards and alert rules in this folder into Grafana. Safe to run again:
 // it updates what is already there.
 //
-//   GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=glsa_... node monitoring/import-grafana.mjs
+//   GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=glsa_... node infra/monitoring/import-grafana.mjs
 //
 // The token comes from a Grafana service account with the Editor role, not from the
 // write-only token Alloy uses.
@@ -35,7 +35,7 @@ await api("POST", "/api/folders", folder, [409, 412]);
 
 for (const file of readdirSync(here("./dashboards/")).filter((f) => f.endsWith(".json"))) {
     const dashboard = JSON.parse(readFileSync(here(`./dashboards/${file}`), "utf8"));
-    await api("POST", "/api/dashboards/db", { dashboard, folderUid: folder.uid, overwrite: true, message: "monitoring/import-grafana.mjs" });
+    await api("POST", "/api/dashboards/db", { dashboard, folderUid: folder.uid, overwrite: true, message: "infra/monitoring/import-grafana.mjs" });
     console.log(`dashboard: ${dashboard.title}`);
 }
 

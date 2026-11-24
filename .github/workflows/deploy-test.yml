@@ -11,18 +11,18 @@ on:
   push:
     branches: ["infra/**"]
     paths:
-      - "deploy/**"
+      - "infra/deploy/**"
       - ".github/workflows/deploy.yml"
       - ".github/workflows/rollback.yml"
       - ".github/workflows/deploy-test.yml"
-      - "docker-compose.prod.yml"
+      - "infra/compose/docker-compose.prod.yml"
   pull_request:
     paths:
-      - "deploy/**"
+      - "infra/deploy/**"
       - ".github/workflows/deploy.yml"
       - ".github/workflows/rollback.yml"
       - ".github/workflows/deploy-test.yml"
-      - "docker-compose.prod.yml"
+      - "infra/compose/docker-compose.prod.yml"
   workflow_dispatch:
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: shellcheck
-        run: shellcheck deploy/*.sh
+        run: shellcheck infra/deploy/*.sh
       - name: actionlint
         # Only the deploy workflows: ci.yml and release.yml belong to M3.
         run: >-
@@ -56,9 +56,11 @@ jobs:
       - name: Build two versions of every image
         run: |
           set -euo pipefail
-          for svc in restaurant-service menu-service order-service; do
-            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V1" --build-arg "GIT_SHA=$SHA1" "services/$svc"
-            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V2" --build-arg "GIT_SHA=$SHA2" "services/$svc"
+          # Image names keep the -service suffix; the folders are backend/services/<name>.
+          for name in restaurant menu order; do
+            svc="$name-service"
+            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V1" --build-arg "GIT_SHA=$SHA1" "backend/services/$name"
+            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V2" --build-arg "GIT_SHA=$SHA2" "backend/services/$name"
           done
           # A small stand-in frontend: the real one is built and tested by M3's CI. This test is
           # about deploying, and only needs something healthy on port 3400.
@@ -88,12 +90,12 @@ jobs:
           sudo STAGING_HOST=staging.localhost PROD_HOST=prod.localhost \
                DEPLOY_PUBKEY="$(cat "$RUNNER_TEMP/ci_key.pub")" \
                MONGO_MODE=host FIREWALL_FORCE=yes \
-               bash deploy/setup-server.sh
+               bash infra/deploy/setup-server.sh
           # A second run must also work.
           sudo STAGING_HOST=staging.localhost PROD_HOST=prod.localhost \
                DEPLOY_PUBKEY="$(cat "$RUNNER_TEMP/ci_key.pub")" \
                MONGO_MODE=host FIREWALL_FORCE=yes \
-               bash deploy/setup-server.sh > /dev/null
+               bash infra/deploy/setup-server.sh > /dev/null
           echo "setup-server.sh is re-runnable"
 
       - name: Run the deploy scenarios
@@ -108,7 +110,7 @@ jobs:
             export MONGODB_URI_MENU="mongodb://host.docker.internal:27017/vmenu_$1_menu"
             export MONGODB_URI_ORDER="mongodb://host.docker.internal:27017/vmenu_$1_orders"
           }
-          deploy() { TARGET=$1 DEPLOY_ACTION=$2 EXPECTED_SHA=${3:-} bash deploy/ci-deploy.sh; }
+          deploy() { TARGET=$1 DEPLOY_ACTION=$2 EXPECTED_SHA=${3:-} bash infra/deploy/ci-deploy.sh; }
           running() { docker exec "vmenu-$1-menu-service-1" wget -qO- http://127.0.0.1:4102/version; echo; }
           expect_tag() {
             got=$(sudo cat "/srv/vmenu/$1/.current_tag")

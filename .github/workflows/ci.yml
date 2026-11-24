@@ -27,9 +27,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: restaurant-service, dir: services/restaurant-service, kind: service }
-          - { name: menu-service, dir: services/menu-service, kind: service }
-          - { name: order-service, dir: services/order-service, kind: service }
+          - { name: restaurant-service, dir: backend/services/restaurant, kind: service }
+          - { name: menu-service, dir: backend/services/menu, kind: service }
+          - { name: order-service, dir: backend/services/order, kind: service }
           - { name: frontend, dir: frontend, kind: web }
           # Repo-level checks (issue and PR templates); no install needed.
           - { name: repo, dir: ., kind: repo }
@@ -137,13 +137,19 @@ jobs:
 
   # ---------------------------------------------------------------- dependency audit
   audit:
-    name: audit (${{ matrix.dir }})
+    # The check names (audit (services/restaurant-service) ...) are required by the staging
+    # ruleset, so they keep the old folder names after CL-01 moved the services to backend/.
+    name: audit (${{ matrix.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        dir: [services/restaurant-service, services/menu-service, services/order-service, frontend]
+        include:
+          - { name: services/restaurant-service, dir: backend/services/restaurant }
+          - { name: services/menu-service, dir: backend/services/menu }
+          - { name: services/order-service, dir: backend/services/order }
+          - { name: frontend, dir: frontend }
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

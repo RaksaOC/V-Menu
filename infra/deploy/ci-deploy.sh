@@ -45,7 +45,7 @@ fi
 if [[ -z ${SSH_HOST:-}${SSH_USER:-}${SSH_KEY:-} ]]; then
     echo "::notice::No server configured for '$TARGET' yet (SSH_HOST/SSH_USER/SSH_KEY are empty). Skipping the deploy."
     if [[ -n ${GITHUB_STEP_SUMMARY:-} ]]; then
-        echo "### ⏭️ $TARGET: skipped, no server configured yet (see deploy/README.md)" >>"$GITHUB_STEP_SUMMARY"
+        echo "### ⏭️ $TARGET: skipped, no server configured yet (see infra/deploy/README.md)" >>"$GITHUB_STEP_SUMMARY"
     fi
     exit 0
 fi
@@ -57,7 +57,7 @@ for name in SSH_HOST SSH_USER SSH_KEY MONGODB_URI_RESTAURANT MONGODB_URI_MENU MO
 done
 ((${#missing[@]} == 0)) || die "missing secrets in the '$TARGET' environment: ${missing[*]}"
 
-# The services refuse to start with a shorter one (services/*/src/lib/config.ts).
+# The services refuse to start with a shorter one (backend/services/*/src/lib/config.ts).
 ((${#JWT_SECRET} >= 32)) || die "JWT_SECRET in the '$TARGET' environment is ${#JWT_SECRET} characters; it must be at least 32 (openssl rand -hex 32)"
 
 # Values are written single-quoted, so compose takes them literally ($ is not expanded).
@@ -72,10 +72,11 @@ umask 077
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 bundle=$work/bundle
+# Server layout, not the repo's: docker-compose.prod.yml reads services/<service-name>/.env.
 mkdir -p "$bundle"/services/{restaurant-service,menu-service,order-service}
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-cp "$here/../docker-compose.prod.yml" "$here/compose.deploy.yml" "$here/compose.mongo-host.yml" \
+cp "$here/../compose/docker-compose.prod.yml" "$here/compose.deploy.yml" "$here/compose.mongo-host.yml" \
     "$here/compose.mongo-container.yml" "$here/compose.proxy-network.yml" "$here/remote-deploy.sh" "$bundle/"
 
 # TAG is added by remote-deploy.sh; it owns that line.
@@ -132,7 +133,7 @@ remote_dir=/srv/vmenu/$TARGET
 
 echo "Copying compose and env files to $remote_dir"
 tar -C "$bundle" -czf - . | ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" "test -d '$remote_dir' && tar -xzf - -C '$remote_dir'" ||
-    die "copy failed. Does $remote_dir exist and belong to $SSH_USER? (deploy/setup-server.sh creates it)"
+    die "copy failed. Does $remote_dir exist and belong to $SSH_USER? (infra/deploy/setup-server.sh creates it)"
 
 # For the DORA lead time: the average commit time of what this deploy ships. A merge commit
 # ships the commits of its second parent; any other commit ships itself. Empty if unknown.

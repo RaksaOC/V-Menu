@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 
 # Never clobber a developer's real .env files: outside CI, stop if any already exist.
 if [ -z "${CI:-}" ]; then
-  for f in .env services/*/.env; do
+  for f in .env backend/services/*/.env; do
     if [ -e "$f" ]; then echo "refusing to overwrite $f outside CI (set CI=true to force)" >&2; exit 1; fi
   done
 fi
@@ -15,12 +15,12 @@ fi
 JWT_SECRET="${JWT_SECRET:-ci-dummy-jwt-secret-ci-dummy-jwt-secret-0001}"
 INTERNAL_API_KEY="${INTERNAL_API_KEY:-ci-dummy-internal-api-key-0001}"
 
-for svc in restaurant-service menu-service order-service; do
+for svc in restaurant menu order; do
   sed -e "s|^JWT_SECRET=.*|JWT_SECRET=${JWT_SECRET}|" \
       -e "s|^INTERNAL_API_KEY=.*|INTERNAL_API_KEY=${INTERNAL_API_KEY}|" \
       -e "s|^FIREBASE_PROJECT_ID=.*|FIREBASE_PROJECT_ID=ci-dummy|" \
       -e "s|^COOKIE_SECURE=.*|COOKIE_SECURE=false|" \
-      "services/${svc}/.env.example" > "services/${svc}/.env"
+      "backend/services/${svc}/.env.example" > "backend/services/${svc}/.env"
 done
 
 # Root .env feeds the frontend build args. Firebase needs a non-empty config to build;

@@ -127,11 +127,11 @@ jobs:
           TARGET: ${{ steps.plan.outputs.target }}
           DEPLOY_ACTION: ${{ steps.plan.outputs.action }}
           EXPECTED_SHA: ${{ steps.plan.outputs.expected }}
-        run: bash deploy/ci-deploy.sh
+        run: bash infra/deploy/ci-deploy.sh
 
       - name: Load demo data
         if: inputs.seed && inputs.environment == 'staging'
         env:
           TARGET: staging
           DEPLOY_ACTION: --seed
-        run: bash deploy/ci-deploy.sh
+        run: bash infra/deploy/ci-deploy.sh

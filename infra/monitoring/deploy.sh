@@ -2,7 +2,7 @@
 # SC2153: SSH_HOST and the other inputs come from the environment.
 # shellcheck disable=SC2153
 # V-Menu monitoring: the GitHub Actions side of a deploy, called by
-# .github/workflows/monitoring.yml. It follows the same pattern as deploy/ci-deploy.sh:
+# .github/workflows/monitoring.yml. It follows the same pattern as infra/deploy/ci-deploy.sh:
 # write the env file from GitHub secrets, copy the files over SSH, start them there.
 #
 # Inputs, all as environment variables:
@@ -70,7 +70,7 @@ ssh_opts=(-i "$key" -p "$SSH_PORT" -o UserKnownHostsFile="$known" -o StrictHostK
 echo "Copying the monitoring files to $MONITORING_DIR"
 # shellcheck disable=SC2029  # MONITORING_DIR is validated above
 tar -C "$bundle" -czf - . | ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" "test -d '$MONITORING_DIR' && tar -xzf - -C '$MONITORING_DIR'" ||
-    die "copy failed. Does $MONITORING_DIR exist and belong to $SSH_USER? (see monitoring/README.md)"
+    die "copy failed. Does $MONITORING_DIR exist and belong to $SSH_USER? (see infra/monitoring/README.md)"
 
 echo "Starting the monitoring agent"
 # shellcheck disable=SC2029  # MONITORING_DIR is validated above

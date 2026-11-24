@@ -46,12 +46,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: restaurant-service, context: services/restaurant-service }
-          - { name: menu-service, context: services/menu-service }
-          - { name: order-service, context: services/order-service }
+          - { name: restaurant-service, context: backend/services/restaurant }
+          - { name: menu-service, context: backend/services/menu }
+          - { name: order-service, context: backend/services/order }
           - { name: frontend, context: frontend }
     env:
-      # Same names docker-compose.prod.yml pulls.
+      # Same names infra/compose/docker-compose.prod.yml pulls (unchanged by the CL-01 move).
       IMAGE: ghcr.io/${{ needs.meta.outputs.owner }}/vmenu-${{ matrix.name }}
     steps:
       - uses: actions/checkout@v7

@@ -16,7 +16,7 @@ Closes #
 
 ## Tests
 
-<!-- What you ran locally and the result, e.g. `npm test` in services/order-service: 14 passed. -->
+<!-- What you ran locally and the result, e.g. `npm test` in backend/services/order: 14 passed. -->
 
 ### Failing before the fix
 

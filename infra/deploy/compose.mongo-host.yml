@@ -1,7 +1,7 @@
 # MONGO_MODE=host: MongoDB runs as a normal service on the server (mongod), not in Docker.
 # The services reach it as host.docker.internal, so each MONGODB_URI looks like
 #   mongodb://USER:PASSWORD@host.docker.internal:27017/vmenu_staging_orders?authSource=admin
-# mongod must listen on the Docker bridge too (see deploy/README.md, "MongoDB").
+# mongod must listen on the Docker bridge too (see infra/deploy/README.md, "MongoDB").
 
 services:
   restaurant-service:

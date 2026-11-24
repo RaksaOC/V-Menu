@@ -25,7 +25,7 @@ async function call(method, path, { body, token } = {}) {
     return data;
 }
 
-// HS256 app token in the shape restaurant-service issues (see services/*/src/lib/auth.ts).
+// HS256 app token in the shape restaurant-service issues (see backend/services/*/src/lib/auth.ts).
 function signAppToken(claims) {
     const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const now = Math.floor(Date.now() / 1000);

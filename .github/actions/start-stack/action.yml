@@ -1,6 +1,6 @@
 name: Start the V-Menu stack
 description: >
-  Builds the four images from docker-compose.yml with Docker layer caching (GitHub Actions
+  Builds the four images from infra/compose/docker-compose.yml with Docker layer caching (GitHub Actions
   cache), starts the stack with dummy-secret .env files, waits for every healthcheck and
   seeds the demo restaurant. Used by the integration and e2e jobs.
 
@@ -14,6 +14,8 @@ runs:
         # Same values for bake (build args) and compose; fixed project name = fixed image names.
         grep '^NEXT_PUBLIC_' .env >> "$GITHUB_ENV"
         echo "COMPOSE_PROJECT_NAME=vmenu" >> "$GITHUB_ENV"
+        # Every later `docker compose` call in the job (ps, logs, exec, down) uses this file.
+        echo "COMPOSE_FILE=$GITHUB_WORKSPACE/infra/compose/docker-compose.yml" >> "$GITHUB_ENV"
         echo "GIT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
     - uses: docker/setup-buildx-action@v4
@@ -23,7 +25,9 @@ runs:
     - name: Build images (cached)
       uses: docker/bake-action@v7
       with:
-        source: .
+        # A local source makes Bake run from that folder, so the compose file's relative
+        # build contexts (../../backend/...) mean the same to Bake as to docker compose.
+        source: infra/compose
         files: docker-compose.yml
         load: true
         set: |

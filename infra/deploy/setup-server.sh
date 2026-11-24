@@ -3,7 +3,7 @@
 #
 #   sudo STAGING_HOST=staging.example.com PROD_HOST=example.com \
 #        DEPLOY_PUBKEY="ssh-ed25519 AAAA... vmenu-deploy" \
-#        MONGO_MODE=host bash deploy/setup-server.sh
+#        MONGO_MODE=host bash infra/deploy/setup-server.sh
 #
 # Safe to run again: every step checks what is already there.
 #
@@ -33,7 +33,7 @@ log() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[33mWARNING: %s\033[0m\n' "$*"; }
 die() { printf '\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 
-[[ $EUID -eq 0 ]] || die "run as root: sudo ... bash deploy/setup-server.sh"
+[[ $EUID -eq 0 ]] || die "run as root: sudo ... bash infra/deploy/setup-server.sh"
 command -v apt-get >/dev/null || die "this script supports Debian/Ubuntu (apt) only"
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -135,7 +135,7 @@ owner80=$(port_owner 80)
 owner443=$(port_owner 443)
 if [[ (-n $owner80 && $owner80 != caddy) || (-n $owner443 && $owner443 != caddy) ]]; then
     warn "ports 80/443 already belong to '${owner80:-}${owner443:+/$owner443}'. Caddy is NOT installed."
-    warn "Route $STAGING_HOST -> 127.0.0.1:$STAGING_PORT and $PROD_HOST -> 127.0.0.1:$PROD_PORT in that proxy (deploy/README.md has an nginx example)."
+    warn "Route $STAGING_HOST -> 127.0.0.1:$STAGING_PORT and $PROD_HOST -> 127.0.0.1:$PROD_PORT in that proxy (infra/deploy/README.md has an nginx example)."
 else
     fresh_caddy=no
     if ! command -v caddy >/dev/null; then
@@ -205,7 +205,7 @@ chmod 644 /etc/cron.d/vmenu-backup
 log "Done"
 cat <<EOF
 Next:
-  1. Add the GitHub secrets and variables listed in deploy/README.md.
+  1. Add the GitHub secrets and variables listed in infra/deploy/README.md.
      SSH_KNOWN_HOSTS for the GitHub secret:
 $(ssh-keyscan -p "$SSH_PORT" localhost 2>/dev/null | sed "s/^localhost/  [YOUR_HOST]/; s/^\[localhost\]:$SSH_PORT/  [[YOUR_HOST]]:$SSH_PORT/" | head -n3)
      (replace [YOUR_HOST] with the value of SSH_HOST)

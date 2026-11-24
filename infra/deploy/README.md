@@ -31,16 +31,16 @@ Nobody logs into the server to deploy. The workflow writes the env files from Gi
 |---|---|
 | `setup-server.sh` | One-time server setup, run as root (below) |
 | `Caddyfile` | HTTPS reverse proxy; hostnames come from `/etc/caddy/vmenu.env` |
-| `compose.deploy.yml` | Added on top of `docker-compose.prod.yml`: frontend on 127.0.0.1 only, log size limits |
+| `compose.deploy.yml` | Added on top of `infra/compose/docker-compose.prod.yml`: frontend on 127.0.0.1 only, log size limits |
 | `compose.mongo-host.yml` / `compose.mongo-container.yml` | How the services reach MongoDB (`MONGO_MODE`) |
 | `compose.proxy-network.yml` | Only with `PROXY_NETWORK`: the frontend joins an existing Docker reverse proxy's network |
 | `remote-deploy.sh` | Runs on the server: pull, start, wait for healthy, smoke test, auto-rollback on failure |
 | `ci-deploy.sh` | Runs in GitHub Actions: writes env files from secrets, copies them, calls `remote-deploy.sh` |
 | `backup-mongo.sh` | Daily `mongodump`, installed by `setup-server.sh` |
 | `staging.env.example`, `prod.env.example` | Every secret and variable, and where it goes |
-| `../.github/workflows/deploy.yml` | The deploy job (called by M3's release workflow, or run by hand) |
-| `../.github/workflows/rollback.yml` | One-click rollback |
-| `../.github/workflows/deploy-test.yml` | Tests all of the above on a throwaway runner |
+| `../../.github/workflows/deploy.yml` | The deploy job (called by M3's release workflow, or run by hand) |
+| `../../.github/workflows/rollback.yml` | One-click rollback |
+| `../../.github/workflows/deploy-test.yml` | Tests all of the above on a throwaway runner |
 
 ## One-time setup (Raksa, on the server)
 
@@ -85,11 +85,11 @@ db.createUser({ user: "vmenu_backup", pwd: passwordPrompt(), roles: ["backup"] }
 ### 3. Run the setup script
 
 ```bash
-git clone https://github.com/RaksaOC/V-Menu.git && cd V-Menu   # the branch that has deploy/
+git clone https://github.com/RaksaOC/V-Menu.git && cd V-Menu   # the branch that has infra/deploy/
 sudo STAGING_HOST=staging.example.com PROD_HOST=example.com \
      DEPLOY_PUBKEY="$(cat vmenu_deploy.pub)" \
      MONGO_MODE=host \
-     bash deploy/setup-server.sh
+     bash infra/deploy/setup-server.sh
 ```
 
 No domain yet? Use `STAGING_HOST=staging.<ip>.sslip.io PROD_HOST=<ip>.sslip.io`. Both need to point at the server, and ports 80 and 443 must be reachable from the internet for HTTPS.
