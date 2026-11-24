@@ -16,7 +16,7 @@ export function AboutSection() {
                     variants={staggerContainer}
                 >
                     <motion.div variants={fadeIn}>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-[var(--accent-text)] mb-6">
                             Meet V-Menu: The Complete Restaurant Solution
                         </h2>
                         <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
@@ -27,7 +27,7 @@ export function AboutSection() {
                             Whether you&apos;re running a small café or managing multiple locations, our intuitive platform streamlines
                             operations, reduces errors, and enhances the dining experience.
                         </p>
-                        <a href="#features" className="text-blue-600 dark:text-blue-400 font-medium inline-flex items-center group">
+                        <a href="#features" className="text-[var(--accent-text)] font-medium inline-flex items-center group">
                             Explore our features
                             <ChevronRight size={18} className="ml-1 transition-transform group-hover:translate-x-1" />
                         </a>

@@ -11,7 +11,7 @@ export function LandingFooter() {
                         <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
                             <span className="text-xl font-bold text-white">V</span>
                         </div>
-                        <span className="text-2xl font-bold text-blue-400">V-Menu</span>
+                        <span className="text-2xl font-bold text-white">V-Menu</span>
                     </div>
                     <p className="text-gray-400 mb-6 max-w-md">
                         Modern restaurant management software that streamlines operations, reduces errors, and enhances the dining
@@ -66,7 +66,7 @@ export function LandingFooter() {
 
             {/* Bottom Footer */}
             <div className="border-t border-gray-800 pt-8 mt-16">
-                <div className="max-w-7xl mx-auto px-6  flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+                <div className="max-w-7xl mx-auto px-6  flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
                     <p>© {new Date().getFullYear()} V-Menu. All rights reserved.</p>
                     <div className="flex flex-wrap justify-center gap-x-8 gap-y-2">
                         <a href="#" className="hover:text-blue-400 transition-colors">

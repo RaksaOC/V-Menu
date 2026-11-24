@@ -1948,6 +1948,37 @@ for (const vp of [PHONE, DESKTOP]) {
     }
 }
 
+// VM-36: the screens the accessibility fixes touched: the sign-in and sign-up forms, the landing
+// page, the "no table" page, and the owner's menu on a phone (now a dialog).
+for (const vp of [PHONE, DESKTOP]) {
+    for (const theme of ["light", "dark"] as const) {
+        await step(`VM-36 final ${vp.width} ${theme}`, async () => {
+            for (const [path, name] of [
+                ["/signup", "signup"],
+                ["/login", "login"],
+                [`/${SLUG}/cashier/login`, "cashier-login"],
+                ["/", "landing"],
+                [`/${SLUG}/customer`, "no-table"],
+            ]) {
+                const { context, page } = await newPage(browser, vp, theme);
+                await page.goto(`${BASE}${path}`);
+                await settle(page);
+                await shot({ page, theme, width: vp.width }, `VM-36-final-${name}`, false);
+                await context.close();
+            }
+            if (vp === PHONE) {
+                const { context, page } = await newPage(browser, vp, theme, "owner");
+                await page.goto(`${BASE}/owner`);
+                await settle(page);
+                await page.getByRole("button", { name: "Open the menu" }).click();
+                await page.waitForTimeout(500);
+                await shot({ page, theme, width: vp.width }, "VM-36-final-owner-menu", false);
+                await context.close();
+            }
+        });
+    }
+}
+
 // SEC-01 (review follow-up): Sign Out when the server doesn't clear the cookie (here, a 429 from the
 // sign-in rate limit). Before: the page goes to the login screen as if signed out. After: it says
 // sign-out failed and stays.
@@ -1977,6 +2008,58 @@ for (const [vp, theme] of [
         });
         results.push(`ok   SEC-01-sign-out-failed-${vp.width}${theme === "dark" ? "-dark" : ""}`);
         await context.close();
+    });
+}
+
+// VM-07 (review follow-up): the order confirmation after one failed check and then a good one (the
+// next 10-second check). Before: the error stays above the order for good. After: just the order.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-07-recovered ${vp.width} ${theme}`, async () => {
+        const staff = await newPage(browser, vp, theme, "cashier");
+        const tables = (await (await staff.page.request.get(`${BASE}/api/menu/${SLUG}/tables`)).json()) as {
+            name: string;
+            qrToken: string;
+        }[];
+        const qrToken = tables.find((t) => t.name === "T3")!.qrToken;
+        const { context, page } = await newPage(browser, vp, theme);
+        const dish = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()).find(
+            (d) => d.isEnabled !== false,
+        )!;
+        const placed = (await (
+            await page.request.post(`${BASE}/api/orders/${SLUG}`, {
+                data: { qrToken, orderedItems: [{ item: { _id: dish._id }, quantity: 1 }] },
+            })
+        ).json()) as { _id: string };
+        let failedOnce = false; // the first check of the order fails, the next ones go through
+        await page.route(`**/api/orders/**/orders/${placed._id}`, (route) => {
+            if (failedOnce) return route.continue();
+            failedOnce = true;
+            return route.fulfill({
+                status: 503,
+                contentType: "application/json",
+                body: JSON.stringify({ message: "Service unavailable" }),
+            });
+        });
+        await page.goto(`${BASE}/${SLUG}/t/${qrToken}/orders/${placed._id}`);
+        await page.getByRole("heading", { name: /sent to the kitchen/ }).waitFor({ timeout: 25_000 });
+        await page.waitForTimeout(500);
+        await shot({ page, theme, width: vp.width }, "VM-07-recovered", false);
+        await context.close();
+        // cancel the test order, so the kitchen queue stays as it was
+        const bills = (await (await staff.page.request.get(`${BASE}/api/orders/${SLUG}/bills`)).json()) as {
+            _id: string;
+            orders: { _id: string }[];
+        }[];
+        const bill = bills.find((b) => b.orders.some((o) => o._id === placed._id));
+        if (bill)
+            await staff.page.request.patch(`${BASE}/api/orders/${SLUG}/bills/${bill._id}/orders/${placed._id}/cancel`, {
+                data: { reason: "Screenshot order" },
+            });
+        await staff.context.close();
     });
 }
 

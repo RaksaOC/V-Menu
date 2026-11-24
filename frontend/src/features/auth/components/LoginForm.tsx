@@ -148,7 +148,7 @@ export function LoginForm({
                     <button
                         type="button"
                         onClick={() => showReset(false)}
-                        className="mx-auto mt-5 flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                        className="mx-auto mt-5 flex items-center gap-1.5 text-sm font-medium text-[var(--accent-text)] hover:underline"
                     >
                         <ArrowLeft size={16} aria-hidden />
                         Back to login

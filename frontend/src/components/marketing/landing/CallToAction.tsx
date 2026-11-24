@@ -22,7 +22,7 @@ export function CallToAction() {
                         <div className="flex flex-col sm:flex-row gap-4">
                             <a
                                 href="#"
-                                className="py-3 px-8 bg-white text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-all duration-300 shadow-lg text-center"
+                                className="py-3 px-8 bg-white text-[var(--accent-text)] hover:bg-blue-50 rounded-lg font-medium transition-all duration-300 shadow-lg text-center"
                             >
                                 Start Your Free Trial
                             </a>

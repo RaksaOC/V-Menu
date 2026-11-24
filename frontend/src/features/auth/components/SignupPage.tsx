@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import { createUserWithEmailAndPassword, sendEmailVerification, type User, UserCredential } from "firebase/auth";
 import { motion } from "framer-motion";
 import { Store, User as UserIcon, Mail, Lock, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signup } from "@/features/auth/api";
 import { auth } from "@/lib/firebase";
@@ -138,14 +139,9 @@ const SignupPage = () => {
 
                 <p className="text-center text-zinc-500 dark:text-zinc-400 text-sm mt-2 relative z-10">
                     Already have an account?{" "}
-                    <a
-                        onClick={() => {
-                            router.push("/login");
-                        }}
-                        className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
+                    <Link href="/login" className="text-[var(--accent-text)] underline underline-offset-2">
                         Log in
-                    </a>
+                    </Link>
                 </p>
             </motion.form>
         </div>
