@@ -1,12 +1,12 @@
 import axios from "axios";
-import { endSession } from "@/lib/session";
+import { endSession, ROLE_HEADER, roleForPath } from "@/lib/session";
 
 // The one HTTP client of the app. Components never use it directly: each feature wraps the
 // calls it needs in typed functions in features/<area>/api.ts. Only this file imports axios.
 export const api = axios.create({
     baseURL: "/", // same origin; Next.js forwards /api/* to the services
-    // SEC-01: the sign-in is the httpOnly "token" cookie, which the browser sends by itself and
-    // page scripts can't read. No token is stored or sent by this code.
+    // SEC-01: the sign-in is an httpOnly cookie, which the browser sends by itself and page scripts
+    // can't read. No token is stored or sent by this code.
     withCredentials: true,
 });
 
@@ -18,6 +18,14 @@ if (typeof window !== "undefined") {
         // storage blocked: nothing to remove
     }
 }
+
+// SEC-12: the browser keeps one sign-in per role; each call says which screen it comes from, so the
+// cashier screen acts as the cashier even when the same person is also signed in as owner.
+api.interceptors.request.use((config) => {
+    const role = typeof window === "undefined" ? null : roleForPath(window.location.pathname);
+    if (role) config.headers.set(ROLE_HEADER, role);
+    return config;
+});
 
 /** The HTTP status of a failed call, or undefined when the server could not be reached. */
 // VM-03: when the sign-in has ended, staff are sent to their login page instead of a screen

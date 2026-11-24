@@ -76,7 +76,7 @@ describe("ending sessions (SEC-03)", () => {
         expect((await request(app).get("/api/restaurants").set!("cookie", cookie)).status).toBe(200);
         const out = await request(app).post("/api/auth/sign-out-everywhere").set!("cookie", cookie);
         expect(out.status).toBe(200);
-        expect(out.headers["set-cookie"]![0]).toMatch(/^token=;/);
+        expect(out.headers["set-cookie"]![0]).toMatch(/^vmenu_owner=;/);
         expect((await request(app).get("/api/restaurants").set!("cookie", cookie)).status).toBe(401);
         const again = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "owner" });
         expect((await request(app).get("/api/restaurants").set!("cookie", again.headers["set-cookie"]![0]!.split(";")[0]!)).status).toBe(

@@ -23,7 +23,7 @@ describe("reading the session", () => {
     it("a request with the cookie works", async () => {
         const res = await request(app)
             .get("/me")
-            .set("cookie", `token=${await ownerToken()}`);
+            .set("cookie", `__Host-vmenu_owner=${await ownerToken()}`);
         expect(res.status).toBe(200);
         expect(res.body.uid).toBe("owner1");
     });

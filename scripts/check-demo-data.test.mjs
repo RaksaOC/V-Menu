@@ -19,7 +19,7 @@ const T1_LINK = "t1-link-token-aaaaaaaaa";
 async function withSite(routes, fn) {
     const server = createServer((req, res) => {
         const staff = routes[`staff ${req.url}`];
-        const signedIn = req.headers.cookie === `token=${CASHIER}`;
+        const signedIn = req.headers.cookie === `__Host-vmenu_cashier=${CASHIER}`; // SEC-12: the cashier's own cookie
         const [status, body] = staff
             ? signedIn
                 ? staff

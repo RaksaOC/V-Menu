@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
 import { http, HttpResponse } from "msw";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+vi.mock("firebase/auth", () => ({ signOut: vi.fn(async () => {}) }));
+vi.mock("@/lib/firebase", () => ({ auth: {} }));
+
 import { middleware } from "@/middleware";
 import { roleForPath } from "@/lib/session";
 import { server } from "../msw";

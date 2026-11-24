@@ -8,7 +8,7 @@ test("signing out of the kitchen goes to the login page and ends the session", a
     await page.getByRole("button", { name: "Sign Out" }).click();
     await expect(page).toHaveURL(new RegExp(`/${SLUG}/kitchen/login$`), { timeout: 15_000 });
     await expect(page.getByRole("heading", { name: "Kitchen Login" })).toBeVisible();
-    await expect.poll(async () => (await context.cookies()).some((c) => c.name === "token")).toBe(false);
+    await expect.poll(async () => (await context.cookies()).some((c) => /vmenu_chef$/.test(c.name))).toBe(false);
 
     await page.goto(`/${SLUG}/kitchen`); // the board is closed now
     await expect(page).toHaveURL(new RegExp(`/${SLUG}/kitchen/login$`));
@@ -22,4 +22,15 @@ test("a cashier of one restaurant opening another's dashboard goes to that resta
 
     await page.goto(`/${SLUG}/cashier/dashboard`); // their own still opens
     await expect(page).toHaveURL(new RegExp(`/${SLUG}/cashier/dashboard$`));
+});
+
+// SEC-12: an owner who also works the cashier screen keeps both sign-ins in one browser.
+test("an owner who signs in to the cashier screen is still signed in as owner", async ({ page, context, baseURL }) => {
+    await signInAs(context, baseURL!, "owner");
+    await signInAs(context, baseURL!, "cashier");
+    await page.goto(`/${SLUG}/cashier/dashboard`);
+    await expect(page).toHaveURL(new RegExp(`/${SLUG}/cashier/dashboard$`));
+    await page.goto("/owner");
+    await expect(page).toHaveURL(/\/owner$/);
+    await expect(page.getByRole("button", { name: "Sign Out" })).toBeVisible();
 });
