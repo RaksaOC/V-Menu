@@ -24,7 +24,12 @@ export function markShuttingDown() {
 export function baseApp(): Express {
     const app = express();
     app.disable("x-powered-by");
-    app.set("trust proxy", 1); // behind the nginx gateway
+    // SEC-06: the request path is browser -> Caddy -> Next.js rewrite -> service. Caddy sets
+    // X-Forwarded-For to the client's address; the Next.js rewrite passes headers on and adds no
+    // hop of its own. So exactly 1 hop is trusted: req.ip is the client, and each client has its
+    // own rate-limit counters. If a proxy is added or removed in front of the services, change
+    // this number and run test/client-ip.test.ts and e2e/tests/rate-limit-per-client.spec.ts.
+    app.set("trust proxy", 1);
     app.use(helmet());
     app.use(express.json({ limit: "100kb" }));
     app.use(httpLogger);

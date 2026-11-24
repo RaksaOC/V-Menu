@@ -166,6 +166,7 @@ The frontend only needs the public Firebase web config, plus the three service U
 - Order prices come from menu-service, not the cart.
 - Mongoose `sanitizeFilter` strips `$` operators from user input. Bodies are whitelisted field by field.
 - `helmet` headers, a 100 kB body limit, rate limiting on `/api/auth`, and a 5-second timeout on calls between services.
+- Rate limits count per visitor (SEC-06). Requests go browser → Caddy → Next.js rewrite → service. Caddy sets `X-Forwarded-For`, and the rewrite passes it on, so each service trusts exactly one proxy hop (`trust proxy` in `backend/packages/common/src/server.ts`). To check a deployment, run `node scripts/check-rate-limit.mjs https://<host>` a few times from one network, then once from another: the second network should start from the full limit.
 - The firebase-admin service-account key is no longer used. Any old key should be revoked in the Firebase console.
 
 ## Security checks in the pipeline
