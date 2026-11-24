@@ -38,6 +38,9 @@ const settingsOf = (r: RestaurantRecord): RestaurantSettings => ({
 /** Restaurants: creating them, and finding them for other services (CL-04). */
 export function restaurantsService({ restaurants, memberships }: { restaurants: RestaurantsRepo; memberships: MembershipsRepo }) {
     // A new restaurant gives its owner all three roles, as the original signup did.
+    // SEC-03: these rows start at version 0. That can't bring an ended session back: no token can
+    // name this new restaurant yet, and the owner's version is the highest of their owner rows, so
+    // a 0 here leaves their current sessions as they are. (Invites start higher: staff.service.)
     async function createForOwner(name: string, owner: { uid: string; email: string; name: string }) {
         const restaurant = await restaurants.create({ name, slug: generateSlug(name), ownerId: owner.uid });
         await memberships.createMany(

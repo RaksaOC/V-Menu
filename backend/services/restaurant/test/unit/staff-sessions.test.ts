@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { owner, setup, status, ALICE } from "./services-setup.js";
 
 // VM-12 and SEC-03 (review follow-up): a staff row belongs to one person. Changing its email hands
@@ -65,10 +65,14 @@ describe("a new or re-invited row never restarts at version 0 (SEC-03)", () => {
         expect(added!.tokenVersion).toBeGreaterThanOrEqual(startedAt);
     });
 
+    afterEach(() => vi.useRealTimers());
+
     it("someone removed and invited again doesn't get their old version back", async () => {
+        vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-11-24T09:00:00Z") });
         const s = await bistroWithBob();
         await s.auth.signOutEverywhere("bob-uid");
         const ended = (await s.version("bob-uid"))!; // tokens up to this one are ended or still current
+        vi.setSystemTime(new Date("2026-11-24T09:05:00Z")); // the owner removes Bob, and later invites him again
         await s.staff.remove(owner(), s.r.slug, s.id);
         await s.staff.add(owner(), s.r.slug, { name: "Bob", email: "bob@x.test", role: "cashier" });
         await s.auth.memberships({ idToken: "id:bob-uid:bob@x.test" });
