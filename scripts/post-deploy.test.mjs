@@ -91,6 +91,29 @@ test("the deploy test on a throwaway runner covers the new action", () => {
     assert.match(read(".github/workflows/deploy-test.yml"), /deploy staging --check-failed/);
 });
 
+test("the staff tokens come first: the demo-data check reads T1's QR link as the cashier (SEC-04)", () => {
+    assert.ok(post.indexOf("- name: Staff tokens") < post.indexOf("- name: Demo data"), "tokens before the demo-data check");
+    assert.doesNotMatch(step(post, "Staff tokens"), /if: steps\.demo/, "the tokens don't wait for the check that needs them");
+});
+
+test("the browser suite opens the demo table by its QR link, not its name (off on the servers since SEC-04)", () => {
+    const spec = read("e2e/tests/post-deploy.spec.ts");
+    assert.match(spec, /\/t\/\$\{/, "opens /<slug>/t/<token>");
+    assert.match(spec, /qrToken/);
+    assert.doesNotMatch(spec, /\/customer\/\$\{TABLE\}/);
+});
+
+test("CI runs the post-deploy checks with table-name links off, as on the servers (B7)", () => {
+    const e2e = job(read(".github/workflows/ci.yml"), "e2e");
+    const off = step(e2e, "Post-deploy checks, table-name links off");
+    assert.ok(off, "an e2e step named 'Post-deploy checks, table-name links off'");
+    assert.match(off, /ALLOW_TABLE_NAME_LINKS=false/);
+    assert.match(off, /docker compose up -d --no-build --wait/);
+    assert.match(off, /node scripts\/staff-token\.mjs/);
+    assert.match(off, /node scripts\/check-demo-data\.mjs/);
+    assert.match(off, /playwright test --grep @post-deploy/);
+});
+
 test("the browser suite is a tagged e2e spec, so the e2e job runs it on every PR too", () => {
     const spec = read("e2e/tests/post-deploy.spec.ts");
     assert.match(spec, /tag: "@post-deploy"/);
