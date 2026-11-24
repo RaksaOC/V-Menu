@@ -12,13 +12,13 @@ const body = (lineNote?: unknown, note?: unknown) => ({
 describe("order notes (VM-28)", () => {
     it("are trimmed, with runs of spaces and line breaks made one space", () => {
         const parsed = C.PlaceOrderBody.parse(body("  no   chilli\n please ", "  birthday,\n\nbring a candle "));
-        expect(parsed.orderedItems[0].note).toBe("no chilli please");
+        expect(parsed.orderedItems[0]!.note).toBe("no chilli please");
         expect(parsed.note).toBe("birthday, bring a candle");
     });
 
     it("are optional; an empty note is no note", () => {
         const parsed = C.PlaceOrderBody.parse(body("   ", ""));
-        expect("note" in parsed.orderedItems[0]).toBe(false);
+        expect("note" in parsed.orderedItems[0]!).toBe(false);
         expect("note" in parsed).toBe(false);
         expect(C.PlaceOrderBody.parse(body()).orderedItems[0]).toEqual({ item: { _id: DISH }, quantity: 1 });
     });
@@ -29,9 +29,9 @@ describe("order notes (VM-28)", () => {
         expect(C.PlaceOrderBody.safeParse(body("x".repeat(100), "y".repeat(200))).success).toBe(true);
         const line = C.PlaceOrderBody.safeParse(body("x".repeat(101)));
         expect(line.success).toBe(false);
-        expect(line.error?.issues[0].path).toEqual(["orderedItems", 0, "note"]);
+        expect(line.error?.issues[0]!.path).toEqual(["orderedItems", 0, "note"]);
         const order = C.PlaceOrderBody.safeParse(body(undefined, "y".repeat(201)));
-        expect(order.error?.issues[0].path).toEqual(["note"]);
+        expect(order.error?.issues[0]!.path).toEqual(["note"]);
         expect(C.PlaceOrderBody.safeParse(body(42)).success).toBe(false);
     });
 

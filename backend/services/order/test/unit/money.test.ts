@@ -49,14 +49,14 @@ describe("money in cents (CL-07)", () => {
         await s.placing.place(R1._id, { table: "1", orderedItems: [line(3)] });
         const dropped = await s.placing.place(R1._id, { table: "1", orderedItems: [line(1)] });
         const [bill] = await s.billing.open(R1._id);
-        await s.billing.cancelOrder(R1._id, String(bill._id), String(dropped._id), { reason: "x" }, "cashier");
+        await s.billing.cancelOrder(R1._id, String(bill!._id), String(dropped._id), { reason: "x" }, "cashier");
         expect((await s.tableView.openBill(R1._id, "1")).totalCents).toBe(705);
     });
 
     it("revenue is in cents on both dashboards", async () => {
         const s = setup();
         await s.placing.place(R1._id, { table: "1", orderedItems: [line(3)] });
-        await s.billing.setPaid(R1._id, s.bills.all[0]._id, true);
+        await s.billing.setPaid(R1._id, s.bills.all[0]!._id, true);
         expect((await s.stats.ownerOverview("owner1")).revenueCents).toBe(705);
         expect((await s.stats.restaurantOverview(R1._id)).revenueCents).toBe(705);
     });

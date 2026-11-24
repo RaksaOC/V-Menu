@@ -42,7 +42,7 @@ describe("the kitchen moves an order one step at a time", () => {
         const { statusHistory } = (await s.orders.get(R1._id, order._id))!;
         expect(statusHistory.map((h) => h.status)).toEqual(PATH);
         expect(statusHistory[1]).toMatchObject({ status: "preparing", by: "chef-1" });
-        expect(statusHistory[1].at).toBeInstanceOf(Date);
+        expect(statusHistory[1]!.at).toBeInstanceOf(Date);
     });
 
     it.each([
@@ -69,7 +69,7 @@ describe("the kitchen moves an order one step at a time", () => {
     it("a cancelled order can't move; another restaurant's order is not found; a bad id is a 400", async () => {
         const s = setup();
         const order = await place(s);
-        await s.billing.cancelOrder(R1._id, (await openBill(s))._id, order._id, { reason: "Wrong table" }, "cashier-1");
+        await s.billing.cancelOrder(R1._id, (await openBill(s))!._id, order._id, { reason: "Wrong table" }, "cashier-1");
         expect(await failure(s.kitchen.setStatus(R1._id, order._id, { status: "preparing" }, "chef-1"))).toEqual({
             status: 409,
             code: "ORDER_STATUS_STEP",
@@ -85,7 +85,7 @@ describe("the cashier cancels an order, with a reason", () => {
         const s = setup();
         const order = await place(s);
         await advanceTo(s, order._id, from);
-        const cancelled = await s.billing.cancelOrder(R1._id, (await openBill(s))._id, order._id, { reason: "Wrong dish" }, "cashier-1");
+        const cancelled = await s.billing.cancelOrder(R1._id, (await openBill(s))!._id, order._id, { reason: "Wrong dish" }, "cashier-1");
         expect(cancelled).toMatchObject({ status: "cancelled", cancelReason: "Wrong dish" });
         expect(cancelled.statusHistory.at(-1)).toMatchObject({ status: "cancelled", by: "cashier-1" });
     });
@@ -94,24 +94,24 @@ describe("the cashier cancels an order, with a reason", () => {
         const s = setup();
         const order = await place(s);
         const bill = await openBill(s);
-        await s.billing.cancelOrder(R1._id, bill._id, order._id, { reason: "x" }, "cashier-1");
-        expect(await failure(s.billing.cancelOrder(R1._id, bill._id, order._id, { reason: "x" }, "cashier-1"))).toEqual({
+        await s.billing.cancelOrder(R1._id, bill!._id, order._id, { reason: "x" }, "cashier-1");
+        expect(await failure(s.billing.cancelOrder(R1._id, bill!._id, order._id, { reason: "x" }, "cashier-1"))).toEqual({
             status: 409,
             code: "ORDER_CANCELLED",
         });
 
         const kept = await place(s);
-        await s.billing.setPaid(R1._id, bill._id, true);
-        expect(await failure(s.billing.cancelOrder(R1._id, bill._id, kept._id, { reason: "x" }, "cashier-1"))).toEqual({
+        await s.billing.setPaid(R1._id, bill!._id, true);
+        expect(await failure(s.billing.cancelOrder(R1._id, bill!._id, kept._id, { reason: "x" }, "cashier-1"))).toEqual({
             status: 409,
             code: "BILL_PAID",
         });
 
         const elsewhere = await place(s); // goes on a new open bill
-        expect((await failure(s.billing.cancelOrder(R1._id, bill._id, elsewhere._id, { reason: "x" }, "cashier-1")))?.status).toBe(404);
+        expect((await failure(s.billing.cancelOrder(R1._id, bill!._id, elsewhere._id, { reason: "x" }, "cashier-1")))?.status).toBe(404);
         const theirs = await place(s, R2._id);
         const theirBill = await openBill(s, R2._id);
-        expect((await failure(s.billing.cancelOrder(R1._id, theirBill._id, theirs._id, { reason: "x" }, "cashier-1")))?.status).toBe(404);
+        expect((await failure(s.billing.cancelOrder(R1._id, theirBill!._id, theirs._id, { reason: "x" }, "cashier-1")))?.status).toBe(404);
         expect((await failure(s.billing.cancelOrder(R1._id, newId(), theirs._id, { reason: "x" }, "cashier-1")))?.status).toBe(404);
     });
 });
@@ -123,13 +123,13 @@ describe("cancelled orders don't count", () => {
         const dropped = await place(s, R1._id, 3);
         await advanceTo(s, kept._id, "served");
         await advanceTo(s, dropped._id, "served");
-        await s.billing.cancelOrder(R1._id, (await openBill(s))._id, dropped._id, { reason: "Sent back" }, "cashier-1");
+        await s.billing.cancelOrder(R1._id, (await openBill(s))!._id, dropped._id, { reason: "Sent back" }, "cashier-1");
 
         const bill = await s.tableView.openBill(R1._id, "1");
         expect(bill.orders.map((o) => o.status)).toEqual(["served", "cancelled"]);
         expect(bill.totalCents).toBe(2 * DISH.priceCents);
 
-        await s.billing.setPaid(R1._id, (await openBill(s))._id, true); // VM-09: revenue is paid bills
+        await s.billing.setPaid(R1._id, (await openBill(s))!._id, true); // VM-09: revenue is paid bills
         const owner = await s.stats.ownerOverview("owner1");
         expect(owner).toMatchObject({ orderCount: 1, revenueCents: 2 * DISH.priceCents, itemsSoldCount: 2 });
         expect((await s.stats.restaurantOverview(R1._id)).orderCount).toBe(1);
@@ -141,7 +141,7 @@ describe("cancelled orders don't count", () => {
         await advanceTo(s, b._id, "preparing");
         await advanceTo(s, c._id, "ready");
         await advanceTo(s, d._id, "served");
-        await s.billing.cancelOrder(R1._id, (await openBill(s))._id, e._id, { reason: "x" }, "cashier-1");
+        await s.billing.cancelOrder(R1._id, (await openBill(s))!._id, e._id, { reason: "x" }, "cashier-1");
         expect((await s.kitchen.queue(R1._id)).map((o) => o._id)).toEqual([a._id, b._id, c._id]);
         expect((await s.kitchen.history(R1._id, {})).orders.map((o) => o._id).sort()).toEqual([d._id, e._id].sort());
     });

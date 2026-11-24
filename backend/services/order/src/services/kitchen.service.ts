@@ -1,8 +1,8 @@
 import { assertId, HttpError, notFound } from "@vmenu/common";
 import { NEXT_STATUS, type UpdateOrderStatusBody } from "@vmenu/contracts";
 import { countOrderStatus, observeReady } from "../lib/order-metrics.js";
-import { pages, paging } from "./paging.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
+import { pages, paging } from "./paging.js";
 
 /** The kitchen's queue, and an order's steps (VM-27). */
 export function kitchenService({ orders }: { orders: OrdersRepo }) {

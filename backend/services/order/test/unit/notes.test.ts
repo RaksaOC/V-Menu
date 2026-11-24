@@ -38,7 +38,7 @@ describe("order notes (VM-28)", () => {
         expect(placed.note).toBe("birthday");
         expect(placed.orderedItems.map((l) => l.note)).toEqual(["no chilli", undefined]);
         expect(orders.all[0]).toMatchObject({ note: "birthday", orderedItems: [{ note: "no chilli" }, {}] });
-        expect("note" in orders.all[0].orderedItems[1]).toBe(false);
+        expect("note" in orders.all[0]!.orderedItems[1]!).toBe(false);
     });
 
     it("the same dish with different notes stays as two lines", async () => {
@@ -63,7 +63,7 @@ describe("order notes (VM-28)", () => {
         const { placing, billing } = setup();
         await placing.place(R1._id, order([{ note: "no chilli" }, { note: "extra chilli" }]));
         const [bill] = await billing.open(R1._id);
-        expect(bill.lines).toEqual([{ _id: DISH._id, name: "Kuy Teav", priceCents: 250, quantity: 2, totalCents: 500 }]);
+        expect(bill!.lines).toEqual([{ _id: DISH._id, name: "Kuy Teav", priceCents: 250, quantity: 2, totalCents: 500 }]);
     });
 
     it("if the menu's answer doesn't match the lines, nothing is saved", async () => {

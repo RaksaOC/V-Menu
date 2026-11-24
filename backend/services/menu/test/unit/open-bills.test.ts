@@ -31,7 +31,7 @@ describe("renaming and deleting a table with an unpaid bill (VM-15)", () => {
             code: "TABLE_HAS_OPEN_BILL",
             message: "Table 4 has an unpaid bill. Mark it paid, then try again.",
         });
-        expect(tables.all[0].name).toBe("4");
+        expect(tables.all[0]!.name).toBe("4");
     });
 
     it("rename: 200 when it has none", async () => {

@@ -2,8 +2,8 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../../src/app.js";
 import { signAppToken } from "@vmenu/common";
+import { createApp } from "../../src/app.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 process.env.INTERNAL_API_KEY = "internal-test-key";
@@ -61,14 +61,14 @@ describe("sign-up and sign-in", () => {
         const slug = await signUp();
         const res = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "cashier", resSlug: slug });
         expect(res.status).toBe(200);
-        expect(res.headers["set-cookie"][0]).toMatch(/^token=.*HttpOnly/);
+        expect(res.headers["set-cookie"]![0]).toMatch(/^token=.*HttpOnly/);
     });
 
     it("answers the sign-in with the httpOnly cookie only, never the token in the body (SEC-01)", async () => {
         const slug = await signUp();
         const res = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "cashier", resSlug: slug });
         expect(res.status).toBe(200);
-        expect(res.headers["set-cookie"][0]).toMatch(/^token=[^;]+;.*HttpOnly.*SameSite=Lax/i);
+        expect(res.headers["set-cookie"]![0]).toMatch(/^token=[^;]+;.*HttpOnly.*SameSite=Lax/i);
         expect(JSON.stringify(res.body)).not.toMatch(/eyJ/); // no JWT anywhere in the answer
         expect(res.body.appToken).toBeUndefined();
     });
@@ -209,7 +209,7 @@ describe("who am I (VM-20)", () => {
     it("answers with the signed-in person's name, from their cookie", async () => {
         await signUp();
         const login = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "owner" });
-        const res = await request(app).get("/api/auth/me").set("cookie", login.headers["set-cookie"][0].split(";")[0]);
+        const res = await request(app).get("/api/auth/me").set!("cookie", login.headers["set-cookie"]![0]!.split(";")[0]!);
         expect(res.status).toBe(200);
         expect(res.body).toEqual({ name: "Ory", email: "owner@x.com", role: "owner" });
     });
@@ -222,12 +222,12 @@ describe("who am I (VM-20)", () => {
 describe("session length (VM-03)", () => {
     // SEC-01: the token is only in the httpOnly cookie
     const cookieToken = (res: { headers: Record<string, unknown> }) =>
-        decodeURIComponent(/^token=([^;]+)/.exec((res.headers["set-cookie"] as string[])[0])![1]);
+        decodeURIComponent(/^token=([^;]+)/.exec((res.headers["set-cookie"] as string[])[0]!)![1]!);
     const lifetime = (token: string) => {
-        const { iat, exp } = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+        const { iat, exp } = JSON.parse(Buffer.from(token.split(".")[1]!, "base64url").toString());
         return exp - iat;
     };
-    const cookieMaxAge = (res: request.Response) => Number(/Max-Age=(\d+)/.exec(res.headers["set-cookie"][0])![1]);
+    const cookieMaxAge = (res: request.Response) => Number(/Max-Age=(\d+)/.exec(res.headers["set-cookie"]![0]!)![1]);
 
     it("lasts 12 hours by default, for the token and the cookie", async () => {
         const slug = await signUp();

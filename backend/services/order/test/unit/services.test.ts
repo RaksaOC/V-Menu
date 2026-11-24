@@ -55,8 +55,8 @@ describe("placing an order", () => {
         const b = await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         await placing.place(R1._id, { table: "2", orderedItems: [line()] });
         expect(bills.all).toHaveLength(2);
-        expect(bills.all[0].orders).toEqual([a._id, b._id]);
-        await billing.setPaid(R1._id, bills.all[0]._id, true);
+        expect(bills.all[0]!.orders).toEqual([a._id, b._id]);
+        await billing.setPaid(R1._id, bills.all[0]!._id, true);
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         expect(bills.all).toHaveLength(3);
     });
@@ -89,8 +89,8 @@ describe("an order always ends up on a bill (VM-23)", () => {
     it("saves the order with its bill's id, and puts it on that bill", async () => {
         const { placing, orders, bills } = setup();
         const placed = await placing.place(R1._id, { table: "1", orderedItems: [line()] });
-        expect(bills.all[0].orders).toEqual([placed._id]);
-        expect(orders.all[0].billId).toBe(bills.all[0]._id);
+        expect(bills.all[0]!.orders).toEqual([placed._id]);
+        expect(orders.all[0]!.billId).toBe(bills.all[0]!._id);
     });
 
     it("doesn't send the bill's id to the customer", async () => {
@@ -103,7 +103,7 @@ describe("an order always ends up on a bill (VM-23)", () => {
         bills.failUpdates = 1;
         const placed = await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         expect(orders.all.map((o) => o._id)).toEqual([placed._id]);
-        expect(bills.all[0].orders).toEqual([placed._id]);
+        expect(bills.all[0]!.orders).toEqual([placed._id]);
     });
 
     it("the bill update keeps failing: 503, no order saved and no empty bill left", async () => {
@@ -121,7 +121,7 @@ describe("an order always ends up on a bill (VM-23)", () => {
         expect(await status(placing.place(R1._id, { table: "1", orderedItems: [line()] }))).toBe(503);
         expect(orders.all.map((o) => o._id)).toEqual([first._id]);
         expect(bills.all).toHaveLength(1);
-        expect(bills.all[0].orders).toEqual([first._id]);
+        expect(bills.all[0]!.orders).toEqual([first._id]);
     });
 
     it("saving the order fails: 503, and the bill just opened for it is removed", async () => {
@@ -141,13 +141,13 @@ describe("an order always ends up on a bill (VM-23)", () => {
         expect(await status(placing.place(R1._id, { table: "1", orderedItems: [line()] }))).toBe(503);
         expect(orders.all).toHaveLength(1);
         const report = await placing.withoutBill({}, new Date(Date.UTC(2026, 0, 2)));
-        expect(report.orders.map((o) => o._id)).toEqual([orders.all[0]._id]);
+        expect(report.orders.map((o) => o._id)).toEqual([orders.all[0]!._id]);
     });
 
     it("the bill is paid between the two steps: the order joins the table's new bill", async () => {
         const { placing, orders, bills, billing } = setup();
         const first = await placing.place(R1._id, { table: "1", orderedItems: [line()] });
-        const paidBill = bills.all[0]._id;
+        const paidBill = bills.all[0]!._id;
         const create = orders.create;
         orders.create = async (o) => {
             const saved = await create(o);
@@ -155,15 +155,15 @@ describe("an order always ends up on a bill (VM-23)", () => {
             return saved;
         };
         const second = await placing.place(R1._id, { table: "1", orderedItems: [line()] });
-        expect(bills.all[0].orders).toEqual([first._id]);
-        expect(bills.all[1].orders).toEqual([second._id]);
-        expect(orders.all.find((o) => o._id === second._id)!.billId).toBe(bills.all[1]._id);
+        expect(bills.all[0]!.orders).toEqual([first._id]);
+        expect(bills.all[1]!.orders).toEqual([second._id]);
+        expect(orders.all.find((o) => o._id === second._id)!.billId).toBe(bills.all[1]!._id);
     });
 
     it("a bill with no orders yet isn't shown or counted, and doesn't block re-opening a paid bill", async () => {
         const { placing, bills, billing, stats } = setup();
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
-        const paid = bills.all[0]._id;
+        const paid = bills.all[0]!._id;
         await billing.setPaid(R1._id, paid, true);
         await bills.openBillFor(R1._id, "1"); // left behind by a crash between the two steps
         expect(await billing.open(R1._id)).toEqual([]);
@@ -274,7 +274,7 @@ describe("cashier bills (VM-11)", () => {
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         await placing.place(R1._id, { table: "2", orderedItems: [line()] });
         await placing.place(R1._id, { table: "3", orderedItems: [line()] });
-        await billing.setPaid(R1._id, bills.all[1]._id, true);
+        await billing.setPaid(R1._id, bills.all[1]!._id, true);
         expect((await billing.open(R1._id)).map((b) => b.table)).toEqual(["3", "1"]);
         expect(await billing.open(R2._id)).toEqual([]);
     });
@@ -286,7 +286,7 @@ describe("cashier bills (VM-11)", () => {
         await placing.place(R1._id, { table: "open", orderedItems: [line()] });
         const first = await billing.paid(R1._id, {});
         expect(first).toMatchObject({ page: 1, limit: 20, total: 23, pages: 2 });
-        expect(first.bills[0].table).toBe("22");
+        expect(first.bills[0]!.table).toBe("22");
         expect((await billing.paid(R1._id, { page: "2" })).bills.map((b) => b.table)).toEqual(["2", "1", "0"]);
         expect((await billing.paid(R1._id, { limit: "999" })).limit).toBe(100);
         expect(await status(billing.paid(R1._id, { page: "0" }))).toBe(400);
@@ -301,16 +301,16 @@ describe("bills", () => {
         await placing.place(R1._id, { table: "2", orderedItems: [line()] });
         const list = await billing.open(R1._id);
         expect(list.map((b) => b.table)).toEqual(["2", "1"]);
-        expect(list[0].orders[0].orderedItems[0].item.name).toBe(DISH.name);
-        const paid = await billing.setPaid(R1._id, list[0]._id, true);
+        expect(list[0]!.orders[0]!.orderedItems[0]!.item.name).toBe(DISH.name);
+        const paid = await billing.setPaid(R1._id, list[0]!._id, true);
         expect(paid.isPaid).toBe(true);
-        expect((await billing.setPaid(R1._id, list[0]._id, false)).isPaid).toBe(false);
+        expect((await billing.setPaid(R1._id, list[0]!._id, false)).isPaid).toBe(false);
     });
 
     it("needs true or false, a valid id, and this restaurant's bill", async () => {
         const { placing, billing, bills } = setup();
         await placing.place(R2._id, { table: "9", orderedItems: [line()] });
-        const other = bills.all[0]._id;
+        const other = bills.all[0]!._id;
         expect(await status(billing.setPaid(R1._id, other, "yes" as unknown as boolean))).toBe(400);
         expect(await status(billing.setPaid(R1._id, "nope", true))).toBe(400);
         expect(await status(billing.setPaid(R1._id, other, true))).toBe(404);
@@ -321,7 +321,7 @@ describe("one open bill per table (VM-08)", () => {
     it("won't re-open a paid bill while the table has another open bill", async () => {
         const { placing, billing, bills } = setup();
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
-        const first = bills.all[0]._id;
+        const first = bills.all[0]!._id;
         await billing.setPaid(R1._id, first, true);
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
         expect(await status(billing.setPaid(R1._id, first, false))).toBe(409);
@@ -331,7 +331,7 @@ describe("one open bill per table (VM-08)", () => {
     it("re-opens it when the table has no other open bill, and marking an open bill unpaid again is harmless", async () => {
         const { placing, billing, bills } = setup();
         await placing.place(R1._id, { table: "1", orderedItems: [line()] });
-        const first = bills.all[0]._id;
+        const first = bills.all[0]!._id;
         expect((await billing.setPaid(R1._id, first, false)).isPaid).toBe(false); // already open
         await billing.setPaid(R1._id, first, true);
         expect((await billing.setPaid(R1._id, first, false)).isPaid).toBe(false);
@@ -364,7 +364,7 @@ describe("what the customer sees (VM-07)", () => {
         const bill = await tableView.openBill(R1._id, "1");
         expect(bill.orders.map((o) => o.totalCents)).toEqual([250, 500]);
         expect(bill.totalCents).toBe(750);
-        await billing.setPaid(R1._id, bills.all[0]._id, true);
+        await billing.setPaid(R1._id, bills.all[0]!._id, true);
         expect(await tableView.openBill(R1._id, "1")).toEqual({
             table: "1",
             orders: [],
@@ -405,7 +405,7 @@ describe("dashboard numbers", () => {
         await done(R1._id, "1", 2);
         await done(R2._id, "5", 3);
         await s.placing.place(R1._id, { table: "2", orderedItems: [line(4)] }); // on an open bill: not earned
-        await s.billing.setPaid(R1._id, s.bills.all[0]._id, true);
+        await s.billing.setPaid(R1._id, s.bills.all[0]!._id, true);
         return s;
     }
 
@@ -450,7 +450,7 @@ describe("dashboard numbers", () => {
             }),
         });
         await free.placing.place(R1._id, { table: "1", orderedItems: [line(1)] });
-        await free.billing.setPaid(R1._id, free.bills.all[0]._id, true);
+        await free.billing.setPaid(R1._id, free.bills.all[0]!._id, true);
         expect(await free.stats.ownerOverview("owner1")).toMatchObject({ revenueCents: 0, itemsSoldCount: 1, avgItemsPerOrder: 1 });
     });
 
@@ -465,7 +465,7 @@ describe("dashboard numbers", () => {
             table: "1",
             orderedItems: dishes.map((d, i) => ({ item: { _id: d._id }, quantity: i + 1 })),
         });
-        await s.billing.setPaid(R1._id, s.bills.all[0]._id, true);
+        await s.billing.setPaid(R1._id, s.bills.all[0]!._id, true);
         const top = (await s.stats.ownerOverview("owner1")).topSellingItems;
         expect(top.map((t) => t.name)).toEqual(["F", "E", "D", "C", "B"]);
     });

@@ -74,14 +74,16 @@ describe("ending sessions (SEC-03)", () => {
     it("Sign out everywhere ends this token at once and clears the cookie", async () => {
         await signUp();
         const login = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "owner" });
-        const cookie = login.headers["set-cookie"][0].split(";")[0];
-        expect((await request(app).get("/api/restaurants").set("cookie", cookie)).status).toBe(200);
-        const out = await request(app).post("/api/auth/sign-out-everywhere").set("cookie", cookie);
+        const cookie = login.headers["set-cookie"]![0]!.split(";")[0]!;
+        expect((await request(app).get("/api/restaurants").set!("cookie", cookie)).status).toBe(200);
+        const out = await request(app).post("/api/auth/sign-out-everywhere").set!("cookie", cookie);
         expect(out.status).toBe(200);
-        expect(out.headers["set-cookie"][0]).toMatch(/^token=;/);
-        expect((await request(app).get("/api/restaurants").set("cookie", cookie)).status).toBe(401);
+        expect(out.headers["set-cookie"]![0]).toMatch(/^token=;/);
+        expect((await request(app).get("/api/restaurants").set!("cookie", cookie)).status).toBe(401);
         const again = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "owner" });
-        expect((await request(app).get("/api/restaurants").set("cookie", again.headers["set-cookie"][0].split(";")[0])).status).toBe(200);
+        expect((await request(app).get("/api/restaurants").set!("cookie", again.headers["set-cookie"]![0]!.split(";")[0]!)).status).toBe(
+            200,
+        );
     });
 
     it("a token for someone with no membership is refused", async () => {

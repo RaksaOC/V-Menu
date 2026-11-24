@@ -1,4 +1,3 @@
-import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import {
     CALLERS,
     callerHeaders,
@@ -16,6 +15,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 
 // SEC-07: every menu-service route, tried as every kind of caller. A new route fails the
 // inventory test until it's added here with its rule.
@@ -103,11 +103,11 @@ beforeEach(async () => {
 /** The route with A's slug and A's real ids filled in. */
 function urlFor(route: string) {
     const path = route.split(" ")[1];
-    return path
+    return path!
         .replace(":slug", A.slug)
         .replace(":resId", A._id)
         .replace(":name", "T1")
-        .replace(":token", ids.tokenA)
+        .replace(":token", ids.tokenA!)
         .replace(/items\/:id/, `items/${ids.itemA}`)
         .replace(/tables\/:id/, `tables/${ids.tableA}`)
         .replace(/categories\/:id/, `categories/${ids.categoryA}`)
@@ -116,8 +116,8 @@ function urlFor(route: string) {
 
 function send(method: string, url: string, caller: Caller, extra: Record<string, string> = {}, body: object = {}) {
     const m = method.toLowerCase() as "get" | "post" | "put" | "patch" | "delete";
-    return request(app)
-        [m](url)
+    const agent = request(app);
+    return agent[m](url)
         .set({ ...headers[caller], ...extra })
         .send(method === "GET" || method === "DELETE" ? undefined : body);
 }
@@ -132,7 +132,7 @@ describe("menu-service access matrix (SEC-07)", () => {
         const got = {} as Record<Caller, number>;
         // refused callers first, so an allowed DELETE can't change what they see
         for (const caller of [...CALLERS].sort((x, y) => Number(row[x] === "ok") - Number(row[y] === "ok")))
-            got[caller] = (await send(method, urlFor(route), caller)).status;
+            got[caller] = (await send(method!, urlFor(route), caller)).status;
         expect(mismatches(row, got)).toEqual([]);
     });
 

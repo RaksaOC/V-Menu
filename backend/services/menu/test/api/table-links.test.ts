@@ -1,12 +1,12 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { notFound, signAppToken } from "@vmenu/common";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import { createApp } from "../../src/app.js";
 import { prepareDatabase } from "../../src/db.js";
 import { Table } from "../../src/models/table.model.js";
-import { notFound, signAppToken } from "@vmenu/common";
 
 // SEC-04: a table is opened through its own random link token, which the owner can replace.
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
@@ -58,7 +58,7 @@ async function addTable(name: string, slug = SLUG, open = true) {
 }
 const byToken = (token: string, slug = SLUG) => request(app).get(`/api/menu/${slug}/public/t/${token}`);
 const check = (body: object) =>
-    request(app).post(`/internal/restaurants/${RESTAURANTS[SLUG]._id}/order-check`).set("x-internal-key", "internal-test-key").send(body);
+    request(app).post(`/internal/restaurants/${RESTAURANTS[SLUG]!._id}/order-check`).set("x-internal-key", "internal-test-key").send(body);
 
 describe("a table's link token (SEC-04)", () => {
     it("every table gets its own random token", async () => {
@@ -119,7 +119,7 @@ describe("a table's link token (SEC-04)", () => {
     });
 
     it("at startup, tables from before get a token, and existing tokens are kept", async () => {
-        const resId = RESTAURANTS[SLUG]._id;
+        const resId = RESTAURANTS[SLUG]!._id;
         const kept = await addTable("A1");
         await Table.collection.insertMany([
             { name: "old-1", resId, isEnabled: true },
@@ -184,7 +184,7 @@ describe("the order check by token (SEC-04)", () => {
 
     it("the internal lookup answers the name, or 404", async () => {
         const table = await addTable("A1");
-        const url = (t: string) => `/internal/restaurants/${RESTAURANTS[SLUG]._id}/tables/by-token/${t}`;
+        const url = (t: string) => `/internal/restaurants/${RESTAURANTS[SLUG]!._id}/tables/by-token/${t}`;
         const found = await request(app).get(url(table.qrToken)).set("x-internal-key", "internal-test-key");
         expect(found.body).toEqual({ name: "A1" });
         expect((await request(app).get(url(WRONG)).set("x-internal-key", "internal-test-key")).status).toBe(404);
