@@ -22,6 +22,5 @@ export const KNOWN: Record<string, string[]> = {
     "cashier-menu:light": ["color-contrast"],
     "kitchen-login:light": ["color-contrast"],
     "kitchen-login:dark": ["color-contrast"],
-    "kitchen:light": ["color-contrast"],
     "customer-no-table:light": ["color-contrast"],
 };

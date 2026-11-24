@@ -295,11 +295,14 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2,
-h3 {
-    font-family: var(--f-display);
-    letter-spacing: var(--d-track);
+/* VM-34: in the base layer, so a heading's own font class (a mono label, say) wins over it */
+@layer base {
+    h1,
+    h2,
+    h3 {
+        font-family: var(--f-display);
+        letter-spacing: var(--d-track);
+    }
 }
 
 code {
