@@ -65,6 +65,10 @@ services:
       dockerfile: services/restaurant/Dockerfile
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
+    networks:
+      backend:
+      frontend:
+        aliases: [vmenu-restaurant-api] # M6: the frontend's name for it
     env_file: ../../backend/services/restaurant/.env
     environment: # replaces the 127.0.0.1 addresses in .env
       MONGODB_URI: mongodb://mongo:27017/vmenu_restaurants
@@ -79,6 +83,10 @@ services:
       dockerfile: services/menu/Dockerfile
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
+    networks:
+      backend:
+      frontend:
+        aliases: [vmenu-menu-api] # M6: the frontend's name for it
     env_file: ../../backend/services/menu/.env
     environment:
       MONGODB_URI: mongodb://mongo:27017/vmenu_menu
@@ -103,6 +111,10 @@ services:
       dockerfile: services/order/Dockerfile
       args:
         GIT_SHA: ${GIT_SHA:-unknown}
+    networks:
+      backend:
+      frontend:
+        aliases: [vmenu-order-api] # M6: the frontend's name for it
     env_file: ../../backend/services/order/.env
     environment:
       MONGODB_URI: mongodb://mongo:27017/vmenu_orders
@@ -128,10 +140,10 @@ services:
         # B6: set only by scripts/ci-env.sh (e2e runs against the Auth emulator)
         NEXT_PUBLIC_E2E: ${NEXT_PUBLIC_E2E:-}
         NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL: ${NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL:-}
-        # rewrites are fixed at build time, so these must be the Compose DNS names
-        RESTAURANT_SERVICE_URL: http://restaurant-service:4101
-        MENU_SERVICE_URL: http://menu-service:4102
-        ORDER_SERVICE_URL: http://order-service:4103
+        # rewrites are fixed at build time; M6: the aliases on the stack's own frontend network
+        RESTAURANT_SERVICE_URL: http://vmenu-restaurant-api:4101
+        MENU_SERVICE_URL: http://vmenu-menu-api:4102
+        ORDER_SERVICE_URL: http://vmenu-order-api:4103
         # PHOTOS-S3: the CSP lets the browser post photos to MinIO and load them from it
         S3_PUBLIC_URL: http://localhost:${S3_PORT:-9400}
     restart: unless-stopped
