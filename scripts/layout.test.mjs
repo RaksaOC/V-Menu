@@ -162,3 +162,10 @@ test("the CI stack action builds and runs infra/compose/docker-compose.yml", () 
     assert.match(action, /COMPOSE_FILE=\$GITHUB_WORKSPACE\/infra\/compose\/docker-compose\.yml/);
     assert.doesNotMatch(action, /services\/[a-z]+-service/);
 });
+
+// The before/after screenshots (B11) are kept outside the repo: 800+ images made every clone heavy,
+// and nothing builds, tests or deploys from them. PR screenshots are attached to the PR instead.
+test("the repo holds no screenshot showcase", () => {
+    assert.ok(!existsSync(join(root, "docs")), "docs/ is gone; keep screenshots outside the repo");
+    assert.doesNotMatch(read(".github/pull_request_template.md"), /docs\/showcase/, "the PR template still asks for docs/showcase");
+});
