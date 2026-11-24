@@ -2,7 +2,6 @@
 
 import ItemCard from "@/features/customer/components/ItemCard";
 import { ShoppingCart, Store, Utensils } from "lucide-react";
-import { ItemOutput } from "@/lib/types/Item";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -13,9 +12,10 @@ import TableProblem, { type TableProblemKind } from "@/features/customer/compone
 import { checkTable, getMenu } from "@/features/customer/api";
 import { reconcileCart } from "@/features/customer/cart";
 import { toast } from "@/lib/toast";
+import type { MenuItem } from "@vmenu/contracts";
 
 export default function CustomerPage() {
-    const [items, setItems] = useState<ItemOutput[]>([]);
+    const [items, setItems] = useState<MenuItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [problem, setProblem] = useState<TableProblemKind | null>(null);
     const params = useParams();

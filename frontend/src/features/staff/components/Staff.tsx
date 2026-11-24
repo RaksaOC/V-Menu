@@ -4,20 +4,21 @@ import { ResContext } from "@/lib/restaurantContext";
 import { Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, ChevronsUpDown, Pencil } from "lucide-react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import StaffForm from "@/features/staff/components/StaffForm";
-import { TenantInput, TenantOutput } from "@/lib/types/Tenant";
 import { prettyDate } from "@/lib/dates";
 import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, UserCredential } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import type { StaffMember } from "@vmenu/contracts";
+import type { NewStaffMember } from "@/features/staff/components/StaffForm";
 
 export default function Staff() {
     const resSlug = useContext(ResContext);
-    const [staff, setStaff] = useState<TenantOutput[]>([]);
+    const [staff, setStaff] = useState<StaffMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState<"all" | "owner" | "cashier" | "chef">("all");
     const [showAddStaff, setShowAddStaff] = useState(false);
     const [showEditStaff, setShowEditStaff] = useState(false);
-    const [staffToEdit, setStaffToEdit] = useState<TenantOutput>();
+    const [staffToEdit, setStaffToEdit] = useState<StaffMember>();
     const [refresh, setRefresh] = useState(false);
     const [emailTaken, setEmailTaken] = useState(false);
 
@@ -38,7 +39,7 @@ export default function Staff() {
         }
     }, [refresh]);
 
-    async function handleAddStaff(newTenant: TenantInput) {
+    async function handleAddStaff(newTenant: NewStaffMember) {
         setEmailTaken(false);
         try {
             const signInMethods = await fetchSignInMethodsForEmail(auth, newTenant.email);
@@ -72,7 +73,7 @@ export default function Staff() {
         }
     }
 
-    async function handleEditStaff(tenant: TenantOutput) {
+    async function handleEditStaff(tenant: StaffMember) {
         try {
             await updateStaff(resSlug, tenant);
             setShowEditStaff(false);

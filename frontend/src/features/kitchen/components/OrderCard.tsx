@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { CartItem } from "@/lib/types/CartItem";
 import { prettyDate } from "@/lib/dates";
 import { Clock, CheckCircle2, Users, Hash } from "lucide-react";
+import type { OrderLine } from "@vmenu/contracts";
 
 interface CardProps {
     orderId: string;
     table: string;
-    orderedItems: CartItem[];
+    orderedItems: OrderLine[];
     isDone: boolean;
     onDone: (orderId: string) => void;
     orderedAt: string;

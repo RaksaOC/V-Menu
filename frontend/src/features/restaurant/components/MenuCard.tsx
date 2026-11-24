@@ -1,9 +1,9 @@
 import { CheckCircle, Pencil, XCircle } from "lucide-react";
 import { Card, Chip } from "@/components/ui";
-import type { ItemOutput } from "@/lib/types/Item";
+import type { MenuItem } from "@vmenu/contracts";
 
-type Props = { item: ItemOutput } & (
-    { role: "owner"; onEdit: (item: ItemOutput) => void } | { role: "cashier"; onToggle: (item: ItemOutput) => void }
+type Props = { item: MenuItem } & (
+    { role: "owner"; onEdit: (item: MenuItem) => void } | { role: "cashier"; onToggle: (item: MenuItem) => void }
 );
 
 /** One dish, for the owner (edit) and the cashier (switch it on or off) (CL-09). */

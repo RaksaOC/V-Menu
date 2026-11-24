@@ -1,6 +1,6 @@
-import { ItemOutput } from "@/lib/types/Item";
 import { addToCart } from "../cart";
 import { Plus } from "lucide-react";
+import type { MenuItem } from "@vmenu/contracts";
 
 interface CardProps {
     /** The restaurant and table whose cart the dish goes into (VM-05). */
@@ -36,7 +36,7 @@ export default function Card({ slug, table, _id, name, price, image }: CardProps
                 {/* Add to Cart Button */}
                 <button
                     onClick={() => {
-                        const item: ItemOutput = {
+                        const item: MenuItem = {
                             _id,
                             image,
                             name,

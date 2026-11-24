@@ -7,7 +7,12 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
     plugins: [react()],
     resolve: {
-        alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+        alias: {
+            "@": fileURLToPath(new URL("./src", import.meta.url)),
+            // CL-05: the API shapes, straight from the backend's source; zod from this package
+            "@vmenu/contracts": fileURLToPath(new URL("../backend/packages/contracts/src/index.ts", import.meta.url)),
+            zod: fileURLToPath(new URL("./node_modules/zod", import.meta.url)),
+        },
     },
     test: {
         environment: "jsdom",
@@ -19,7 +24,7 @@ export default defineConfig({
             provider: "v8",
             // Every source file counts, even ones no test imports yet.
             include: ["src/**/*.{ts,tsx}"],
-            exclude: ["src/**/*.d.ts", "src/lib/types/**"],
+            exclude: ["src/**/*.d.ts"],
             reporter: ["text-summary", "json-summary", "html"],
             reportsDirectory: "coverage",
             // B3: CI fails below this. It started at today's number (34%, 2026-11-23); raise it as

@@ -1,7 +1,11 @@
+# Built from the repo root (CL-05), so the API types in backend/packages/contracts are in reach:
+#   docker build -f frontend/Dockerfile .
+# frontend/Dockerfile.dockerignore keeps the context to frontend/ and the contracts' source.
+
 # ---- deps ----
 FROM node:26-slim AS deps
 WORKDIR /app
-COPY package*.json .npmrc* ./
+COPY frontend/package*.json frontend/.npmrc* ./
 RUN npm ci --no-audit --no-fund
 
 # ---- build ----
@@ -37,7 +41,9 @@ ENV ORDER_SERVICE_URL=$ORDER_SERVICE_URL
 
 # Copy dependencies from the previous stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY frontend/ .
+# type-only imports: tsconfig maps @vmenu/contracts here (../backend from /app), nothing reaches the bundle
+COPY backend/packages/contracts/src /backend/packages/contracts/src
 RUN mkdir -p public && npm run build
 
 # ---- run: Next.js standalone server only ----

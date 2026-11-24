@@ -7,7 +7,7 @@ import { createMenuItem, deleteMenuItem, getMenuItems, setItemAvailability, upda
 import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
 import MenuCard from "./MenuCard";
 import ItemForm from "./ItemForm";
-import type { ItemInput, ItemOutput } from "@/lib/types/Item";
+import type { CreateItemBody, MenuItem } from "@vmenu/contracts";
 
 /**
  * A restaurant's menu (CL-09; was two copies). The owner adds, edits and deletes dishes; the
@@ -15,9 +15,9 @@ import type { ItemInput, ItemOutput } from "@/lib/types/Item";
  */
 export default function Menu({ role }: { role: "owner" | "cashier" }) {
     const slug = useRestaurantSlug();
-    const [items, setItems] = useState<ItemOutput[]>([]);
+    const [items, setItems] = useState<MenuItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editing, setEditing] = useState<ItemOutput | "new" | null>(null);
+    const [editing, setEditing] = useState<MenuItem | "new" | null>(null);
 
     const load = useCallback(async () => {
         if (!slug) return;
@@ -34,7 +34,7 @@ export default function Menu({ role }: { role: "owner" | "cashier" }) {
         load();
     }, [load]);
 
-    async function toggle(item: ItemOutput) {
+    async function toggle(item: MenuItem) {
         const isEnabled = !item.isEnabled;
         setItems((all) => all.map((i) => (i._id === item._id ? { ...i, isEnabled } : i)));
         try {
@@ -46,7 +46,7 @@ export default function Menu({ role }: { role: "owner" | "cashier" }) {
         }
     }
 
-    async function save(item: ItemInput | ItemOutput) {
+    async function save(item: CreateItemBody | MenuItem) {
         try {
             if ("_id" in item) await updateMenuItem(slug, item);
             else await createMenuItem(slug, item);

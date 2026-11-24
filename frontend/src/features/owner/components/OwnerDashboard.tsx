@@ -21,7 +21,6 @@ import { ToastHost } from "@/components/ui";
 import MobileSidebar from "@/components/layout/MobileSidebar";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import { createRestaurant, getRestaurants } from "@/features/owner/api";
-import { RestaurantOutput } from "@/lib/types/Restaurant";
 import Overview from "@/features/restaurant/components/Overview";
 import { ResContext } from "@/lib/restaurantContext";
 import Menu from "@/features/restaurant/components/Menu";
@@ -32,15 +31,16 @@ import { AddRestaurantPopup } from "@/features/owner/components/AddRestaurantPop
 import AllStaff from "@/features/staff/components/AllStaff";
 import AllOverview from "@/features/owner/components/AllOverview";
 import AllRestaurants from "@/features/owner/components/AllRestaurants";
+import type { Restaurant } from "@vmenu/contracts";
 
 const OwnerDashboard = () => {
     // temp fix for reloading res content when selected res changes
     const tabs = ["overview", "menu", "tables", "staff", "preferences"];
 
     const [activeItem, setActiveItem] = useState("management");
-    const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantOutput | null>(null);
+    const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
     const [showManagement, setShowManagement] = useState(true);
-    const [restaurants, setRestaurants] = useState<RestaurantOutput[]>([]);
+    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [selectedTab, setSelectedTab] = useState("overview");
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showAddRes, setShowAddRes] = useState(false);

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react";
 import Card from "./OrderCard";
-import { OrderOutput } from "@/lib/types/Order";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,12 +11,13 @@ import { ChefHat, Clock, History, Bell } from "lucide-react";
 import { getActiveOrders, markOrderDone } from "@/features/kitchen/api";
 import { useConnectionStatus } from "@/lib/useConnectionStatus";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
+import type { Order } from "@vmenu/contracts";
 
 // VM-10: every 5 s (was 2 s), and only the orders still to cook
 export default function KitchenPage({ pollMs = 5000 }: { pollMs?: number } = {}) {
     const params = useParams();
     const connection = useConnectionStatus();
-    const [orders, setOrders] = useState<OrderOutput[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [totalOrders, setTotalOrders] = useState(0);
     const previousOrderIdsRef = useRef<string[]>([]);
 
@@ -27,7 +27,7 @@ export default function KitchenPage({ pollMs = 5000 }: { pollMs?: number } = {})
                 const activeOrders = await getActiveOrders(String(params.res));
                 setOrders(activeOrders);
                 setTotalOrders(activeOrders.length);
-                previousOrderIdsRef.current = activeOrders.map((order: OrderOutput) => order._id);
+                previousOrderIdsRef.current = activeOrders.map((order: Order) => order._id);
                 connection.succeeded();
             } catch (err) {
                 connection.failed();
@@ -41,14 +41,14 @@ export default function KitchenPage({ pollMs = 5000 }: { pollMs?: number } = {})
             try {
                 const activeOrders = await getActiveOrders(String(params.res));
 
-                const newOrders = activeOrders.filter((order: OrderOutput) => !previousOrderIdsRef.current.includes(order._id));
+                const newOrders = activeOrders.filter((order: Order) => !previousOrderIdsRef.current.includes(order._id));
                 if (newOrders.length > 0) {
                     toast.info(`${newOrders.length} new order${newOrders.length > 1 ? "s" : ""} received! 🔔`);
                 }
 
                 setOrders(activeOrders);
                 setTotalOrders(activeOrders.length);
-                previousOrderIdsRef.current = activeOrders.map((order: OrderOutput) => order._id);
+                previousOrderIdsRef.current = activeOrders.map((order: Order) => order._id);
                 connection.succeeded();
             } catch (err) {
                 // VM-03: after 2 failures in a row the screen says so (a 401 goes to the login page)

@@ -1,7 +1,5 @@
 import api, { seg } from "@/lib/api";
-import type { ItemInput, ItemOutput } from "@/lib/types/Item";
-import type { Overview } from "@/lib/types/Overview";
-import type { TableInput, TableOutput } from "@/lib/types/Table";
+import type { CreateItemBody, CreateTableBody, MenuItem, Overview, Table } from "@vmenu/contracts";
 
 // CL-09: the calls the owner and the cashier both make about one restaurant (tables, menu,
 // overview), in one place. owner/api.ts and cashier/api.ts re-export what each role uses.
@@ -11,16 +9,16 @@ export async function getOverview(slug: string): Promise<Overview> {
     return data;
 }
 
-export async function getMenuItems(slug: string): Promise<ItemOutput[]> {
-    const { data } = await api.get<ItemOutput[]>(`/api/menu/${seg(slug)}/items`);
+export async function getMenuItems(slug: string): Promise<MenuItem[]> {
+    const { data } = await api.get<MenuItem[]>(`/api/menu/${seg(slug)}/items`);
     return data;
 }
 
-export async function createMenuItem(slug: string, item: ItemInput): Promise<void> {
+export async function createMenuItem(slug: string, item: CreateItemBody): Promise<void> {
     await api.post(`/api/menu/${seg(slug)}/items`, item);
 }
 
-export async function updateMenuItem(slug: string, item: ItemOutput): Promise<void> {
+export async function updateMenuItem(slug: string, item: MenuItem): Promise<void> {
     await api.put(`/api/menu/${seg(slug)}/items/${seg(item._id)}`, item);
 }
 
@@ -28,12 +26,12 @@ export async function deleteMenuItem(slug: string, itemId: string): Promise<void
     await api.delete(`/api/menu/${seg(slug)}/items/${seg(itemId)}`);
 }
 
-export async function getTables(slug: string): Promise<TableOutput[]> {
-    const { data } = await api.get<TableOutput[]>(`/api/menu/${seg(slug)}/tables`);
+export async function getTables(slug: string): Promise<Table[]> {
+    const { data } = await api.get<Table[]>(`/api/menu/${seg(slug)}/tables`);
     return data;
 }
 
-export async function createTable(slug: string, table: TableInput): Promise<void> {
+export async function createTable(slug: string, table: CreateTableBody): Promise<void> {
     await api.post(`/api/menu/${seg(slug)}/tables`, table);
 }
 

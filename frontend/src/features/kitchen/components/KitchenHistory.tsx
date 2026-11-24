@@ -2,11 +2,11 @@
 
 import Card from "@/features/kitchen/components/OrderCard";
 import { useEffect, useState } from "react";
-import { OrderOutput } from "@/lib/types/Order";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, History as His } from "lucide-react";
 import Link from "next/link";
 import { getKitchenHistory, type KitchenHistoryPage } from "@/features/kitchen/api";
+import type { Order } from "@vmenu/contracts";
 
 export default function History() {
     const router = useRouter();
@@ -19,7 +19,7 @@ export default function History() {
             .then(setData)
             .catch((err) => console.error("Failed to load the kitchen history:", err));
     }, [params.res, page]);
-    const orders: OrderOutput[] = data?.orders ?? [];
+    const orders: Order[] = data?.orders ?? [];
     const pages = data?.pages ?? 1;
 
     return (

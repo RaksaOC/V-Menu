@@ -4,15 +4,15 @@ import { useId, useState, type FormEvent } from "react";
 import { ImageIcon, Trash2, Upload, X } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
 import { PHOTO_TYPES, usePhoto } from "./usePhoto";
-import type { ItemInput, ItemOutput } from "@/lib/types/Item";
+import type { CreateItemBody, MenuItem } from "@vmenu/contracts";
 
 const PLACEHOLDER = "/images/img.png";
 
 interface Props {
     /** Without an item the form adds one; with an item it edits or deletes it. */
-    item?: ItemOutput;
+    item?: MenuItem;
     onClose: () => void;
-    onSave: (item: ItemInput | ItemOutput) => void;
+    onSave: (item: CreateItemBody | MenuItem) => void;
     onDelete?: (id: string) => void;
 }
 

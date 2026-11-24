@@ -3,15 +3,15 @@
 import { useId, useState, type FormEvent } from "react";
 import { Trash2 } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
-import type { TableInput, TableOutput } from "@/lib/types/Table";
+import type { CreateTableBody, Table } from "@vmenu/contracts";
 
 type Result = "ok" | "taken" | "error" | undefined;
 
 interface Props {
     /** Without a table the form adds one; with a table it renames or deletes it. */
-    table?: TableOutput;
+    table?: Table;
     onClose: () => void;
-    onCreate?: (table: TableInput) => void;
+    onCreate?: (table: CreateTableBody) => void;
     onRename?: (id: string, name: string) => Promise<Result>;
     onDelete?: (id: string) => void;
 }
@@ -35,7 +35,7 @@ export default function TableForm({ table, onClose, onCreate, onRename, onDelete
             setError(result === "taken" ? "Table name is taken." : result === "error" ? "Could not save the table. Please try again." : "");
         } else {
             if (!auto && !name.trim()) return setError("Table name is required.");
-            onCreate?.({ name: auto ? "" : name.trim(), isEnabled: false, type: auto ? "auto" : "manual" });
+            onCreate?.({ name: auto ? "" : name.trim(), type: auto ? "auto" : "manual" }); // a new table starts closed (VM-04)
         }
     }
 

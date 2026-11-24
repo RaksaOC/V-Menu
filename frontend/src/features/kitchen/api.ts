@@ -1,15 +1,15 @@
 import api, { seg } from "@/lib/api";
-import type { OrderOutput } from "@/lib/types/Order";
+import type { Order } from "@vmenu/contracts";
 
 /** The orders still to cook, oldest first. Finished ones never leave the server (VM-10). */
-export async function getActiveOrders(slug: string): Promise<OrderOutput[]> {
-    const { data } = await api.get<OrderOutput[]>(`/api/orders/${seg(slug)}/kitchen?status=active`);
+export async function getActiveOrders(slug: string): Promise<Order[]> {
+    const { data } = await api.get<Order[]>(`/api/orders/${seg(slug)}/kitchen?status=active`);
     return data;
 }
 
 /** One page of finished orders, newest first. */
 export interface KitchenHistoryPage {
-    orders: OrderOutput[];
+    orders: Order[];
     page: number;
     limit: number;
     total: number;

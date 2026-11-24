@@ -1,8 +1,7 @@
-import { ItemOutput } from "@/lib/types/Item";
-import { CartItem } from "@/lib/types/CartItem";
 import { Printer, X } from "lucide-react";
 import { useRef } from "react";
 import { Button, Modal } from "@/components/ui";
+import type { MenuItem, OrderLine } from "@vmenu/contracts";
 
 interface Props {
     businessName: string;
@@ -10,13 +9,13 @@ interface Props {
     phone: string;
     invoiceId: string;
     date: string;
-    items: CartItem[];
+    items: OrderLine[];
     onClose: () => void;
 }
 
 function Invoice({ businessName, address, phone, invoiceId, date, items, onClose }: Props) {
     // Combine duplicate items by id
-    const mergedItems: CartItem[] = [];
+    const mergedItems: OrderLine[] = [];
     const invoiceRef = useRef<HTMLDivElement>(null);
     const printInvoice = () => {
         if (!invoiceRef.current) return;

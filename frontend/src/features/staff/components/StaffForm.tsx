@@ -3,18 +3,21 @@
 import { useId, useState, type FormEvent } from "react";
 import { Trash2 } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
-import type { TenantInput, TenantOutput } from "@/lib/types/Tenant";
+import type { AddStaffBody, StaffMember } from "@vmenu/contracts";
+
+/** A new member as the form collects them: the password goes to Firebase, the rest to the API. */
+export type NewStaffMember = AddStaffBody & { password: string };
 
 type Role = "cashier" | "chef";
 
 interface Props {
     /** Without a member the form adds one (with a password); with a member it edits or removes them. */
-    member?: TenantOutput;
+    member?: StaffMember;
     /** Set by the page when Firebase says the email already has an account. */
     emailTaken?: boolean;
     onClose: () => void;
-    onAdd?: (input: TenantInput) => void;
-    onSave?: (member: TenantOutput) => void;
+    onAdd?: (input: NewStaffMember) => void;
+    onSave?: (member: StaffMember) => void;
     onDelete?: (id: string) => void;
 }
 

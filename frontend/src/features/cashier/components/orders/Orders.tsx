@@ -2,13 +2,13 @@ import OrderCard from "./OrderCard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
-import { TableOrderOutput } from "@/lib/types/TableOrder";
 import { getOpenBills, getPaidBills, setBillPaid, type PaidBillsPage } from "@/features/cashier/api";
 import { apiErrorMessage } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { useConnectionStatus } from "@/lib/useConnectionStatus";
 import { useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Clock, RefreshCw, ShoppingCart } from "lucide-react";
+import type { Bill } from "@vmenu/contracts";
 
 /** VM-11: the open bills refresh themselves this often. */
 export const BILLS_POLL_MS = 10_000;
@@ -26,7 +26,7 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
     const connection = useConnectionStatus();
 
     // ---- open bills, kept up to date
-    const [orders, setOrders] = useState<TableOrderOutput[]>([]);
+    const [orders, setOrders] = useState<Bill[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [updatedAt, setUpdatedAt] = useState<number | null>(null);
     const [now, setNow] = useState(() => Date.now());

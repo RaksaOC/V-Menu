@@ -1,15 +1,15 @@
 import api, { seg } from "@/lib/api";
-import type { TableOrderOutput } from "@/lib/types/TableOrder";
+import type { Bill } from "@vmenu/contracts";
 
 /** The bills still to settle, with their orders, newest first (VM-11). */
-export async function getOpenBills(slug: string): Promise<TableOrderOutput[]> {
-    const { data } = await api.get<TableOrderOutput[]>(`/api/orders/${seg(slug)}/bills?status=open`);
+export async function getOpenBills(slug: string): Promise<Bill[]> {
+    const { data } = await api.get<Bill[]>(`/api/orders/${seg(slug)}/bills?status=open`);
     return data;
 }
 
 /** One page of paid bills, most recently paid first. */
 export interface PaidBillsPage {
-    bills: TableOrderOutput[];
+    bills: Bill[];
     page: number;
     limit: number;
     total: number;

@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle, CreditCard, Table as TableIcon, TrendingUp,
 import { Card, Skeleton } from "@/components/ui";
 import { getOverview } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/useRestaurantSlug";
-import type { Overview as OverviewData } from "@/lib/types/Overview";
+import type { Overview as OverviewData } from "@vmenu/contracts";
 
 const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 

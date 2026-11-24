@@ -31,7 +31,7 @@ describe("customer api", () => {
 
     it("places an order for the restaurant", async () => {
         const seen = answer("post", "/api/orders/demo-bistro", {}, 201);
-        const input = { table: "T1", isDone: false, orderedItems: [{ item: dish, quantity: 1 }] };
+        const input = { table: "T1", orderedItems: [{ item: { _id: dish._id }, quantity: 1 }] };
         await customer.placeOrder("demo-bistro", input);
         expect(seen[0].body).toEqual(input);
     });
@@ -146,10 +146,10 @@ describe("owner api", () => {
         const add = answer("post", "/api/menu/demo-bistro/tables", table, 201);
         const edit = answer("put", "/api/menu/demo-bistro/tables/t1", table);
         const del = answer("delete", "/api/menu/demo-bistro/tables/t1");
-        await owner.createTable("demo-bistro", { name: "T1", isEnabled: true, type: "table" });
+        await owner.createTable("demo-bistro", { name: "T1", type: "manual" });
         await owner.updateTable("demo-bistro", "t1", table);
         await owner.deleteTable("demo-bistro", "t1");
-        expect(add[0].body).toEqual({ name: "T1", isEnabled: true, type: "table" });
+        expect(add[0].body).toEqual({ name: "T1", type: "manual" });
         expect(edit[0].body).toEqual(table);
         expect(del).toHaveLength(1);
     });
@@ -207,7 +207,7 @@ describe("errors", () => {
     it("rejects with the server's message, which apiErrorMessage turns into text", async () => {
         const { apiErrorMessage } = await import("@/lib/api");
         answer("post", "/api/orders/demo-bistro", { message: "Table T9 is closed" }, 409);
-        const err = await customer.placeOrder("demo-bistro", { table: "T9", isDone: false, orderedItems: [] }).catch((e) => e);
+        const err = await customer.placeOrder("demo-bistro", { table: "T9", orderedItems: [] }).catch((e) => e);
         expect(apiErrorMessage(err)).toBe("Table T9 is closed");
     });
 

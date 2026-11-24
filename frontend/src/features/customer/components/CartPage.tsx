@@ -4,15 +4,14 @@ import { useEffect, useState } from "react";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import { getMenu, placeOrder as sendOrder } from "@/features/customer/api";
-import { clearCart, readCart, reconcileCart, saveCart } from "@/features/customer/cart";
+import { clearCart, readCart, reconcileCart, saveCart, toOrderBody } from "@/features/customer/cart";
 import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
-import { CartItem } from "@/lib/types/CartItem";
-import { OrderInput } from "@/lib/types/Order";
 import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, ShoppingBag, Receipt, Plus, RotateCcw } from "lucide-react";
-import { ItemOutput } from "@/lib/types/Item";
 import { addToCart } from "@/features/customer/cart";
+import type { MenuItem } from "@vmenu/contracts";
+import type { CartItem } from "@/features/customer/cart";
 
 export default function CartPage() {
     const router = useRouter();
@@ -86,12 +85,7 @@ export default function CartPage() {
         setIsPlacingOrder(true);
 
         try {
-            const orderToAdd: OrderInput = {
-                table,
-                isDone: false,
-                orderedItems: cartItems,
-            };
-            const order = await sendOrder(slug, orderToAdd);
+            const order = await sendOrder(slug, toOrderBody(table, cartItems));
             clearCart(slug, table); // straight away, so the same cart can't be sent twice
             setCartItems([]);
             // VM-07: the order's confirmation, with its number and the server's prices

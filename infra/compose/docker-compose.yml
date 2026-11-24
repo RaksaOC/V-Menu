@@ -81,7 +81,9 @@ services:
 
   frontend:
     build:
-      context: ../../frontend
+      # the repo root, so the image can see backend/packages/contracts (CL-05)
+      context: ../..
+      dockerfile: frontend/Dockerfile
       args:
         NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-}

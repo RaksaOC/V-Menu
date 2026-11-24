@@ -1,7 +1,14 @@
 import { toast } from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
-import type { CartItem } from "@/lib/types/CartItem";
-import type { ItemOutput } from "@/lib/types/Item";
+import type { MenuItem, PlaceOrderBody } from "@vmenu/contracts";
+
+/** A line in the cart: a dish as the menu showed it, and how many. */
+export type CartItem = { item: MenuItem; quantity: number };
+
+/** What the cart sends: the dish ids and quantities; menu-service supplies the names and prices. */
+export function toOrderBody(table: string, items: CartItem[]): PlaceOrderBody {
+    return { table, orderedItems: items.map((l) => ({ item: { _id: l.item._id }, quantity: l.quantity })) };
+}
 
 // The customer's cart, kept in localStorage until the order is placed.
 // VM-05: one cart per restaurant and table, so a cart never leaks into another restaurant or
@@ -50,7 +57,7 @@ export function addToCart(slug: string, table: string, itemToAdd: CartItem): voi
  * are dropped, and the others get the menu's current name, price and photo.
  * Returns how many lines were dropped, so the page can tell the customer.
  */
-export function reconcileCart(slug: string, table: string, menu: ItemOutput[]): number {
+export function reconcileCart(slug: string, table: string, menu: MenuItem[]): number {
     const items = readCart(slug, table);
     const byId = new Map(menu.map((item) => [item._id, item]));
     const kept = items.filter((line) => byId.has(line.item._id)).map((line) => ({ ...line, item: byId.get(line.item._id)! }));
