@@ -531,3 +531,33 @@ ok   VM-33-final-menu-with-cart-1280-dark
 ok   VM-33-final-cart-1280-dark
 ok   VM-33-final-cart-empty-1280-dark
 ok   VM-33-final-not-found-1280-dark
+# ONLY=VM-34 final (2026-11-24T04:18:23.739Z)
+ok   VM-34-final-kitchen-360
+ok   VM-34-final-kitchen-empty-360
+ok   VM-34-final-history-360
+ok   VM-34-final-kitchen-360-dark
+ok   VM-34-final-kitchen-empty-360-dark
+ok   VM-34-final-history-360-dark
+ok   VM-34-final-kitchen-1280
+ok   VM-34-final-kitchen-empty-1280
+ok   VM-34-final-history-1280
+ok   VM-34-final-kitchen-1280-dark
+ok   VM-34-final-kitchen-empty-1280-dark
+ok   VM-34-final-history-1280-dark
+# ONLY=VM-34 final 1280 dark (2026-11-24T04:22:14.955Z)
+ok   VM-34-final-kitchen-1280-dark
+ok   VM-34-final-kitchen-empty-1280-dark
+ok   VM-34-final-history-1280-dark
+# ONLY=VM-34 final (2026-11-24T04:23:45.835Z)
+ok   VM-34-final-kitchen-360
+ok   VM-34-final-kitchen-empty-360
+ok   VM-34-final-history-360
+ok   VM-34-final-kitchen-360-dark
+ok   VM-34-final-kitchen-empty-360-dark
+ok   VM-34-final-history-360-dark
+ok   VM-34-final-kitchen-1280
+ok   VM-34-final-kitchen-empty-1280
+ok   VM-34-final-history-1280
+ok   VM-34-final-kitchen-1280-dark
+ok   VM-34-final-kitchen-empty-1280-dark
+ok   VM-34-final-history-1280-dark

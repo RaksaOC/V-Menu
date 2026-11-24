@@ -47,6 +47,8 @@ const SCREENS = [
     "customer-menu",
     "cart",
     "kitchen",
+    "kitchen-empty",
+    "kitchen-busy",
     "cashier-overview",
     "cashier-tables",
     "cashier-orders",

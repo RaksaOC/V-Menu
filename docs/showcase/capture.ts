@@ -1804,6 +1804,64 @@ for (const vp of [PHONE, DESKTOP]) {
     }
 }
 
+// VM-34: the kitchen screen in Deep Lab: three orders of different ages (2, 8 and 20 minutes, one
+// with notes) and the empty board, light and dark, phone and desktop. The orders are served to the
+// page with page.route, so the shots don't depend on the stack's data.
+for (const vp of [PHONE, DESKTOP]) {
+    for (const theme of ["light", "dark"] as const) {
+        await step(`VM-34 final ${vp.width} ${theme}`, async () => {
+            const { context, page } = await newPage(browser, vp, theme, "chef");
+            await context.addInitScript((t) => localStorage.setItem("vm-kitchen-theme", t), theme);
+            const c = { page, theme, width: vp.width };
+            const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as {
+                categories: { items: { _id: string; name: string; priceCents: number; image: string; isEnabled: boolean }[] }[];
+            };
+            const [a, b, d] = menu.categories.flatMap((s) => s.items);
+            const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
+            const order = (n: number, table: string, status: string, min: number, lines: unknown[], note?: string) => ({
+                _id: `665f00000000000000000${n}0${n}`,
+                table,
+                status,
+                statusHistory: [],
+                createdAt: ago(min),
+                orderedAt: ago(min),
+                orderedItems: lines,
+                ...(note && { note }),
+            });
+            let orders: unknown[] = [
+                order(
+                    1,
+                    "T4",
+                    "pending",
+                    2,
+                    [
+                        { item: a, quantity: 2, note: "no chilli" },
+                        { item: d, quantity: 1 },
+                    ],
+                    "birthday table",
+                ),
+                order(2, "T2", "preparing", 8, [{ item: b, quantity: 1 }]),
+                order(3, "T1", "ready", 20, [
+                    { item: a, quantity: 1 },
+                    { item: b, quantity: 3 },
+                ]),
+            ];
+            await page.route(`**/api/orders/${SLUG}/kitchen?status=active`, (route) => route.fulfill({ json: orders }));
+            await page.goto(`${BASE}/${SLUG}/kitchen`);
+            await settle(page);
+            await shot(c, "VM-34-final-kitchen", false);
+            orders = [];
+            await page.reload();
+            await settle(page);
+            await shot(c, "VM-34-final-kitchen-empty", false);
+            await page.goto(`${BASE}/${SLUG}/kitchen/history`);
+            await settle(page);
+            await shot(c, "VM-34-final-history", false);
+            await context.close();
+        });
+    }
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

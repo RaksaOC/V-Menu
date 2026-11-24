@@ -15,6 +15,9 @@ import { NEXT_STATUS } from "@/lib/order-status";
 import { toast } from "@/lib/toast";
 import { useConnectionStatus } from "@/lib/use-connection-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
+import { ThemeToggle } from "@/components/marketing/tour/ThemeToggle";
+import { BAND_BUTTON } from "@/features/kitchen/band";
+import { KITCHEN_THEME_KEY } from "@/theme/ThemeSync";
 import KitchenColumns from "./KitchenColumns";
 import KitchenControls, { type SoundState } from "./KitchenControls";
 import KitchenHeader from "./KitchenHeader";
@@ -130,14 +133,17 @@ export default function KitchenPage({ pollMs = 5000, sound }: Props = {}) {
     );
 
     return (
-        <div data-kiosk={kiosk || undefined} className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+        <div data-kiosk={kiosk || undefined} className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
             {lost && <ConnectionLostBar />}
             {kiosk ? (
-                <header className="flex flex-wrap items-center justify-between gap-3 bg-slate-800 px-6 py-3 text-white">
-                    <h1 className="flex items-center gap-3 text-2xl font-bold">
+                <header className="vm-band flex flex-wrap items-center justify-between gap-3 px-6 py-3">
+                    <h1 className="flex items-center gap-3 font-[family-name:var(--f-display)] text-2xl font-semibold">
                         <ChefHat size={28} aria-hidden /> Kitchen · {totalOrders} active
                     </h1>
-                    {controls}
+                    <div className="flex flex-wrap items-center gap-2">
+                        {controls}
+                        <ThemeToggle storageKey={KITCHEN_THEME_KEY} className={BAND_BUTTON} />
+                    </div>
                 </header>
             ) : (
                 <KitchenHeader slug={slug} totalOrders={totalOrders} controls={controls} />

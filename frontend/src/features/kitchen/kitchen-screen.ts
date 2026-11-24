@@ -18,11 +18,12 @@ export function ageLabel(ageMs: number): string {
     return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
 }
 
-/** Fixed colours, readable from across a kitchen; nothing pulses. */
+/** Fixed chips in the soft tones (VM-34), readable from across a kitchen; nothing pulses. The text
+ *  is ink, not the tone's colour: on the soft tones that is too faint in dark mode (axe). */
 export const AGE_CHIP_CLASS: Record<AgeTone, string> = {
-    fresh: "bg-green-700 text-white",
-    waiting: "bg-[var(--accent)] text-[var(--accent-ink)]",
-    late: "bg-red-700 text-white",
+    fresh: "bg-[var(--ok-soft)] text-[var(--ink)]",
+    waiting: "bg-[var(--accent-soft)] text-[var(--ink)]",
+    late: "bg-[var(--bad-soft)] text-[var(--ink)]",
 };
 
 export interface SoundPlayer {
