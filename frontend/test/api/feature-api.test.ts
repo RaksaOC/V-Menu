@@ -151,9 +151,9 @@ describe("staff api", () => {
 });
 
 describe("auth api", () => {
-    it("exchanges a Firebase token for the app token", async () => {
-        const seen = answer("post", "/api/auth/login", { appToken: "app.jwt" });
-        expect(await auth.login({ idToken: "fb", role: "chef", resSlug: "demo-bistro" })).toBe("app.jwt");
+    it("exchanges a Firebase token for a session cookie, and hands nothing back (SEC-01)", async () => {
+        const seen = answer("post", "/api/auth/login", { role: "chef" });
+        expect(await auth.login({ idToken: "fb", role: "chef", resSlug: "demo-bistro" })).toBeUndefined();
         expect(seen[0].body).toEqual({ idToken: "fb", role: "chef", resSlug: "demo-bistro" });
     });
 

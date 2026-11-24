@@ -3,18 +3,21 @@ import { endSession } from "@/lib/session";
 
 // The one HTTP client of the app. Components never use it directly: each feature wraps the
 // calls it needs in typed functions in features/<area>/api.ts. Only this file imports axios.
-const api = axios.create({
+export const api = axios.create({
     baseURL: "/", // same origin; Next.js forwards /api/* to the services
+    // SEC-01: the sign-in is the httpOnly "token" cookie, which the browser sends by itself and
+    // page scripts can't read. No token is stored or sent by this code.
+    withCredentials: true,
 });
 
-// Sends the app token of the signed-in staff member, if any.
-api.interceptors.request.use(async (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+// Before SEC-01 the token was also kept in localStorage; drop any copy left from then.
+if (typeof window !== "undefined") {
+    try {
+        localStorage.removeItem("token");
+    } catch {
+        // storage blocked: nothing to remove
     }
-    return config;
-});
+}
 
 /** The HTTP status of a failed call, or undefined when the server could not be reached. */
 // VM-03: when the sign-in has ended, staff are sent to their login page instead of a screen

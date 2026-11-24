@@ -50,12 +50,10 @@ const Auth = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
 
-            const appToken = await login({
+            await login({
                 idToken: await userCredential.user.getIdToken(),
                 role: "owner",
             });
-
-            localStorage.setItem("token", appToken);
 
             router.push(`/owner`);
         } catch (err: any) {

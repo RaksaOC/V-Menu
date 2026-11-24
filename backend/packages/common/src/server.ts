@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { errorHandler, notFound } from "./errors.js";
 import { httpLogger, logger } from "./logger.js";
 import { metricsHandler, metricsMiddleware } from "./metrics.js";
+import { sameOrigin } from "./origin.js";
 
 // Strip $-operators from query filters, so a body like {"email": {"$ne": null}} cannot
 // turn into a NoSQL injection.
@@ -28,6 +29,7 @@ export function baseApp(): Express {
     app.use(express.json({ limit: "100kb" }));
     app.use(httpLogger);
     app.use(metricsMiddleware);
+    app.use(sameOrigin); // SEC-01: no cross-site writes (after the logger, so refusals are logged)
     // Liveness: the process is up and answering. Docker/k8s restart it only when this fails.
     app.get("/health", (_req, res) => {
         res.json({ status: "ok", service: process.env.SERVICE_NAME, db: dbConnected() });

@@ -51,13 +51,11 @@ const Auth = () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
 
-            const appToken = await login({
+            await login({
                 idToken: await userCredential.user.getIdToken(),
                 role: "chef",
                 resSlug: String(params.res),
             });
-
-            localStorage.setItem("token", appToken);
 
             router.push(`/${params.res}/kitchen`);
         } catch (err: any) {

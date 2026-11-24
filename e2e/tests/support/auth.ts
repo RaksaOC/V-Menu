@@ -28,5 +28,4 @@ export async function signInAs(context: BrowserContext, baseURL: string, role: "
         .setExpirationTime("15m")
         .sign(new TextEncoder().encode(jwtSecret()));
     await context.addCookies([{ name: "token", value: token, url: baseURL, httpOnly: true, sameSite: "Lax" }]);
-    await context.addInitScript((t) => localStorage.setItem("token", t), token);
 }

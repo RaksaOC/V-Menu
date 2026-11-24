@@ -8,9 +8,8 @@ test("an ended kitchen session goes to the login page with a message", async ({ 
     await page.goto(`/${SLUG}/kitchen`);
     await expect(page.getByRole("heading", { name: /kitchen/i }).first()).toBeVisible();
 
-    // the session ends: the cookie is gone and the stored token is no longer valid
+    // the session ends: the cookie is gone (SEC-01: it's the only copy of the session)
     await context.clearCookies();
-    await page.evaluate(() => localStorage.setItem("token", "ended.session.token"));
 
     // the next poll (every 2 s) gets 401
     await expect(page).toHaveURL(new RegExp(`/${SLUG}/kitchen/login\\?expired=1$`), { timeout: 10_000 });

@@ -45,8 +45,10 @@ Prices always come from menu-service, never from the browser.
 1. The user signs in with Firebase Auth in the browser.
 2. The browser sends the Firebase **ID token** to `/api/auth/login`.
 3. restaurant-service verifies the token against Google's public keys. No service-account key is needed.
-4. restaurant-service issues a 1-hour **app token** (HS256 JWT) holding `uid`, `role` and, for staff, `resId`. It goes in an httpOnly cookie and in the response body.
+4. restaurant-service issues an **app token** (HS256 JWT, lasting `SESSION_HOURS`, 12 by default) holding `uid`, `role` and, for staff, `resId`. It is set **only** as an httpOnly, `SameSite=Lax` cookie, so page scripts can never read it (SEC-01). The browser sends it with every `/api/*` call.
 5. Every service checks the role, and checks that the token's restaurant matches the one in the URL. Owners may only touch restaurants they own.
+6. Writes (`POST`, `PUT`, `PATCH`, `DELETE`) whose `Origin` is another site get **403**, so another site can't use the cookie (CSRF). The services read the site's own address from the request; `ALLOWED_ORIGINS` adds others.
+7. A `Authorization: Bearer` header is ignored unless `AUTH_ALLOW_BEARER=true`, which only the tests use.
 
 ## Run it
 
