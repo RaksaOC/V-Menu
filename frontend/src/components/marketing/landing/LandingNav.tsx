@@ -50,7 +50,7 @@ export function LandingNav({ onOpenTour }: { onOpenTour: () => void }) {
                             <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
                                 <span className="text-xl font-bold text-white">V</span>
                             </div>
-                            <span className="text-xl font-bold text-blue-600 dark:text-blue-400">V-Menu</span>
+                            <span className="text-xl font-bold text-[var(--accent-text)]">V-Menu</span>
                         </a>
                     </div>
 

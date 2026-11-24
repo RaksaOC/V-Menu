@@ -44,7 +44,7 @@ export function CheckInbox({ user, onVerified }: Props) {
 
     return (
         <section className="w-full max-w-md space-y-5 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-8 text-center shadow-xl">
-            <MailCheck size={40} aria-hidden className="mx-auto text-blue-600 dark:text-blue-400" />
+            <MailCheck size={40} aria-hidden className="mx-auto text-[var(--accent-text)]" />
             <h1 className="text-2xl font-bold">Check your inbox</h1>
             <p className="text-sm text-[var(--muted)]">
                 We sent a link to <strong className="text-[var(--ink)]">{user.email}</strong>. Open it to verify your email, then come back

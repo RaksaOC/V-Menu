@@ -13,7 +13,7 @@ export function HowItWorksSection() {
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
                 >
-                    <h2 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">How V-Menu Works</h2>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-[var(--accent-text)] mb-6">How V-Menu Works</h2>
                     <p className="text-lg text-gray-700 dark:text-gray-300">
                         Simple, intuitive, and powerful — from setup to daily operations
                     </p>
@@ -46,7 +46,7 @@ export function HowItWorksSection() {
                             variants={fadeIn}
                             transition={{ delay: index * 0.2 }}
                         >
-                            <div className="text-5xl font-bold text-blue-600/20 dark:text-blue-400/20 mb-4">{item.step}</div>
+                            <div className="text-5xl font-bold text-[var(--accent-text)]/20 mb-4">{item.step}</div>
                             <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">{item.title}</h3>
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">{item.desc}</p>
                             <div className="mt-auto">

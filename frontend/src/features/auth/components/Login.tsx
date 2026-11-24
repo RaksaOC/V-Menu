@@ -86,7 +86,7 @@ export function Login({ onSuccess }: Props) {
                     <button
                         type="button"
                         onClick={() => setMode(creating ? "signin" : "create")}
-                        className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                        className="font-medium text-[var(--accent-text)] hover:underline dark:text-blue-400"
                     >
                         {creating ? "Sign in" : "Create an account"}
                     </button>

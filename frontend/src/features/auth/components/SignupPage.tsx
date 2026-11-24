@@ -142,7 +142,7 @@ const SignupPage = () => {
                         onClick={() => {
                             router.push("/login");
                         }}
-                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                        className="text-[var(--accent-text)] hover:underline"
                     >
                         Log in
                     </a>

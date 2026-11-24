@@ -36,6 +36,8 @@ async function tabTo(page: Page, name: RegExp) {
 test("a guest orders with the keyboard alone", async ({ page }) => {
     await page.goto(`/${SLUG}/customer/${table.name}`);
     await expect(page.getByRole("heading", { name: "Our Menu" })).toBeVisible();
+    // the dishes load after the heading
+    await expect(page.getByRole("button", { name: /^Add to cart: / }).first()).toBeVisible();
 
     await tabTo(page, /^Add to cart: /);
     await page.keyboard.press("Enter");
