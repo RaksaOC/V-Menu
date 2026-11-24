@@ -6,7 +6,8 @@
 
 services:
   menu-service:
-    networks: [backend, frontend, storage]
+    networks:
+      storage: {} # added to the stack's networks, keeping the frontend alias (M6)
 
 networks:
   storage:

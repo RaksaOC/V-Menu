@@ -5,11 +5,14 @@
 
 services:
   restaurant-service:
-    networks: [mongo]
+    networks:
+      mongo: {}
   menu-service:
-    networks: [mongo]
+    networks:
+      mongo: {}
   order-service:
-    networks: [mongo]
+    networks:
+      mongo: {}
 
 networks:
   mongo:

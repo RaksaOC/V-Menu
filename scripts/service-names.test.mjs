@@ -71,6 +71,7 @@ test("on the server, the aliases are only on the stack's own frontend network", 
         for (const [name, net] of Object.entries(nets))
             if (name !== "frontend") assert.ok(!(net?.aliases ?? []).includes(alias), `${s}-service: "${alias}" also on ${name}`);
     }
-    assert.ok(config.services["menu-service"].networks.storage, "menu-service still joins MinIO's network");
-    assert.ok(config.services.frontend.networks.proxy, "the frontend still joins the proxy's network");
+    // a network with no settings is null in the merged config, so check the key
+    assert.ok("storage" in config.services["menu-service"].networks, "menu-service still joins MinIO's network");
+    assert.ok("proxy" in config.services.frontend.networks, "the frontend still joins the proxy's network");
 });

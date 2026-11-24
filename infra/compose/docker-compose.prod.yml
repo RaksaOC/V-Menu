@@ -47,11 +47,19 @@ services:
   restaurant-service:
     <<: *service
     image: ghcr.io/raksaoc/vmenu-restaurant-service:${TAG:?set TAG to the image tag}
+    networks:
+      backend:
+      frontend:
+        aliases: [vmenu-restaurant-api] # M6: the frontend's name for it, only on this stack's network
     env_file: ./services/restaurant-service/.env
 
   menu-service:
     <<: *service
     image: ghcr.io/raksaoc/vmenu-menu-service:${TAG:?set TAG to the image tag}
+    networks:
+      backend:
+      frontend:
+        aliases: [vmenu-menu-api] # M6: the frontend's name for it, only on this stack's network
     env_file: ./services/menu-service/.env
     environment:
       RESTAURANT_SERVICE_URL: http://restaurant-service:4101
@@ -60,13 +68,19 @@ services:
   order-service:
     <<: *service
     image: ghcr.io/raksaoc/vmenu-order-service:${TAG:?set TAG to the image tag}
+    networks:
+      backend:
+      frontend:
+        aliases: [vmenu-order-api] # M6: the frontend's name for it, only on this stack's network
     env_file: ./services/order-service/.env
     environment:
       RESTAURANT_SERVICE_URL: http://restaurant-service:4101
       MENU_SERVICE_URL: http://menu-service:4102
 
-  # The image must be built with the Compose DNS names as service URLs (the frontend
-  # Dockerfile's defaults) and the NEXT_PUBLIC_FIREBASE_* build args.
+  # The image must be built with the service URLs the frontend Dockerfile defaults to and the
+  # NEXT_PUBLIC_FIREBASE_* build args. M6: those URLs use the vmenu-*-api aliases above, which exist
+  # only on this stack's "frontend" network. A service's own name ("menu-service") is also on every
+  # shared network it joins (the proxy's, MinIO's), where the other environment's has it too.
   frontend:
     image: ghcr.io/raksaoc/vmenu-frontend:${TAG:?set TAG to the image tag}
     restart: unless-stopped
