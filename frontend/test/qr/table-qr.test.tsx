@@ -74,7 +74,7 @@ describe("View QR Code buttons", () => {
 
     it("opens the QR code from the owner's table card", async () => {
         const { default: TableCard } = await import("@/features/restaurant/components/TableCard");
-        render(<TableCard role="owner" table={table} onEdit={() => {}} />);
+        render(<TableCard role="owner" table={table} onEdit={() => {}} onToggle={() => {}} />);
         fireEvent.click(screen.getByRole("button", { name: /view qr code/i }));
         expect(await screen.findByRole("img", { name: "QR code for table T1" })).toBeTruthy();
     });

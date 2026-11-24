@@ -7,11 +7,11 @@ import { Button, Card } from "@/components/ui";
 import TableQrModal from "@/components/qr/TableQrModal";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 
-type Props = { table: Table; restaurantName?: string } & (
-    { role: "owner"; onEdit: (table: Table) => void } | { role: "cashier"; onToggle: (table: Table) => void }
+type Props = { table: Table; restaurantName?: string; onToggle: (table: Table) => void } & (
+    { role: "owner"; onEdit: (table: Table) => void } | { role: "cashier" }
 );
 
-/** One table, for the owner (edit) and the cashier (open/close); both can show its QR code (CL-09). */
+/** One table: both roles open and close it and show its QR code (VM-37); the owner also edits it (CL-09). */
 export default function TableCard(props: Props) {
     const { table } = props;
     const slug = useRestaurantSlug();
@@ -35,16 +35,15 @@ export default function TableCard(props: Props) {
                 {table.isEnabled ? "Open" : "Closed"}
             </span>
             <div className="mt-2 grid w-full gap-2">
-                {props.role === "cashier" ? (
-                    <Button
-                        variant={table.isEnabled ? "danger" : "solid"}
-                        icon={table.isEnabled ? <XCircle size={16} aria-hidden /> : <CheckCircle size={16} aria-hidden />}
-                        onClick={() => props.onToggle(table)}
-                        block
-                    >
-                        {table.isEnabled ? "Close Table" : "Open Table"}
-                    </Button>
-                ) : (
+                <Button
+                    variant={table.isEnabled ? "danger" : "solid"}
+                    icon={table.isEnabled ? <XCircle size={16} aria-hidden /> : <CheckCircle size={16} aria-hidden />}
+                    onClick={() => props.onToggle(table)}
+                    block
+                >
+                    {table.isEnabled ? "Close Table" : "Open Table"}
+                </Button>
+                {props.role === "owner" && (
                     <Button variant="outline" icon={<Pencil size={16} aria-hidden />} onClick={() => props.onEdit(table)} block>
                         Edit Table
                     </Button>
