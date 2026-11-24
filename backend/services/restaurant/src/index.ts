@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
 import { createApp } from "./app.js";
 import { verifyFirebaseIdToken } from "./firebase.js";
-import { requireEnv } from "./lib/config.js";
-import { logger } from "./lib/logger.js";
-import { handleShutdown } from "./lib/server.js";
+import { requireEnv, logger, handleShutdown } from "@vmenu/common";
 
 requireEnv("MONGODB_URI", "JWT_SECRET", "INTERNAL_API_KEY", "FIREBASE_PROJECT_ID");
 const port = Number(process.env.PORT ?? 4101);

@@ -27,12 +27,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: restaurant-service, dir: backend/services/restaurant, kind: service }
-          - { name: menu-service, dir: backend/services/menu, kind: service }
-          - { name: order-service, dir: backend/services/order, kind: service }
-          - { name: frontend, dir: frontend, kind: web }
+          # backend/ is one npm workspace (CL-02): npm ci in any of its folders installs the
+          # whole workspace from backend/package-lock.json.
+          - { name: common, dir: backend/packages/common, kind: service, lock: backend/package-lock.json }
+          - { name: restaurant-service, dir: backend/services/restaurant, kind: service, lock: backend/package-lock.json }
+          - { name: menu-service, dir: backend/services/menu, kind: service, lock: backend/package-lock.json }
+          - { name: order-service, dir: backend/services/order, kind: service, lock: backend/package-lock.json }
+          - { name: frontend, dir: frontend, kind: web, lock: frontend/package-lock.json }
           # Repo-level checks (issue and PR templates); no install needed.
-          - { name: repo, dir: ., kind: repo }
+          - { name: repo, dir: ., kind: repo, lock: package-lock.json }
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -47,7 +50,7 @@ jobs:
           node-version: 22
           # The repo checks install nothing, so there is no npm cache to save.
           cache: ${{ matrix.kind != 'repo' && 'npm' || '' }}
-          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+          cache-dependency-path: ${{ matrix.lock }}
 
       - run: npm ci --no-audit --no-fund
         if: matrix.kind != 'repo'
@@ -66,7 +69,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: /home/runner/.cache/mongodb-binaries
-          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', matrix.dir)) }}
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles(matrix.lock) }}
           restore-keys: mongodb-binaries-${{ runner.os }}-
 
       - name: Test with coverage

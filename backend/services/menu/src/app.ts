@@ -1,10 +1,6 @@
 import { Router, type Request } from "express";
 import mongoose from "mongoose";
-import { assertRestaurantAccess, requireRole, type Role } from "./lib/auth.js";
-import { assertId, badRequest, HttpError, notFound } from "./lib/errors.js";
-import { requireInternal } from "./lib/internal.js";
-import { lookupRestaurant as defaultLookup, type LookupRestaurant } from "./lib/restaurants.js";
-import { baseApp, finish } from "./lib/server.js";
+import { assertRestaurantAccess, requireRole, type Role, assertId, badRequest, HttpError, notFound, requireInternal, lookupRestaurant as defaultLookup, type LookupRestaurant, baseApp, finish } from "@vmenu/common";
 import { Item, Table } from "./models.js";
 
 const str = (v: unknown, max = 200) => (typeof v === "string" && v.trim() && v.length <= max ? v.trim() : null);

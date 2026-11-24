@@ -13,7 +13,8 @@ const shared = { JWT_SECRET: secret(), INTERNAL_API_KEY: secret() };
 const frontEnv = existsSync("frontend/.env.local") ? readFileSync("frontend/.env.local", "utf8") : "";
 const projectId = frontEnv.match(/^NEXT_PUBLIC_FIREBASE_PROJECT_ID=(.+)$/m)?.[1]?.trim();
 
-for (const dir of ["frontend", ...services.map((s) => `backend/services/${s}`)]) {
+// backend/ is one npm workspace (the services and packages/common), so it installs once.
+for (const dir of ["frontend", "backend"]) {
     console.log(`\n> npm install (${dir})`);
     execSync("npm install --no-audit --no-fund", { cwd: dir, stdio: "inherit" });
 }
