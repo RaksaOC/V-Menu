@@ -1,5 +1,6 @@
 import {useState} from "react";
 import {X, Upload, Image, Trash2, Pencil, Tag, DollarSign} from "lucide-react";
+import {PHOTO_TYPES, usePhoto} from "./usePhoto";
 
 // Simplified types for demo
 interface ItemOutput {
@@ -21,37 +22,12 @@ interface Props {
 }
 
 export default function EditItemPopup({id, image, name, price, onClose, onSave, onDelete}: Props) {
-    const [imagePreview, setImagePreview] = useState(image);
-    const [imageFile, setImageFile] = useState(null);
+    const photo = usePhoto(image);
     const [editedName, setEditedName] = useState(name);
     const [editedPrice, setEditedPrice] = useState(price.toString());
     const [errors, setErrors] = useState({name: "", price: ""});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-    const handleImageChange = (e: any) => {
-        const file = e.target.files[0];
-        if (file) {
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert("Image size should be less than 5MB");
-                return;
-            }
-
-            // Validate file type
-            if (!file.type.startsWith("image/")) {
-                alert("Please select a valid image file");
-                return;
-            }
-
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
 
     const validateForm = () => {
         const newErrors = {name: "", price: ""};
@@ -86,14 +62,8 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
 
         try {
             // Use the current preview or original image
-            let finalImageUrl = imagePreview || image;
-
-            // In production, upload new image to your storage service here
-            // For now, using preview URL or original
-            if (imageFile) {
-                // This would be replaced with actual upload logic
-                finalImageUrl = imagePreview;
-            }
+            // A new photo is uploaded first (VM-02); otherwise the item keeps its current one.
+            const finalImageUrl = (await photo.upload()) ?? image;
 
             onSave({
                 _id: id,
@@ -102,8 +72,8 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                 image: finalImageUrl,
                 isEnabled: true,
             });
-        } catch (error) {
-            console.error("Error updating item:", error);
+        } catch {
+            // the photo field shows why the upload failed
         } finally {
             setIsSubmitting(false);
         }
@@ -115,16 +85,14 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
     };
 
     const clearImage = () => {
-        setImagePreview("");
-        setImageFile(null);
+        photo.reset();
         // Reset file input
         const fileInput: HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
     };
 
     const resetToOriginalImage = () => {
-        setImagePreview(image);
-        setImageFile(null);
+        photo.reset(image);
         // Reset file input
         const fileInput: HTMLInputElement = document.getElementById("fileInput") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
@@ -161,10 +129,10 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                             {/* Image Preview */}
                             <div
                                 className="w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl overflow-hidden flex items-center justify-center relative group">
-                                {imagePreview ? (
+                                {photo.preview ? (
                                     <>
                                         <img
-                                            src={imagePreview}
+                                            src={photo.preview}
                                             alt="Preview"
                                             className="w-full h-full object-cover"
                                         />
@@ -188,9 +156,9 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                             <div className="flex-1 space-y-2">
                                 <input
                                     type="file"
-                                    accept="image/*"
+                                    accept={PHOTO_TYPES}
                                     id="fileInput"
-                                    onChange={handleImageChange}
+                                    onChange={photo.choose}
                                     className="hidden"
                                 />
                                 <label htmlFor="fileInput">
@@ -201,7 +169,7 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                                     </div>
                                 </label>
 
-                                {imagePreview !== image && (
+                                {photo.preview !== image && (
                                     <button
                                         type="button"
                                         onClick={resetToOriginalImage}
@@ -212,8 +180,10 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                                 )}
 
                                 <p className="text-xs text-gray-500 mt-2.5">
-                                    PNG, JPG up to 5MB
+                                    JPG, PNG or WebP, up to 5 MB
                                 </p>
+                                {photo.progress !== null && <p className="text-xs text-blue-600 mt-1" aria-live="polite">Uploading… {photo.progress}%</p>}
+                                {photo.error && <p role="alert" className="text-xs text-red-600 mt-1">{photo.error}</p>}
                             </div>
                         </div>
                     </div>
@@ -335,7 +305,7 @@ export default function EditItemPopup({id, image, name, price, onClose, onSave, 
                                 disabled={isSubmitting}
                                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition-colors"
                             >
-                                {isSubmitting ? "Saving..." : "Save Changes"}
+                                {photo.progress !== null ? `Uploading ${photo.progress}%` : isSubmitting ? "Saving..." : "Save Changes"}
                             </button>
                         </div>
                     </div>
