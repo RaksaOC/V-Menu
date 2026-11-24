@@ -30,7 +30,7 @@ test(`every frontend source file has at most ${MAX_LINES} lines`, () => {
 // comment that holds a statement. Git keeps the history, so dead code is deleted.
 const DEAD_JSX = /\{\/\*\s*<\/?[A-Za-z]/;
 const DEAD_LINE =
-    /^\s*\/\/\s*((const|let|var) \w+ =|import .*from |export (const|function|default) |return .*;$|await \w|function \w+\(|if \(.*\) ?\{|\}[\s);,\]]*$|set[A-Z]\w*\(|console\.)/;
+    /^\s*\/\/\s*((const|let|var) \w+ =|import .*from |export (const|function|default) |return .*;$|await \w|function \w+\(|if \(.*\) ?\{|\}[\s);,\]]*$|set[A-Z]\w*\(|console\.|\{\s*\w+\s*:)/;
 
 test("no commented-out code", () => {
     const dead = [];
