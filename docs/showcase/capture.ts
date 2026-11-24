@@ -1906,6 +1906,37 @@ for (const vp of [PHONE, DESKTOP]) {
     }
 }
 
+// VM-36: the screens the accessibility fixes touched: the sign-in and sign-up forms, the landing
+// page, the "no table" page, and the owner's menu on a phone (now a dialog).
+for (const vp of [PHONE, DESKTOP]) {
+    for (const theme of ["light", "dark"] as const) {
+        await step(`VM-36 final ${vp.width} ${theme}`, async () => {
+            for (const [path, name] of [
+                ["/signup", "signup"],
+                ["/login", "login"],
+                [`/${SLUG}/cashier/login`, "cashier-login"],
+                ["/", "landing"],
+                [`/${SLUG}/customer`, "no-table"],
+            ]) {
+                const { context, page } = await newPage(browser, vp, theme);
+                await page.goto(`${BASE}${path}`);
+                await settle(page);
+                await shot({ page, theme, width: vp.width }, `VM-36-final-${name}`, false);
+                await context.close();
+            }
+            if (vp === PHONE) {
+                const { context, page } = await newPage(browser, vp, theme, "owner");
+                await page.goto(`${BASE}/owner`);
+                await settle(page);
+                await page.getByRole("button", { name: "Open the menu" }).click();
+                await page.waitForTimeout(500);
+                await shot({ page, theme, width: vp.width }, "VM-36-final-owner-menu", false);
+                await context.close();
+            }
+        });
+    }
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

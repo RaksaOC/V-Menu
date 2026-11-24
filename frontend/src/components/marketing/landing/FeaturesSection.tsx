@@ -14,9 +14,7 @@ export function FeaturesSection() {
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
                 >
-                    <h2 className="text-3xl sm:text-4xl font-bold text-[var(--accent-text)] mb-6">
-                        Powerful Features That Drive Results
-                    </h2>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-[var(--accent-text)] mb-6">Powerful Features That Drive Results</h2>
                     <p className="text-lg text-gray-700 dark:text-gray-300">
                         Everything you need to streamline operations and delight your customers in one unified platform.
                     </p>

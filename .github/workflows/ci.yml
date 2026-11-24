@@ -247,6 +247,11 @@ jobs:
         run: npx playwright test
         working-directory: e2e
 
+      # VM-36: Lighthouse accessibility score of the customer menu, at least 90
+      - name: Lighthouse (customer menu, accessibility)
+        run: npm run lighthouse
+        working-directory: e2e
+
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v7

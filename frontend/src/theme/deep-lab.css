@@ -35,7 +35,7 @@
     --muted: #63637a;
     --dim: #d9d9dd;
     --accent: #ff7759;
-    --accent-text: #ad381b; /* VM-36: 4.5:1 on --accent-soft over --card */
+    --accent-text: #a8361a; /* VM-36: at least 4.5:1 on --accent-soft over --bg, --card and --surface-2 */
     --accent-ink: #17171c;
     --accent-soft: rgba(255, 119, 89, 0.15);
     --accent-mid: rgba(255, 119, 89, 0.5);

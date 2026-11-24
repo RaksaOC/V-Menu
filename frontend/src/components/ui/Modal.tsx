@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { useDialog } from "./use-dialog";
 
-const FOCUSABLE =
-    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 const WIDTHS = { sm: "max-w-md", md: "max-w-lg", lg: "max-w-2xl" };
 
 interface ModalProps {
@@ -27,36 +26,7 @@ export default function Modal({ title, onClose, children, footer, size = "md", d
     close.current = onClose;
     const titleId = useId();
 
-    useEffect(() => {
-        const opener = document.activeElement as HTMLElement | null;
-        const focusables = () => Array.from(panel.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
-        (focusables()[0] ?? panel.current)?.focus();
-
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                e.stopPropagation();
-                close.current();
-            } else if (e.key === "Tab") {
-                const items = focusables();
-                if (items.length === 0) return e.preventDefault();
-                const first = items[0];
-                const last = items[items.length - 1];
-                const inside = panel.current?.contains(document.activeElement);
-                if (e.shiftKey && (document.activeElement === first || !inside)) {
-                    e.preventDefault();
-                    last.focus();
-                } else if (!e.shiftKey && (document.activeElement === last || !inside)) {
-                    e.preventDefault();
-                    first.focus();
-                }
-            }
-        };
-        document.addEventListener("keydown", onKey);
-        return () => {
-            document.removeEventListener("keydown", onKey);
-            opener?.focus?.();
-        };
-    }, []);
+    useDialog(panel, onClose);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

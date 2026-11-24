@@ -4,6 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { STEPS } from "@/content/tour";
+import { useDialog } from "@/components/ui/use-dialog";
 import { SCENES } from "./Scenes";
 import styles from "./Tour.module.css";
 
@@ -26,16 +27,15 @@ export function Tour({ onClose }: { onClose: () => void }) {
         });
     }, []);
 
+    useDialog(dialog, onClose, { focusPanel: true }); // VM-36: Escape, focus kept inside, focus back on close
     useEffect(() => {
-        dialog.current?.focus({ preventScroll: true });
         const onKey = (e: KeyboardEvent) => {
             if (e.key === "ArrowRight") go(index + 1);
             if (e.key === "ArrowLeft") go(index - 1);
-            if (e.key === "Escape") onClose();
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, [go, index, onClose]);
+    }, [go, index]);
 
     return (
         <MotionConfig reducedMotion="user" transition={{ duration: 0.45, ease }}>
