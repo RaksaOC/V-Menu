@@ -15,7 +15,7 @@ const table = { _id: "t1", name: "T1", isEnabled: true, qrToken: "AbCdEfGhIjKlMn
 const dish = { _id: "i1", name: "Fish Amok", priceCents: 550, image: "/images/img.png", isEnabled: true };
 
 describe("one TableCard and one MenuCard, role by props", () => {
-    it("gives the cashier Open/Close and the owner Edit; both get the QR code", () => {
+    it("gives both Open/Close and the QR code, and only the owner Edit (VM-37)", () => {
         const onToggle = vi.fn();
         const { unmount } = render(<TableCard role="cashier" table={table} onToggle={onToggle} />);
         fireEvent.click(screen.getByRole("button", { name: "Close Table" }));
@@ -25,11 +25,12 @@ describe("one TableCard and one MenuCard, role by props", () => {
         unmount();
 
         const onEdit = vi.fn();
-        render(<TableCard role="owner" table={{ ...table, isEnabled: false }} onEdit={onEdit} />);
+        render(<TableCard role="owner" table={{ ...table, isEnabled: false }} onEdit={onEdit} onToggle={onToggle} />);
         expect(screen.getByText("Closed")).toBeInTheDocument();
         fireEvent.click(screen.getByRole("button", { name: "Edit Table" }));
         expect(onEdit).toHaveBeenCalledWith({ ...table, isEnabled: false });
-        expect(screen.queryByRole("button", { name: /open table|close table/i })).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "Open Table" })); // VM-37: the owner opens tables too
+        expect(onToggle).toHaveBeenCalledWith({ ...table, isEnabled: false });
     });
 
     it("gives the cashier an availability switch and the owner an edit button", () => {

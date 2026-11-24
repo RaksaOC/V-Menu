@@ -109,7 +109,9 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                 <div>
                     <h2 className="text-xl font-semibold text-[var(--ink)]">{role === "owner" ? "Manage Tables" : "Tables"}</h2>
                     <p className="text-sm text-[var(--muted)]">
-                        {role === "owner" ? "Add tables, rename them and print their QR codes" : "Open a table when guests sit down"}
+                        {role === "owner"
+                            ? "Open a table when guests sit down. Add, rename and print QR codes here too."
+                            : "Open a table when guests sit down"}
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -138,7 +140,14 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {tables.map((table) =>
                         role === "owner" ? (
-                            <TableCard key={table._id} role="owner" table={table} restaurantName={restaurantName} onEdit={setEditing} />
+                            <TableCard
+                                key={table._id}
+                                role="owner"
+                                table={table}
+                                restaurantName={restaurantName}
+                                onEdit={setEditing}
+                                onToggle={toggle}
+                            />
                         ) : (
                             <TableCard key={table._id} role="cashier" table={table} restaurantName={restaurantName} onToggle={toggle} />
                         ),
