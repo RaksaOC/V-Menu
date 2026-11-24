@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 // Runs against an already running stack (docker compose up + seed); it does not start one.
 //   BASE_URL=http://localhost:3400 npx playwright test
+/** The specs a customer's journey runs through: they also run in the mobile project. */
+const CUSTOMER_SPECS = ["customer-order", "qr", "errors", "cart-per-table", "menu-categories"].map((name) => `**/${name}.spec.ts`);
+
 export default defineConfig({
     testDir: "./tests",
     timeout: 60_000,
@@ -18,5 +21,13 @@ export default defineConfig({
         trace: "retain-on-failure",
         screenshot: "only-on-failure",
     },
-    projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+    projects: [
+        { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+        // B4: the customer specs again on a small phone: most customers order from one.
+        {
+            name: "mobile",
+            testMatch: CUSTOMER_SPECS,
+            use: { ...devices["Desktop Chrome"], viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true },
+        },
+    ],
 });
