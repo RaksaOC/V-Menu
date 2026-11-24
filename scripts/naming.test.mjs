@@ -57,7 +57,11 @@ test("a bill is paid (isPaid); the old isPayed is only read for the switch-over"
         "docs/showcase/capture.ts",
     ).filter(
         // tests keep the old name on purpose: they check it still works during the switch-over
-        (line) => !allowed.some((f) => line.startsWith(`${f}:`)) && !/^backend\/[^:]*\/test\//.test(line),
+        // B5: e2e/screens/data holds answers recorded from the server, which still sends both names
+        (line) =>
+            !allowed.some((f) => line.startsWith(`${f}:`)) &&
+            !/^backend\/[^:]*\/test\//.test(line) &&
+            !line.startsWith("e2e/screens/data/"),
     );
     assert.deepEqual(left, []);
 });

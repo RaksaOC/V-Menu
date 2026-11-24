@@ -1,0 +1,41 @@
+{
+    "recordedAt": 1795491304859,
+    "cart": [
+        {
+            "item": {
+                "_id": "6b04ee9d729ea5162b48b470",
+                "name": "Beef Lok Lak",
+                "resId": "64b000000000000000000001",
+                "__v": 0,
+                "categoryId": "6b04ee9d729ea5162b48b463",
+                "createdAt": "2026-11-24T01:55:41.661Z",
+                "description": "",
+                "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=600",
+                "isEnabled": true,
+                "price": 5,
+                "priceCents": 500,
+                "tags": [],
+                "updatedAt": "2026-11-24T01:55:41.661Z"
+            },
+            "quantity": 2
+        },
+        {
+            "item": {
+                "_id": "6b04ee9d729ea5162b48b474",
+                "name": "Fish Amok",
+                "resId": "64b000000000000000000001",
+                "__v": 0,
+                "categoryId": "6b04ee9d729ea5162b48b463",
+                "createdAt": "2026-11-24T01:55:41.662Z",
+                "description": "",
+                "image": "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600",
+                "isEnabled": true,
+                "price": 5.5,
+                "priceCents": 550,
+                "tags": [],
+                "updatedAt": "2026-11-24T01:55:41.662Z"
+            },
+            "quantity": 1
+        }
+    ]
+}
