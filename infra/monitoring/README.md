@@ -89,7 +89,7 @@ It is safe to run again. Alerts go to the stack's default contact point.
 | `vmenu_orders_total{status}` | Orders that entered each status: `pending` when placed, then `preparing`, `ready`, `served` or `cancelled`. It counts steps, so one served order adds 1 to four statuses. |
 | `vmenu_order_ready_seconds` | Histogram: seconds from the customer's order to "ready" |
 | `vmenu_orders_pending_oldest_seconds` | How long the oldest pending order has waited, read from the database at each scrape. Orders placed over 24 hours ago don't count, so one forgotten order can't keep the alert on. |
-| `vmenu_orders_rate_limited_total` | Orders refused by the order rate limit. Stays at 0 until VM-22 adds the limit, which must call `countRateLimitedOrder()`. |
+| `vmenu_orders_rate_limited_total` | Orders refused by the order rate limits (VM-22): too many from one client in a minute, or from one table in 10 minutes |
 | `vmenu_image_uploads_total{result}` | Photo uploads: `ok`, `not_a_photo`, `too_large`, `bad_request`, `denied`, `rate_limited` or `error` |
 
 The **Order pending for over 15 minutes** alert reads the third one. The agent only forwards metrics on its keep-list in `config.alloy`, which now includes every `vmenu_*` metric from the services.
