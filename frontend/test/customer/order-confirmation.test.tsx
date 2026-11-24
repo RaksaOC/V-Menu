@@ -14,6 +14,7 @@ const { default: OrderConfirmation } = await import("@/features/customer/compone
 const ORDER = {
     _id: "665f00000000000000abc123",
     number: "ABC123",
+    status: "pending", // VM-27
     table: "T1",
     placedAt: "2026-11-23T12:34:00.000Z",
     lines: [

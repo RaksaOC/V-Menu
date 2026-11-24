@@ -24,14 +24,15 @@ export function statsService({ orders, bills, clients }: { orders: OrdersRepo; b
             return Promise.all(list.map(async (r) => ({ resId: r._id, resName: r.name, ...(await restaurantOverview(r._id)) })));
         },
 
-        /** Totals across all the owner's restaurants. Money and items count finished orders only. */
+        /** Totals across all the owner's restaurants. Money and items count served orders only;
+         *  cancelled orders count nowhere (VM-27). VM-09 reworks revenue. */
         async ownerOverview(ownerId: string) {
             const resIds = (await clients.listOwnerRestaurants(ownerId)).map((r) => r._id);
             const [numOfUnpaidOrders, numOfPayments, numOfOrders, done, counts] = await Promise.all([
                 bills.countFor(resIds, false),
                 bills.countFor(resIds, true),
                 orders.countFor(resIds),
-                orders.listDone(resIds),
+                orders.listServed(resIds),
                 Promise.all(resIds.map((id) => clients.menuCounts(id))),
             ]);
             let numOfMoneyEarned = 0;

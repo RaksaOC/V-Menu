@@ -14,7 +14,7 @@ const auth = await import("@/features/auth/api");
 
 const dish = { _id: "i1", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
 const table = { _id: "t1", name: "T1", isEnabled: true };
-const order = { _id: "o1", table: "T1", isDone: false, createdAt: "2026-11-23T10:00:00Z", orderedItems: [{ item: dish, quantity: 2 }] };
+const order = { _id: "o1", table: "T1", status: "pending", createdAt: "2026-11-23T10:00:00Z", orderedItems: [{ item: dish, quantity: 2 }] };
 
 describe("customer api", () => {
     it("loads the public menu", async () => {
@@ -64,10 +64,10 @@ describe("kitchen api", () => {
         expect(seen).toEqual(["?page=2&limit=20"]);
     });
 
-    it("marks an order done", async () => {
-        const seen = answer("patch", "/api/orders/demo-bistro/kitchen/o1/done");
-        await kitchen.markOrderDone("demo-bistro", "o1");
-        expect(seen[0].method).toBe("PATCH");
+    it("moves an order to its next status (VM-27)", async () => {
+        const seen = answer("patch", "/api/orders/demo-bistro/kitchen/o1/status", { ...order, status: "preparing" });
+        expect((await kitchen.setOrderStatus("demo-bistro", "o1", "preparing")).status).toBe("preparing");
+        expect(seen[0].body).toEqual({ status: "preparing" });
     });
 });
 
@@ -98,6 +98,12 @@ describe("cashier api", () => {
         expect(await cashier.getMenuItems("demo-bistro")).toEqual([dish]);
         expect(await cashier.getOpenBills("demo-bistro")).toEqual([bill]); // VM-11
         expect(await cashier.getOverview("demo-bistro")).toEqual(overview);
+    });
+
+    it("cancels an order on a bill, with a reason (VM-27)", async () => {
+        const seen = answer("patch", "/api/orders/demo-bistro/bills/b1/orders/o1/cancel", { ...order, status: "cancelled" });
+        await cashier.cancelOrder("demo-bistro", "b1", "o1", "Wrong dish");
+        expect(seen[0].body).toEqual({ reason: "Wrong dish" });
     });
 
     it("opens and closes tables and dishes, and marks a bill paid", async () => {

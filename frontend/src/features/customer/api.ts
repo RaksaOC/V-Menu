@@ -1,5 +1,5 @@
 import api, { seg } from "@/lib/api";
-import type { PlaceOrderBody, PublicMenu } from "@vmenu/contracts";
+import type { PlaceOrderBody, PublicMenu, TableBill, TableOrderView } from "@vmenu/contracts";
 
 /** The dishes a customer can order, by category (public, no sign-in; VM-25). */
 export async function getMenu(slug: string): Promise<PublicMenu> {
@@ -18,23 +18,8 @@ export async function placeOrder(slug: string, order: PlaceOrderBody): Promise<{
     return data;
 }
 
-/** One order as the server saved it: the menu's prices, the totals (VM-07). */
-export interface TableOrderView {
-    _id: string;
-    /** short number shown to the customer, e.g. "ABC123" */
-    number: string;
-    table: string;
-    placedAt: string;
-    lines: { name: string; price: number; quantity: number; total: number }[];
-    total: number;
-}
-
-/** The orders on the table's open bill so far, and the running total. */
-export interface TableBill {
-    table: string;
-    orders: TableOrderView[];
-    total: number;
-}
+/** One order as the server saved it (VM-07), with its status (VM-27); the table's open bill. */
+export type { TableBill, TableOrderView } from "@vmenu/contracts";
 
 export async function getTableOrder(slug: string, table: string, orderId: string): Promise<TableOrderView> {
     const { data } = await api.get<TableOrderView>(`/api/orders/${seg(slug)}/tables/${seg(table)}/orders/${seg(orderId)}`);

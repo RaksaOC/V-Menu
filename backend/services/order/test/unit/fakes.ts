@@ -14,31 +14,47 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[] } {
         all,
         async create({ table, orderedItems, resId }) {
             const at = new Date(Date.UTC(2026, 0, 1, 0, 0, clock++));
-            const order = { _id: newId(), table, orderedItems, resId, isDone: false, orderedAt: at, createdAt: at };
+            const order = {
+                _id: newId(),
+                table,
+                orderedItems,
+                resId,
+                status: "pending" as const,
+                statusHistory: [{ status: "pending" as const, at, by: "customer" }],
+                orderedAt: at,
+                createdAt: at,
+            };
             all.push(order);
             return order;
         },
-        async countFor(resIds, where = {}) {
-            return all.filter(inRes(resIds)).filter((o) => where.isDone === undefined || o.isDone === where.isDone).length;
+        async countFor(resIds) {
+            return all.filter(inRes(resIds)).filter((o) => o.status !== "cancelled").length;
         },
         async listActive(resId) {
-            return all.filter((o) => o.resId === resId && !o.isDone).sort((a, b) => +a.createdAt - +b.createdAt);
+            return all
+                .filter((o) => o.resId === resId && ["pending", "preparing", "ready"].includes(o.status))
+                .sort((a, b) => +a.createdAt - +b.createdAt);
         },
-        async pageDone(resId, skip, limit) {
-            const done = all.filter((o) => o.resId === resId && o.isDone).sort((a, b) => +b.createdAt - +a.createdAt);
+        async pageFinished(resId, skip, limit) {
+            const done = all
+                .filter((o) => o.resId === resId && ["served", "cancelled"].includes(o.status))
+                .sort((a, b) => +b.createdAt - +a.createdAt);
             return { orders: done.slice(skip, skip + limit), total: done.length };
         },
-        async markDone(resId, id) {
-            const o = all.find((x) => x._id === id && x.resId === resId);
+        async setStatus(resId, id, from, to, change, extra = {}) {
+            const o = all.find((x) => x._id === id && x.resId === resId && x.status === from);
             if (!o) return null;
-            o.isDone = true;
-            return o;
+            o.status = to;
+            o.statusHistory = [...o.statusHistory, { status: to, ...change }];
+            Object.assign(o, extra);
+            return { ...o };
         },
         async get(resId, id) {
-            return all.find((o) => o._id === id && o.resId === resId) ?? null;
+            const o = all.find((x) => x._id === id && x.resId === resId);
+            return o ? { ...o } : null;
         },
-        async listDone(resIds) {
-            return all.filter(inRes(resIds)).filter((o) => o.isDone);
+        async listServed(resIds) {
+            return all.filter(inRes(resIds)).filter((o) => o.status === "served");
         },
     };
 }

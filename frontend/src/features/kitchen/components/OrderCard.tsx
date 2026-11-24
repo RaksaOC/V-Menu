@@ -2,16 +2,15 @@
 
 import React, { useState } from "react";
 import { prettyDate } from "@/lib/dates";
-import { Clock, CheckCircle2, Users, Hash } from "lucide-react";
-import type { OrderLine } from "@vmenu/contracts";
+import { Clock, ArrowRight, Users, Hash } from "lucide-react";
+import { Chip } from "@/components/ui";
+import { NEXT_ACTION, STATUS_LABEL, STATUS_TONE } from "@/lib/order-status";
+import type { Order } from "@vmenu/contracts";
 
 interface CardProps {
-    orderId: string;
-    table: string;
-    orderedItems: OrderLine[];
-    isDone: boolean;
-    onDone: (orderId: string) => void;
-    orderedAt: string;
+    order: Order;
+    /** VM-27: the one big button that moves the order a step on; without it (history) there's no button */
+    onAdvance?: (order: Order) => Promise<void> | void;
 }
 
 function formatTimeAgo(orderTime: Date): string {
@@ -30,13 +29,18 @@ function formatTimeAgo(orderTime: Date): string {
     }
 }
 
-const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardProps) => {
+const Card = ({ order, onAdvance }: CardProps) => {
+    const { _id: orderId, table, orderedItems, createdAt: orderedAt, status } = order;
+    const action = onAdvance && NEXT_ACTION[status];
     const [isCompleting, setIsCompleting] = useState(false);
 
     const handleComplete = async () => {
         setIsCompleting(true);
-        await onDone(orderId);
-        setIsCompleting(false);
+        try {
+            await onAdvance?.(order);
+        } finally {
+            setIsCompleting(false);
+        }
     };
 
     const totalItems = orderedItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -45,7 +49,7 @@ const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardP
     const timeAgoDisplay = formatTimeAgo(orderTime); // e.g., "2h 15m" or "3d"
 
     return (
-        <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group w-full">
+        <article className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group w-full">
             {/* Order Header */}
             <div className="bg-gradient-to-r from-slate-600 to-gray-600 text-white p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -56,6 +60,11 @@ const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardP
                         <div>
                             <h3 className="text-2xl font-bold">Table {table}</h3>
                             <p className="text-slate-200 text-sm">Order #{orderId.slice(-6).toUpperCase()}</p>
+                            {!onAdvance && (
+                                <Chip tone={STATUS_TONE[status]} className="mt-1">
+                                    {STATUS_LABEL[status]}
+                                </Chip>
+                            )}
                         </div>
                     </div>
 
@@ -129,29 +138,32 @@ const Card = ({ orderId, table, orderedItems, isDone, onDone, orderedAt }: CardP
                 </div>
             </div>
 
-            {/* Action Button */}
-            {!isDone && (
+            {/* VM-27: one big button, to the next step */}
+            {action && (
                 <div className="p-6 pt-0">
                     <button
                         onClick={handleComplete}
                         disabled={isCompleting}
-                        className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                        className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg"
                     >
                         {isCompleting ? (
                             <>
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                Completing Order...
+                                <div
+                                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+                                    aria-hidden
+                                ></div>
+                                {action}
                             </>
                         ) : (
                             <>
-                                <CheckCircle2 size={22} />
-                                Mark as Complete
+                                {action}
+                                <ArrowRight size={22} aria-hidden />
                             </>
                         )}
                     </button>
                 </div>
             )}
-        </div>
+        </article>
     );
 };
 

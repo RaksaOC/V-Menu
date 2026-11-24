@@ -51,9 +51,10 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /api/orders/:slug/tables/:table/open-bill", PUBLIC],
     ["GET /api/orders/:slug/kitchen", only(["chef"])],
     ["GET /api/orders/:slug/kitchen/history", only(["chef"])],
-    ["PATCH /api/orders/:slug/kitchen/:id/done", only(["chef"])],
+    ["PATCH /api/orders/:slug/kitchen/:id/status", only(["chef"])],
     ["GET /api/orders/:slug/bills", only(["cashier"])],
     ["PATCH /api/orders/:slug/bills/:id", only(["cashier"])],
+    ["PATCH /api/orders/:slug/bills/:id/orders/:orderId/cancel", only(["cashier"])],
     ["GET /api/orders/:slug/overview", only(["owner", "cashier"])],
     ["GET /api/orders/owner/restaurants", only(["owner"], { ownData: true })],
     ["GET /api/orders/owner/overview", only(["owner"], { ownData: true })],
@@ -73,7 +74,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
-    const order = (resId: string) => Order.create({ table: "1", resId, isDone: false, orderedItems: [{ item: DISH, quantity: 1 }] });
+    const order = (resId: string) => Order.create({ table: "1", resId, status: "pending", orderedItems: [{ item: DISH, quantity: 1 }] });
     const a = await order(A._id);
     const b = await order(B._id);
     ids.orderA = String(a._id);
@@ -87,6 +88,7 @@ function urlFor(route: string) {
         .split(" ")[1]
         .replace(":slug", A.slug)
         .replace(":table", "1")
+        .replace(":orderId", ids.orderA)
         .replace(/orders\/:id/, `orders/${ids.orderA}`)
         .replace(/kitchen\/:id/, `kitchen/${ids.orderA}`)
         .replace(/bills\/:id/, `bills/${ids.billA}`);
@@ -120,9 +122,22 @@ describe("another restaurant's ids, through your own restaurant (SEC-07)", () =>
         expect(await Bill.findById(ids.billB).lean()).toMatchObject({ isPaid: false });
     });
 
-    it("a chef can't finish B's order through A", async () => {
-        expect((await send("PATCH", `/api/orders/${A.slug}/kitchen/${ids.orderB}/done`, "chef")).status).toBe(404);
-        expect(await Order.findById(ids.orderB).lean()).toMatchObject({ isDone: false });
+    it("a chef can't move B's order through A (VM-27)", async () => {
+        expect((await send("PATCH", `/api/orders/${A.slug}/kitchen/${ids.orderB}/status`, "chef", { status: "preparing" })).status).toBe(
+            404,
+        );
+        expect(await Order.findById(ids.orderB).lean()).toMatchObject({ status: "pending" });
+    });
+
+    it("a cashier can't cancel B's order through A's bill, or B's bill through A (VM-27)", async () => {
+        const reason = { reason: "Not ours" };
+        expect(
+            (await send("PATCH", `/api/orders/${A.slug}/bills/${ids.billA}/orders/${ids.orderB}/cancel`, "cashier", reason)).status,
+        ).toBe(404);
+        expect(
+            (await send("PATCH", `/api/orders/${A.slug}/bills/${ids.billB}/orders/${ids.orderB}/cancel`, "cashier", reason)).status,
+        ).toBe(404);
+        expect(await Order.findById(ids.orderB).lean()).toMatchObject({ status: "pending" });
     });
 
     it("a customer can't read B's order through A's table page", async () => {

@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CheckCircle2, ChefHat, Clock, Plus, Receipt } from "lucide-react";
 import { getTableBill, getTableOrder, type TableBill, type TableOrderView } from "@/features/customer/api";
 import { apiErrorMessage } from "@/lib/api";
+import { CUSTOMER_STATUS, isFinal } from "@/lib/order-status";
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-/** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far. */
-export default function OrderConfirmation() {
+/** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far.
+ *  VM-27: its status, checked every 10 seconds until it's served or cancelled. */
+export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number } = {}) {
     const params = useParams<{ res: string; table: string; orderId: string }>();
     const slug = String(params.res);
     const table = decodeURIComponent(String(params.table));
@@ -21,7 +23,8 @@ export default function OrderConfirmation() {
     const [bill, setBill] = useState<TableBill | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
+    const finished = order ? isFinal(order.status) : false;
+    const load = useCallback(() => {
         getTableOrder(slug, table, String(params.orderId))
             .then(setOrder)
             .catch((err) => setError(apiErrorMessage(err, "Couldn't load this order.")));
@@ -29,6 +32,17 @@ export default function OrderConfirmation() {
             .then(setBill)
             .catch(() => setBill(null)); // the list is a bonus; the order above is what matters
     }, [slug, table, params.orderId]);
+
+    // once when the page opens
+    useEffect(load, [load]);
+
+    // VM-27: then every pollMs, until the status can't change any more. Its own effect, so
+    // reaching a final status only stops the timer and doesn't load once more.
+    useEffect(() => {
+        if (finished) return;
+        const timer = setInterval(load, pollMs);
+        return () => clearInterval(timer);
+    }, [load, pollMs, finished]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 pb-28">
@@ -65,6 +79,25 @@ export default function OrderConfirmation() {
                                     <Clock size={14} aria-hidden /> Placed at {time(order.placedAt)}
                                 </p>
                             </div>
+                        </div>
+
+                        <div
+                            role="status"
+                            aria-label="Order status"
+                            className={`mt-4 rounded-xl px-4 py-3 ${
+                                order.status === "cancelled"
+                                    ? "bg-red-50 text-red-800"
+                                    : order.status === "ready"
+                                      ? "bg-emerald-600 text-white"
+                                      : "bg-emerald-50 text-emerald-900"
+                            }`}
+                        >
+                            <p className="text-lg font-bold">{CUSTOMER_STATUS[order.status].label}</p>
+                            <p className="text-sm opacity-90">
+                                {order.status === "cancelled" && order.cancelReason
+                                    ? `Reason: ${order.cancelReason}. It won't be on your bill.`
+                                    : CUSTOMER_STATUS[order.status].note}
+                            </p>
                         </div>
 
                         <h2 id="this-order" className="sr-only">
@@ -107,7 +140,13 @@ export default function OrderConfirmation() {
                                             </span>
                                         )}
                                     </span>
-                                    <span className="font-semibold text-slate-900">{money(o.total)}</span>
+                                    {o.status === "cancelled" ? (
+                                        <span className="text-slate-400">
+                                            <del>{money(o.total)}</del> cancelled
+                                        </span>
+                                    ) : (
+                                        <span className="font-semibold text-slate-900">{money(o.total)}</span>
+                                    )}
                                 </li>
                             ))}
                         </ul>

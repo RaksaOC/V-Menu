@@ -1,7 +1,7 @@
 import api, { seg } from "@/lib/api";
-import type { Order } from "@vmenu/contracts";
+import type { Order, OrderStatus } from "@vmenu/contracts";
 
-/** The orders still to cook, oldest first. Finished ones never leave the server (VM-10). */
+/** New, preparing and ready orders, oldest first. Served and cancelled ones stay on the server (VM-10, VM-27). */
 export async function getActiveOrders(slug: string): Promise<Order[]> {
     const { data } = await api.get<Order[]>(`/api/orders/${seg(slug)}/kitchen?status=active`);
     return data;
@@ -23,6 +23,8 @@ export async function getKitchenHistory(slug: string, page: number): Promise<Kit
     return data;
 }
 
-export async function markOrderDone(slug: string, orderId: string): Promise<void> {
-    await api.patch(`/api/orders/${seg(slug)}/kitchen/${seg(orderId)}/done`);
+/** One step forward (VM-27): pending → preparing → ready → served. A skipped step is a 409. */
+export async function setOrderStatus(slug: string, orderId: string, status: OrderStatus): Promise<Order> {
+    const { data } = await api.patch<Order>(`/api/orders/${seg(slug)}/kitchen/${seg(orderId)}/status`, { status });
+    return data;
 }

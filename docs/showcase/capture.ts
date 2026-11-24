@@ -268,10 +268,17 @@ for (const [vp, theme] of [
             const menu = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
             for (let i = 0; i < 25; i++) {
                 const placed = await page.request.post(`${BASE}/api/orders/${SLUG}`, {
-                    data: { table: "T1", isDone: false, orderedItems: [{ item: menu[i % menu.length], quantity: 1 + (i % 3) }] },
+                    data: { table: "T1", orderedItems: [{ item: menu[i % menu.length], quantity: 1 + (i % 3) }] },
                 });
                 const { _id } = (await placed.json()) as { _id: string };
-                await page.request.patch(`${BASE}/api/orders/${SLUG}/kitchen/${_id}/done`);
+                // VM-27: step by step to served; an older backend only has /done
+                const first = await page.request.patch(`${BASE}/api/orders/${SLUG}/kitchen/${_id}/status`, {
+                    data: { status: "preparing" },
+                });
+                if (first.status() === 404) await page.request.patch(`${BASE}/api/orders/${SLUG}/kitchen/${_id}/done`);
+                else
+                    for (const status of ["ready", "served"])
+                        await page.request.patch(`${BASE}/api/orders/${SLUG}/kitchen/${_id}/status`, { data: { status } });
             }
         }
         await page.goto(`${BASE}/${SLUG}/kitchen/history`);
@@ -306,7 +313,7 @@ for (const [vp, theme] of [
         await settle(page);
         const menu = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
         await page.request.post(`${BASE}/api/orders/${SLUG}`, {
-            data: { table: "T2", isDone: false, orderedItems: [{ item: menu[0], quantity: 2 }] },
+            data: { table: "T2", orderedItems: [{ item: menu[0], quantity: 2 }] },
         });
         await page.waitForTimeout(11_000);
         await shot({ page, theme, width: vp.width }, "VM-11-orders-after-new-order");
@@ -677,6 +684,75 @@ for (const [vp, theme] of [
             await shot({ page, theme, width: vp.width }, "VM-25-cashier-menu", false);
             await context.close();
         }
+    });
+}
+
+// VM-27: order status. The kitchen's New / Preparing / Ready columns, the customer's live status,
+// and the cashier's bill with each order's status and a cancelled order struck through.
+const VM27: { ids: string[] } = { ids: [] };
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-27 ${vp.width} ${theme}`, async () => {
+        const after = PHASE === "after";
+        const kitchen = await newPage(browser, vp, theme, "chef");
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        const api = (path: string) => `${BASE}/api/orders/${SLUG}${path}`;
+        if (!VM27.ids.length) {
+            // once per phase: clear the board and table T3, then three orders at T3
+            if (after) {
+                const queue = (await (await kitchen.page.request.get(api("/kitchen"))).json()) as { _id: string; status: string }[];
+                for (const o of queue)
+                    for (const status of ["preparing", "ready", "served"].slice(["pending", "preparing", "ready"].indexOf(o.status)))
+                        await kitchen.page.request.patch(api(`/kitchen/${o._id}/status`), { data: { status } });
+            }
+            const open = (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[];
+            for (const b of open.filter((b) => b.table === "T3"))
+                await cashier.page.request.patch(api(`/bills/${b._id}`), { data: { isPaid: true } });
+            const menu = dishesOf(await (await kitchen.page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+            for (const [i, quantity] of [1, 2, 1].entries()) {
+                const placed = await kitchen.page.request.post(api(""), {
+                    data: { table: "T3", orderedItems: [{ item: { _id: menu[i % menu.length]._id }, quantity }] },
+                });
+                VM27.ids.push(((await placed.json()) as { _id: string })._id);
+            }
+            if (after) {
+                const step = (id: string, status: string) => kitchen.page.request.patch(api(`/kitchen/${id}/status`), { data: { status } });
+                await step(VM27.ids[1], "preparing");
+                await step(VM27.ids[2], "preparing");
+                await step(VM27.ids[2], "ready");
+                const [bill] = (
+                    (await (await cashier.page.request.get(api("/bills?status=open"))).json()) as { _id: string; table: string }[]
+                ).filter((b) => b.table === "T3");
+                await cashier.page.request.patch(api(`/bills/${bill._id}/orders/${VM27.ids[0]}/cancel`), {
+                    data: { reason: "Guest changed their mind" },
+                });
+            }
+        }
+        await kitchen.page.goto(`${BASE}/${SLUG}/kitchen`);
+        await settle(kitchen.page);
+        await kitchen.page.waitForTimeout(600);
+        await shot({ page: kitchen.page, theme, width: vp.width }, "VM-27-kitchen", vp === PHONE);
+        await kitchen.page.goto(`${BASE}/${SLUG}/customer/T3/orders/${VM27.ids[2]}`);
+        await settle(kitchen.page);
+        await shot({ page: kitchen.page, theme, width: vp.width }, "VM-27-customer-status", false);
+        await kitchen.context.close();
+
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        const card = cashier.page.locator("article").filter({ has: cashier.page.getByRole("heading", { name: "Table T3" }) });
+        await card.scrollIntoViewIfNeeded().catch(() => {});
+        await cashier.page.waitForTimeout(400);
+        await shot({ page: cashier.page, theme, width: vp.width }, "VM-27-cashier-bill", false);
+        if (after) {
+            await card.getByRole("button", { name: `Cancel order #${VM27.ids[1].slice(-6).toUpperCase()}` }).click();
+            await cashier.page.waitForTimeout(300);
+            await shot({ page: cashier.page, theme, width: vp.width }, "VM-27-cashier-cancel", false);
+        }
+        await cashier.context.close();
     });
 }
 

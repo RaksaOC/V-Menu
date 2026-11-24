@@ -8,10 +8,16 @@ import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ChefHat, Clock, History, Bell } from "lucide-react";
-import { getActiveOrders, markOrderDone } from "@/features/kitchen/api";
+import { getActiveOrders, setOrderStatus } from "@/features/kitchen/api";
+import { apiErrorMessage } from "@/lib/api";
+import { NEXT_STATUS, STATUS_LABEL } from "@/lib/order-status";
+import type { OrderStatus } from "@vmenu/contracts";
 import { useConnectionStatus } from "@/lib/use-connection-status";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
 import type { Order } from "@vmenu/contracts";
+
+// VM-27: the board's columns
+const COLUMNS: OrderStatus[] = ["pending", "preparing", "ready"];
 
 // VM-10: every 5 s (was 2 s), and only the orders still to cook
 export default function KitchenPage({ pollMs = 5000 }: { pollMs?: number } = {}) {
@@ -60,15 +66,23 @@ export default function KitchenPage({ pollMs = 5000 }: { pollMs?: number } = {})
         return () => clearInterval(intervalId);
     }, []);
 
-    const handleOnDone = async (id: string) => {
+    // VM-27: one step on. Served orders leave the board; a refused step (409) says why and reloads.
+    const advance = async (order: Order) => {
+        const next = NEXT_STATUS[order.status];
+        if (!next) return;
         try {
-            await markOrderDone(String(params.res), id);
-            setOrders((prev) => prev.filter((order) => order._id !== id));
-            setTotalOrders((prev) => prev - 1);
-            toast.success("Order completed! ✅");
+            const moved = await setOrderStatus(String(params.res), order._id, next);
+            setOrders((prev) =>
+                next === "served" ? prev.filter((o) => o._id !== order._id) : prev.map((o) => (o._id === order._id ? moved : o)),
+            );
+            if (next === "served") setTotalOrders((prev) => prev - 1);
         } catch (err) {
-            console.error("Failed to mark order as done:", err);
-            toast.error("Failed to update order status");
+            toast.error(apiErrorMessage(err, "Failed to update the order"));
+            try {
+                setOrders(await getActiveOrders(String(params.res)));
+            } catch {
+                /* the next poll will catch up */
+            }
         }
     };
 
@@ -128,30 +142,26 @@ export default function KitchenPage({ pollMs = 5000 }: { pollMs?: number } = {})
 
             {/* Main Content */}
             <main className="px-4 sm:px-6 py-8">
-                <div className="max-w-6xl mx-auto">
+                <div className="max-w-7xl mx-auto">
                     {orders.length > 0 ? (
-                        <>
-                            {/* Section Header */}
-                            <div className="mb-8">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-2">Pending Orders</h2>
-                                <div className="h-1 w-20 bg-gradient-to-r from-slate-600 to-gray-600 rounded-full"></div>
-                            </div>
-
-                            {/* Orders Grid */}
-                            <div className="space-y-6">
-                                {orders.map((order) => (
-                                    <Card
-                                        key={order._id}
-                                        orderId={order._id}
-                                        table={order.table}
-                                        orderedItems={order.orderedItems}
-                                        orderedAt={order.createdAt}
-                                        onDone={handleOnDone}
-                                        isDone={order.isDone}
-                                    />
-                                ))}
-                            </div>
-                        </>
+                        <div className="grid gap-6 lg:grid-cols-3">
+                            {COLUMNS.map((status) => {
+                                const inColumn = orders.filter((o) => o.status === status);
+                                return (
+                                    <section key={status} aria-label={STATUS_LABEL[status]} className="min-w-0 space-y-4">
+                                        <div className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 shadow-sm">
+                                            <h2 className="text-xl font-bold text-gray-800">{STATUS_LABEL[status]}</h2>
+                                            <span className="rounded-full bg-slate-700 px-3 py-0.5 text-sm font-bold text-white">
+                                                {inColumn.length}
+                                            </span>
+                                        </div>
+                                        {inColumn.map((order) => (
+                                            <Card key={order._id} order={order} onAdvance={advance} />
+                                        ))}
+                                    </section>
+                                );
+                            })}
+                        </div>
                     ) : (
                         <div className="text-center py-20">
                             <div className="max-w-md mx-auto">

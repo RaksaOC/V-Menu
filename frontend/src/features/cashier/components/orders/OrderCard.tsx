@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import Invoice from "./Invoice";
 import { prettyDate } from "@/lib/dates";
 import { useParams } from "next/navigation";
-import { DollarSign, Eye, EyeOff } from "lucide-react";
-import { Chip } from "@/components/ui";
+import { DollarSign, Eye, EyeOff, XCircle } from "lucide-react";
+import { Button, Chip, Input } from "@/components/ui";
+import { BILL_STATUS_LABEL, STATUS_TONE } from "@/lib/order-status";
 import type { Bill, Order } from "@vmenu/contracts";
 
 interface Props {
@@ -14,10 +15,15 @@ interface Props {
     isNew?: boolean;
     /** called when the cashier opens the invoice, which clears NEW */
     onSeen?: (id: string) => void;
+    /** VM-27: cancel one order on this (open) bill, with a reason */
+    onCancelOrder?: (billId: string, orderId: string, reason: string) => void;
 }
 
-function OrderCard({ order, onMarkPaid, isNew = false, onSeen }: Props) {
+const orderNumber = (id: string) => id.slice(-6).toUpperCase();
+
+function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: Props) {
     const [showInvoice, setShowInvoice] = useState(false);
+    const [cancelling, setCancelling] = useState<{ id: string; reason: string; error: string } | null>(null);
     const params = useParams();
     // Access nested structure: order.orders = array of sub-orders, each with its own items
     const subOrders = order.orders;
@@ -44,34 +50,92 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen }: Props) {
 
             <div className="bg-none  rounded-xl p-3 mb-4 border border-slate-500">
                 {subOrders.length > 0 ? (
-                    subOrders.map((subOrder, index) => (
-                        <div key={index} className="m-4 border-b border-zinc-300 dark:border-zinc-600 last:border-b-0">
-                            <div className={"flex justify-between w-full items-center"}>
-                                <p className="font-semibold text-zinc-700 dark:text-zinc-200 mb-2">Order {index + 1}</p>
-                                <p className={"text-gray-400"}>{prettyDate(subOrder.createdAt)}</p>
-                            </div>
-
-                            {subOrder.orderedItems.map((item) => (
-                                <div
-                                    key={item.item._id}
-                                    className="flex items-center justify-between gap-2 border-b last:border-none border-zinc-200 dark:border-zinc-600 py-2"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <img src={item.item.image} alt={item.item.name} className="w-10 h-10 object-cover rounded" />
-                                        <div>
-                                            <p className="text-zinc-800 dark:text-white font-semibold">{item.item.name}</p>
-                                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                                ${item.item.price.toFixed(2)} × {item.quantity}
-                                            </p>
-                                        </div>
+                    subOrders.map((subOrder, index) => {
+                        const cancelled = subOrder.status === "cancelled";
+                        const lines = subOrder.orderedItems.map((item) => (
+                            <div
+                                key={item.item._id}
+                                className="flex items-center justify-between gap-2 border-b last:border-none border-zinc-200 dark:border-zinc-600 py-2"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <img src={item.item.image} alt={item.item.name} className="w-10 h-10 object-cover rounded" />
+                                    <div>
+                                        <p className="text-zinc-800 dark:text-white font-semibold">{item.item.name}</p>
+                                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                            ${item.item.price.toFixed(2)} × {item.quantity}
+                                        </p>
                                     </div>
-                                    <p className="font-bold text-zinc-700 dark:text-white">
-                                        ${(item.item.price * item.quantity).toFixed(2)}
-                                    </p>
                                 </div>
-                            ))}
-                        </div>
-                    ))
+                                <p className="font-bold text-zinc-700 dark:text-white">${(item.item.price * item.quantity).toFixed(2)}</p>
+                            </div>
+                        ));
+                        return (
+                            <div key={subOrder._id ?? index} className="m-4 border-b border-zinc-300 dark:border-zinc-600 last:border-b-0">
+                                <div className={"flex flex-wrap justify-between gap-2 w-full items-center"}>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <p className="font-semibold text-zinc-700 dark:text-zinc-200">Order {index + 1}</p>
+                                        {subOrder.status && (
+                                            <Chip tone={STATUS_TONE[subOrder.status]}>{BILL_STATUS_LABEL[subOrder.status]}</Chip>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <p className={"text-gray-400"}>{prettyDate(subOrder.createdAt)}</p>
+                                        {!order.isPaid && !cancelled && onCancelOrder && cancelling?.id !== subOrder._id && (
+                                            <button
+                                                type="button"
+                                                aria-label={`Cancel order #${orderNumber(subOrder._id)}`}
+                                                onClick={() => setCancelling({ id: subOrder._id, reason: "", error: "" })}
+                                                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                                            >
+                                                <XCircle size={14} aria-hidden /> Cancel
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {cancelling?.id === subOrder._id && (
+                                    <form
+                                        className="mb-3 flex flex-wrap items-end gap-2 rounded-xl bg-red-50 p-3 text-left dark:bg-red-950/40"
+                                        onSubmit={(e) => {
+                                            e.preventDefault();
+                                            if (!cancelling.reason.trim()) return setCancelling({ ...cancelling, error: "Give a reason" });
+                                            onCancelOrder?.(order._id, subOrder._id, cancelling.reason.trim());
+                                            setCancelling(null);
+                                        }}
+                                    >
+                                        <div className="min-w-0 flex-1">
+                                            <Input
+                                                label="Why is it cancelled?"
+                                                value={cancelling.reason}
+                                                maxLength={200}
+                                                autoFocus
+                                                placeholder="e.g. Wrong dish, guest left"
+                                                error={cancelling.error || undefined}
+                                                onChange={(e) => setCancelling({ ...cancelling, reason: e.target.value, error: "" })}
+                                            />
+                                        </div>
+                                        <Button type="submit" variant="danger" size="sm">
+                                            Confirm cancel
+                                        </Button>
+                                        <Button variant="outline" size="sm" onClick={() => setCancelling(null)}>
+                                            Keep order
+                                        </Button>
+                                    </form>
+                                )}
+
+                                {cancelled ? (
+                                    <>
+                                        <del className="block opacity-60">{lines}</del>
+                                        <p className="pb-2 text-left text-sm text-red-600 dark:text-red-400">
+                                            Cancelled{subOrder.cancelReason ? `: ${subOrder.cancelReason}` : ""} (not charged)
+                                        </p>
+                                    </>
+                                ) : (
+                                    lines
+                                )}
+                            </div>
+                        );
+                    })
                 ) : (
                     <p className="text-zinc-500 dark:text-zinc-400">No orders found.</p>
                 )}
@@ -84,7 +148,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen }: Props) {
                     phone={"(123) 456-7890"}
                     invoiceId={`${order._id}`}
                     date={prettyDate(new Date().toLocaleString())}
-                    items={subOrders.flatMap((sub) => sub.orderedItems)}
+                    items={subOrders.filter((sub) => sub.status !== "cancelled").flatMap((sub) => sub.orderedItems)}
                     onClose={() => setShowInvoice(false)}
                 />
             )}

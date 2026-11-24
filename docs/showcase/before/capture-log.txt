@@ -143,3 +143,13 @@ ok   VM-25-customer-drinks-360
 ok   VM-25-owner-menu-360
 ok   VM-25-owner-item-form-360
 ok   VM-25-cashier-menu-360
+# ONLY=VM-27 (2026-11-23T15:18:47.623Z)
+ok   VM-27-kitchen-1280
+ok   VM-27-customer-status-1280
+ok   VM-27-cashier-bill-1280
+ok   VM-27-kitchen-1280-dark
+ok   VM-27-customer-status-1280-dark
+ok   VM-27-cashier-bill-1280-dark
+ok   VM-27-kitchen-360
+ok   VM-27-customer-status-360
+ok   VM-27-cashier-bill-360

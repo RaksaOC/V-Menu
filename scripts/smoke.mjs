@@ -62,7 +62,9 @@ const chef = signAppToken({ uid: "smoke-chef", email: "chef@smoke.local", role: 
 const queue = await call("GET", `/api/orders/${slug}/kitchen`, { token: chef });
 const found = queue.find((o) => String(o._id) === String(order._id));
 if (!found) throw new Error(`Order ${order._id} is not in the kitchen queue (${queue.length} orders)`);
-if (found.isDone) throw new Error(`Order ${order._id} is already marked done`);
+// VM-27: a new order is "pending" (older services said isDone: false)
+if (found.isDone === true || (found.status && found.status !== "pending"))
+    throw new Error(`Order ${order._id} is already ${found.status ?? "done"}`);
 step(`kitchen queue shows order ${order._id}`);
 
 console.log("smoke test passed");
