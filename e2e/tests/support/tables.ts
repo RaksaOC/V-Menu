@@ -8,6 +8,8 @@ import { SLUG, staffToken } from "./auth";
 export interface OwnTable {
     name: string;
     _id: string;
+    /** the token in its QR code link, /<slug>/t/<qrToken> (SEC-04) */
+    qrToken: string;
     /** Settles the table's bill and deletes the table. */
     remove: () => Promise<void>;
 }
@@ -23,12 +25,13 @@ export async function ownTable(baseURL: string, prefix = "E2E", { open = true } 
     const name = `${prefix}-${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`.slice(0, 20);
     const res = await owner.post(`/api/menu/${SLUG}/tables`, { data: { type: "manual", name } });
     if (!res.ok()) throw new Error(`could not make table ${name}: ${res.status()} ${await res.text()}`);
-    const table = (await res.json()) as { _id: string; name: string };
+    const table = (await res.json()) as { _id: string; name: string; qrToken: string };
     // new tables start closed (VM-04); the cashier opens it, as at a real table
     if (open) await cashier.patch(`/api/menu/${SLUG}/tables/${table._id}/availability`, { data: { isEnabled: true } });
     return {
         name: table.name,
         _id: table._id,
+        qrToken: table.qrToken,
         remove: async () => {
             const bills = (await (await cashier.get(`/api/orders/${SLUG}/bills?status=open`)).json()) as { _id: string; table: string }[];
             for (const b of bills.filter((b) => b.table === table.name))
