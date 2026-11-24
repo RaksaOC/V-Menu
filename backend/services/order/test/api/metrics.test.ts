@@ -13,12 +13,15 @@ import { Order } from "../../src/models/order.model.js";
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 
 const R = { _id: "665f00000000000000000001", name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1" };
-const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
+const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 const clients: Clients = {
     listOwnerRestaurants: async () => [R],
     menuCounts: async () => ({ numOfTables: 4, numOfActiveTables: 2, numOfItems: 10 }),
     orderCheck: async (_req, _resId, body) =>
         OrderCheckResponse.parse({ items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) }),
+    tableByToken: async () => {
+        throw notFound("No such table link"); // B10: these tests order by table name
+    },
 };
 const app = createApp({
     clients,

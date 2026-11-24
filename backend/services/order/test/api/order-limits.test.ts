@@ -23,6 +23,9 @@ const clients: Clients = {
         if (body.table === closedTable) throw new HttpError(409, "Table is not available", "TABLE_CLOSED");
         return { items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) };
     },
+    tableByToken: async () => {
+        throw notFound("No such table link"); // VM-22: these tests order by table name
+    },
 };
 const lookupRestaurant = async (_req: unknown, slug: string) => {
     const found = [A, B].find((r) => r.slug === slug);

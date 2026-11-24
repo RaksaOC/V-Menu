@@ -14,7 +14,7 @@ const contracts = await import("@vmenu/contracts");
 const DISH = {
     _id: "665f0000000000000000d001",
     name: "Amok",
-    price: 5,
+    priceCents: 500,
     image: "/images/img.png",
     isEnabled: true,
     description: "Fish curry",

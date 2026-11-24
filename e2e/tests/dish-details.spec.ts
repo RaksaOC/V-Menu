@@ -7,7 +7,7 @@ test("a sold-out dish shows the label and has no Add button", async ({ page, con
     await signInAs(context, baseURL!, "owner");
     const name = `Test Soup ${Date.now()}`;
     const created = await page.request.post(`/api/menu/${SLUG}/items`, {
-        data: { name, price: 2, image: "/images/img.png", description: "A very good soup", tags: ["spicy"], isEnabled: false },
+        data: { name, priceCents: 200, image: "/images/img.png", description: "A very good soup", tags: ["spicy"], isEnabled: false },
     });
     expect(created.status()).toBe(201);
     const dish = (await created.json()) as { _id: string };
