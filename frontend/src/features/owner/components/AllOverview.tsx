@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, CreditCard, DollarSign, Package, ShoppingCart, Target, TrendingUp, Users } from "lucide-react";
 import { getOwnerOverview, PERIODS, type OwnerOverview, type Period } from "@/features/owner/api";
 import { useMoney } from "@/components/money/MoneyProvider";
-import { MetricsChart } from "./overview/MetricsChart";
-import { OverviewSkeleton } from "./overview/OverviewSkeleton";
-import { StatCard } from "./overview/StatCard";
-import { TopSellingChart } from "./overview/TopSellingChart";
+import { MetricsChart } from "./all-overview/MetricsChart";
+import { OverviewSkeleton } from "./all-overview/OverviewSkeleton";
+import { StatCard } from "./all-overview/StatCard";
+import { TopSellingChart } from "./all-overview/TopSellingChart";
 
 /** The owner's figures across all their restaurants, for a period (VM-09). */
 export default function AllOverview() {
