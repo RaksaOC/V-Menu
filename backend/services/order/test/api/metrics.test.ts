@@ -1,9 +1,9 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { signAppToken, notFound } from "@vmenu/common";
+import { notFound } from "@vmenu/common";
 import { ORDER_STATUSES, OrderCheckResponse } from "@vmenu/contracts";
+import { fakeRestaurantLookup, startMemoryMongo, tokenFor } from "@vmenu/common/testing";
 import { createApp } from "../../src/app.js";
 import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
@@ -25,23 +25,17 @@ const clients: Clients = {
 };
 const app = createApp({
     clients,
-    lookupRestaurant: async (_req, slug) => {
-        if (slug !== R.slug) throw notFound("Restaurant not found");
-        return R;
-    },
+    lookupRestaurant: fakeRestaurantLookup([R]),
 });
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let chef: Record<string, string>, cashier: Record<string, string>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("orders"));
-    const staff = { resId: R._id, resSlug: R.slug };
-    chef = { authorization: `Bearer ${await signAppToken({ uid: "u1", email: "c@x.com", role: "chef", ...staff })}` };
-    cashier = { authorization: `Bearer ${await signAppToken({ uid: "u2", email: "k@x.com", role: "cashier", ...staff })}` };
+    mongo = await startMemoryMongo("orders");
+    chef = await tokenFor("chef", R, { uid: "u1" });
+    cashier = await tokenFor("cashier", R, { uid: "u2" });
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

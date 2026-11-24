@@ -5,6 +5,10 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
     testDir: "./tests",
     timeout: 60_000,
+    // CL-14: 5 s (the default) was too short on a busy machine: a page compiling in dev, or a
+    // client-side navigation in CI with every worker busy, made specs flaky. Waits stay
+    // condition-based; this is only how long a condition may take.
+    expect: { timeout: 10_000 },
     // B8: in CI, a forgotten test.only is an error. It would otherwise run that one test and pass.
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,

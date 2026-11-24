@@ -1,8 +1,7 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { HttpError, notFound, signAppToken } from "@vmenu/common";
+import { fakeRestaurantLookup, startMemoryMongo, tokenFor } from "@vmenu/common/testing";
 import { createApp } from "../../src/app.js";
 import { NO_OPEN_BILLS } from "../unit/fakes.js";
 
@@ -15,22 +14,16 @@ const RES = { _id: "665f00000000000000000001", name: "Mee Keav", slug: SLUG, own
 let restaurantServiceDown = false;
 const app = createApp({
     openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
-    lookupRestaurant: async (_req, slug) => {
-        if (restaurantServiceDown) throw new HttpError(503, "A required service is unavailable");
-        if (slug !== SLUG) throw notFound("Restaurant not found");
-        return RES;
-    },
+    lookupRestaurant: fakeRestaurantLookup([RES], { down: () => restaurantServiceDown }),
 });
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let owner: Record<string, string>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("menu"));
-    owner = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "o@x.com", role: "owner" })}` };
+    mongo = await startMemoryMongo("menu");
+    owner = await tokenFor("owner", { ownerId: "owner1" });
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

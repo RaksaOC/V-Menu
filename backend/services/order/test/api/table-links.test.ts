@@ -1,8 +1,8 @@
-import { HttpError, notFound } from "@vmenu/common";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { HttpError } from "@vmenu/common";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { fakeRestaurantLookup, startMemoryMongo } from "@vmenu/common/testing";
 import type { Clients } from "../../src/clients/index.js";
 import { createApp } from "../../src/app.js";
 import { Bill } from "../../src/models/bill.model.js";
@@ -32,20 +32,15 @@ const clients: Clients = {
 };
 const app = createApp({
     clients,
-    lookupRestaurant: async (_req, slug) => {
-        if (slug !== SLUG) throw notFound("Restaurant not found");
-        return RES;
-    },
+    lookupRestaurant: fakeRestaurantLookup([RES]),
 });
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 const saved = process.env.ALLOW_TABLE_NAME_LINKS;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("order-links"));
+    mongo = await startMemoryMongo("order-links");
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

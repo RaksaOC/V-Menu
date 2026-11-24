@@ -1,6 +1,6 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { startMemoryMongo } from "@vmenu/common/testing";
 import { prepareDatabase } from "../../src/db.js";
 import { mongoItemsRepo } from "../../src/repositories/items.repo.js";
 
@@ -10,13 +10,11 @@ const RES = "665f00000000000000000001";
 const items = () => mongoose.connection.db!.collection("items");
 const old = (name: string, price: number, more: object = {}) => ({ name, price, image: "/a.jpg", isEnabled: true, resId: RES, ...more });
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("menu"));
+    mongo = await startMemoryMongo("menu");
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

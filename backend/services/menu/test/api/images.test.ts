@@ -1,9 +1,8 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import sharp from "sharp";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { signAppToken, notFound } from "@vmenu/common";
+import { fakeRestaurantLookup, startMemoryMongo, tokenFor } from "@vmenu/common/testing";
 import { createApp } from "../../src/app.js";
 
 // VM-02 (menu photos are uploaded, not sent as base64) and SEC-05 (the upload is safe).
@@ -14,26 +13,19 @@ const RESTAURANTS = {
     "mee-keav-abc123": { _id: "665f00000000000000000001", name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1" },
     "other-xyz789": { _id: "665f00000000000000000002", name: "Other", slug: "other-xyz789", ownerId: "owner2" },
 };
-const lookupRestaurant = async (_req: unknown, slug: string) => {
-    const r = RESTAURANTS[slug as keyof typeof RESTAURANTS];
-    if (!r) throw notFound("Restaurant not found");
-    return r;
-};
+const lookupRestaurant = fakeRestaurantLookup(RESTAURANTS);
 const app = createApp({ lookupRestaurant });
 const SLUG = "mee-keav-abc123";
 const RES_ID = RESTAURANTS[SLUG]._id;
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let owner: Record<string, string>, cashier: Record<string, string>, otherOwner: Record<string, string>;
 let photo: Buffer, gpsPhoto: Buffer;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("menu"));
-    owner = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "o@x.com", role: "owner" })}` };
-    cashier = {
-        authorization: `Bearer ${await signAppToken({ uid: "c1", email: "c@x.com", role: "cashier", resId: RES_ID, resSlug: SLUG })}`,
-    };
-    otherOwner = { authorization: `Bearer ${await signAppToken({ uid: "owner2", email: "p@x.com", role: "owner" })}` };
+    mongo = await startMemoryMongo("menu");
+    owner = await tokenFor("owner", { ownerId: "owner1" });
+    cashier = await tokenFor("cashier", { _id: RES_ID, slug: SLUG }, { uid: "c1" });
+    otherOwner = await tokenFor("owner", { ownerId: "owner2" });
     // A 1600 x 1200 photo, like a phone's, and the same with a GPS location in its EXIF.
     const noise = Buffer.alloc(1600 * 1200 * 3);
     for (let i = 0, s = 7; i < noise.length; i++) noise[i] = (s = (s * 1103515245 + 12345) & 0x7fffffff) & 255;
@@ -49,7 +41,6 @@ beforeAll(async () => {
         .toBuffer();
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

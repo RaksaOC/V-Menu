@@ -11,7 +11,8 @@ test("an ended kitchen session goes to the login page with a message", async ({ 
     // the session ends: the cookie is gone (SEC-01: it's the only copy of the session)
     await context.clearCookies();
 
-    // the next poll (every 2 s) gets 401
-    await expect(page).toHaveURL(new RegExp(`/${SLUG}/kitchen/login\\?expired=1$`), { timeout: 10_000 });
+    // the next poll (every 5 s since VM-10) gets 401, then the login page loads. CL-14: 10 s was
+    // too tight when the machine is busy (a 5 s wait for the poll, then the page).
+    await expect(page).toHaveURL(new RegExp(`/${SLUG}/kitchen/login\\?expired=1$`), { timeout: 20_000 });
     await expect(page.getByRole("status")).toHaveText("Your session ended, please sign in again.");
 });

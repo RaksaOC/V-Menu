@@ -1,6 +1,6 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { startMemoryMongo } from "@vmenu/common/testing";
 import { prepareDatabase } from "../../src/db.js";
 
 // CL-07: stored order lines get priceCents next to their old price. The old price stays, so the
@@ -23,13 +23,11 @@ const old = (lines: object[]) => ({
     createdAt: new Date(),
 });
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("orders"), { autoIndex: false });
+    mongo = await startMemoryMongo("orders", { autoIndex: false });
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

@@ -2,6 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
     test: {
+        // CL-14: one in-memory MongoDB for the run; each test file gets its own database
+        globalSetup: ["./test/global-setup.ts"],
         // SEC-01: the API tests sign in with a Bearer header; browsers only ever use the cookie.
         // VM-22: the suite places many orders from one address; order-limits.test.ts sets its own limits.
         // SEC-04: ALLOW_TABLE_NAME_LINKS is on here; the tests that are about it turn it off.
