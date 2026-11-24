@@ -101,3 +101,31 @@ describe("internal routes", () => {
         expect(ok.body).toMatchObject({ slug, ownerId: "owner1" });
     });
 });
+
+// VM-03: staff stay signed in for a whole shift; the token and the cookie last as long.
+describe("session length (VM-03)", () => {
+    const lifetime = (token: string) => {
+        const { iat, exp } = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+        return exp - iat;
+    };
+    const cookieMaxAge = (res: request.Response) => Number(/Max-Age=(\d+)/.exec(res.headers["set-cookie"][0])![1]);
+
+    it("lasts 12 hours by default, for the token and the cookie", async () => {
+        const slug = await signUp();
+        const res = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "chef", resSlug: slug });
+        expect(lifetime(res.body.appToken)).toBe(12 * 3600);
+        expect(cookieMaxAge(res)).toBe(12 * 3600);
+    });
+
+    it("can be set with SESSION_HOURS", async () => {
+        const slug = await signUp();
+        process.env.SESSION_HOURS = "8";
+        try {
+            const res = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "cashier", resSlug: slug });
+            expect(lifetime(res.body.appToken)).toBe(8 * 3600);
+            expect(cookieMaxAge(res)).toBe(8 * 3600);
+        } finally {
+            delete process.env.SESSION_HOURS;
+        }
+    });
+});

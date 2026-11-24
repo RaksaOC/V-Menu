@@ -1,4 +1,5 @@
 import axios from "axios";
+import { endSession } from "@/lib/session";
 
 // The one HTTP client of the app. Components never use it directly: each feature wraps the
 // calls it needs in typed functions in features/<area>/api.ts. Only this file imports axios.
@@ -16,6 +17,16 @@ api.interceptors.request.use(async (config) => {
 });
 
 /** The HTTP status of a failed call, or undefined when the server could not be reached. */
+// VM-03: when the sign-in has ended, staff are sent to their login page instead of a screen
+// that silently stops updating. Sign-in calls themselves (a wrong password) are left alone.
+api.interceptors.response.use(
+    (response) => response,
+    (err) => {
+        if (axios.isAxiosError(err) && err.response?.status === 401 && !String(err.config?.url ?? "").startsWith("/api/auth/")) endSession();
+        return Promise.reject(err);
+    },
+);
+
 export function apiStatus(err: unknown): number | undefined {
     return axios.isAxiosError(err) ? err.response?.status : undefined;
 }

@@ -6,6 +6,7 @@ import {signInWithEmailAndPassword} from "firebase/auth";
 import {auth} from "@/lib/firebase";
 import {Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight} from "lucide-react";
 import {login} from "@/features/auth/api";
+import SessionEndedNotice from "@/features/auth/components/SessionEndedNotice";
 import {ToastContainer} from "react-toastify";
 import {toast} from "@/lib/toast";
 
@@ -72,6 +73,8 @@ const Auth = () => {
                 <h2 className="text-3xl font-bold text-center text-zinc-800 dark:text-white mb-6">
                     Owner Login
                 </h2>
+
+                <SessionEndedNotice/>
 
                 <form onSubmit={handleLogin} className="space-y-5">
                     {/* Email */}
