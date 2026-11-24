@@ -1,9 +1,9 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { signAppToken, HttpError, notFound } from "@vmenu/common";
+import { HttpError } from "@vmenu/common";
 import { OrderCheckResponse } from "@vmenu/contracts";
+import { fakeRestaurantLookup, startMemoryMongo, tokenFor } from "@vmenu/common/testing";
 import { createApp } from "../../src/app.js";
 import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
@@ -32,24 +32,18 @@ const clients: Clients = {
 };
 const app = createApp({
     clients,
-    lookupRestaurant: async (_req, slug) => {
-        if (slug !== R.slug) throw notFound("Restaurant not found");
-        return R;
-    },
+    lookupRestaurant: fakeRestaurantLookup([R]),
 });
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let chef: Record<string, string>, cashier: Record<string, string>, owner: Record<string, string>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("orders"));
-    const staff = { resId: R._id, resSlug: R.slug };
-    chef = { authorization: `Bearer ${await signAppToken({ uid: "u1", email: "c@x.com", role: "chef", ...staff })}` };
-    cashier = { authorization: `Bearer ${await signAppToken({ uid: "u2", email: "k@x.com", role: "cashier", ...staff })}` };
-    owner = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "o@x.com", role: "owner" })}` };
+    mongo = await startMemoryMongo("orders");
+    chef = await tokenFor("chef", R, { uid: "u1" });
+    cashier = await tokenFor("cashier", R, { uid: "u2" });
+    owner = await tokenFor("owner", { ownerId: "owner1" });
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {
@@ -106,7 +100,7 @@ describe("an order is never left off its bill (VM-23)", () => {
                 return mongoBillsRepo.attachOrder(billId, orderId);
             },
         };
-        return createApp({ clients, bills, lookupRestaurant: async () => R });
+        return createApp({ clients, bills, lookupRestaurant: fakeRestaurantLookup([R]) });
     }
     const send = (target: ReturnType<typeof createApp>) =>
         request(target)
@@ -139,7 +133,7 @@ describe("an order is never left off its bill (VM-23)", () => {
                 return saved;
             },
         };
-        const res = await send(createApp({ clients, orders, lookupRestaurant: async () => R }));
+        const res = await send(createApp({ clients, orders, lookupRestaurant: fakeRestaurantLookup([R]) }));
         expect(res.status).toBe(201);
         const open = await Bill.findOne({ resId: R._id, isPaid: false }).lean();
         expect(open!.orders.map(String)).toEqual([res.body._id]);

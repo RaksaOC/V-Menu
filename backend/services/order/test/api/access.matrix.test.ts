@@ -1,17 +1,17 @@
 import {
-    CALLERS,
     callerHeaders,
+    CALLERS,
+    fakeRestaurantLookup,
     listRoutes,
     mismatches,
     NO_APP_TOKEN,
     only,
     PUBLIC,
+    startMemoryMongo,
     trackRoutes,
     type AccessRow,
     type Caller,
 } from "@vmenu/common/testing";
-import { notFound } from "@vmenu/common";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -37,11 +37,7 @@ const clients: Clients = {
 };
 const app = createApp({
     clients,
-    lookupRestaurant: async (_req, slug) => {
-        const r = [A, B].find((x) => x.slug === slug);
-        if (!r) throw notFound("Restaurant not found");
-        return r;
-    },
+    lookupRestaurant: fakeRestaurantLookup([A, B]),
 });
 
 const MATRIX: [string, AccessRow][] = [
@@ -70,16 +66,14 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /internal/orders/without-bill", NO_APP_TOKEN], // VM-23: the internal key only
 ];
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let headers: Awaited<ReturnType<typeof callerHeaders>>;
 const ids: Record<string, string> = {};
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("order-access"));
+    mongo = await startMemoryMongo("order-access");
     headers = await callerHeaders(A, B);
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

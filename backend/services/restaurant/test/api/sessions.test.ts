@@ -1,8 +1,8 @@
 import { signAppToken } from "@vmenu/common";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { startMemoryMongo, tokenFor } from "@vmenu/common/testing";
 import { createApp } from "../../src/app.js";
 
 // SEC-03, through the real routes and MongoDB. Its own file because /api/auth is rate limited per app.
@@ -19,13 +19,11 @@ const app = createApp({
     },
 });
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("restaurants"));
+    mongo = await startMemoryMongo("restaurants");
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {
@@ -47,7 +45,7 @@ describe("ending sessions (SEC-03)", () => {
 
     it("a staff member's version is gone once they're removed", async () => {
         const slug = await signUp();
-        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
+        const auth = await tokenFor("owner", { ownerId: "owner1" });
         const added = await request(app)
             .post(`/api/restaurants/${slug}/staff`)
             .set(auth)
@@ -61,7 +59,7 @@ describe("ending sessions (SEC-03)", () => {
 
     it("a role change raises the version", async () => {
         const slug = await signUp();
-        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
+        const auth = await tokenFor("owner", { ownerId: "owner1" });
         const added = await request(app)
             .post(`/api/restaurants/${slug}/staff`)
             .set(auth)

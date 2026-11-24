@@ -1,16 +1,16 @@
 import {
-    CALLERS,
     callerHeaders,
+    CALLERS,
     listRoutes,
     mismatches,
     NO_APP_TOKEN,
     only,
     PUBLIC,
+    startMemoryMongo,
     trackRoutes,
     type AccessRow,
     type Caller,
 } from "@vmenu/common/testing";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -63,16 +63,14 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /internal/sessions/version", NO_APP_TOKEN],
 ];
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let headers: Awaited<ReturnType<typeof callerHeaders>>;
 const ids: Record<string, string> = {};
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("restaurant-access"));
+    mongo = await startMemoryMongo("restaurant-access");
     headers = await callerHeaders(A, B);
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

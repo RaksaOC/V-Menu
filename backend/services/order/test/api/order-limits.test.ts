@@ -1,8 +1,8 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { HttpError, notFound } from "@vmenu/common";
+import { fakeRestaurantLookup, startMemoryMongo } from "@vmenu/common/testing";
 import { createApp } from "../../src/app.js";
 import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
@@ -27,11 +27,7 @@ const clients: Clients = {
         throw notFound("No such table link"); // VM-22: these tests order by table name
     },
 };
-const lookupRestaurant = async (_req: unknown, slug: string) => {
-    const found = [A, B].find((r) => r.slug === slug);
-    if (!found) throw notFound("Restaurant not found");
-    return found;
-};
+const lookupRestaurant = fakeRestaurantLookup([A, B]);
 const appWith = (orderLimits?: { perMinute: number; perTable: number }) => createApp({ clients, lookupRestaurant, orderLimits });
 
 type App = ReturnType<typeof createApp>;
@@ -42,13 +38,11 @@ const order = (app: App, from: string, { table = "1", slug = A.slug, lines = 1 }
         .set("X-Forwarded-For", from)
         .send({ table, orderedItems: Array.from({ length: lines }, () => ({ item: { _id: ITEM._id }, quantity: 1 })) });
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("order-limits"));
+    mongo = await startMemoryMongo("order-limits");
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

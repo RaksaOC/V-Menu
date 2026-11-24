@@ -1,8 +1,7 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { notFound, signAppToken } from "@vmenu/common";
+import { fakeRestaurantLookup, startMemoryMongo, tokenFor } from "@vmenu/common/testing";
 import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import { createApp } from "../../src/app.js";
 import { prepareDatabase } from "../../src/db.js";
@@ -20,25 +19,19 @@ const RESTAURANTS: Record<string, { _id: string; name: string; slug: string; own
 };
 const app = createApp({
     openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
-    lookupRestaurant: async (_req, slug) => {
-        const r = RESTAURANTS[slug];
-        if (!r) throw notFound("Restaurant not found");
-        return r;
-    },
+    lookupRestaurant: fakeRestaurantLookup(RESTAURANTS),
 });
 const WRONG = "AAAAAAAAAAAAAAAAAAAAAA";
 const PHOTO = `/api/menu/${SLUG}/images/${"a".repeat(24)}`;
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let owner: Record<string, string>;
 const saved = process.env.ALLOW_TABLE_NAME_LINKS;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("menu"));
-    owner = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "o@x.com", role: "owner" })}` };
+    mongo = await startMemoryMongo("menu");
+    owner = await tokenFor("owner", { ownerId: "owner1" });
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

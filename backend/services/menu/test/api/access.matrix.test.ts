@@ -1,17 +1,17 @@
 import {
-    CALLERS,
     callerHeaders,
+    CALLERS,
+    fakeRestaurantLookup,
     listRoutes,
     mismatches,
     NO_APP_TOKEN,
     only,
     PUBLIC,
+    startMemoryMongo,
     trackRoutes,
     type AccessRow,
     type Caller,
 } from "@vmenu/common/testing";
-import { notFound } from "@vmenu/common";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -32,11 +32,7 @@ const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId:
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
 const app = createApp({
     openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
-    lookupRestaurant: async (_req, slug) => {
-        const r = [A, B].find((x) => x.slug === slug);
-        if (!r) throw notFound("Restaurant not found");
-        return r;
-    },
+    lookupRestaurant: fakeRestaurantLookup([A, B]),
 });
 
 const staff = only(["owner", "cashier"]);
@@ -74,16 +70,14 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /internal/restaurants/:resId/tables/by-token/:token", NO_APP_TOKEN], // SEC-04
 ];
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let headers: Awaited<ReturnType<typeof callerHeaders>>;
 const ids: Record<string, string> = {};
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("menu-access"));
+    mongo = await startMemoryMongo("menu-access");
     headers = await callerHeaders(A, B);
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

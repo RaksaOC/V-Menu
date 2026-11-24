@@ -1,8 +1,7 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { signAppToken, notFound } from "@vmenu/common";
+import { fakeRestaurantLookup, startMemoryMongo, tokenFor } from "@vmenu/common/testing";
 import { createApp } from "../../src/app.js";
 import { NO_OPEN_BILLS } from "../unit/fakes.js";
 
@@ -16,30 +15,22 @@ const RESTAURANTS = {
 };
 const app = createApp({
     openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
-    lookupRestaurant: async (_req, slug) => {
-        const r = RESTAURANTS[slug as keyof typeof RESTAURANTS];
-        if (!r) throw notFound("Restaurant not found");
-        return r;
-    },
+    lookupRestaurant: fakeRestaurantLookup(RESTAURANTS),
 });
 const SLUG = "mee-keav-abc123";
 const RES_ID = RESTAURANTS[SLUG]._id;
 // SEC-05: an item's image must be one of the restaurant's uploaded photos.
 const PHOTO = `/api/menu/${SLUG}/images/${"a".repeat(24)}`;
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 let owner: Record<string, string>, cashier: Record<string, string>, otherOwner: Record<string, string>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("menu"));
-    owner = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "o@x.com", role: "owner" })}` };
-    cashier = {
-        authorization: `Bearer ${await signAppToken({ uid: "c1", email: "c@x.com", role: "cashier", resId: RES_ID, resSlug: SLUG })}`,
-    };
-    otherOwner = { authorization: `Bearer ${await signAppToken({ uid: "owner2", email: "p@x.com", role: "owner" })}` };
+    mongo = await startMemoryMongo("menu");
+    owner = await tokenFor("owner", { ownerId: "owner1" });
+    cashier = await tokenFor("cashier", { _id: RES_ID, slug: SLUG }, { uid: "c1" });
+    otherOwner = await tokenFor("owner", { ownerId: "owner2" });
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {

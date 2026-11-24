@@ -1,8 +1,8 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { signAppToken } from "@vmenu/common";
+import { startMemoryMongo, tokenFor } from "@vmenu/common/testing";
 import { createApp } from "../../src/app.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
@@ -23,13 +23,11 @@ const newApp = () =>
 // and signs in far more often than that. The limit itself is tested below (SEC-10).
 let app = newApp();
 
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("restaurants"));
+    mongo = await startMemoryMongo("restaurants");
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {
@@ -156,7 +154,7 @@ describe("owner routes", () => {
 
     it("invites a cashier by email; their first verified sign-in links the account (VM-12)", async () => {
         const slug = await signUp();
-        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
+        const auth = await tokenFor("owner", { ownerId: "owner1" });
         const invited = await request(app)
             .post(`/api/restaurants/${slug}/staff`)
             .set(auth)
@@ -174,7 +172,7 @@ describe("owner routes", () => {
 
     it("changing a role into one the person already has here is a 409 (VM-18)", async () => {
         const slug = await signUp();
-        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
+        const auth = await tokenFor("owner", { ownerId: "owner1" });
         const add = (role: string) =>
             request(app).post(`/api/restaurants/${slug}/staff`).set(auth).send({ name: "Sok", email: "sok@x.com", role });
         await add("cashier");

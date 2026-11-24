@@ -1,21 +1,19 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { startMemoryMongo } from "@vmenu/common/testing";
 import { prepareDatabase } from "../../src/db.js";
 import { mongoBillsRepo } from "../../src/repositories/bills.repo.js";
 
 // CL-06: bills stored as isPayed become isPaid, on a database seeded the way production is today:
 // the old field, and VM-08's and VM-11's indexes built on it.
 const RES = "665f00000000000000000001";
-let mongo: MongoMemoryServer;
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 const bills = () => mongoose.connection.db!.collection("table_orders");
 
 beforeAll(async () => {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri("orders"), { autoIndex: false }); // as index.ts does
+    mongo = await startMemoryMongo("orders", { autoIndex: false }); // as index.ts does
 });
 afterAll(async () => {
-    await mongoose.disconnect();
     await mongo.stop();
 });
 beforeEach(async () => {
