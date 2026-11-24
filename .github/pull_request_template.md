@@ -29,7 +29,7 @@ Closes #
 ## Screenshots
 
 <!-- UI changes: light and dark, and phone width (360 px) for screens used on phones.
-     Save them as docs/showcase/after/<ticket>-<screen>-<width>[-dark].png. Delete this section otherwise. -->
+     Attach them to this PR. Delete this section otherwise. -->
 
 ## Checklist
 

@@ -8,8 +8,6 @@ playwright-report/
 test-results/
 **/package-lock.json
 frontend/next-env.d.ts
-docs/showcase/before/
-docs/showcase/after/
 # Prose, workflow and infrastructure files are formatted by hand
 *.md
 *.yml

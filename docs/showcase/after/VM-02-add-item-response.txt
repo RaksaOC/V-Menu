@@ -1,1 +1,0 @@
-POST /items after choosing fixture-photo.jpg (1178916 bytes) -> 201 {"name":"Showcase Dish","price":4.5,"image":"/api/menu/demo-bistro/images/6b042152339f8e03c292b2c7","isEnabled":true,"resId":"64b000000000000000000001","_id":"6b042152339f8e03c292b2c9","createdAt":"2026-11-23T11:19:46.807Z","updatedAt":"2026-11-23T11:19:46.807Z","__v":0}

@@ -146,7 +146,6 @@ test("root scripts and helper scripts use the new paths", () => {
         "scripts/dev-db.mjs",
         "scripts/smoke.mjs",
         "scripts/place-order.mjs",
-        "docs/showcase/capture.ts",
     ]) {
         const m = read(f).match(stale);
         assert.equal(m, null, `${f} still uses the old path ${m?.[0]?.trim()}`);

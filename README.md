@@ -246,7 +246,6 @@ infra/
   deploy/                    server setup and deploy scripts (see infra/deploy/README.md)
   monitoring/                Grafana Alloy agent, dashboards and alerts (see infra/monitoring/README.md)
 scripts/                     setup, local MongoDB, smoke test and repo checks
-docs/showcase/               before/after screenshots for each PR (capture.ts)
 .github/                     CI and deploy workflows, Dependabot, issue forms, PR template
 ```
 
