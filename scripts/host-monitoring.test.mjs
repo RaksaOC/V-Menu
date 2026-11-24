@@ -47,3 +47,15 @@ test("the monitoring deploy gives a slow server time to start Alloy", () => {
     const cpus = Number(/cpus: "([\d.]+)"/.exec(alloy)?.[1]);
     assert.ok(cpus >= 0.5, `Alloy is capped at ${cpus} CPU; give it at least 0.5 to start up`);
 });
+
+// On 24 Nov a staging deploy rolled back because menu-service needed about 75s to boot on the busy
+// server and its health check gave it 20s. Every image gets 3 minutes, still polled every few seconds.
+test("the app images give a slow server time to start before a failed check counts", () => {
+    const files = ["restaurant", "menu", "order"].map((s) => `backend/services/${s}/Dockerfile`).concat("frontend/Dockerfile");
+    for (const f of files) {
+        const check = /^HEALTHCHECK (.*)$/m.exec(read(f))?.[1] ?? "";
+        const start = Number(/--start-period=(\d+)s/.exec(check)?.[1]);
+        assert.ok(start >= 180, `${f}: start period is ${start}s; allow at least 180s`);
+        assert.match(check, /--start-interval=\ds/, `${f}: keep polling every few seconds while it starts`);
+    }
+});

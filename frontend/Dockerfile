@@ -82,6 +82,6 @@ EXPOSE 3400
 # Cheap check: bash opens a socket and sends HEAD /favicon.ico (a static file), so no Node process
 # starts and no page is rendered. The old `node -e fetch('/')` check cost ~0.9 CPU-seconds per run.
 # Every 3 s while starting (so deploys and CI see "healthy" quickly), then every 30 s.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --start-interval=3s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --start-interval=3s --retries=3 \
     CMD ["bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/${PORT:-3400} && printf 'HEAD /favicon.ico HTTP/1.0\\r\\n\\r\\n' >&3 && read -r status <&3 && [[ $status == *' 200 '* ]]"]
 CMD ["node", "server.js"]
