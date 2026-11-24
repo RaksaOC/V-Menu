@@ -1,4 +1,4 @@
-/* The landing-page tour: one entry per step. Words live here; pictures live in components/tour/scenes.tsx. */
+/* The landing-page tour: one entry per step. Words live here; pictures live in components/marketing/tour/scenes.tsx. */
 
 export type SceneId = "intro" | "roles" | "flow" | "before" | "architecture" | "ownership" | "order" | "security" | "health" | "try";
 

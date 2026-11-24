@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
     useRouter: () => router,
 }));
 
-const { default: CartPage } = await import("@/app/[res]/customer/[table]/cart/page");
+const { default: CartPage } = await import("@/features/customer/components/CartPage");
 
 const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
 const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", price: 4, image: "/l.jpg", isEnabled: true };
