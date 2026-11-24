@@ -4,7 +4,9 @@ import SkeletonTableCard from "@/components/ui/skeletons/SkeletonTableCard";
 import {TableInput, TableOutput} from "@/lib/types/Table";
 import {createTable, getTables} from "@/features/owner/api";
 import {ResContext} from "@/features/owner/ResContext";
-import {Plus, Table, TrendingUp} from "lucide-react";
+import {Plus, Printer, Table, TrendingUp} from "lucide-react";
+import {printQrCards} from "@/components/qr/print";
+import {tableUrl} from "@/lib/tableUrl";
 import AddTablePopup from "@/features/owner/components/tables/AddTablePopup";
 import {ItemInput} from "@/lib/types/Item";
 
@@ -63,12 +65,23 @@ export default function SettingsTables() {
                                     Create, Edit tables
                                 </p>
                             </div>
-                            <button
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                                onClick={() => setShowAddTable(!showAddTable)}
-                            >
-                                <Plus size={16}/> Add Table
-                            </button>
+                            <div className="flex flex-wrap justify-end gap-2">
+                                {tables.length > 0 && (
+                                    <button
+                                        type="button"
+                                        className="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                                        onClick={() => printQrCards(tables.map((t) => ({tableName: t.name, url: tableUrl(resSlug, t.name)})))}
+                                    >
+                                        <Printer size={16}/> Print all QR codes
+                                    </button>
+                                )}
+                                <button
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                                    onClick={() => setShowAddTable(!showAddTable)}
+                                >
+                                    <Plus size={16}/> Add Table
+                                </button>
+                            </div>
                         </>
                     )}
                 </div>

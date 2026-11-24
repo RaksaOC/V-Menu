@@ -2,10 +2,10 @@ import {QrCode, CheckCircle, XCircle, TableIcon, Pencil} from "lucide-react";
 import {TableOutput} from "@/lib/types/Table";
 import {useContext, useState} from "react";
 import EditTablePopup from "@/features/owner/components/tables/EditTablePopup";
-import {ItemInput, ItemOutput} from "@/lib/types/Item";
 import {deleteTable, updateTable} from "@/features/owner/api";
 import {apiStatus} from "@/lib/api";
 import {ResContext} from "@/features/owner/ResContext";
+import TableQrModal from "@/components/qr/TableQrModal";
 
 interface TableCardProps {
     table: TableOutput;
@@ -14,6 +14,7 @@ interface TableCardProps {
 
 function TableCard({table, onModified}: TableCardProps) {
     const [showEdit, setShowEdit] = useState(false);
+    const [showQr, setShowQr] = useState(false);
     const resSlug = useContext(ResContext);
 
     async function handleSave(id : string, name : string): Promise<"taken"|"ok"|"error"|undefined> {
@@ -112,6 +113,8 @@ function TableCard({table, onModified}: TableCardProps) {
 
                     {/* Bold QR Button */}
                     <button
+                        type="button"
+                        onClick={() => setShowQr(true)}
                         className="w-full py-3 px-4 text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-blue-200"
                     >
                         <QrCode size={16}/>
@@ -119,6 +122,7 @@ function TableCard({table, onModified}: TableCardProps) {
                     </button>
                 </div>
             </div>
+            {showQr && <TableQrModal slug={resSlug} tableName={table.name} onClose={() => setShowQr(false)}/>}
             {
                 showEdit && (<EditTablePopup id={table._id} name={table.name} onClose={() => setShowEdit(false)} onSave={handleSave} onDelete={handleDelete}/>)
             }
