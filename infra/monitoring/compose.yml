@@ -112,13 +112,14 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
-      start_period: 30s
+      # Slow on the shared 2-CPU server: it replays its buffer before it is ready.
+      start_period: 180s
       start_interval: 3s
     deploy:
       resources:
         limits:
           memory: 256M
-          cpus: "0.25"
+          cpus: "0.5" # needs it to start; uses about 0.1 once running
 
 networks:
   docker-api:
