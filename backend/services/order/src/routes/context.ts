@@ -4,6 +4,7 @@ import type { billsService } from "../services/bills.service.js";
 import type { kitchenService } from "../services/kitchen.service.js";
 import type { ordersService } from "../services/orders.service.js";
 import type { statsService } from "../services/stats.service.js";
+import type { tableService } from "../services/table.service.js";
 
 /** What every router needs: the services for this request, and the restaurant in the URL. */
 export interface RouteContext {
@@ -12,6 +13,7 @@ export interface RouteContext {
         kitchen: ReturnType<typeof kitchenService>;
         bills: ReturnType<typeof billsService>;
         stats: ReturnType<typeof statsService>;
+        table: ReturnType<typeof tableService>;
     };
     restaurant(req: Request): Promise<RestaurantRef>;
 }

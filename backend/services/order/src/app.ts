@@ -7,12 +7,14 @@ import { billsService } from "./services/bills.service.js";
 import { kitchenService } from "./services/kitchen.service.js";
 import { ordersService } from "./services/orders.service.js";
 import { statsService } from "./services/stats.service.js";
+import { tableService } from "./services/table.service.js";
 import { billsRoutes } from "./routes/bills.routes.js";
 import { restaurantFrom, type RouteContext } from "./routes/context.js";
 import { kitchenRoutes } from "./routes/kitchen.routes.js";
 import { ordersRoutes } from "./routes/orders.routes.js";
 import { overviewRoutes } from "./routes/overview.routes.js";
 import { ownerRoutes } from "./routes/owner.routes.js";
+import { tableRoutes } from "./routes/table.routes.js";
 
 interface Deps {
     lookupRestaurant?: LookupRestaurant;
@@ -36,6 +38,7 @@ export function createApp({
                 kitchen: kitchenService({ orders }),
                 bills: billsService({ bills }),
                 stats: statsService({ orders, bills, clients: bound }),
+                table: tableService({ orders, bills }),
             };
         },
         restaurant: restaurantFrom(lookupRestaurant),
@@ -47,6 +50,7 @@ export function createApp({
     app.use("/api/orders/:slug/kitchen", kitchenRoutes(ctx));
     app.use("/api/orders/:slug/bills", billsRoutes(ctx));
     app.use("/api/orders/:slug/overview", overviewRoutes(ctx));
+    app.use("/api/orders/:slug/tables/:table", tableRoutes(ctx));
     app.use("/api/orders/:slug", ordersRoutes(ctx));
     return finish(app);
 }

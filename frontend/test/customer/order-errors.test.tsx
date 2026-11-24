@@ -71,7 +71,7 @@ describe("order errors", () => {
         expect(alert).toHaveTextContent("A required service is unavailable");
         expect(cart()).toHaveLength(2);
         fireEvent.click(within(alert).getByRole("button", { name: /try again/i }));
-        await waitFor(() => expect(toast.success).toHaveBeenCalled());
+        await waitFor(() => expect(router.push).toHaveBeenCalledWith("/demo-bistro/customer/1/orders/o1"));
         expect(calls).toBe(2);
         await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
     });

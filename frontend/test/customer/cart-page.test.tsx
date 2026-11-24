@@ -80,7 +80,8 @@ describe("cart page", () => {
         render(<CartPage />);
         await screen.findByText("Kuy Teav");
         placeOrder();
-        await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Order placed successfully!", expect.any(Object)));
+        // VM-07: straight to the order's confirmation page
+        await waitFor(() => expect(router.push).toHaveBeenCalledWith("/demo-bistro/customer/1/orders/o1"));
         expect(body.table).toBe("1");
         expect(localStorage.getItem(KEY)).toBeNull(); // emptied after the order
         expect(body.orderedItems?.map((l) => l.quantity)).toEqual([2, 1]);

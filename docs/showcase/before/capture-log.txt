@@ -102,3 +102,14 @@ ok   VM-06-cart-sold-out-1280-dark
 ok   VM-06-cart-closed-360
 ok   VM-06-cart-down-360
 ok   VM-06-cart-sold-out-360
+# ONLY=VM-07 (2026-11-23T13:10:26.986Z)
+ok   VM-07-after-order-1280
+ok   VM-07-after-order-1280-dark
+ok   VM-07-after-order-360
+# ONLY=VM-07 (2026-11-23T13:11:39.688Z)
+ok   VM-07-after-order-1280
+ok   VM-07-after-order-3s-1280
+ok   VM-07-after-order-1280-dark
+ok   VM-07-after-order-3s-1280-dark
+ok   VM-07-after-order-360
+ok   VM-07-after-order-3s-360

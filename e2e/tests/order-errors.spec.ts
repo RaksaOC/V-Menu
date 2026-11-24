@@ -62,5 +62,5 @@ test("Try again after a 503 places the order", async ({ page }) => {
         .getByRole("alert")
         .getByRole("button", { name: /try again/i })
         .click();
-    await expect(page.getByText(/order placed/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /sent to the kitchen/ })).toBeVisible(); // VM-07
 });

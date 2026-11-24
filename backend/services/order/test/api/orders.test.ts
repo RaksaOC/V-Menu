@@ -149,3 +149,50 @@ describe("one open bill per table (VM-08)", () => {
         expect(res.body.isPayed).toBe(false);
     });
 });
+
+describe("what the customer sees after ordering (VM-07)", () => {
+    const tableApi = (table: string, path: string) => request(app).get(`/api/orders/${R.slug}/tables/${encodeURIComponent(table)}${path}`);
+
+    it("one order, at its own table: number, the server's prices and total, and when it was placed (no sign-in)", async () => {
+        const { body: order } = await place("1", 2); // the browser said price 0
+        const res = await tableApi("1", `/orders/${order._id}`);
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({
+            _id: order._id,
+            number: order._id.slice(-6).toUpperCase(),
+            table: "1",
+            lines: [{ name: "Kuy Teav", price: 2.5, quantity: 2, total: 5 }],
+            total: 5,
+        });
+        expect(new Date(res.body.placedAt).getTime()).toBeGreaterThan(Date.now() - 60_000);
+        expect(JSON.stringify(res.body)).not.toContain(R._id); // nothing internal
+    });
+
+    it("an order can't be read from another table, and unknown or bad ids are refused", async () => {
+        const { body: order } = await place("1");
+        expect((await tableApi("2", `/orders/${order._id}`)).status).toBe(404);
+        expect((await tableApi("1", `/orders/${new mongoose.Types.ObjectId()}`)).status).toBe(404);
+        expect((await tableApi("1", "/orders/nope")).status).toBe(400);
+    });
+
+    it("the table's open bill: only this table's open bill, with its orders and total", async () => {
+        await place("1", 2);
+        await place("1", 1);
+        await place("2", 4); // another table
+        const res = await tableApi("1", "/open-bill");
+        expect(res.status).toBe(200);
+        expect(res.body.table).toBe("1");
+        expect(res.body.orders).toHaveLength(2);
+        expect(res.body.orders.map((o: { total: number }) => o.total)).toEqual([5, 2.5]);
+        expect(res.body.total).toBe(7.5);
+        expect(JSON.stringify(res.body)).not.toContain(R._id);
+    });
+
+    it("once the bill is paid, the table's list is empty again", async () => {
+        await place("1");
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPayed: true });
+        const res = await tableApi("1", "/open-bill");
+        expect(res.body).toEqual({ table: "1", orders: [], total: 0 });
+    });
+});
