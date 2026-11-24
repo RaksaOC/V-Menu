@@ -2,7 +2,7 @@ import {ItemOutput} from "@/lib/types/Item";
 import {CartItem} from "@/lib/types/CartItem";
 import {Printer, X} from "lucide-react";
 import {useRef} from "react";
-import {useReactToPrint} from "react-to-print";
+import {Button, Modal} from "@/components/ui";
 
 interface Props {
     businessName: string;
@@ -39,12 +39,18 @@ function Invoice({businessName, address, phone, invoiceId, date, items, onClose}
     );
 
     return (
-        <div
-            className="fixed inset-0 bg-black/85  z-50 overflow-y-auto px-4 py-6 flex justify-center items-center">
-            <div className={"flex flex-col justify-center items-center"}>
-                <div
-                    className="relative bg-white text-black p-8 font-mono border border-black max-w-lg w-full mx-auto shadow-xl rounded-xl mb-8">
-                    <header className="text-center mb-8">
+        <Modal
+            title={`Invoice ${invoiceId}`}
+            onClose={onClose}
+            footer={
+                <>
+                    <Button variant="outline" icon={<X size={16} aria-hidden/>} onClick={onClose}>Close</Button>
+                    <Button variant="solid" icon={<Printer size={16} aria-hidden/>} onClick={printInvoice}>Print</Button>
+                </>
+            }
+        >
+            <div ref={invoiceRef} className="bg-white p-6 font-mono text-black">
+                <header className="text-center mb-8">
                         <h1 className="text-3xl font-bold uppercase tracking-wide">{businessName}</h1>
                         <p>{address}</p>
                         <p>{phone}</p>
@@ -99,26 +105,8 @@ function Invoice({businessName, address, phone, invoiceId, date, items, onClose}
                         <p>Thank you for dining with us!</p>
                         <p>Powered by V-Menu</p>
                     </footer>
-                </div>
-
-                <div className="flex justify-center items-center gap-2.5">
-                    <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded flex items-center transition-all duration-75 gap-2"
-                        onClick={printInvoice}
-                    >
-                        <span><Printer size={16}/></span> Print
-                    </button>
-                    <button
-                        onClick={onClose}
-                        className=" bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded flex items-center transition-all duration-75 gap-2"
-                    >
-                        <span><X size={16}/></span> Close
-                    </button>
-
-                </div>
             </div>
-        </div>
+        </Modal>
     );
 }
-
 export default Invoice;

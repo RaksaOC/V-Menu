@@ -2,7 +2,6 @@ import React, {useState} from "react";
 import {Minus, Plus, Trash2} from "lucide-react";
 import {CartItem} from "@/lib/types/CartItem";
 import {ItemBase} from "@/lib/types/Item";
-import {ToastContainer} from "react-toastify";
 import {toast} from "@/lib/toast";
 
 type CartItemProps = {

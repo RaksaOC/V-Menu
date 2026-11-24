@@ -72,15 +72,15 @@ describe("View QR Code buttons", () => {
     const table = { _id: "t1", name: "T1", isEnabled: true };
 
     it("opens the QR code from the owner's table card", async () => {
-        const { default: OwnerTableCard } = await import("@/features/owner/components/tables/TableCard");
-        render(<OwnerTableCard table={table} onModified={() => {}} />);
+        const { default: TableCard } = await import("@/features/restaurant/components/TableCard");
+        render(<TableCard role="owner" table={table} onEdit={() => {}} />);
         fireEvent.click(screen.getByRole("button", { name: /view qr code/i }));
         expect(await screen.findByRole("img", { name: "QR code for table T1" })).toBeTruthy();
     });
 
     it("opens the QR code from the cashier's table card", async () => {
-        const { default: CashierTableCard } = await import("@/features/cashier/components/tables/TableCard");
-        render(<CashierTableCard table={table} onToggleStatus={() => {}} />);
+        const { default: TableCard } = await import("@/features/restaurant/components/TableCard");
+        render(<TableCard role="cashier" table={table} onToggle={() => {}} />);
         fireEvent.click(screen.getByRole("button", { name: /view qr code/i }));
         expect(await screen.findByRole("img", { name: "QR code for table T1" })).toBeTruthy();
     });
@@ -90,12 +90,12 @@ describe("Print all QR codes", () => {
     it("prints one card per table from the owner's Tables page", async () => {
         const { answer } = await import("../api/helpers");
         const { ResContext } = await import("@/features/owner/ResContext");
-        const { default: OwnerTables } = await import("@/features/owner/components/tables/Tables");
+        const { default: Tables } = await import("@/features/restaurant/components/Tables");
         answer("get", "/api/menu/demo-bistro/tables", [
             { _id: "t1", name: "T1", isEnabled: true },
             { _id: "t2", name: "Patio 2", isEnabled: false },
         ]);
-        render(<ResContext.Provider value="demo-bistro"><OwnerTables /></ResContext.Provider>);
+        render(<ResContext.Provider value="demo-bistro"><Tables role="owner" /></ResContext.Provider>);
         fireEvent.click(await screen.findByRole("button", { name: /print all qr codes/i }));
         expect(printing.printQrCards).toHaveBeenLastCalledWith([
             { tableName: "T1", url: tableUrl("demo-bistro", "T1") },

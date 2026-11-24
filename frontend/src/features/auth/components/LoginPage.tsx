@@ -6,7 +6,7 @@ import {Login, LoginDetails} from './Login';
 import {RoleSelect} from "@/features/auth/components/RoleSelect";
 import {AnimatePresence, motion} from "framer-motion";
 import {ArrowLeft} from "lucide-react";
-import {ToastContainer} from "react-toastify";
+import {ToastHost} from "@/components/ui";
 import {login, type StaffRole} from "@/features/auth/api";
 import {useRouter} from "next/navigation";
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
         <>
             <div
                 className="min-h-screen flex items-center justify-center bg-[var(--stage)] text-[var(--ink)] px-4 relative">
-                <ToastContainer/>
+                <ToastHost/>
                 <div className={"models flex flex-col justify-center items-center max-w-[1024px] w-full py-4"}>
                     <AnimatePresence mode="wait">
                         {step === "login" && (

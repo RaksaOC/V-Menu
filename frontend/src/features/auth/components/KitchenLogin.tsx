@@ -7,7 +7,7 @@ import {auth} from "@/lib/firebase";
 import {Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight} from "lucide-react";
 import {login} from "@/features/auth/api";
 import SessionEndedNotice from "@/features/auth/components/SessionEndedNotice";
-import {ToastContainer} from "react-toastify";
+import {ToastHost} from "@/components/ui";
 import {toast} from "@/lib/toast";
 
 const Auth = () => {
@@ -70,7 +70,7 @@ const Auth = () => {
 
     return (
         <div className={"w-full min-h-screen flex justify-center items-center bg-[var(--stage)] text-[var(--ink)] px-4 relative"}>
-            <ToastContainer position="top-center"></ToastContainer>
+            <ToastHost/>
             <div className="bg-[var(--bg)] border border-[var(--line)] rounded-2xl shadow-xl p-8 max-w-md w-full">
                 <h2 className="text-3xl font-bold text-center text-zinc-800 dark:text-white mb-6">
                     Kitchen Login

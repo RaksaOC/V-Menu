@@ -3,8 +3,7 @@ import {addStaff, getStaff, removeStaff, updateStaff} from "@/features/staff/api
 import {ResContext} from "@/features/owner/ResContext";
 import {Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, ChevronsUpDown, Pencil} from "lucide-react";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/react";
-import AddStaffPopup from "@/features/staff/components/AddStaffPopUp";
-import EditStaffPopUp from "@/features/staff/components/EditStaffPopUp";
+import StaffForm from "@/features/staff/components/StaffForm";
 import {TenantInput, TenantOutput} from "@/lib/types/Tenant";
 import {prettyDate} from "@/lib/dates";
 import {createUserWithEmailAndPassword, fetchSignInMethodsForEmail, UserCredential} from "firebase/auth";
@@ -493,23 +492,19 @@ export default function Staff() {
                     )}
                 </div>
             </div>
-            {
-                showAddStaff && (
-                    <AddStaffPopup onClose={() => {
-                        setShowAddStaff(!showAddStaff)
-                        setEmailTaken(false)
+            {showAddStaff && (
+                <StaffForm
+                    emailTaken={emailTaken}
+                    onAdd={handleAddStaff}
+                    onClose={() => {
+                        setShowAddStaff(false);
+                        setEmailTaken(false);
                     }}
-                                   emailIsTaken={emailTaken}
-                                   onSave={handleAddStaff}/>
-                )
-            }
-            {
-                showEditStaff && staffToEdit && (
-                    <EditStaffPopUp tenant={staffToEdit} onSave={handleEditStaff}
-                                    onClose={() => setShowEditStaff(false)}
-                                    onDelete={handleDeleteStaff}/>
-                )
-            }
+                />
+            )}
+            {showEditStaff && staffToEdit && (
+                <StaffForm member={staffToEdit} onSave={handleEditStaff} onDelete={handleDeleteStaff} onClose={() => setShowEditStaff(false)}/>
+            )}
         </>
     );
 }

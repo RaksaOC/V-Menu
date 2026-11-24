@@ -6,8 +6,12 @@ import { server } from "../msw";
 // VM-02: the owner's photo is uploaded as a file first; the item is saved with the short URL.
 vi.mock("@/lib/firebase", () => ({ auth: {} }));
 const { ResContext } = await import("@/features/owner/ResContext");
-const { default: AddItemPopup } = await import("@/features/owner/components/menu/AddItemPopup");
-const { default: EditItemPopup } = await import("@/features/owner/components/menu/EditItemPopup");
+const { default: ItemForm } = await import("@/features/restaurant/components/ItemForm");
+// CL-09: Add and Edit are one ItemForm; without an item it adds, with one it edits.
+const AddItemPopup = (p: { onClose: () => void; onSave: (i: unknown) => void }) => <ItemForm {...p} />;
+const EditItemPopup = ({ id, name, price, image, ...p }: { id: string; name: string; price: number; image: string; onClose: () => void; onSave: (i: unknown) => void; onDelete: (id: string) => void }) => (
+    <ItemForm item={{ _id: id, name, price, image, isEnabled: true }} {...p} />
+);
 
 URL.createObjectURL = vi.fn(() => "blob:preview");
 URL.revokeObjectURL = vi.fn();

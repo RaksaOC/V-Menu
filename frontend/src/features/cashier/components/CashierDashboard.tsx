@@ -1,14 +1,20 @@
 'use client';
 
 import {ReactNode, useEffect, useState} from "react";
-import Menu from "./menu/Menu";
-import Tables from "./tables/Tables";
+import Menu from "@/features/restaurant/components/Menu";
+import Tables from "@/features/restaurant/components/Tables";
 import Orders from "./orders/Orders";
-import Overview from "./overview/Overview";
-import Header from "./Header";
+import Overview from "@/features/restaurant/components/Overview";
+import DashboardHeader from "@/components/layout/DashboardHeader";
+import {ToastHost} from "@/components/ui";
+import {useParams} from "next/navigation";
 import {BarChart3, UtensilsCrossed, Users, ShoppingBag, ChevronRight} from "lucide-react";
 
 const Dashboard = () => {
+    const slug = String(useParams()?.res ?? "");
+    // VM-20 replaces this with the signed-in account's email.
+    const [email, setEmail] = useState("cashier@restaurants.com");
+    useEffect(() => setEmail(localStorage.getItem("userEmail") || "cashier@restaurants.com"), []);
     const savedSection = localStorage.getItem("dashboardSection") || "overview";
     const [section, setSection] = useState(savedSection);
 
@@ -63,9 +69,9 @@ const Dashboard = () => {
             case "orders":
                 return <Orders/>
             case "menu":
-                return <Menu/>;
+                return <Menu role="cashier"/>;
             case "tables":
-                return <Tables/>
+                return <Tables role="cashier"/>
             default:
                 return null;
         }
@@ -75,7 +81,15 @@ const Dashboard = () => {
 
     return (
         <div className="relative min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white">
-            <Header/>
+            <ToastHost/>
+            <DashboardHeader
+                title="V-Menu Cashier"
+                subtitle={slug}
+                roleLabel="Cashier"
+                email={email}
+                loginHref={`/${slug}/cashier/login`}
+                clock
+            />
 
             <div className="flex relative">
                 {/* Sidebar Navigation */}
