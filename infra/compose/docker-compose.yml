@@ -92,6 +92,9 @@ services:
         NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:-}
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:-}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:-}
+        # B6: set only by scripts/ci-env.sh (e2e runs against the Auth emulator)
+        NEXT_PUBLIC_E2E: ${NEXT_PUBLIC_E2E:-}
+        NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL: ${NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL:-}
         # rewrites are fixed at build time, so these must be the Compose DNS names
         RESTAURANT_SERVICE_URL: http://restaurant-service:4101
         MENU_SERVICE_URL: http://menu-service:4102
@@ -107,6 +110,27 @@ services:
         condition: service_healthy
       order-service:
         condition: service_healthy
+
+  # B6: the Firebase Auth emulator, for e2e sign-ins (CI). Only with `--profile e2e`
+  # (COMPOSE_PROFILES=e2e), so a normal `docker compose up` never starts it.
+  auth-emulator:
+    image: node:22-alpine
+    profiles: [e2e]
+    working_dir: /emulator
+    command: ["npx", "-y", "firebase-tools@15.34.2", "emulators:start", "--only", "auth", "--project", "demo-vmenu"]
+    environment:
+      CI: "true" # no prompts
+    volumes:
+      - ../firebase-emulator/firebase.json:/emulator/firebase.json:ro
+    networks: [backend, frontend]
+    ports:
+      - "127.0.0.1:9099:9099" # the browser in the e2e job signs in here
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9099/"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
 
 networks:
   backend:

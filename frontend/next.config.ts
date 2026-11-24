@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { securityHeaders } from "./security-headers";
+import { AUTH_EMULATOR_URL } from "./src/lib/auth-emulator";
 
 // The browser only ever calls /api/* on this site. Next forwards each prefix to the service
 // that owns it, so the frontend has no database access and no server secrets of its own.
@@ -23,6 +24,7 @@ const nextConfig: NextConfig = {
                 headers: securityHeaders({
                     dev: process.env.NODE_ENV !== "production",
                     analytics: Boolean(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID),
+                    authEmulator: AUTH_EMULATOR_URL, // B6: e2e builds only
                     mode: process.env.CSP_MODE === "enforce" ? "enforce" : "report-only",
                 }),
             },
