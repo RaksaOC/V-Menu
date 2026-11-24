@@ -11,13 +11,17 @@ process.env.COOKIE_SECURE = "false";
 
 // Fake Firebase: an "ID token" here is just "uid:email", or "uid:email:unverified" for an account
 // whose email isn't verified yet (VM-13).
-const app = createApp({
-    verifyIdToken: async (t) => {
-        const [uid, email, unverified] = t.split(":");
-        if (!uid || !email) throw new Error("bad token");
-        return { uid, email, emailVerified: unverified !== "unverified" };
-    },
-});
+const newApp = () =>
+    createApp({
+        verifyIdToken: async (t) => {
+            const [uid, email, unverified] = t.split(":");
+            if (!uid || !email) throw new Error("bad token");
+            return { uid, email, emailVerified: unverified !== "unverified" };
+        },
+    });
+// A new app for each test: /api/auth allows 30 requests a minute per app, and this file signs up
+// and signs in far more often than that. The limit itself is tested below (SEC-10).
+let app = newApp();
 
 let mongo: MongoMemoryServer;
 beforeAll(async () => {
@@ -30,6 +34,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
+    app = newApp();
 });
 
 async function signUp(uid = "owner1", email = "owner@x.com") {
@@ -112,6 +117,7 @@ describe("restaurant settings (VM-24)", () => {
 
     it("refuses another owner and a bad currency", async () => {
         const slug = await signUp("owner1", "a@x.com");
+        await signUp("owner2", "b@x.com"); // a real owner, of another restaurant (SEC-03)
         const other = await signAppToken({ uid: "owner2", email: "b@x.com", role: "owner" });
         const mine = await signAppToken({ uid: "owner1", email: "a@x.com", role: "owner" });
         const put = (t: string, body: object) =>
