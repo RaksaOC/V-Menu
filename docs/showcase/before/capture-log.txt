@@ -323,3 +323,69 @@ ok   VM-30-customer-menu-1280-dark
 ok   VM-30-cashier-card-1280-dark
 ok   VM-30-customer-menu-360
 ok   VM-30-cashier-card-360
+# ONLY=CL-11 (2026-11-24T02:14:32.971Z)
+ok   CL-11-landing-1280
+FAIL CL-11 1280 light: locator.click: Timeout 30000ms exceeded.
+ok   CL-11-landing-1280-dark
+FAIL CL-11 1280 dark: locator.click: Timeout 30000ms exceeded.
+ok   CL-11-landing-360
+ok   CL-11-tour-360
+ok   CL-11-login-360
+ok   CL-11-signup-360
+ok   CL-11-customer-menu-360
+ok   CL-11-cart-360
+ok   CL-11-kitchen-360
+ok   CL-11-cashier-orders-360
+ok   CL-11-owner-management-360
+FAIL CL-11 360 light: locator.click: Timeout 30000ms exceeded.
+# ONLY=CL-11 (2026-11-24T02:16:13.071Z)
+ok   CL-11-landing-1280
+FAIL CL-11 1280 light: locator.click: Timeout 30000ms exceeded.
+ok   CL-11-landing-1280-dark
+FAIL CL-11 1280 dark: locator.click: Timeout 30000ms exceeded.
+ok   CL-11-landing-360
+ok   CL-11-tour-360
+ok   CL-11-login-360
+ok   CL-11-signup-360
+ok   CL-11-customer-menu-360
+ok   CL-11-cart-360
+ok   CL-11-kitchen-360
+ok   CL-11-cashier-orders-360
+ok   CL-11-owner-management-360
+ok   CL-11-owner-all-overview-360
+ok   CL-11-owner-all-restaurants-360
+ok   CL-11-owner-all-staff-360
+ok   CL-11-owner-staff-360
+ok   CL-11-owner-categories-360
+ok   CL-11-owner-item-form-360
+# ONLY=CL-11 1280 (2026-11-24T02:17:15.169Z)
+ok   CL-11-landing-1280
+ok   CL-11-tour-1280
+ok   CL-11-login-1280
+ok   CL-11-signup-1280
+ok   CL-11-customer-menu-1280
+ok   CL-11-cart-1280
+ok   CL-11-kitchen-1280
+ok   CL-11-cashier-orders-1280
+ok   CL-11-owner-management-1280
+ok   CL-11-owner-all-overview-1280
+ok   CL-11-owner-all-restaurants-1280
+ok   CL-11-owner-all-staff-1280
+ok   CL-11-owner-staff-1280
+ok   CL-11-owner-categories-1280
+ok   CL-11-owner-item-form-1280
+ok   CL-11-landing-1280-dark
+ok   CL-11-tour-1280-dark
+ok   CL-11-login-1280-dark
+ok   CL-11-signup-1280-dark
+ok   CL-11-customer-menu-1280-dark
+ok   CL-11-cart-1280-dark
+ok   CL-11-kitchen-1280-dark
+ok   CL-11-cashier-orders-1280-dark
+ok   CL-11-owner-management-1280-dark
+ok   CL-11-owner-all-overview-1280-dark
+ok   CL-11-owner-all-restaurants-1280-dark
+ok   CL-11-owner-all-staff-1280-dark
+ok   CL-11-owner-staff-1280-dark
+ok   CL-11-owner-categories-1280-dark
+ok   CL-11-owner-item-form-1280-dark

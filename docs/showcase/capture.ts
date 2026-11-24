@@ -1664,6 +1664,110 @@ for (const [vp, theme] of [
     });
 }
 
+// CL-11: the screens whose big files were split up. A refactor, so before and after must match.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`CL-11 ${vp.width} ${theme}`, async () => {
+        const c = (page: Page) => ({ page, theme, width: vp.width });
+        const pages: [string, string, Role | undefined][] = [
+            ["landing", "/", undefined],
+            ["login", "/login", undefined],
+            ["signup", "/signup", undefined],
+            ["customer-menu", `/${SLUG}/customer/${TABLE}`, undefined],
+            ["kitchen", `/${SLUG}/kitchen`, "chef"],
+        ];
+        for (const [name, path, role] of pages) {
+            const { context, page } = await newPage(browser, vp, theme, role);
+            await page.goto(BASE + path);
+            await settle(page);
+            await shot(c(page), `CL-11-${name}`, name !== "landing");
+            if (name === "landing") {
+                await page.getByRole("button", { name: /tour/i }).filter({ visible: true }).first().click({ force: true });
+                await page.waitForTimeout(800);
+                await shot(c(page), "CL-11-tour", false);
+            }
+            if (name === "customer-menu") {
+                const menu = dishesOf(await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json());
+                const lines = menu.slice(0, 2).map((item, i) => ({ item, quantity: i + 1 }));
+                await page.evaluate(([k, v]) => localStorage.setItem(k, v), [`cart:${SLUG}:${TABLE}`, JSON.stringify(lines)]);
+                await page.goto(`${BASE}/${SLUG}/customer/${TABLE}/cart`);
+                await settle(page);
+                await shot(c(page), "CL-11-cart");
+            }
+            await context.close();
+        }
+
+        const cashier = await newPage(browser, vp, theme, "cashier");
+        await cashier.context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await cashier.page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(cashier.page);
+        await shot(c(cashier.page), "CL-11-cashier-orders", false);
+        await cashier.context.close();
+
+        const owner = await newPage(browser, vp, theme, "owner");
+        const o = owner.page;
+        await owner.context.addInitScript(() => localStorage.setItem("activeTab", "management"));
+        await o.goto(`${BASE}/owner`);
+        await settle(o);
+        await shot(c(o), "CL-11-owner-management", false);
+        if (vp === PHONE)
+            await o
+                .getByRole("button", { name: /open the menu/i })
+                .first()
+                .click();
+        for (const [label, name] of [
+            ["Dashboard Overview", "all-overview"],
+            ["All Restaurants", "all-restaurants"],
+            ["Staff Management", "all-staff"],
+        ]) {
+            await o.getByRole("button", { name: label }).filter({ visible: true }).first().click();
+            await settle(o);
+            await shot(c(o), `CL-11-owner-${name}`, false);
+            if (vp === PHONE && name !== "all-staff")
+                await o
+                    .getByRole("button", { name: /open the menu/i })
+                    .first()
+                    .click();
+        }
+        if (vp === PHONE)
+            await o
+                .getByRole("button", { name: /open the menu/i })
+                .first()
+                .click();
+        await o.getByRole("button", { name: "Manage Restaurants" }).filter({ visible: true }).first().click();
+        await settle(o);
+        await o
+            .getByRole("button", { name: /^\s*Staff\s*$/ })
+            .first()
+            .click();
+        await settle(o);
+        await shot(c(o), "CL-11-owner-staff", false);
+        await o
+            .getByRole("button", { name: /^\s*Menu\s*$/ })
+            .first()
+            .click();
+        await settle(o);
+        await o
+            .getByRole("button", { name: /categories/i })
+            .first()
+            .click();
+        await o.waitForTimeout(600);
+        await shot(c(o), "CL-11-owner-categories", false);
+        await o.keyboard.press("Escape");
+        await o.waitForTimeout(400);
+        await o
+            .getByRole("button", { name: /add (new )?item|add dish|new item/i })
+            .first()
+            .click();
+        await o.waitForTimeout(600);
+        await shot(c(o), "CL-11-owner-item-form", false);
+        await owner.context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
