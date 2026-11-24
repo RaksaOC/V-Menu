@@ -19,13 +19,21 @@ function jwtSecret(): string {
     return line.slice("JWT_SECRET=".length).trim();
 }
 
-export async function signInAs(context: BrowserContext, baseURL: string, role: "owner" | "cashier" | "chef") {
+/** An app token for `role`. B7: against staging, the post-deploy job passes ready-made, short-lived
+ *  CHEF_TOKEN and CASHIER_TOKEN, so the tests never need the secret there. */
+export async function staffToken(role: "owner" | "cashier" | "chef"): Promise<string> {
+    const given = process.env[`${role.toUpperCase()}_TOKEN`];
+    if (given) return given;
     const user = { uid: "demo-owner", email: "owner@demo.local", role, ...(role === "owner" ? {} : { resId: RES_ID, resSlug: SLUG }) };
-    const token = await new SignJWT(user)
+    return new SignJWT(user)
         .setProtectedHeader({ alg: "HS256" })
         .setIssuer("v-menu")
         .setIssuedAt()
         .setExpirationTime("15m")
         .sign(new TextEncoder().encode(jwtSecret()));
+}
+
+export async function signInAs(context: BrowserContext, baseURL: string, role: "owner" | "cashier" | "chef") {
+    const token = await staffToken(role);
     await context.addCookies([{ name: "token", value: token, url: baseURL, httpOnly: true, sameSite: "Lax" }]);
 }

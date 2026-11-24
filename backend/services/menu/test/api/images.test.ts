@@ -197,3 +197,38 @@ describe("photo upload safety (SEC-05)", () => {
         expect(swap.status).toBe(400);
     });
 });
+
+describe("photo upload metrics (B10)", () => {
+    const count = async (result: string) => {
+        const res = await request(app).get("/metrics");
+        const line = res.text.split("\n").find((l) => l.startsWith(`vmenu_image_uploads_total{result="${result}"} `));
+        return line ? Number(line.split(" ").pop()) : 0;
+    };
+
+    it("lists every result from the start, so a dashboard's increase() doesn't miss the first one after a restart", async () => {
+        const { text } = await request(app).get("/metrics");
+        for (const result of ["ok", "not_a_photo", "too_large", "bad_request", "denied", "rate_limited", "error"])
+            expect(text).toMatch(new RegExp(`^vmenu_image_uploads_total\\{result="${result}"\\} \\d+$`, "m"));
+    });
+
+    it("counts each upload by its result", async () => {
+        const before = { ok: await count("ok"), wrong: await count("not_a_photo"), big: await count("too_large") };
+        expect((await upload(photo)).status).toBe(201);
+        expect((await upload(Buffer.from("%PDF-1.7 not a photo"), "menu.pdf")).status).toBe(415);
+        expect((await upload(Buffer.alloc(6 * 1024 * 1024, 1), "huge.jpg")).status).toBe(413);
+        expect(await count("ok")).toBe(before.ok + 1);
+        expect(await count("not_a_photo")).toBe(before.wrong + 1);
+        expect(await count("too_large")).toBe(before.big + 1);
+    });
+
+    it("counts refused sign-ins and rate limits apart from bad files", async () => {
+        const denied = await count("denied");
+        expect((await upload(photo, "dish.jpg", cashier)).status).toBe(403);
+        expect(await count("denied")).toBe(denied + 1);
+        const limited = createApp({ lookupRestaurant, uploadsPerHour: 1 });
+        const rateLimited = await count("rate_limited");
+        await upload(photo, "a.jpg", owner, SLUG, limited);
+        expect((await upload(photo, "b.jpg", owner, SLUG, limited)).status).toBe(429);
+        expect(await count("rate_limited")).toBe(rateLimited + 1);
+    });
+});

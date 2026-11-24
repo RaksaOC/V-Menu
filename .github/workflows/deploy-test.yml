@@ -163,7 +163,19 @@ jobs:
           https staging.localhost
           echo "::endgroup::"
 
-          echo "::group::8. wrong commit is caught by the /version check"
+          echo "::group::8. a failed post-deploy check is recorded, and nothing else changes (B7)"
+          deploy staging --check-failed
+          sudo tail -n1 /srv/vmenu/staging/deploy-history.log | grep -P "\tpost-deploy-check\t$V1\tfailed\t" \
+            || { echo "::error::no post-deploy-check failed line in the history"; exit 1; }
+          sudo grep -q "^TAG=$V1$" /srv/vmenu/staging/.env \
+            || { echo "::error::recording a failed check changed the server's .env"; exit 1; }
+          expect_tag staging "$V1"
+          if deploy prod --check-failed; then
+            echo "::error::--check-failed is for staging only"; exit 1
+          fi
+          echo "::endgroup::"
+
+          echo "::group::9. wrong commit is caught by the /version check"
           if deploy staging "$V2" "$SHA1"; then
             echo "::error::a /version mismatch should fail the deploy"; exit 1
           fi

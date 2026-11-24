@@ -30,5 +30,7 @@ const orderSchema = new mongoose.Schema(
 
 // VM-10: the kitchen's queue (oldest first) and its history (newest first), by status (VM-27).
 orderSchema.index({ resId: 1, status: 1, createdAt: 1 });
+// B10: the oldest pending order across restaurants, read on every /metrics scrape.
+orderSchema.index({ status: 1, orderedAt: 1 });
 
 export const Order = mongoose.model("Order", orderSchema, "orders");

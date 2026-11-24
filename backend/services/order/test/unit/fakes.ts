@@ -86,6 +86,10 @@ export function fakeOrders(): OrdersRepo & { all: OrderRecord[]; onBill: (id: st
                 })),
             };
         },
+        async oldestPendingAt(since) {
+            const waiting = all.filter((o) => o.status === "pending" && o.orderedAt >= since).map((o) => o.orderedAt);
+            return waiting.length ? new Date(Math.min(...waiting.map(Number))) : null;
+        },
     };
     return repo;
 }

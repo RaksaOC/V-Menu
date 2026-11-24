@@ -1,6 +1,7 @@
 import { HttpError, invalidTableLink, logger, parse, tableNameLinksAllowed } from "@vmenu/common";
 import { DateRangeQuery, type OrderLine, type PlaceOrderBody } from "@vmenu/contracts";
 import type { BoundClients } from "../clients/index.js";
+import { countOrderStatus } from "../lib/order-metrics.js";
 import type { BillsRepo } from "../repositories/bills.repo.js";
 import type { OrderRecord, OrdersRepo } from "../repositories/orders.repo.js";
 
@@ -81,6 +82,7 @@ export function ordersService({ orders, bills, clients }: { orders: OrdersRepo; 
                         billOnOrder = billId;
                     }
                     if (await bills.attachOrder(billId, order._id)) {
+                        countOrderStatus("pending"); // B10
                         const { billId: _internal, ...answer } = order; // the customer has no use for it
                         return answer;
                     }

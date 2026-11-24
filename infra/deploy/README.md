@@ -37,8 +37,9 @@ Nobody logs into the server to deploy. The workflow writes the env files from Gi
 | `remote-deploy.sh` | Runs on the server: pull, start, wait for healthy, smoke test, auto-rollback on failure |
 | `ci-deploy.sh` | Runs in GitHub Actions: writes env files from secrets, copies them, calls `remote-deploy.sh` |
 | `backup-mongo.sh` | Daily `mongodump`, installed by `setup-server.sh` |
+| `mongo-users.js` | The database users and their roles, and a read-only check of them (SEC-11) |
 | `staging.env.example`, `prod.env.example` | Every secret and variable, and where it goes |
-| `../../.github/workflows/deploy.yml` | The deploy job (called by M3's release workflow, or run by hand) |
+| `../../.github/workflows/deploy.yml` | The deploy job (called by M3's release workflow, or run by hand), then the post-deploy checks of staging |
 | `../../.github/workflows/rollback.yml` | One-click rollback |
 | `../../.github/workflows/deploy-test.yml` | Tests all of the above on a throwaway runner |
 
@@ -81,6 +82,33 @@ db.createUser({ user: "vmenu_prod", pwd: passwordPrompt(), roles: [
   { role: "readWrite", db: "vmenu_prod_orders" } ] })
 db.createUser({ user: "vmenu_backup", pwd: passwordPrompt(), roles: ["backup"] })
 ```
+
+#### Check the database users (SEC-11)
+
+Each environment's user must reach **only its own** databases. `mongo-users.js` holds the expected users and roles, and compares them with the real ones. It only reads: it doesn't change a user, and it doesn't print passwords.
+
+Run it on the server, as a Mongo admin, once now and after any change to the users:
+
+```bash
+scp infra/deploy/mongo-users.js <server>:/tmp/mongo-users.js    # from your machine
+# on the server:
+mongosh "mongodb://127.0.0.1:27017/admin" -u <admin> -p --quiet --file /tmp/mongo-users.js
+rm /tmp/mongo-users.js
+```
+
+- **Use the real database names.** The script expects the names in the table at the top of this file. Compare them with the database in each `MONGODB_URI_*` secret. If an environment uses other names, pass them for this run, and don't commit them:
+  ```bash
+  VMENU_STAGING_DBS=name1,name2,name3 VMENU_PROD_DBS=name4,name5,name6 mongosh ... --file /tmp/mongo-users.js
+  ```
+- **`ok` on every line:** nothing to do.
+- **`WRONG ...`:** it names the user and the role. Remove a role that shouldn't be there, or add a missing one, then run the check again:
+  ```js
+  db.getSiblingDB("admin").revokeRolesFromUser("<user>", [{ role: "<role>", db: "<database>" }])
+  db.getSiblingDB("admin").grantRolesToUser("<user>", [{ role: "readWrite", db: "<database>" }])
+  ```
+- **If the names differ from the table,** update the table and the two `.env.example` files, so the docs say what's real.
+
+CI proves the rules on a real MongoDB: `scripts/check-db-isolation.sh`, in the `integration` job, starts a throwaway MongoDB with these users. It checks that staging can't read or write production's databases and the other way round, and that the check catches a user with one role too many. You can run it locally with Docker.
 
 ### 3. Run the setup script
 
@@ -153,7 +181,31 @@ Create **`production`**:
 
 Branch rulesets (Settings → Rules → Rulesets):
 - **main: owner only**: restrict updates, block deletion and force pushes; bypass: repository admin.
-- **staging: PRs only**: require a pull request, block deletion and force pushes; bypass: repository admin.
+- **staging: PRs only**: require a pull request, block deletion and force pushes; bypass: repository admin. Require the status checks listed below.
+
+#### Required checks (B8)
+
+Set these on the **staging: PRs only** ruleset, under **Require status checks to pass**. The names must match exactly, including the brackets:
+
+<!-- required-checks -->
+- `test`: the gate over every package's tests, including the frontend's unit tests
+- `integration`: the real services, the smoke test and the database-user check (SEC-11)
+- `e2e`: every browser spec
+- `audit (frontend)`
+- `audit (services/restaurant-service)`
+- `audit (services/menu-service)`
+- `audit (services/order-service)`
+- `semgrep`: **add this one.** It's the code scan (SEC-09). It already fails a PR with a new high finding, but until it's required, that PR can still be merged.
+<!-- /required-checks -->
+
+- **Pick `semgrep` in lowercase.** `Semgrep OSS` is a different check, from the Semgrep app.
+- **Don't require** `validate`, `lint` or `vm-test`. They only run when certain files change, so every other PR would wait for them for ever. Don't require `deploy` either: it only runs after a merge.
+- **A job that's skipped counts as passed** on GitHub. So when `test` fails, `integration` and `e2e` show "skipped", and it's `test` that blocks the merge. Keep all three required.
+- **To compare with what's set now** (read-only):
+  ```bash
+  gh api repos/RaksaOC/V-Menu/rulesets/27796986 --jq '.rules[] | select(.type=="required_status_checks") | .parameters.required_status_checks[].context'
+  ```
+- `scripts/required-checks.test.mjs` fails if one of these jobs is renamed, stops running on every PR, or can no longer fail.
 
 Add these to **both** environments, with different values for each (see `staging.env.example` / `prod.env.example`):
 
@@ -240,6 +292,23 @@ It doesn't check the API key restrictions (item 1); look at those in the console
 
 `docker compose stop` sends SIGTERM and the services shut down gracefully, so requests in flight finish.
 
+### After a staging deploy: the post-deploy checks (B7)
+
+Once a staging deploy has passed its smoke test, the `post-deploy` job in `deploy.yml` tests staging from the outside, through Caddy and HTTPS, like a customer would. It doesn't run after a rollback, for production, or when no server is configured yet.
+
+| Step | What it checks | If it fails |
+|---|---|---|
+| Demo data | `scripts/check-demo-data.mjs`: `demo-bistro` exists, has dishes and has table `T1` | The message says how to load the demo data (see below). The browser tests are skipped. |
+| Security headers | `scripts/check-headers.mjs` (SEC-02) on `/`, a customer page and the staff logins | The job summary lists the missing headers per page |
+| Browser tests | The e2e specs tagged `@post-deploy`: a customer orders at `T1`, the kitchen API sees the order, then the cashier cancels it so the kitchen queue stays clean | The Playwright report is in the `post-deploy` artifact |
+| ZAP baseline | Passive OWASP ZAP scan (SEC-09): spider plus passive checks only, no attacks | Fails on a High alert not listed in `.zap/known-high.txt`; the reports are in the `post-deploy` artifact |
+
+- **Every check runs**, even when an earlier one failed, so one run shows everything that's wrong.
+- **Staff tokens.** The browser tests need a chef and a cashier. One step signs two 10-minute tokens for the demo restaurant with staging's `JWT_SECRET` (`scripts/staff-token.mjs`) and passes only the tokens on. Playwright never sees the secret, and no server secret reaches this job.
+- **On failure** the run turns red, and the `post-deploy-failed` job adds a `post-deploy-check <tag> failed` line to staging's `deploy-history.log` (`remote-deploy.sh staging --check-failed`). The monitoring agent ships it, and the **Deploy failed** alert fires. Staging keeps the new version: this is a signal for a person, not a rollback. Roll back by hand if the version is broken.
+- **Demo data missing?** Run it once: Actions → **Deploy** → Run workflow on `staging`, environment `staging`, the current tag, tick **Load demo data**. The post-deploy checks run again after it.
+- **Run the same browser test locally** against your own stack: `cd e2e && BASE_URL=http://localhost:3400 npx playwright test --grep @post-deploy`. It also runs in CI's `e2e` job with the other specs. Never point it at production.
+
 ### Rollback
 
 `rollback.yml` runs `remote-deploy.sh <env> --rollback`, which redeploys the tag in `.previous_tag`. It uses the images already on the server and downloads only missing ones, so it doesn't wait on GHCR, and it gets the build that actually ran even if that tag was pushed again since. The same applies when a failed deploy puts the previous tag back.
@@ -266,4 +335,5 @@ Every push to an `infra/**` branch that touches these files runs **Deploy test**
 - deploys two versions, seeds, rolls back, and deploys prod next to staging;
 - checks HTTPS through Caddy;
 - checks that a missing image and a wrong commit are both refused while staging stays up;
+- records a failed post-deploy check, and refuses one for production;
 - runs a backup.

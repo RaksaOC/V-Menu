@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { jwtVerify, SignJWT } from "jose";
+import { errors as joseErrors, jwtVerify, SignJWT } from "jose";
 import { HttpError, forbidden, unauthorized } from "./errors.js";
 import { callService } from "./internal.js";
 
@@ -100,15 +100,16 @@ async function currentVersion(req: Request, user: AppUser) {
 export function requireRole(...roles: Role[]) {
     return async (req: Request, _res: Response, next: NextFunction) => {
         const token = readToken(req);
-        if (!token) return next(unauthorized());
+        if (!token) return next(unauthorized(undefined, "no_token"));
         let user: AppUser;
         try {
             const { payload } = await jwtVerify(token, secret(), { issuer: ISSUER, algorithms: ["HS256"] });
             user = payload as unknown as AppUser;
-        } catch {
-            return next(unauthorized("Invalid or expired token"));
+        } catch (err) {
+            // SEC-10: why, for the logs and metrics
+            return next(unauthorized("Invalid or expired token", err instanceof joseErrors.JWTExpired ? "expired" : "bad_token"));
         }
-        if (!roles.includes(user.role)) return next(forbidden("Wrong role for this action"));
+        if (!roles.includes(user.role)) return next(forbidden("Wrong role for this action", "wrong_role", user));
         let version: number | null;
         try {
             version = await currentVersion(req, user);
@@ -116,7 +117,8 @@ export function requireRole(...roles: Role[]) {
             // can't tell: refuse this request, but as an outage, so nobody is signed out by it
             return next(new HttpError(503, "A required service is unavailable"));
         }
-        if (version === null || version !== (user.tv ?? 0)) return next(unauthorized("Your session has ended"));
+        // SEC-03: the session was ended (signed out everywhere, removed, role changed); SEC-10 counts it as a bad token
+        if (version === null || version !== (user.tv ?? 0)) return next(unauthorized("Your session has ended", "bad_token", user));
         req.user = user;
         next();
     };
@@ -125,5 +127,5 @@ export function requireRole(...roles: Role[]) {
 // The rule every service applies once it knows which restaurant a request is about.
 export function assertRestaurantAccess(user: AppUser, restaurant: { _id: string; ownerId: string }) {
     const ok = user.role === "owner" ? restaurant.ownerId === user.uid : String(user.resId) === String(restaurant._id);
-    if (!ok) throw forbidden("No access to this restaurant");
+    if (!ok) throw forbidden("No access to this restaurant", "other_restaurant", user);
 }

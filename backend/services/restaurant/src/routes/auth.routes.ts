@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
-import { requireRole } from "@vmenu/common";
+import { rateLimitHandler, requireRole } from "@vmenu/common";
 import { sessionHours } from "../services/session.js";
 import type { RouteContext } from "./context.js";
 
@@ -22,7 +22,7 @@ export function authRoutes({ services }: RouteContext) {
     r.get("/me", requireRole("owner", "cashier", "chef"), async (req, res) => {
         res.json(await services.auth.me(req.user!));
     });
-    r.use(rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false }));
+    r.use(rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false, handler: rateLimitHandler }));
     r.post("/signup", async (req, res) => {
         res.status(201).json(await services.auth.signup(req.body));
     });
