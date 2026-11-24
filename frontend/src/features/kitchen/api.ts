@@ -1,5 +1,5 @@
-import api, { seg } from "@/lib/api";
 import type { Order, OrderStatus } from "@vmenu/contracts";
+import api, { seg } from "@/lib/api";
 
 /** New, preparing and ready orders, oldest first. Served and cancelled ones stay on the server (VM-10, VM-27). */
 export async function getActiveOrders(slug: string): Promise<Order[]> {

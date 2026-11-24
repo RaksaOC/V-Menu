@@ -2,11 +2,11 @@
 
 import { useState, FormEvent } from "react";
 import { createUserWithEmailAndPassword, sendEmailVerification, type User, UserCredential } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { signup } from "@/features/auth/api";
 import { motion } from "framer-motion";
 import { Store, User as UserIcon, Mail, Lock, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { signup } from "@/features/auth/api";
+import { auth } from "@/lib/firebase";
 import { CheckInbox } from "@/features/auth/components/CheckInbox";
 import { PASSWORD_RULE, passwordProblem } from "@/features/auth/password-rule";
 import { firebaseCode } from "@/features/auth/login-errors";

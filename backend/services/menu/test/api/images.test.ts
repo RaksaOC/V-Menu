@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 import sharp from "sharp";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../../src/app.js";
 import { signAppToken, notFound } from "@vmenu/common";
+import { createApp } from "../../src/app.js";
 
 // VM-02 (menu photos are uploaded, not sent as base64) and SEC-05 (the upload is safe).
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";

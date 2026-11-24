@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
-import Invoice from "./Invoice";
-import { formatDateTime } from "@/lib/dates";
-import { useMoney } from "@/components/money/MoneyProvider";
 import { useParams } from "next/navigation";
 import { DollarSign, Eye, EyeOff } from "lucide-react";
-import { Chip } from "@/components/ui";
 import type { Bill, TableRequestKind } from "@vmenu/contracts";
+import { formatDateTime } from "@/lib/dates";
+import { useMoney } from "@/components/money/MoneyProvider";
+import { Chip } from "@/components/ui";
+import Invoice from "./Invoice";
 import BillOrder, { type Cancelling } from "./BillOrder";
 import { orderNumber } from "./order-number";
 import RequestBadges from "./RequestBadges";

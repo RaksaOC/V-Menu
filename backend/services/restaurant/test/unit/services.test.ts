@@ -147,24 +147,24 @@ describe("staff", () => {
         expect((await staff.list(owner(), r.slug)).map((t) => t.role).sort()).toEqual(["cashier", "chef", "chef", "owner"]);
         const overview = await staff.overview("alice");
         expect(overview).toHaveLength(1);
-        expect(overview[0].resName).toBe("Mee Keav");
-        expect(overview[0].staff).toHaveLength(4);
+        expect(overview[0]!.resName).toBe("Mee Keav");
+        expect(overview[0]!.staff).toHaveLength(4);
     });
 
     it("edits and removes staff, but never the owner role, and only in your own restaurant", async () => {
         const { staff, memberships, r, other } = await seeded();
         const added = await staff.add(owner(), r.slug, bob);
-        const edited = await staff.update(owner(), r.slug, added._id, { name: "Robert", email: "ROB@x.test", role: "cashier" });
+        const edited = await staff.update(owner(), r.slug, added!._id, { name: "Robert", email: "ROB@x.test", role: "cashier" });
         expect(edited).toMatchObject({ name: "Robert", email: "rob@x.test", role: "cashier" });
-        expect((await staff.update(owner(), r.slug, added._id, {})).name).toBe("Robert");
-        expect(await status(staff.update(owner(), r.slug, added._id, { role: "owner" }))).toBe(400);
+        expect((await staff.update(owner(), r.slug, added!._id, {})).name).toBe("Robert");
+        expect(await status(staff.update(owner(), r.slug, added!._id, { role: "owner" }))).toBe(400);
         const ownerRow = memberships.all.find((t) => t.resId === String(r._id) && t.role === "owner")!;
         expect(await status(staff.update(owner(), r.slug, ownerRow._id, { name: "x" }))).toBe(400);
         expect(await status(staff.remove(owner(), r.slug, ownerRow._id))).toBe(400);
         expect(await status(staff.list(owner(), other.slug))).toBe(403); // Zed's restaurant
         expect(await status(staff.update(owner(), r.slug, "bad", {}))).toBe(400);
         expect(await status(staff.remove(owner(), r.slug, newId()))).toBe(404);
-        expect((await staff.remove(owner(), r.slug, added._id)).name).toBe("Robert");
+        expect((await staff.remove(owner(), r.slug, added!._id)).name).toBe("Robert");
         expect(await status(staff.list(owner(), "nope"))).toBe(404);
     });
 });
@@ -218,7 +218,7 @@ describe("staff invites (VM-12)", () => {
         expect(added).toMatchObject({ name: "Bob", email: "bob@x.test", role: "cashier", tenantId: null });
         // an account id in the body is ignored: the owner can't attach the role to someone's account
         const sneaky = await s.staff.add(owner(), s.r.slug, { name: "Eve", email: "eve@x.test", role: "chef", tenantId: "someone-else" });
-        expect(sneaky.tenantId).toBeNull();
+        expect(sneaky!.tenantId).toBeNull();
         expect(await status(s.staff.add(owner(), s.r.slug, { name: "Bob again", email: "bob@X.test", role: "cashier" }))).toBe(409);
     });
 
@@ -284,27 +284,27 @@ describe("changing a staff role can't duplicate it (VM-18)", () => {
 
     it("changing Bob's chef row to cashier is a 409, and nothing changes", async () => {
         const { staff, memberships, r, chef, by } = await bistro();
-        expect(await status(staff.update(by, r.slug, chef._id, { role: "cashier" }))).toBe(409);
-        expect(memberships.all.find((m) => m._id === chef._id)?.role).toBe("chef");
+        expect(await status(staff.update(by, r.slug, chef!._id, { role: "cashier" }))).toBe(409);
+        expect(memberships.all.find((m) => m._id === chef!._id)?.role).toBe("chef");
     });
 
     it("the same account under another email counts as the same person", async () => {
         const { staff, memberships, r, resId, by } = await bistro();
         const [other] = await memberships.createMany([{ name: "Bob", tenantId: "bob2", email: "bob2@x.test", role: "chef", resId }]);
         await memberships.createMany([{ name: "Bob", tenantId: "bob2", email: "bob-work@x.test", role: "cashier", resId }]);
-        expect(await status(staff.update(by, r.slug, other._id, { role: "cashier" }))).toBe(409);
+        expect(await status(staff.update(by, r.slug, other!._id, { role: "cashier" }))).toBe(409);
     });
 
     it("changing an email to someone who already has that role is a 409", async () => {
         const { staff, memberships, r, resId, by } = await bistro();
         const [dara] = await memberships.createMany([{ name: "Dara", tenantId: null, email: "dara@x.test", role: "cashier", resId }]);
-        expect(await status(staff.update(by, r.slug, dara._id, { email: "BOB@x.test" }))).toBe(409);
+        expect(await status(staff.update(by, r.slug, dara!._id, { email: "BOB@x.test" }))).toBe(409);
     });
 
     it("a role the person doesn't have yet is fine", async () => {
         const { staff, memberships, r, resId, by } = await bistro();
         const [dara] = await memberships.createMany([{ name: "Dara", tenantId: "dara", email: "dara@x.test", role: "chef", resId }]);
-        expect((await staff.update(by, r.slug, dara._id, { role: "cashier" })).role).toBe("cashier");
+        expect((await staff.update(by, r.slug, dara!._id, { role: "cashier" })).role).toBe("cashier");
     });
 
     it("two different pending invites aren't the same person just because neither has an account", async () => {
@@ -313,20 +313,22 @@ describe("changing a staff role can't duplicate it (VM-18)", () => {
             { name: "A", tenantId: null, email: "a@x.test", role: "chef", resId },
             { name: "B", tenantId: null, email: "b@x.test", role: "cashier", resId },
         ]);
-        expect((await staff.update(by, r.slug, a._id, { role: "cashier" })).role).toBe("cashier");
+        expect((await staff.update(by, r.slug, a!._id, { role: "cashier" })).role).toBe("cashier");
     });
 
     it("the same role at another restaurant doesn't count", async () => {
         const { staff, memberships, r, other, resId, by } = await bistro();
         await memberships.createMany([{ name: "Dara", tenantId: "dara", email: "dara@x.test", role: "cashier", resId: String(other._id) }]);
         const [dara] = await memberships.createMany([{ name: "Dara", tenantId: "dara", email: "dara@x.test", role: "chef", resId }]);
-        expect((await staff.update(by, r.slug, dara._id, { role: "cashier" })).role).toBe("cashier");
+        expect((await staff.update(by, r.slug, dara!._id, { role: "cashier" })).role).toBe("cashier");
     });
 
     it("saving a row without changing its role still works, even if old data already has a duplicate", async () => {
         const { staff, memberships, r, resId, cashier, by } = await bistro();
         await memberships.createMany([{ name: "Bob", tenantId: "bob", email: "bob@x.test", role: "cashier", resId }]); // from before this fix
-        expect((await staff.update(by, r.slug, cashier._id, { name: "Robert", role: "cashier", email: "bob@x.test" })).name).toBe("Robert");
+        expect((await staff.update(by, r.slug, cashier!._id, { name: "Robert", role: "cashier", email: "bob@x.test" })).name).toBe(
+            "Robert",
+        );
     });
 });
 
@@ -351,28 +353,28 @@ describe("session versions (SEC-03)", () => {
 
     it("removing someone ends their session", async () => {
         const { staff, r, cashier, by, version } = await bistro();
-        await staff.remove(by, r.slug, cashier._id);
+        await staff.remove(by, r.slug, cashier!._id);
         expect(await version()).toEqual({ version: null });
     });
 
     it("a role change raises the version, so the old token stops working even if the role comes back", async () => {
         const { staff, r, cashier, by, version } = await bistro();
-        await staff.update(by, r.slug, cashier._id, { role: "chef" });
+        await staff.update(by, r.slug, cashier!._id, { role: "chef" });
         expect(await version("bob", "cashier")).toEqual({ version: null });
         expect(await version("bob", "chef")).toEqual({ version: 1 });
-        await staff.update(by, r.slug, cashier._id, { role: "cashier" });
+        await staff.update(by, r.slug, cashier!._id, { role: "cashier" });
         expect(await version("bob", "cashier")).toEqual({ version: 2 });
     });
 
     it("an edit that keeps the role doesn't sign them out", async () => {
         const { staff, r, cashier, by, version } = await bistro();
-        await staff.update(by, r.slug, cashier._id, { name: "Robert", role: "cashier" });
+        await staff.update(by, r.slug, cashier!._id, { name: "Robert", role: "cashier" });
         expect(await version()).toEqual({ version: 0 });
     });
 
     it("a new login after a change carries the new version", async () => {
         const { auth, staff, r, cashier, by } = await bistro();
-        await staff.update(by, r.slug, cashier._id, { role: "chef" });
+        await staff.update(by, r.slug, cashier!._id, { role: "chef" });
         const { token } = await auth.login({ idToken: "id:bob:bob@x.test", role: "chef", resSlug: r.slug });
         expect(versionOf(token)).toBe(1);
     });

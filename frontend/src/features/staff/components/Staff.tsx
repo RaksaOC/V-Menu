@@ -42,7 +42,7 @@ export default function Staff() {
         if (resSlug) {
             fetchData();
         }
-    }, [refresh]);
+    }, [resSlug, refresh]);
 
     // VM-12: an invite. No Firebase account is made here: creating one in this browser used to sign
     // the owner out and in as the new person. They make their own at /login with this email.

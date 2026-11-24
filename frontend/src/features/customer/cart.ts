@@ -1,7 +1,7 @@
-import { toast } from "@/lib/toast";
 import "react-toastify/dist/ReactToastify.css";
 import type { MenuItem, PlaceOrderBody } from "@vmenu/contracts";
 import { toCents } from "@/lib/money";
+import { toast } from "@/lib/toast";
 
 /** A line in the cart: a dish as the menu showed it, how many, and the customer's note (VM-28). */
 export type CartItem = { item: MenuItem; quantity: number; note?: string };

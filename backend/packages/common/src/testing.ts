@@ -27,7 +27,8 @@ export function trackRoutes() {
     const route = proto.route;
     proto.route = function (this: RouterProto, path: string) {
         const out = route.call(this, path);
-        this.stack[this.stack.length - 1].__path = path;
+        const layer = this.stack[this.stack.length - 1];
+        if (layer) layer.__path = path;
         return out;
     };
 }
@@ -75,7 +76,7 @@ export function only(roles: Role[], { ownData = false } = {}): AccessRow {
     const row = { guest: 401, forged: 401 } as AccessRow;
     for (const role of ["chef", "cashier", "owner"] as const) {
         row[role] = roles.includes(role) ? "ok" : 403;
-        const other = `other${role[0].toUpperCase()}${role.slice(1)}` as Caller;
+        const other = `other${role.charAt(0).toUpperCase()}${role.slice(1)}` as Caller;
         row[other] = roles.includes(role) && ownData ? "ok" : 403;
     }
     return row;

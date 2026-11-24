@@ -1,9 +1,9 @@
 import { assertId, HttpError, invalidTableLink, notFound, tableNameLinksAllowed } from "@vmenu/common";
 import { QrToken, type TableLink } from "@vmenu/contracts";
+import type { CreateTableBody, UpdateTableBody } from "@vmenu/contracts";
 import type { OpenBills } from "../clients/open-bills.js";
 import { newQrToken } from "../qr-token.js";
 import { TableNameTaken, type TableRecord, type TablesRepo } from "../repositories/tables.repo.js";
-import type { CreateTableBody, UpdateTableBody } from "@vmenu/contracts";
 
 /** VM-16: 409, with the field, so the form can say it next to the name. */
 const nameTaken = () => new HttpError(409, "Name is taken", "NAME_TAKEN", { name: "Name is taken" });

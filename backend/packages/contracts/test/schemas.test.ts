@@ -25,8 +25,8 @@ describe("shared", () => {
         expect(C.text(5).parse("  hi  ")).toBe("hi");
         fieldsOf(C.text(5), "   ");
         fieldsOf(C.text(5), "toolong");
-        expect(C.text(5).safeParse(7).error?.issues[0].message).toBe("Must be text");
-        expect(C.text(5).safeParse(undefined).error?.issues[0].message).toBe("Required"); // a missing field
+        expect(C.text(5).safeParse(7).error?.issues[0]!.message).toBe("Must be text");
+        expect(C.text(5).safeParse(undefined).error?.issues[0]!.message).toBe("Required"); // a missing field
         expect(C.label(5).parse(7)).toBe("7");
         expect(C.Email.parse(" BOB@X.test ")).toBe("bob@x.test");
         fieldsOf(C.Email, "not-an-email");
@@ -47,8 +47,8 @@ describe("menu", () => {
         expect(cents(0).data).toEqual({ priceCents: 0 });
         expect(cents(235).data).toEqual({ priceCents: 235 });
         for (const bad of ["", "  ", null, true, [], "abc", "250", -5, 2.5]) expect(cents(bad).success, JSON.stringify(bad)).toBe(false);
-        expect(cents(-5).error?.issues[0].message).toBe("Can't be negative");
-        expect(cents(2.5).error?.issues[0].message).toBe("Must be a whole number of cents");
+        expect(cents(-5).error?.issues[0]!.message).toBe("Can't be negative");
+        expect(cents(2.5).error?.issues[0]!.message).toBe("Must be a whole number of cents");
     });
 
     it("the old dollar price keeps VM-17's checks and messages, under `price` (VM-17, CL-07)", () => {
@@ -59,11 +59,11 @@ describe("menu", () => {
         for (const bad of ["", "  ", null, true, [], "abc", "1e999", -5, "-1", 1e300])
             expect(price(bad).success, JSON.stringify(bad)).toBe(false);
         expect(price(-5).error?.issues[0]).toMatchObject({ path: ["price"], message: "Must be 0 or more" });
-        expect(price("").error?.issues[0].message).toBe("Required");
-        expect(price("abc").error?.issues[0].message).toBe("Must be a number");
+        expect(price("").error?.issues[0]!.message).toBe("Required");
+        expect(price("abc").error?.issues[0]!.message).toBe("Must be a number");
         // money has cents: the form's old step="0.01" stopped this only in the browser
-        expect(price(2.555).error?.issues[0].message).toBe("At most 2 decimal places");
-        expect(price(1e300).error?.issues[0].message).toBe("At most $1,000,000");
+        expect(price(2.555).error?.issues[0]!.message).toBe("At most 2 decimal places");
+        expect(price(1e300).error?.issues[0]!.message).toBe("At most $1,000,000");
         // the other fields are still checked alongside it
         expect(fieldsOf(C.CreateItemBody, { name: "", price: -1 }).sort()).toEqual(["image", "name", "price"]);
     });

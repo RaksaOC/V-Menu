@@ -1,5 +1,5 @@
-import { Chip } from "@/components/ui";
 import type { StaffMember } from "@vmenu/contracts";
+import { Chip } from "@/components/ui";
 
 /** VM-12: shown for an invite nobody has accepted yet (no account linked to it). */
 export default function InvitePending({ member }: { member: Pick<StaffMember, "tenantId"> }) {

@@ -1,6 +1,6 @@
 import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
-import type { ImagesRepo } from "../repositories/images.repo.js";
 import { OTHER_CATEGORY, type CreateItemBody, type MenuSection, type PublicMenu, type UpdateItemBody } from "@vmenu/contracts";
+import type { ImagesRepo } from "../repositories/images.repo.js";
 import type { CategoriesRepo } from "../repositories/categories.repo.js";
 import type { ItemRecord, ItemsRepo } from "../repositories/items.repo.js";
 import { imageIdOf, isOwnImage, PLACEHOLDER } from "./photos.js";

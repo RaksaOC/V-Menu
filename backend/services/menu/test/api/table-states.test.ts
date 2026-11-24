@@ -1,10 +1,10 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../../src/app.js";
 import { HttpError, notFound, signAppToken } from "@vmenu/common";
+import { createApp } from "../../src/app.js";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 
 // VM-04: the customer's table check says *why* a table can't be used, so the page can say so.
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
+import { requireEnv, logger, handleShutdown } from "@vmenu/common";
 import { createApp } from "./app.js";
 import { prepareDatabase } from "./db.js";
-import { requireEnv, logger, handleShutdown } from "@vmenu/common";
 
 requireEnv("MONGODB_URI", "JWT_SECRET", "INTERNAL_API_KEY", "RESTAURANT_SERVICE_URL", "ORDER_SERVICE_URL");
 const port = Number(process.env.PORT ?? 4102);

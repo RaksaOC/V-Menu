@@ -1,12 +1,12 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { notFound, signAppToken } from "@vmenu/common";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import { createApp } from "../../src/app.js";
 import { prepareDatabase } from "../../src/db.js";
 import { Table } from "../../src/models/table.model.js";
-import { notFound, signAppToken } from "@vmenu/common";
 
 // VM-16: two tables of one restaurant can never share a name, even when two requests arrive at
 // the same moment. The database has the final say (a unique index), not a check before the insert.
@@ -79,13 +79,13 @@ describe("table names are unique per restaurant (VM-16)", () => {
     });
 
     it("the database itself refuses a second table with the same name", async () => {
-        await Table.create({ name: "7", resId: RESTAURANTS[SLUG]._id });
-        await expect(Table.create({ name: "7", resId: RESTAURANTS[SLUG]._id })).rejects.toMatchObject({ code: 11000 });
+        await Table.create({ name: "7", resId: RESTAURANTS[SLUG]!._id });
+        await expect(Table.create({ name: "7", resId: RESTAURANTS[SLUG]!._id })).rejects.toMatchObject({ code: 11000 });
     });
 
     it("the repository passes other database errors on unchanged", async () => {
         const { mongoTablesRepo, TableNameTaken } = await import("../../src/repositories/tables.repo.js");
-        const resId = RESTAURANTS[SLUG]._id;
+        const resId = RESTAURANTS[SLUG]!._id;
         const t = await mongoTablesRepo.create(resId, { name: "1", isEnabled: false });
         const tooLong = mongoTablesRepo.update(resId, String(t._id), { name: "x".repeat(41) });
         await expect(tooLong).rejects.toBeInstanceOf(mongoose.Error.ValidationError);
@@ -94,7 +94,7 @@ describe("table names are unique per restaurant (VM-16)", () => {
 
     it("at startup, tables that already share a name are reported and the service keeps going", async () => {
         await mongoose.connection.db!.dropDatabase();
-        const resId = RESTAURANTS[SLUG]._id;
+        const resId = RESTAURANTS[SLUG]!._id;
         await Table.collection.insertMany([
             { name: "4", resId },
             { name: "4", resId },

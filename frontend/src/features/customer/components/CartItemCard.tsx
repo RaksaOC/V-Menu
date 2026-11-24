@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import type { MenuItem } from "@vmenu/contracts";
 import { useMoney } from "@/components/money/MoneyProvider";
 import { toast } from "@/lib/toast";
-import type { MenuItem } from "@vmenu/contracts";
 import { LINE_NOTE_MAX, type CartItem } from "@/features/customer/cart";
 
 type CartItemProps = {

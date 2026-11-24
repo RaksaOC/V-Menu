@@ -95,13 +95,13 @@ beforeEach(async () => {
 
 function urlFor(route: string) {
     return route
-        .split(" ")[1]
+        .split(" ")[1]!
         .replace(":slug", A.slug)
         .replace(":resId", A._id)
         .replace(":name", "1")
         .replace(":table", "1")
         .replace(":token", "AbCdEfGhIjKlMnOpQrSt_-")
-        .replace(":orderId", ids.orderA)
+        .replace(":orderId", ids.orderA!)
         .replace(":kind", "bill")
         .replace(/orders\/:id/, `orders/${ids.orderA}`)
         .replace(/kitchen\/:id/, `kitchen/${ids.orderA}`)
@@ -110,8 +110,8 @@ function urlFor(route: string) {
 
 function send(method: string, url: string, caller: Caller, body: object = {}) {
     const m = method.toLowerCase() as "get" | "post" | "patch";
-    return request(app)
-        [m](url)
+    const agent = request(app);
+    return agent[m](url)
         .set(headers[caller])
         .send(method === "GET" ? undefined : body);
 }
@@ -125,7 +125,7 @@ describe("order-service access matrix (SEC-07)", () => {
         const method = route.split(" ")[0];
         const got = {} as Record<Caller, number>;
         for (const caller of [...CALLERS].sort((x, y) => Number(row[x] === "ok") - Number(row[y] === "ok")))
-            got[caller] = (await send(method, urlFor(route), caller)).status;
+            got[caller] = (await send(method!, urlFor(route), caller)).status;
         expect(mismatches(row, got)).toEqual([]);
     });
 });

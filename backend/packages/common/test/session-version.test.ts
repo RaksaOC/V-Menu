@@ -126,7 +126,7 @@ describe("asking restaurant-service (SEC-03)", () => {
         const fetchMock = answer(200, { version: 3 });
         vi.stubGlobal("fetch", fetchMock);
         expect(await call({ ...cashier, uid: "asks", tv: 3 })).toBe(200);
-        const [url, init] = fetchMock.mock.calls[0];
+        const [url, init] = fetchMock.mock.calls[0]!;
         expect(String(url)).toBe("http://restaurant.test/internal/sessions/version?uid=asks&role=cashier&resId=r1");
         expect((init!.headers as Record<string, string>)["x-internal-key"]).toBe("internal-test-key");
     });
@@ -136,7 +136,7 @@ describe("asking restaurant-service (SEC-03)", () => {
         const fetchMock = answer(200, { version: 0 });
         vi.stubGlobal("fetch", fetchMock);
         expect(await call({ uid: "own", email: "o@x.test", role: "owner" })).toBe(200);
-        expect(String(fetchMock.mock.calls[0][0])).toBe("http://restaurant.test/internal/sessions/version?uid=own&role=owner");
+        expect(String(fetchMock.mock.calls[0]![0])).toBe("http://restaurant.test/internal/sessions/version?uid=own&role=owner");
     });
 
     it.each([404, 500])("a %i from restaurant-service is a 503, never a sign-out", async (status) => {

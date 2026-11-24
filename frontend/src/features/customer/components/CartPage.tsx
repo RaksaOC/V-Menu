@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import { placeOrder as sendOrder } from "@/features/customer/api";
@@ -8,9 +10,7 @@ import { clearCart, MAX_ORDER_LINES, readCart, readOrderNote, saveCart, saveOrde
 import { dropUnavailable } from "@/features/customer/unavailable";
 import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
-import { useRouter } from "next/navigation";
 import { useTableLink } from "@/features/customer/table-link";
-import { Plus } from "lucide-react";
 import type { CartItem } from "@/features/customer/cart";
 import CartBottomBar from "./cart/CartBottomBar";
 import CartHeader from "./cart/CartHeader";

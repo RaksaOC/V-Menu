@@ -1,7 +1,8 @@
 "use client";
 
-import ItemCard from "@/features/customer/components/ItemCard";
 import { useCallback, useEffect, useState } from "react";
+import type { MenuSection } from "@vmenu/contracts";
+import ItemCard from "@/features/customer/components/ItemCard";
 import { ToastHost } from "@/components/ui";
 import { Skeleton } from "@/components/ui";
 import { apiErrorCode } from "@/lib/api";
@@ -12,7 +13,6 @@ import { useTableLink } from "@/features/customer/table-link";
 import { reconcileCart } from "@/features/customer/cart";
 import { orderableDishes, searchMenu, sectionId } from "@/features/customer/menu";
 import { toast } from "@/lib/toast";
-import type { MenuSection } from "@vmenu/contracts";
 import MenuCartBar from "./menu/MenuCartBar";
 import MenuHeader from "./menu/MenuHeader";
 import MenuToolbar from "./menu/MenuToolbar";

@@ -35,6 +35,8 @@ jobs:
           - { name: restaurant-service, dir: backend/services/restaurant, kind: service, lock: backend/package-lock.json }
           - { name: menu-service, dir: backend/services/menu, kind: service, lock: backend/package-lock.json }
           - { name: order-service, dir: backend/services/order, kind: service, lock: backend/package-lock.json }
+          # CL-13: ESLint over the whole backend (services, packages, their tests), from backend/.
+          - { name: backend-lint, dir: backend, kind: lint, lock: backend/package-lock.json }
           - { name: frontend, dir: frontend, kind: web, lock: frontend/package-lock.json }
           # Repo-level checks: issue and PR templates, repo hygiene, formatting.
           - { name: repo, dir: ., kind: repo, lock: package-lock.json }
@@ -65,7 +67,7 @@ jobs:
         if: matrix.kind == 'repo'
 
       - run: npm run typecheck
-        if: matrix.kind != 'repo'
+        if: matrix.kind == 'service' || matrix.kind == 'web'
 
       - name: Import boundaries (dependency-cruiser, CL-03)
         if: matrix.kind == 'repo'
@@ -116,7 +118,7 @@ jobs:
           retention-days: 14
 
       - name: Lint
-        if: matrix.kind == 'web'
+        if: matrix.kind == 'web' || matrix.kind == 'lint'
         run: npm run lint
 
       - name: Cache Next.js build
@@ -230,6 +232,11 @@ jobs:
           cache-dependency-path: e2e/package-lock.json
 
       - run: npm ci --no-audit --no-fund
+        working-directory: e2e
+
+      # CL-13: the specs are TypeScript too, checked with strict settings
+      - name: Type-check the specs
+        run: npm run typecheck
         working-directory: e2e
 
       - name: Install Chromium

@@ -1,7 +1,7 @@
 import { Printer, X } from "lucide-react";
+import type { BillLine } from "@vmenu/contracts";
 import { Button, Modal } from "@/components/ui";
 import { useMoney, useRestaurantSettings } from "@/components/money/MoneyProvider";
-import type { BillLine } from "@vmenu/contracts";
 
 interface Props {
     /** shown until the restaurant's settings load */

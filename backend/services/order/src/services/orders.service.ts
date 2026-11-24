@@ -20,10 +20,10 @@ const notSaved = () => new HttpError(503, "We couldn't save your order. Please t
  * never land on the wrong dish. Lines are never merged: the same dish with two notes is two lines.
  */
 function withNotes(checked: OrderLine[], asked: PlaceOrderBody["orderedItems"]): OrderLine[] {
-    const matches = checked.length === asked.length && checked.every((l, i) => String(l.item._id) === String(asked[i].item._id));
+    const matches = checked.length === asked.length && checked.every((l, i) => String(l.item._id) === String(asked[i]?.item._id));
     if (!matches) throw new HttpError(502, "The menu's answer didn't match the order. Please try again.", "ORDER_CHECK_MISMATCH");
     return checked.map((line, i) => {
-        const note = asked[i].note;
+        const note = asked[i]?.note;
         return note ? { ...line, note } : line;
     });
 }

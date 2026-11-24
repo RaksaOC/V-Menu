@@ -1,13 +1,12 @@
 "use client";
 
-import Card from "@/features/kitchen/components/OrderCard";
-import KitchenSignOut from "@/features/kitchen/components/KitchenSignOut";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, History as His } from "lucide-react";
-import Link from "next/link";
-import { getKitchenHistory, type KitchenHistoryPage } from "@/features/kitchen/api";
 import type { Order } from "@vmenu/contracts";
+import { getKitchenHistory, type KitchenHistoryPage } from "@/features/kitchen/api";
+import KitchenSignOut from "@/features/kitchen/components/KitchenSignOut";
+import Card from "@/features/kitchen/components/OrderCard";
 
 export default function History() {
     const router = useRouter();

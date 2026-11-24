@@ -103,7 +103,7 @@ export const mongoOrdersRepo: OrdersRepo = {
             { $sort: { createdAt: 1 } },
             { $facet: { rows: [{ $limit: limit }], total: [{ $count: "n" }] } },
         ]);
-        return { orders: result.rows, total: result.total[0]?.n ?? 0 };
+        return { orders: result?.rows ?? [], total: result?.total[0]?.n ?? 0 }; // $facet always answers one document
     },
     countFor: (resIds, range) =>
         Order.countDocuments({ ...inRestaurants(resIds), status: mongoose.trusted({ $ne: "cancelled" }), ...inRange("createdAt", range) }),

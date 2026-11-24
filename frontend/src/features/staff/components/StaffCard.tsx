@@ -1,9 +1,9 @@
 import { Calendar, Mail, Pencil } from "lucide-react";
 import type { StaffMember } from "@vmenu/contracts";
 import { formatDate } from "@/lib/dates";
+import { initials } from "../staff-list";
 import InvitePending from "./InvitePending";
 import RoleBadge from "./RoleBadge";
-import { initials } from "../staff-list";
 
 /** One member as a card, for phones. With `onEdit`, the card has an edit button. */
 export default function StaffCard({ member, className, onEdit }: { member: StaffMember; className: string; onEdit?: () => void }) {

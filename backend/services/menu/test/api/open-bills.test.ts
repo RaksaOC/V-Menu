@@ -2,8 +2,8 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../../src/app.js";
 import { notFound, signAppToken } from "@vmenu/common";
+import { createApp } from "../../src/app.js";
 
 // VM-15: over HTTP, with order-service mocked (as order-service's tests mock menu-service).
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";

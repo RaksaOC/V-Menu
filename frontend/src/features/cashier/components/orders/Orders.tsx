@@ -1,17 +1,17 @@
-import OrderCard from "./OrderCard";
-import { orderNumber } from "./order-number";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { TableRequestKind } from "@vmenu/contracts";
+import { useParams } from "next/navigation";
+import { Clock, RefreshCw, ShoppingCart } from "lucide-react";
+import type { Bill } from "@vmenu/contracts";
 import { Skeleton } from "@/components/ui";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
 import { getOpenBills, getPaidBills, setBillPaid, type PaidBillsPage, cancelOrder, dismissRequest } from "@/features/cashier/api";
-import type { TableRequestKind } from "@vmenu/contracts";
 import { apiErrorMessage } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { useConnectionStatus } from "@/lib/use-connection-status";
-import { useParams } from "next/navigation";
-import { Clock, RefreshCw, ShoppingCart } from "lucide-react";
 import HistoryPager from "./HistoryPager";
-import type { Bill } from "@vmenu/contracts";
+import { orderNumber } from "./order-number";
+import OrderCard from "./OrderCard";
 
 /** VM-11: the open bills refresh themselves this often. */
 export const BILLS_POLL_MS = 10_000;
@@ -26,7 +26,7 @@ function ago(ms: number) {
 export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } = {}) {
     const params = useParams();
     const slug = String(params.res);
-    const connection = useConnectionStatus();
+    const { lost, succeeded, failed } = useConnectionStatus();
 
     // ---- open bills, kept up to date
     const [orders, setOrders] = useState<Bill[]>([]);
@@ -49,14 +49,14 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
             setOrders(bills);
             setUpdatedAt(Date.now());
             setNow(Date.now());
-            connection.succeeded();
+            succeeded();
         } catch (err) {
-            connection.failed(); // the red bar after 2 failures in a row (VM-03)
+            failed(); // the red bar after 2 failures in a row (VM-03)
             console.error("Failed to load the open bills:", err);
         } finally {
             setIsLoading(false);
         }
-    }, [slug, connection.succeeded, connection.failed]);
+    }, [slug, succeeded, failed]);
 
     useEffect(() => {
         loadOpen();
@@ -123,7 +123,7 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
     return (
         <div className="orders w-full flex justify-center items-center">
             <div className={"orders-wrapper w-full text-center flex flex-col gap-6"}>
-                {connection.lost && <ConnectionLostBar />}
+                {lost && <ConnectionLostBar />}
                 <div className={"order-orderHistory w-full flex flex-wrap gap-3 justify-between items-center p-4"}>
                     <div className="flex items-center space-x-2 text-lg font-semibold ">
                         {showHistory ? <Clock size={20} /> : <ShoppingCart size={20} />}

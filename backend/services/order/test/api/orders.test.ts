@@ -2,9 +2,9 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../../src/app.js";
 import { signAppToken, HttpError, notFound } from "@vmenu/common";
 import { OrderCheckResponse } from "@vmenu/contracts";
+import { createApp } from "../../src/app.js";
 import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
 import { Order } from "../../src/models/order.model.js";
@@ -118,8 +118,8 @@ describe("an order is never left off its bill (VM-23)", () => {
         expect(res.status).toBe(201);
         expect(res.body).not.toHaveProperty("billId");
         const [bill] = await Bill.find({ resId: R._id }).lean();
-        expect(bill.orders.map(String)).toEqual([res.body._id]);
-        expect(String((await Order.findById(res.body._id).lean())!.billId)).toBe(String(bill._id));
+        expect(bill!.orders.map(String)).toEqual([res.body._id]);
+        expect(String((await Order.findById(res.body._id).lean())!.billId)).toBe(String(bill!._id));
     });
 
     it("the bill update keeps failing: 503, no order, and no empty bill", async () => {
@@ -135,7 +135,7 @@ describe("an order is never left off its bill (VM-23)", () => {
             ...mongoOrdersRepo,
             create: async (order: Parameters<typeof mongoOrdersRepo.create>[0]) => {
                 const saved = await mongoOrdersRepo.create(order);
-                await Bill.updateOne({ _id: paying._id }, { isPaid: true }); // the cashier, at the wrong moment
+                await Bill.updateOne({ _id: paying!._id }, { isPaid: true }); // the cashier, at the wrong moment
                 return saved;
             },
         };
@@ -144,7 +144,7 @@ describe("an order is never left off its bill (VM-23)", () => {
         const open = await Bill.findOne({ resId: R._id, isPaid: false }).lean();
         expect(open!.orders.map(String)).toEqual([res.body._id]);
         expect(String((await Order.findById(res.body._id).lean())!.billId)).toBe(String(open!._id));
-        expect((await Bill.findById(paying._id).lean())!.orders.map(String)).toEqual([first._id]);
+        expect((await Bill.findById(paying!._id).lean())!.orders.map(String)).toEqual([first._id]);
     });
 
     it("the internal check lists an order that's on no bill, and not one that is", async () => {
@@ -300,7 +300,7 @@ describe("one open bill per table (VM-08)", () => {
         await Promise.all(orderIds.map(async (id) => mongoBillsRepo.attachOrder(await mongoBillsRepo.openBillFor(R._id, "1"), id)));
         const open = await Bill.find({ resId: R._id, table: "1", isPaid: false }).lean();
         expect(open).toHaveLength(1);
-        expect(open[0].orders.map(String).sort()).toEqual([...orderIds].sort());
+        expect(open[0]!.orders.map(String).sort()).toEqual([...orderIds].sort());
     });
 
     it("10 orders placed at the same moment end up on exactly 1 open bill", async () => {
@@ -308,15 +308,15 @@ describe("one open bill per table (VM-08)", () => {
         expect(results.map((r) => r.status)).toEqual(Array(10).fill(201));
         const open = (await bills()).filter((b) => b.table === "1" && !b.isPaid);
         expect(open).toHaveLength(1);
-        expect(open[0].orders).toHaveLength(10);
+        expect(open[0]!.orders).toHaveLength(10);
     });
 
     it("re-opening a paid bill while the table has another open bill gives 409", async () => {
         await place();
         const [first] = await bills();
-        expect((await setPaid(first._id, true)).status).toBe(200);
+        expect((await setPaid(first!._id, true)).status).toBe(200);
         await place(); // the table's next visit: a new open bill
-        const res = await setPaid(first._id, false);
+        const res = await setPaid(first!._id, false);
         expect(res.status).toBe(409);
         expect(res.body.code).toBe("TABLE_HAS_OPEN_BILL");
         expect((await bills()).filter((b) => !b.isPaid)).toHaveLength(1);
@@ -325,8 +325,8 @@ describe("one open bill per table (VM-08)", () => {
     it("re-opening a paid bill is fine when the table has no other open bill", async () => {
         await place();
         const [first] = await bills();
-        await setPaid(first._id, true);
-        const res = await setPaid(first._id, false);
+        await setPaid(first!._id, true);
+        const res = await setPaid(first!._id, false);
         expect(res.status).toBe(200);
         expect(res.body.isPaid).toBe(false);
     });

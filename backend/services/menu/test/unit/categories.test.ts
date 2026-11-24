@@ -73,7 +73,7 @@ describe("categories", () => {
         expect(await status(sections.reorder(A._id, { ids: [drinks._id, drinks._id, mains._id] }))).toBe(400);
         expect(await status(sections.reorder(A._id, { ids: [drinks._id, mains._id, theirs._id] }))).toBe(400);
         expect((await sections.list(A._id)).map((c) => c.name)).toEqual(["Drinks", "Mains", "Desserts"]);
-        expect((await sections.list(B._id))[0].sortOrder).toBe(0);
+        expect((await sections.list(B._id))[0]!.sortOrder).toBe(0);
     });
 
     it("deleting one moves its dishes to Other, and leaves other restaurants' dishes alone", async () => {
@@ -114,7 +114,7 @@ describe("dishes in categories", () => {
         await menu.create(A, dish("Lok Lak", mains._id, false)); // off
         await menu.create(A, dish("Fried Rice", mains._id));
         await menu.create(A, dish("Bread"));
-        await sections.reorder(A._id, { ids: [drinks._id, mains._id, (await sections.list(A._id))[2]._id] });
+        await sections.reorder(A._id, { ids: [drinks._id, mains._id, (await sections.list(A._id))[2]!._id] });
 
         const { categories } = await menu.publicMenu(A._id);
         expect(categories.map((c) => [c._id, c.name, c.items.map((i) => i.name)])).toEqual([

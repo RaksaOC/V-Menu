@@ -156,7 +156,7 @@ describe("the log line (SEC-10)", () => {
         const token = await signAppToken(chef);
         await request(app).get("/api/orders/other-place/kitchen").set(cookie(token));
         expect(lines).toHaveLength(1);
-        expect(lines[0].fields).toMatchObject({
+        expect(lines[0]!.fields).toMatchObject({
             status: 403,
             reason: "other_restaurant",
             method: "GET",
@@ -170,28 +170,28 @@ describe("the log line (SEC-10)", () => {
     it("never has the token or the full email; the email is masked", async () => {
         const token = await signAppToken(chef);
         await request(app).get("/api/orders/other-place/kitchen").set(cookie(token));
-        expect(lines[0].text).not.toContain(token);
-        expect(lines[0].text).not.toContain("sokha@gmail.com");
-        expect(lines[0].fields.email).toBe("s***@gmail.com");
+        expect(lines[0]!.text).not.toContain(token);
+        expect(lines[0]!.text).not.toContain("sokha@gmail.com");
+        expect(lines[0]!.fields.email).toBe("s***@gmail.com");
     });
 
     it("leaves a bad token and the query string out", async () => {
         await request(app).get(`${KITCHEN}?secret=abc123`).set(cookie("forged.token.value"));
-        expect(lines[0].text).not.toContain("forged.token.value");
-        expect(lines[0].text).not.toContain("abc123");
+        expect(lines[0]!.text).not.toContain("forged.token.value");
+        expect(lines[0]!.text).not.toContain("abc123");
     });
 
     it("has the request id, to find the same request in the other logs, and not the request's headers", async () => {
         const res = await request(app).get(KITCHEN).set("x-request-id", "req-123").set("referer", "https://site.example/?private=1");
         expect(res.status).toBe(401);
-        expect(lines[0].fields.requestId).toBe("req-123");
-        expect(lines[0].fields).not.toHaveProperty("req");
-        expect(lines[0].text).not.toContain("private=1");
+        expect(lines[0]!.fields.requestId).toBe("req-123");
+        expect(lines[0]!.fields).not.toHaveProperty("req");
+        expect(lines[0]!.text).not.toContain("private=1");
     });
 
     it("never logs an internal key", async () => {
         await request(app).get("/internal/thing").set("x-internal-key", "wrong-value-here");
-        expect(lines[0].text).not.toContain("wrong-value-here");
+        expect(lines[0]!.text).not.toContain("wrong-value-here");
     });
 
     it("the answer doesn't tell the caller the reason", async () => {

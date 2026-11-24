@@ -86,7 +86,7 @@ beforeEach(async () => {
     );
 });
 
-const urlFor = (route: string) => route.split(" ")[1].replace(":slug", A.slug).replace(":id", ids.staffA);
+const urlFor = (route: string) => route.split(" ")[1]!.replace(":slug", A.slug).replace(":id", ids.staffA!);
 
 // /api/auth has a rate limit per address: give every request its own, as separate visitors would have.
 let visitor = 0;
@@ -94,8 +94,8 @@ function send(method: string, url: string, caller: Caller, extra: Record<string,
     const m = method.toLowerCase() as "get" | "post" | "put" | "patch" | "delete";
     visitor += 1;
     const ip = `198.18.${Math.floor(visitor / 250)}.${(visitor % 250) + 1}`;
-    return request(app)
-        [m](url)
+    const agent = request(app);
+    return agent[m](url)
         .set({ ...headers[caller], "x-forwarded-for": ip, ...extra })
         .send(method === "GET" || method === "DELETE" ? undefined : {});
 }
@@ -109,7 +109,7 @@ describe("restaurant-service access matrix (SEC-07)", () => {
         const method = route.split(" ")[0];
         const got = {} as Record<Caller, number>;
         for (const caller of [...CALLERS].sort((x, y) => Number(row[x] === "ok") - Number(row[y] === "ok")))
-            got[caller] = (await send(method, urlFor(route), caller)).status;
+            got[caller] = (await send(method!, urlFor(route), caller)).status;
         expect(mismatches(row, got)).toEqual([]);
     });
 

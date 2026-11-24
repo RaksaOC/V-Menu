@@ -1,5 +1,5 @@
-import api, { seg } from "@/lib/api";
 import type { Bill, TableRequestKind } from "@vmenu/contracts";
+import api, { seg } from "@/lib/api";
 
 /** The bills still to settle, with their orders, newest first (VM-11). */
 export async function getOpenBills(slug: string): Promise<Bill[]> {

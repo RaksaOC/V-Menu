@@ -1,5 +1,5 @@
-import api, { seg } from "@/lib/api";
 import type { PlaceOrderBody, PublicMenu, TableBill, TableLink as TableLinkInfo, TableOrderView, TableRequestKind } from "@vmenu/contracts";
+import api, { seg } from "@/lib/api";
 import type { TableLink } from "./table-link";
 
 /** The dishes a customer can order, by category (public, no sign-in; VM-25). */

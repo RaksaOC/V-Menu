@@ -20,7 +20,7 @@ function setup() {
         order: (table = "1") => placing.place(R1._id, { table, orderedItems: [{ item: { _id: DISH._id }, quantity: 1 }] }),
     };
 }
-const openBill = async (s: ReturnType<typeof setup>) => (await s.billing.open(R1._id))[0];
+const openBill = async (s: ReturnType<typeof setup>) => (await s.billing.open(R1._id))[0]!;
 
 afterEach(() => vi.useRealTimers());
 
@@ -33,8 +33,8 @@ describe("table requests (VM-30)", () => {
         vi.setSystemTime(new Date("2026-11-24T10:01:00Z"));
         await s.requests.ask(R1._id, "1", { kind: "staff" });
         const bill = await openBill(s);
-        expect(bill.billRequestedAt).toEqual(new Date("2026-11-24T10:00:00Z"));
-        expect(bill.staffCalledAt).toEqual(new Date("2026-11-24T10:01:00Z"));
+        expect(bill!.billRequestedAt).toEqual(new Date("2026-11-24T10:00:00Z"));
+        expect(bill!.staffCalledAt).toEqual(new Date("2026-11-24T10:01:00Z"));
     });
 
     it("each button works at most once per 2 minutes, even after the cashier dismissed it", async () => {
@@ -45,7 +45,7 @@ describe("table requests (VM-30)", () => {
         vi.advanceTimersByTime(1.5 * MIN);
         expect(await status(s.requests.ask(R1._id, "1", { kind: "bill" }))).toBe(429);
         expect(await status(s.requests.ask(R1._id, "1", { kind: "staff" }))).toBe(200); // the other button is separate
-        await s.requests.dismiss(R1._id, String((await openBill(s))._id), "bill");
+        await s.requests.dismiss(R1._id, String((await openBill(s))!._id), "bill");
         expect(await status(s.requests.ask(R1._id, "1", { kind: "bill" }))).toBe(429);
         vi.advanceTimersByTime(0.6 * MIN);
         expect(await status(s.requests.ask(R1._id, "1", { kind: "bill" }))).toBe(200);
@@ -58,7 +58,7 @@ describe("table requests (VM-30)", () => {
         await s.requests.ask(R1._id, "1", { kind: "bill" });
         vi.advanceTimersByTime(3 * MIN);
         await s.requests.ask(R1._id, "1", { kind: "bill" });
-        expect((await openBill(s)).billRequestedAt).toEqual(new Date("2026-11-24T10:00:00Z"));
+        expect((await openBill(s))!.billRequestedAt).toEqual(new Date("2026-11-24T10:00:00Z"));
     });
 
     it("the flags clear when the bill is paid", async () => {
@@ -66,7 +66,7 @@ describe("table requests (VM-30)", () => {
         await s.order();
         await s.requests.ask(R1._id, "1", { kind: "bill" });
         await s.requests.ask(R1._id, "1", { kind: "staff" });
-        const paid = await s.billing.setPaid(R1._id, String((await openBill(s))._id), true);
+        const paid = await s.billing.setPaid(R1._id, String((await openBill(s))!._id), true);
         expect(paid.billRequestedAt).toBeUndefined();
         expect(paid.staffCalledAt).toBeUndefined();
     });
@@ -76,7 +76,7 @@ describe("table requests (VM-30)", () => {
         await s.order();
         await s.requests.ask(R1._id, "1", { kind: "bill" });
         await s.requests.ask(R1._id, "1", { kind: "staff" });
-        const dismissed = await s.requests.dismiss(R1._id, String((await openBill(s))._id), "bill");
+        const dismissed = await s.requests.dismiss(R1._id, String((await openBill(s))!._id), "bill");
         expect(dismissed.billRequestedAt).toBeUndefined();
         expect(dismissed.staffCalledAt).toBeInstanceOf(Date);
     });
@@ -87,7 +87,7 @@ describe("table requests (VM-30)", () => {
         await s.order();
         expect(await status(s.requests.ask(R1._id, "1", { kind: "dance" }))).toBe(400);
         expect(await status(s.requests.dismiss(R1._id, "nope", "bill"))).toBe(400);
-        expect(await status(s.requests.dismiss(R1._id, String((await openBill(s))._id), "dance"))).toBe(400);
+        expect(await status(s.requests.dismiss(R1._id, String((await openBill(s))!._id), "dance"))).toBe(400);
         expect(await status(s.requests.dismiss(R1._id, "665f00000000000000000fff", "bill"))).toBe(404);
     });
 

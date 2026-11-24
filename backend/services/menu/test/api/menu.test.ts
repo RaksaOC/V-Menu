@@ -1,10 +1,10 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../../src/app.js";
 import { signAppToken, notFound } from "@vmenu/common";
+import { createApp } from "../../src/app.js";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 process.env.INTERNAL_API_KEY = "internal-test-key";

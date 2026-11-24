@@ -1,5 +1,5 @@
-import express, { type Express } from "express";
 import type { Server } from "node:http";
+import express, { type Express } from "express";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import { errorHandler, notFound } from "./errors.js";

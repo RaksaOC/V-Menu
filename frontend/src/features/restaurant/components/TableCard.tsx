@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { CheckCircle, Pencil, QrCode, Table as TableIcon, XCircle } from "lucide-react";
+import type { Table } from "@vmenu/contracts";
 import { Button, Card, Chip } from "@/components/ui";
 import TableQrModal from "@/components/qr/TableQrModal";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
-import type { Table } from "@vmenu/contracts";
 
 type Props = { table: Table; restaurantName?: string } & (
     { role: "owner"; onEdit: (table: Table) => void } | { role: "cashier"; onToggle: (table: Table) => void }

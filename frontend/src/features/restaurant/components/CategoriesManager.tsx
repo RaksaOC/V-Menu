@@ -2,10 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import { Plus } from "lucide-react";
+import type { Category } from "@vmenu/contracts";
 import { Button, Input, Modal, toast } from "@/components/ui";
 import { apiErrorMessage } from "@/lib/api";
 import { createCategory, deleteCategory, getCategories, renameCategory, reorderCategories } from "@/features/restaurant/api";
-import type { Category } from "@vmenu/contracts";
 import CategoryActions from "./CategoryActions";
 
 interface Props {

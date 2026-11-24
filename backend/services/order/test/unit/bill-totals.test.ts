@@ -37,7 +37,7 @@ describe("bill totals (VM-31)", () => {
     it("awkward prices are exact: $0.10 + $0.20 is 30 cents, 3 x $2.35 is 705", async () => {
         const s = setup();
         await s.place([1, 1], [2, 1]);
-        expect((await openBill(s)).totalCents).toBe(30);
+        expect((await openBill(s))!.totalCents).toBe(30);
         const other = setup();
         await other.place([3, 3]);
         expect(await openBill(other)).toMatchObject({ subtotalCents: 705, totalCents: 705 });
@@ -47,7 +47,7 @@ describe("bill totals (VM-31)", () => {
         const s = setup();
         await s.place([3, 2], [1, 1]);
         await s.place([3, 1]);
-        expect((await openBill(s)).lines).toEqual([
+        expect((await openBill(s))!.lines).toEqual([
             { _id: id(3), name: "Amok", priceCents: 235, quantity: 3, totalCents: 705 },
             { _id: id(1), name: "Tea", priceCents: 10, quantity: 1, totalCents: 10 },
         ]);
@@ -59,11 +59,11 @@ describe("bill totals (VM-31)", () => {
         s.menu.set(id(3), dish(3, "Amok", 300));
         await s.place([3, 2]);
         const bill = await openBill(s);
-        expect(bill.lines.map((l) => [l.priceCents, l.quantity, l.totalCents])).toEqual([
+        expect(bill!.lines.map((l) => [l.priceCents, l.quantity, l.totalCents])).toEqual([
             [235, 1, 235],
             [300, 2, 600],
         ]);
-        expect(bill.totalCents).toBe(835);
+        expect(bill!.totalCents).toBe(835);
     });
 
     it("shows a renamed dish under its newest name", async () => {
@@ -71,7 +71,7 @@ describe("bill totals (VM-31)", () => {
         await s.place([1, 1]);
         s.menu.set(id(1), dish(1, "Green Tea", 10));
         await s.place([1, 1]);
-        expect((await openBill(s)).lines).toEqual([{ _id: id(1), name: "Green Tea", priceCents: 10, quantity: 2, totalCents: 20 }]);
+        expect((await openBill(s))!.lines).toEqual([{ _id: id(1), name: "Green Tea", priceCents: 10, quantity: 2, totalCents: 20 }]);
     });
 
     it("leaves cancelled orders out", async () => {
@@ -79,21 +79,21 @@ describe("bill totals (VM-31)", () => {
         await s.place([3, 1]);
         const dropped = await s.place([1, 5]);
         const bill = await openBill(s);
-        await s.billing.cancelOrder(R1._id, String(bill._id), String(dropped._id), { reason: "x" }, "cashier");
+        await s.billing.cancelOrder(R1._id, String(bill!._id), String(dropped._id), { reason: "x" }, "cashier");
         const after = await openBill(s);
-        expect(after.lines.map((l) => l.name)).toEqual(["Amok"]);
-        expect(after.totalCents).toBe(235);
+        expect(after!.lines.map((l) => l.name)).toEqual(["Amok"]);
+        expect(after!.totalCents).toBe(235);
     });
 
     it("every bill has them: open, paid history, and the answer to marking it paid", async () => {
         const s = setup();
         await s.place([3, 3]);
         const bill = await openBill(s);
-        const marked = await s.billing.setPaid(R1._id, String(bill._id), true);
+        const marked = await s.billing.setPaid(R1._id, String(bill!._id), true);
         expect(marked).toMatchObject({ subtotalCents: 705, totalCents: 705 });
         const history = await s.billing.paid(R1._id, {});
         expect(history.bills[0]).toMatchObject({ subtotalCents: 705, totalCents: 705 });
-        expect(history.bills[0].lines).toHaveLength(1);
+        expect(history.bills[0]!.lines).toHaveLength(1);
     });
 
     it("the customer's open bill has the same lines and total", async () => {
@@ -102,7 +102,7 @@ describe("bill totals (VM-31)", () => {
         await s.place([3, 1]);
         const table = await s.tableView.openBill(R1._id, "1");
         expect(table).toMatchObject({ subtotalCents: 705, totalCents: 705, total: 7.05 });
-        expect(table.lines).toEqual((await openBill(s)).lines);
+        expect(table.lines).toEqual((await openBill(s))!.lines);
     });
 
     it("a table with no bill has empty lines and zero totals", async () => {
@@ -120,7 +120,7 @@ describe("bill totals (VM-31)", () => {
         const s = setup();
         await s.place([3, 3]);
         const bill = await openBill(s);
-        const { totalCents } = await s.billing.setPaid(R1._id, String(bill._id), true);
+        const { totalCents } = await s.billing.setPaid(R1._id, String(bill!._id), true);
         expect((await s.stats.ownerOverview("owner1")).revenueCents).toBe(totalCents);
     });
 });

@@ -48,7 +48,7 @@ export function maskEmail(email: string | undefined): string | undefined {
 // request metrics, and the length is capped because the path is whatever the caller sent.
 const RESTAURANT_PATH = /^(\/api\/(?:menu|orders|restaurants))\/(?!owner(?:\/|$))([^/]+)/;
 function where(req: Request) {
-    const path = (req.originalUrl ?? req.url).split("?")[0];
+    const path = (req.originalUrl ?? req.url).split("?")[0] ?? "";
     return {
         route: path
             .replace(RESTAURANT_PATH, "$1/:slug")

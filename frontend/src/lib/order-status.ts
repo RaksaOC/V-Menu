@@ -1,5 +1,5 @@
-import type { ChipTone } from "@/components/ui/Chip";
 import type { OrderStatus } from "@vmenu/contracts";
+import type { ChipTone } from "@/components/ui/Chip";
 
 // VM-27: how an order's status reads, for staff and for the customer.
 
