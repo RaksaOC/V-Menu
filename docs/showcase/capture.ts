@@ -210,6 +210,26 @@ for (const theme of ["light", "dark"] as const) {
     });
 }
 
+// VM-05: one cart per table. Add a dish at T1, then look at T1's cart (price with cents) and
+// at T2's cart in the same browser (it must be empty).
+for (const theme of ["light", "dark"] as const) {
+    await step(`VM-05 cart per table ${theme}`, async () => {
+        const { context, page } = await newPage(browser, PHONE, theme);
+        const c = { page, theme, width: PHONE.width };
+        await page.goto(`${BASE}/${SLUG}/customer/T1`);
+        await settle(page);
+        await page.getByRole("button", { name: "Add to Cart" }).first().click({ timeout: 5000 });
+        await page.waitForTimeout(500);
+        await page.goto(`${BASE}/${SLUG}/customer/T1/cart`);
+        await settle(page);
+        await shot(c, "VM-05-t1-cart", false);
+        await page.goto(`${BASE}/${SLUG}/customer/T2/cart`);
+        await settle(page);
+        await shot(c, "VM-05-t2-cart", false);
+        await context.close();
+    });
+}
+
 // ---------------------------------------------------------------- kitchen
 for (const theme of ["light", "dark"] as const) {
     await step(`kitchen ${theme}`, async () => {
