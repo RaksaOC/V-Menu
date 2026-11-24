@@ -10,3 +10,6 @@ out
 .idea
 .vscode
 Dockerfile
+test
+vitest.config.mts
+coverage

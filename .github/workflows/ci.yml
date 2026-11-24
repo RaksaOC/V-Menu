@@ -103,7 +103,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      # ---- frontend: lint and production build instead of tests ----
+      # ---- frontend: unit tests (B1), then lint and the production build ----
+      - name: Unit tests
+        if: matrix.kind == 'web'
+        run: npm test
+
       - name: Lint
         if: matrix.kind == 'web'
         run: npm run lint
