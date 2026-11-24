@@ -15,13 +15,19 @@ const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId:
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner2" };
 const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 let closedTable: string | null = null;
+/** SEC-04: table link tokens (22 characters) and the table each one opens. */
+const T1 = "t1".padEnd(22, "a");
+const T2 = "t2".padEnd(22, "b");
+const LINKS: Record<string, string> = { [T1]: "1", [T2]: "2" };
 
 const clients: Clients = {
     listOwnerRestaurants: async () => [],
     menuCounts: async () => ({ numOfTables: 1, numOfActiveTables: 1, numOfItems: 1 }),
     orderCheck: async (_req, _resId, body) => {
-        if (body.table === closedTable) throw new HttpError(409, "Table is not available", "TABLE_CLOSED");
-        return { items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) };
+        const table = body.qrToken ? LINKS[body.qrToken] : body.table;
+        if (!table) throw notFound("No such table link");
+        if (table === closedTable) throw new HttpError(409, "Table is not available", "TABLE_CLOSED");
+        return { ...(body.qrToken && { table }), items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) };
     },
     tableByToken: async () => {
         throw notFound("No such table link"); // VM-22: these tests order by table name
@@ -37,6 +43,18 @@ const order = (app: App, from: string, { table = "1", slug = A.slug, lines = 1 }
         .post(`/api/orders/${slug}`)
         .set("X-Forwarded-For", from)
         .send({ table, orderedItems: Array.from({ length: lines }, () => ({ item: { _id: ITEM._id }, quantity: 1 })) });
+/** An order from a table's QR link (SEC-04): the body has the link's token and no table name. */
+const orderByLink = (app: App, from: string, qrToken: string) =>
+    request(app)
+        .post(`/api/orders/${A.slug}`)
+        .set("X-Forwarded-For", from)
+        .send({ qrToken, orderedItems: [{ item: { _id: ITEM._id }, quantity: 1 }] });
+/** How many orders the limits have refused so far (B10), from /metrics. */
+const refusedSoFar = async (app: App) => {
+    const res = await request(app).get("/metrics");
+    const line = res.text.split("\n").find((l) => l.startsWith("vmenu_orders_rate_limited_total "));
+    return line ? Number(line.split(" ").pop()) : 0;
+};
 
 let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
 beforeAll(async () => {
@@ -117,6 +135,58 @@ describe("orders per table (VM-22)", () => {
         expect((await order(app, ip(4))).status).toBe(201);
         expect((await order(app, ip(5))).status).toBe(201);
         expect((await order(app, ip(6))).status).toBe(429);
+    });
+});
+
+describe("orders from a table's QR link (VM-22, SEC-04)", () => {
+    it("each table has its own count: two tables can each place their full quota", async () => {
+        const app = appWith({ perMinute: 1000, perTable: 3 });
+        for (let i = 0; i < 3; i++) expect((await orderByLink(app, ip(i + 1), T1)).status).toBe(201);
+        for (let i = 0; i < 3; i++) expect((await orderByLink(app, ip(i + 10), T2)).status).toBe(201);
+        expect(await Order.countDocuments({ table: "1" })).toBe(3);
+        expect(await Order.countDocuments({ table: "2" })).toBe(3);
+    });
+
+    it("one table at its limit doesn't block another table", async () => {
+        const app = appWith({ perMinute: 1000, perTable: 1 });
+        expect((await orderByLink(app, ip(1), T1)).status).toBe(201);
+        const refused = await orderByLink(app, ip(2), T1);
+        expect(refused.status).toBe(429);
+        expect(refused.body.message).toMatch(/staff/i);
+        expect((await orderByLink(app, ip(3), T2)).status).toBe(201);
+    });
+
+    it("a link that opens no table doesn't use up anyone's count", async () => {
+        const app = appWith({ perMinute: 1000, perTable: 1 });
+        expect((await orderByLink(app, ip(1), "zz".padEnd(22, "z"))).status).toBe(404);
+        expect((await orderByLink(app, ip(2), T1)).status).toBe(201);
+    });
+});
+
+describe("refused orders on /metrics (VM-22, B10)", () => {
+    it("vmenu_orders_rate_limited_total counts orders refused by the per-table limit", async () => {
+        const app = appWith({ perMinute: 1000, perTable: 1 });
+        const before = await refusedSoFar(app);
+        expect((await orderByLink(app, ip(1), T1)).status).toBe(201);
+        expect((await orderByLink(app, ip(2), T1)).status).toBe(429);
+        expect((await order(app, ip(3), { table: "5" })).status).toBe(201);
+        expect((await order(app, ip(4), { table: "5" })).status).toBe(429);
+        expect(await refusedSoFar(app)).toBe(before + 2);
+    });
+
+    it("and orders refused by the per-client limit", async () => {
+        const app = appWith({ perMinute: 1, perTable: 1000 });
+        const before = await refusedSoFar(app);
+        expect((await order(app, ip(1))).status).toBe(201);
+        expect((await order(app, ip(1))).status).toBe(429);
+        expect(await refusedSoFar(app)).toBe(before + 1);
+    });
+
+    it("a placed order isn't counted", async () => {
+        const app = appWith({ perMinute: 1000, perTable: 1000 });
+        const before = await refusedSoFar(app);
+        expect((await order(app, ip(1))).status).toBe(201);
+        expect(await refusedSoFar(app)).toBe(before);
     });
 });
 

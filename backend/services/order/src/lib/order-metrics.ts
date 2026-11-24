@@ -25,10 +25,10 @@ const readySeconds = new prom.Histogram({
     registers: [registry],
 });
 
-/** VM-22: orders refused by the order rate limit. VM-22's limiter calls countRateLimitedOrder(). */
+/** VM-22: orders refused by the order rate limits. Both limiters' 429 handlers call countRateLimitedOrder(). */
 const rateLimited = new prom.Counter({
     name: "vmenu_orders_rate_limited_total",
-    help: "Orders refused by the per-table order rate limit (VM-22)",
+    help: "Orders refused by the order rate limits, per client or per table (VM-22)",
     registers: [registry],
 });
 

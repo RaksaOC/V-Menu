@@ -42,6 +42,12 @@ test("the formatting commit is hidden from git blame", () => {
         .filter((l) => /^[0-9a-f]{40}$/.test(l));
     assert.ok(revs.length >= 1, "list the formatting commit");
     for (const rev of revs) {
+        // The commit must be in this branch's history, not just somewhere in a local clone: CI's
+        // checkout only has the branch's own commits, and GitHub's blame view ignores other ones.
+        assert.doesNotThrow(
+            () => execSync(`git merge-base --is-ancestor ${rev} HEAD`, { cwd: root, stdio: "ignore" }),
+            `${rev} is not in this branch's history (was it rewritten by a rebase?)`,
+        );
         const subject = execSync(`git log -1 --format=%s ${rev}`, { cwd: root, encoding: "utf8" });
         assert.match(subject, /format/i);
     }

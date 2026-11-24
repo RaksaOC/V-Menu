@@ -1,6 +1,7 @@
 import type { Request, RequestHandler } from "express";
 import { rateLimit } from "express-rate-limit";
 import { HttpError } from "@vmenu/common";
+import { countRateLimitedOrder } from "../lib/order-metrics.js";
 
 // VM-22: ordering needs no sign-in, so it has limits instead: per client and per table. The counts
 // live in this process's memory, so a restart clears them.
@@ -25,14 +26,27 @@ export const orderLimitsFromEnv = (): OrderLimits => ({
 
 const refuse =
     (message: string): RequestHandler =>
-    (_req, _res, next) =>
+    (_req, _res, next) => {
+        countRateLimitedOrder(); // B10: vmenu_orders_rate_limited_total
         next(new HttpError(429, message, "TOO_MANY_ORDERS"));
+    };
 
-/** The restaurant and the table as the order will store it (trimmed, at most 40 characters). */
-const tableKey = (req: Request) =>
-    `${String(req.params.slug)}:${String(req.body?.table ?? "")
-        .trim()
-        .slice(0, 40)}`;
+/**
+ * The table the order is for, in its restaurant. SEC-04: an order from a table's QR link sends
+ * only its token, so the token is the table; otherwise the table name as the order will store it
+ * (trimmed, at most 40 characters). A token that opens no table is refused before it counts
+ * (skipFailedRequests), so made-up tokens never use up a real table's count.
+ */
+export const tableKey = (req: Request) => {
+    const body = (req.body ?? {}) as { qrToken?: unknown; table?: unknown };
+    const table =
+        typeof body.qrToken === "string" && body.qrToken
+            ? `link:${body.qrToken.slice(0, 40)}`
+            : `name:${String(body.table ?? "")
+                  .trim()
+                  .slice(0, 40)}`;
+    return `${String(req.params.slug)}:${table}`;
+};
 
 export function orderLimiters({ perMinute, perTable }: OrderLimits): RequestHandler[] {
     const shared = { standardHeaders: "draft-8", legacyHeaders: false } as const;
