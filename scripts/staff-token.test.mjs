@@ -38,6 +38,22 @@ test("signs an HS256 app token for one restaurant, in the shape the services che
     assert.equal(claims.resId, "64b000000000000000000001");
 });
 
+test("signs as the seeded demo owner, who really has the chef and cashier roles there (SEC-03)", () => {
+    for (const role of ["chef", "cashier"]) {
+        const { claims } = decode(signStaffToken(role, { secret: SECRET }));
+        assert.equal(claims.uid, "demo-owner", "the seed gives demo-owner all three roles at demo-bistro");
+        assert.equal(claims.email, "owner@demo.local");
+    }
+});
+
+test("SEED_OWNER_UID and SEED_OWNER_EMAIL pick the owner the seed was run with", () => {
+    const out = execFileSync(process.execPath, [script, "cashier"], {
+        encoding: "utf8",
+        env: { ...process.env, JWT_SECRET: SECRET, SEED_OWNER_UID: "firebase-uid-1", SEED_OWNER_EMAIL: "demo@x.test" },
+    });
+    assert.deepEqual((({ uid, email }) => ({ uid, email }))(decode(out.trim()).claims), { uid: "firebase-uid-1", email: "demo@x.test" });
+});
+
 test("the token lives 10 minutes at most", () => {
     const { claims } = decode(signStaffToken("cashier", { secret: SECRET }));
     assert.ok(claims.exp - claims.iat <= 600, `lives ${claims.exp - claims.iat} s`);

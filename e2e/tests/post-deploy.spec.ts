@@ -5,10 +5,13 @@ import { SLUG, staffToken } from "./support/auth";
 // post-deploy job: `npx playwright test --grep @post-deploy`). It also runs in the e2e job with
 // the other specs, so a change that breaks it fails its PR first.
 //
-// A customer opens the demo table's menu and orders; the kitchen API sees the order. Then the
+// A customer opens the demo table's menu by its QR link and orders; the kitchen API sees the
+// order. SEC-04: on the servers a table opens only by its link token (links by name are off), so
+// the test reads T1's token as the cashier first, as scripts/smoke.mjs does. Then the
 // cashier cancels it, so staging's kitchen queue doesn't fill up with test orders (and the
 // "order pending too long" alert stays quiet). No sign-in: against staging the job passes
-// short-lived CHEF_TOKEN and CASHIER_TOKEN; locally they're signed from the stack's secret.
+// short-lived CHEF_TOKEN and CASHIER_TOKEN (the seeded demo owner's, SEC-03); locally they're
+// signed from the stack's secret.
 const TABLE = process.env.TABLE ?? "T1";
 
 interface Order {
@@ -21,8 +24,16 @@ test("a customer orders at the demo table and the kitchen sees it", { tag: "@pos
     const as = async (role: "chef" | "cashier"): Promise<APIRequestContext> =>
         playwright.request.newContext({ baseURL, extraHTTPHeaders: { cookie: `token=${await staffToken(role)}` } });
 
-    // the customer: menu -> cart -> order
-    await page.goto(`/${SLUG}/customer/${TABLE}`);
+    // T1's QR link token: only staff can read it
+    const cashierApi = await as("cashier");
+    const tables = await cashierApi.get(`/api/menu/${SLUG}/tables`);
+    expect(tables.status(), "the cashier reads the tables").toBe(200);
+    const qrToken = ((await tables.json()) as { name: string; qrToken?: string }[]).find((t) => t.name === TABLE)?.qrToken;
+    expect(qrToken, `table ${TABLE} has a QR link`).toBeTruthy();
+    await cashierApi.dispose();
+
+    // the customer: menu -> cart -> order, through the table's QR link
+    await page.goto(`/${SLUG}/t/${qrToken}`);
     await expect(page.getByRole("heading", { name: "Our Menu" })).toBeVisible();
     await page.getByRole("button", { name: "Add to Cart" }).first().click();
     await expect(page.getByText("Added to cart!")).toBeVisible();

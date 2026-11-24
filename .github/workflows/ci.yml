@@ -259,6 +259,20 @@ jobs:
         run: npx playwright test
         working-directory: e2e
 
+      # B7: the staging post-deploy checks, the way they run on a server: table links by name off
+      # (SEC-04), and staff tokens from scripts/staff-token.mjs (SEC-03). The rest of this job runs
+      # with links by name on, which is how these checks broke on staging unnoticed.
+      - name: Post-deploy checks, table-name links off
+        if: '!cancelled()'
+        run: |
+          sed -i 's/^ALLOW_TABLE_NAME_LINKS=.*/ALLOW_TABLE_NAME_LINKS=false/' backend/services/menu/.env backend/services/order/.env
+          docker compose up -d --no-build --wait --wait-timeout 120 menu-service order-service
+          CHEF_TOKEN=$(node scripts/staff-token.mjs chef)
+          CASHIER_TOKEN=$(node scripts/staff-token.mjs cashier)
+          export CHEF_TOKEN CASHIER_TOKEN
+          node scripts/check-demo-data.mjs http://localhost:3400
+          cd e2e && npx playwright test --grep @post-deploy
+
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v7
