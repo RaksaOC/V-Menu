@@ -75,7 +75,7 @@ export function HeroSection() {
                     <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
                         {["Next.js", "Express", "TypeScript", "MongoDB", "Firebase Auth", "Prometheus"].map((brand) => (
                             <div key={brand} className="flex items-center justify-center h-10">
-                                <span className="text-xl font-medium text-gray-400 dark:text-gray-500">{brand}</span>
+                                <span className="text-xl font-medium text-[var(--muted)]">{brand}</span>
                             </div>
                         ))}
                     </div>

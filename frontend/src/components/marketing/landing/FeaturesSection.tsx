@@ -14,9 +14,7 @@ export function FeaturesSection() {
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
                 >
-                    <h2 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-6">
-                        Powerful Features That Drive Results
-                    </h2>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-[var(--accent-text)] mb-6">Powerful Features That Drive Results</h2>
                     <p className="text-lg text-gray-700 dark:text-gray-300">
                         Everything you need to streamline operations and delight your customers in one unified platform.
                     </p>
@@ -67,7 +65,7 @@ export function FeaturesSection() {
                             variants={fadeIn}
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 dark:from-blue-500/10 dark:to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                            <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6">
+                            <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-[var(--accent-text)] mb-6">
                                 {feature.icon}
                             </div>
                             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{feature.title}</h3>

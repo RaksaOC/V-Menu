@@ -12,7 +12,8 @@ const base: ToastOptions = {
 };
 
 export const toast = {
-    success: (message: string) => toastify.success(message, base),
-    info: (message: string) => toastify.info(message, base),
-    error: (message: string) => toastify.error(message, { ...base, autoClose: 4000 }),
+    // VM-36: good news is a polite status; only an error interrupts as an alert
+    success: (message: string) => toastify.success(message, { ...base, role: "status" }),
+    info: (message: string) => toastify.info(message, { ...base, role: "status" }),
+    error: (message: string) => toastify.error(message, { ...base, role: "alert", autoClose: 4000 }),
 };

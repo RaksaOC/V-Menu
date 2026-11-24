@@ -90,7 +90,7 @@ export function PasswordField({
                     <button
                         type="button"
                         onClick={onForgot}
-                        className="text-sm font-medium text-blue-600 hover:underline focus:outline-none focus-visible:underline dark:text-blue-400"
+                        className="text-sm font-medium text-[var(--accent-text)] hover:underline focus:outline-none focus-visible:underline"
                     >
                         Forgot password?
                     </button>
