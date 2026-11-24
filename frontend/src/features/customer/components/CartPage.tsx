@@ -3,31 +3,22 @@
 import { useEffect, useState } from "react";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
-import { getMenu, placeOrder as sendOrder } from "@/features/customer/api";
-import {
-    clearCart,
-    MAX_ORDER_LINES,
-    ORDER_NOTE_MAX,
-    readCart,
-    readOrderNote,
-    reconcileCart,
-    saveCart,
-    saveOrderNote,
-    toOrderBody,
-} from "@/features/customer/cart";
-import { orderableDishes } from "@/features/customer/menu";
+import { placeOrder as sendOrder } from "@/features/customer/api";
+import { clearCart, MAX_ORDER_LINES, readCart, readOrderNote, saveCart, saveOrderNote, toOrderBody } from "@/features/customer/cart";
+import { dropUnavailable } from "@/features/customer/unavailable";
 import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
 import { useRouter } from "next/navigation";
 import { useTableLink } from "@/features/customer/table-link";
-import { AlertCircle, ArrowLeft, ShoppingBag, Receipt, Plus, RotateCcw } from "lucide-react";
-import { addToCart } from "@/features/customer/cart";
-import type { MenuItem } from "@vmenu/contracts";
+import { Plus } from "lucide-react";
 import type { CartItem } from "@/features/customer/cart";
-import { useMoney } from "@/components/money/MoneyProvider";
+import CartBottomBar from "./cart/CartBottomBar";
+import CartHeader from "./cart/CartHeader";
+import CartSummary from "./cart/CartSummary";
+import EmptyCart from "./cart/EmptyCart";
+import KitchenNote from "./cart/KitchenNote";
 
 export default function CartPage() {
-    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const router = useRouter();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -82,22 +73,6 @@ export default function CartPage() {
     const totalCents = cartItems.reduce((sum, item) => sum + item.item.priceCents * item.quantity, 0);
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-    /** Reloads the menu, removes the dishes that are no longer on it, and says which. */
-    const dropUnavailable = async () => {
-        const before = readCart(slug, table);
-        try {
-            reconcileCart(slug, table, orderableDishes(await getMenu(slug)));
-        } catch {
-            return "Check your cart and try again.";
-        }
-        const after = readCart(slug, table);
-        setCartItems(after);
-        const gone = before.filter((line) => !after.some((kept) => kept.item._id === line.item._id)).map((line) => line.item.name);
-        return gone.length
-            ? `Removed from your cart: ${gone.join(", ")}. Check it and place the order again.`
-            : "Check your cart and place the order again.";
-    };
-
     const placeOrder = async () => {
         setOrderError(null);
         if (!cartItems.length) {
@@ -126,7 +101,9 @@ export default function CartPage() {
             // VM-06: say why, and keep the cart. Dishes that went off the menu are taken out of it.
             const message = apiErrorMessage(error, "Couldn't place the order. Please try again.");
             if (apiErrorCode(error) === "ITEMS_UNAVAILABLE") {
-                setOrderError({ message: `${message}. ${await dropUnavailable()}`, retry: false });
+                const { cart, advice } = await dropUnavailable(slug, table);
+                if (cart) setCartItems(cart);
+                setOrderError({ message: `${message}. ${advice}`, retry: false });
             } else {
                 const status = apiStatus(error);
                 setOrderError({ message, retry: status === undefined || status >= 500 });
@@ -136,69 +113,19 @@ export default function CartPage() {
         }
     };
 
+    const backToMenu = () => router.push(link.base);
+
     return (
         <>
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-                {/* Enhanced Header */}
-                <header className="relative bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white overflow-hidden">
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 bg-black/5">
-                        <div
-                            className={`absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]`}
-                        ></div>
-                    </div>
+                <CartHeader onBack={backToMenu} />
 
-                    <div className="relative px-6 py-6">
-                        <div className="max-w-4xl mx-auto">
-                            <div className="flex items-center justify-between w-full">
-                                <button
-                                    onClick={() => router.push(link.base)}
-                                    className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
-                                >
-                                    <ArrowLeft size={18} />
-                                    Back
-                                </button>
-
-                                <div className="text-right">
-                                    <div className="flex items-center justify-center gap-3 mb-2">
-                                        <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
-                                            <ShoppingBag size={22} className="text-white" />
-                                        </div>
-                                        <h1 className="text-2xl font-bold tracking-tight">Your Cart</h1>
-                                    </div>
-                                    {/*<p className="text-emerald-100 text-sm">Table {link.name}</p>*/}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Main Content */}
                 <main className="px-4 sm:px-6 py-8 pb-32">
                     <div className="max-w-4xl mx-auto">
                         {cartItems.length > 0 ? (
                             <>
-                                {/* Cart Summary */}
-                                <div className="mb-6 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-emerald-100 rounded-full">
-                                                <Receipt size={18} className="text-emerald-600" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-gray-800">Order Summary</h3>
-                                                <p className="text-sm text-gray-500">
-                                                    {itemCount} item{itemCount !== 1 ? "s" : ""} in your cart
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-2xl font-bold text-emerald-600">{money(totalCents)}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                <CartSummary itemCount={itemCount} totalCents={totalCents} />
 
-                                {/* Cart Items */}
                                 <div className="space-y-4">
                                     {cartItems.map((cartItem, index) => (
                                         <CartItemCard
@@ -212,24 +139,16 @@ export default function CartPage() {
                                         />
                                     ))}
                                 </div>
-                                <label className="mt-6 block">
-                                    <span className="mb-1 block text-sm font-semibold text-gray-700">Note for the kitchen (optional)</span>
-                                    <textarea
-                                        aria-label="Note for the kitchen"
-                                        maxLength={ORDER_NOTE_MAX}
-                                        rows={2}
-                                        value={orderNote}
-                                        onChange={(e) => {
-                                            setOrderNote(e.target.value);
-                                            saveOrderNote(slug, table, e.target.value);
-                                        }}
-                                        placeholder="e.g. it's a birthday, or bring the drinks first"
-                                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                                    />
-                                </label>
+                                <KitchenNote
+                                    value={orderNote}
+                                    onChange={(note) => {
+                                        setOrderNote(note);
+                                        saveOrderNote(slug, table, note);
+                                    }}
+                                />
                                 <div className={"w-full flex justify-center items-center mt-6"}>
                                     <button
-                                        onClick={() => router.push(link.base)}
+                                        onClick={backToMenu}
                                         className=" text-sm mt-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold p-2 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 flex items-center justify-center gap-1"
                                     >
                                         <Plus size={16} />
@@ -238,87 +157,22 @@ export default function CartPage() {
                                 </div>
                             </>
                         ) : (
-                            <div className="text-center py-20">
-                                <div className="max-w-md mx-auto">
-                                    <div className="p-6 bg-gray-100 rounded-full w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-                                        <ShoppingBag size={48} className="text-gray-400" />
-                                    </div>
-                                    <h2 className="text-3xl font-bold text-gray-700 mb-3">Your cart is empty</h2>
-                                    <p className="text-gray-500 mb-6">Start adding some delicious items to your order!</p>
-                                    <button
-                                        onClick={() => router.push(link.base)}
-                                        className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-                                    >
-                                        Browse Menu
-                                    </button>
-                                </div>
-                            </div>
+                            <EmptyCart onBrowse={backToMenu} />
                         )}
                     </div>
                 </main>
 
-                {/* Enhanced Fixed Bottom Bar */}
                 {(cartItems.length > 0 || orderError) && (
-                    <div className="fixed bottom-0 left-0 right-0 z-50">
-                        {/* Backdrop blur effect */}
-                        <div className="absolute inset-0 bg-white/90 backdrop-blur-lg border-t border-gray-200/50"></div>
-
-                        <div className="relative p-4">
-                            <div className="max-w-4xl mx-auto">
-                                {orderError && (
-                                    <div
-                                        role="alert"
-                                        className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"
-                                    >
-                                        <p className="flex items-start gap-2">
-                                            <AlertCircle size={18} aria-hidden className="mt-0.5 shrink-0" />
-                                            <span>{orderError.message}</span>
-                                        </p>
-                                        {orderError.retry && (
-                                            <button
-                                                type="button"
-                                                onClick={placeOrder}
-                                                disabled={isPlacingOrder}
-                                                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-red-700 px-3 py-1.5 font-semibold text-white hover:bg-red-800 disabled:opacity-60"
-                                            >
-                                                <RotateCcw size={14} aria-hidden /> Try again
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-                                {cartItems.length > 0 && (
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div>
-                                            <p className="text-lg font-bold text-gray-800">Total: {money(totalCents)}</p>
-                                            <p className="text-sm text-gray-500">
-                                                {itemCount} item{itemCount !== 1 ? "s" : ""}
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={placeOrder}
-                                            disabled={isPlacingOrder}
-                                            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 disabled:transform-none disabled:cursor-not-allowed flex items-center gap-2"
-                                        >
-                                            {isPlacingOrder ? (
-                                                <>
-                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                    Placing Order...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Receipt size={18} />
-                                                    Place Order
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                    <CartBottomBar
+                        orderError={orderError}
+                        hasItems={cartItems.length > 0}
+                        itemCount={itemCount}
+                        totalCents={totalCents}
+                        isPlacingOrder={isPlacingOrder}
+                        placeOrder={placeOrder}
+                    />
                 )}
 
-                {/* Enhanced Toast Container */}
                 <ToastHost />
             </div>
         </>

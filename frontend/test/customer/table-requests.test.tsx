@@ -35,8 +35,10 @@ const placed = {
 
 describe("the customer's buttons (VM-30)", () => {
     it("are on the customer menu", () => {
-        const menu = readFileSync(join(__dirname, "..", "..", "src", "features", "customer", "components", "CustomerMenu.tsx"), "utf8");
-        expect(menu).toMatch(/<TableRequests\b/);
+        // CL-11: the menu's header holds them
+        const dir = join(__dirname, "..", "..", "src", "features", "customer", "components");
+        expect(readFileSync(join(dir, "CustomerMenu.tsx"), "utf8")).toMatch(/<MenuHeader\b/);
+        expect(readFileSync(join(dir, "menu", "MenuHeader.tsx"), "utf8")).toMatch(/<TableRequests\b/);
     });
 
     it("wait until the table has ordered", async () => {

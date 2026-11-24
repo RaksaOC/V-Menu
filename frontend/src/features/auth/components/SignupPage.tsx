@@ -9,6 +9,8 @@ import { Store, User as UserIcon, Mail, Lock, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CheckInbox } from "@/features/auth/components/CheckInbox";
 import { PASSWORD_RULE, passwordProblem } from "@/features/auth/password-rule";
+import { firebaseCode } from "@/features/auth/login-errors";
+import SignupField from "./SignupField";
 
 const SignupPage = () => {
     const router = useRouter();
@@ -42,11 +44,12 @@ const SignupPage = () => {
             // VM-13: staff roles matched by email need it verified; ask now, while they're here
             await sendEmailVerification(userCred.user);
             setUnverified(userCred.user);
-        } catch (err: any) {
-            console.error("Signup error:", err.message);
-            if (err?.code === "auth/weak-password" || err?.code === "auth/password-does-not-meet-requirements")
-                setPasswordError(PASSWORD_RULE);
-            else alert("Error: " + err.message);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            console.error("Signup error:", message);
+            const code = firebaseCode(err);
+            if (code === "auth/weak-password" || code === "auth/password-does-not-meet-requirements") setPasswordError(PASSWORD_RULE);
+            else alert("Error: " + message);
         } finally {
             setLoading(false);
         }
@@ -60,11 +63,6 @@ const SignupPage = () => {
             y: 0,
             transition: { duration: 0.6 },
         },
-    };
-
-    const inputVariants = {
-        focus: { scale: 1.02, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" },
-        blur: { scale: 1, boxShadow: "none" },
     };
 
     if (unverified)
@@ -92,77 +90,21 @@ const SignupPage = () => {
                     <p className="text-center text-zinc-500 dark:text-zinc-400 mb-4">Get started with your restaurant management</p>
                 </div>
 
-                <div className="flex flex-col gap-2 relative z-10">
-                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
-                        <Store className="w-4 h-4" />
-                        Restaurant Name
-                    </label>
-                    <motion.input
-                        type="text"
-                        value={restaurantName}
-                        onChange={(e) => setRestaurantName(e.target.value)}
-                        className="px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-zinc-800 dark:text-white focus:outline-none"
-                        required
-                        whileFocus="focus"
-                        whileTap="focus"
-                        variants={inputVariants}
-                    />
-                </div>
-
-                <div className="flex flex-col gap-2 relative z-10">
-                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
-                        <UserIcon className="w-4 h-4" />
-                        Owner Name
-                    </label>
-                    <motion.input
-                        type="text"
-                        value={ownerName}
-                        onChange={(e) => setOwnerName(e.target.value)}
-                        className="px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-zinc-800 dark:text-white focus:outline-none"
-                        required
-                        whileFocus="focus"
-                        whileTap="focus"
-                        variants={inputVariants}
-                    />
-                </div>
-
-                <div className="flex flex-col gap-2 relative z-10">
-                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        Email
-                    </label>
-                    <motion.input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-zinc-800 dark:text-white focus:outline-none"
-                        required
-                        whileFocus="focus"
-                        whileTap="focus"
-                        variants={inputVariants}
-                    />
-                </div>
-
-                <div className="flex flex-col gap-2 relative z-10">
-                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
-                        <Lock className="w-4 h-4" />
-                        Password
-                    </label>
-                    <motion.input
-                        type="password"
-                        value={password}
-                        aria-invalid={passwordError ? true : undefined}
-                        aria-describedby={passwordError ? "signup-password-error" : undefined}
-                        onChange={(e) => {
-                            setPassword(e.target.value);
-                            setPasswordError("");
-                        }}
-                        className="px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-zinc-800 dark:text-white focus:outline-none"
-                        required
-                        whileFocus="focus"
-                        whileTap="focus"
-                        variants={inputVariants}
-                    />
+                <SignupField label="Restaurant Name" icon={Store} type="text" value={restaurantName} onChange={setRestaurantName} />
+                <SignupField label="Owner Name" icon={UserIcon} type="text" value={ownerName} onChange={setOwnerName} />
+                <SignupField label="Email" icon={Mail} type="email" value={email} onChange={setEmail} />
+                <SignupField
+                    label="Password"
+                    icon={Lock}
+                    type="password"
+                    value={password}
+                    error={passwordError}
+                    errorId="signup-password-error"
+                    onChange={(value) => {
+                        setPassword(value);
+                        setPasswordError("");
+                    }}
+                >
                     {passwordError ? (
                         <p id="signup-password-error" role="alert" className="text-sm text-red-600 dark:text-red-400">
                             {passwordError}
@@ -170,7 +112,7 @@ const SignupPage = () => {
                     ) : (
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">At least 8 characters, with a letter and a number.</p>
                     )}
-                </div>
+                </SignupField>
 
                 <motion.button
                     type="submit"

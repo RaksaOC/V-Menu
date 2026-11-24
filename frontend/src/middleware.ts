@@ -6,7 +6,7 @@ interface DecodedToken {
     role?: string;
     exp?: number;
 
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export function middleware(req: NextRequest) {

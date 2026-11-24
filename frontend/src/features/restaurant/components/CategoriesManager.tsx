@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button, Input, Modal, toast } from "@/components/ui";
 import { apiErrorMessage } from "@/lib/api";
 import { createCategory, deleteCategory, getCategories, renameCategory, reorderCategories } from "@/features/restaurant/api";
 import type { Category } from "@vmenu/contracts";
+import CategoryActions from "./CategoryActions";
 
 interface Props {
     slug: string;
@@ -14,9 +15,6 @@ interface Props {
     /** After every change, with the categories as the server now has them. */
     onChanged: (categories: Category[]) => void;
 }
-
-const iconButton =
-    "inline-flex h-9 w-9 items-center justify-center rounded-[var(--r-chip)] border border-[var(--line)] text-[var(--ink)] transition hover:bg-[var(--card)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-40";
 
 /** VM-25: the owner adds, renames, reorders (up and down) and deletes the menu's categories. */
 export default function CategoriesManager({ slug, categories, onClose, onChanged }: Props) {
@@ -139,43 +137,15 @@ export default function CategoriesManager({ slug, categories, onClose, onChanged
                                         </Button>
                                     </div>
                                 ) : (
-                                    <>
-                                        <span className="mr-auto min-w-0 truncate font-medium text-[var(--ink)]">{category.name}</span>
-                                        <button
-                                            type="button"
-                                            className={iconButton}
-                                            aria-label={`Move ${category.name} up`}
-                                            disabled={busy || index === 0}
-                                            onClick={() => move(index, -1)}
-                                        >
-                                            <ArrowUp size={16} aria-hidden />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className={iconButton}
-                                            aria-label={`Move ${category.name} down`}
-                                            disabled={busy || index === list.length - 1}
-                                            onClick={() => move(index, 1)}
-                                        >
-                                            <ArrowDown size={16} aria-hidden />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className={iconButton}
-                                            aria-label={`Rename ${category.name}`}
-                                            onClick={() => setRenaming({ id: category._id, name: category.name, error: "" })}
-                                        >
-                                            <Pencil size={16} aria-hidden />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className={`${iconButton} text-[var(--bad)]`}
-                                            aria-label={`Delete ${category.name}`}
-                                            onClick={() => setDeleting(category)}
-                                        >
-                                            <Trash2 size={16} aria-hidden />
-                                        </button>
-                                    </>
+                                    <CategoryActions
+                                        category={category}
+                                        isFirst={index === 0}
+                                        isLast={index === list.length - 1}
+                                        busy={busy}
+                                        onMove={(by) => move(index, by)}
+                                        onRename={() => setRenaming({ id: category._id, name: category.name, error: "" })}
+                                        onDelete={() => setDeleting(category)}
+                                    />
                                 )}
                             </li>
                         ))}

@@ -1,45 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CreditCard, House, Users, Utensils, type LucideIcon } from "lucide-react";
 import { getAllStaff, type RestaurantStaff } from "@/features/staff/api";
-import { Calendar, ChevronsUpDown, CreditCard, Crown, Mail, Pencil, Search, Users, Utensils, Building2, House } from "lucide-react";
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
-import { formatDate } from "@/lib/dates";
-import InvitePending from "@/features/staff/components/InvitePending";
-import type { StaffMember } from "@vmenu/contracts";
+import { countRoles, filterStaff, type RoleFilter } from "../staff-list";
+import NoStaff from "./NoStaff";
+import StaffCard from "./StaffCard";
+import StaffFilters from "./StaffFilters";
+import StaffRow from "./StaffRow";
+import StaffSkeleton from "./StaffSkeleton";
 
-const getRoleBadge = (role: string) => {
-    const baseClasses = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium";
-    switch (role) {
-        case "owner":
-            return `${baseClasses} bg-amber-100 text-amber-800 border border-amber-200`;
-        case "chef":
-            return `${baseClasses} bg-green-100 text-green-800 border border-green-200`;
-        case "cashier":
-            return `${baseClasses} bg-blue-100 text-blue-800 border border-blue-200`;
-        default:
-            return `${baseClasses} bg-gray-100 text-gray-800 border border-gray-200`;
-    }
-};
+function Tile({ icon: Icon, box, tone, label, value }: { icon: LucideIcon; box: string; tone: string; label: string; value: number }) {
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+                <div className={`p-2 ${box} rounded-lg`}>
+                    <Icon size={20} className={tone} />
+                </div>
+                <div>
+                    <p className="text-sm text-gray-600">{label}</p>
+                    <p className="text-xl font-bold text-gray-900">{value}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
 
-const getRoleIcon = (role: string) => {
-    switch (role) {
-        case "owner":
-            return <Crown size={16} className="text-amber-600" />;
-        case "chef":
-            return <Utensils size={16} className="text-green-600" />;
-        case "cashier":
-            return <CreditCard size={16} className="text-blue-600" />;
-        default:
-            return <Users size={16} className="text-gray-500" />;
-    }
-};
-
+/** The owner's staff across all their restaurants, grouped by restaurant. */
 export default function AllStaff() {
     const [staffData, setStaffData] = useState<RestaurantStaff[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [roleFilter, setRoleFilter] = useState<"all" | "owner" | "cashier" | "chef">("all");
+    const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -54,272 +46,47 @@ export default function AllStaff() {
         fetchData();
     }, []);
 
-    console.log("staff data is", staffData);
-    // Transform array of arrays into grouped restaurant data
-    const groupedStaff: RestaurantStaff[] = staffData.map((restaurantStaff) => ({
-        resName: restaurantStaff.resName,
-        staff: restaurantStaff.staff,
-    }));
-
-    console.log("grouped staff is", groupedStaff);
-
     const allStaff = staffData.flatMap((restaurant) => restaurant.staff);
-
-    const lowerSearch = searchTerm.toLowerCase();
-
-    console.log("Search:", searchTerm, "Role:", roleFilter);
-
-    groupedStaff.forEach((r) => {
-        console.log("Restaurant:", r.resName);
-        console.log(r.staff);
-        r.staff.forEach((m) => {
-            console.log(
-                " -",
-                m.name,
-                "| Match?",
-                m.name.toLowerCase().includes(lowerSearch),
-                m.email.toLowerCase().includes(lowerSearch),
-                roleFilter === "all" || m.role === roleFilter,
-            );
-        });
-    });
-
-    const filteredGroupedStaff = groupedStaff
-        .map((restaurant) => {
-            const filteredStaff = restaurant.staff.filter((member) => {
-                const nameMatch = member.name.toLowerCase().includes(lowerSearch);
-                const emailMatch = member.email.toLowerCase().includes(lowerSearch);
-                const roleMatch = roleFilter === "all" || member.role === roleFilter;
-                return (nameMatch || emailMatch) && roleMatch;
-            });
-
-            return { ...restaurant, staff: filteredStaff };
-        })
+    const groups = staffData
+        .map((restaurant) => ({ resName: restaurant.resName, staff: filterStaff(restaurant.staff, searchTerm, roleFilter) }))
         .filter((restaurant) => restaurant.staff.length > 0);
-
-    console.log("after filtering", filteredGroupedStaff);
-
-    const getRoleStats = () => {
-        const stats = allStaff.reduce(
-            (acc, member) => {
-                acc[member.role] = (acc[member.role] || 0) + 1;
-                return acc;
-            },
-            {} as Record<string, number>,
-        );
-        return stats;
-    };
-
-    const roleStats = getRoleStats();
+    const roleStats = countRoles(allStaff);
     const totalStaff = allStaff.length;
-    const totalFilteredStaff = filteredGroupedStaff.reduce((acc, restaurant) => acc + restaurant.staff.length, 0);
+    const totalFilteredStaff = groups.reduce((acc, restaurant) => acc + restaurant.staff.length, 0);
 
-    if (loading) {
-        return (
-            <div className="p-4 sm:p-6 space-y-6 animate-pulse">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="space-y-2">
-                        <div className="h-6 sm:h-8 w-40 bg-gray-200 rounded"></div>
-                        <div className="h-4 w-60 bg-gray-200 rounded"></div>
-                    </div>
-                    <div className="h-10 w-32 bg-gray-200 rounded-lg"></div>
-                </div>
-
-                {/* Stat Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 space-y-2">
-                            <div className="h-4 w-10 bg-gray-200 rounded"></div>
-                            <div className="h-6 w-16 bg-gray-200 rounded"></div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Filter/Search Bar */}
-                <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <div className="h-10 bg-gray-200 rounded w-full"></div>
-                        <div className="h-10 bg-gray-200 rounded w-full sm:w-40"></div>
-                    </div>
-                </div>
-
-                {/* Table Skeleton */}
-                <div className="hidden lg:block bg-white rounded-xl border border-gray-200">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    {[...Array(5)].map((_, i) => (
-                                        <th key={i} className="py-4 px-2">
-                                            <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {[...Array(4)].map((_, i) => (
-                                    <tr key={i} className="hover:bg-gray-50 transition-colors">
-                                        {[...Array(5)].map((_, j) => (
-                                            <td key={j} className="py-4 px-2 text-center">
-                                                <div className="h-4 w-24 bg-gray-200 rounded mx-auto"></div>
-                                            </td>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return <StaffSkeleton />;
 
     return (
         <>
-            {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6 place-items-stretch">
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <Users size={20} className="text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Total Staff</p>
-                            <p className="text-xl font-bold text-gray-900">{totalStaff}</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                            <Utensils size={20} className="text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Chefs</p>
-                            <p className="text-xl font-bold text-gray-900">{roleStats?.chef || 0}</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <CreditCard size={20} className="text-blue-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Cashiers</p>
-                            <p className="text-xl font-bold text-gray-900">{roleStats?.cashier || 0}</p>
-                        </div>
-                    </div>
-                </div>
+                <Tile icon={Users} box="bg-blue-100" tone="text-blue-600" label="Total Staff" value={totalStaff} />
+                <Tile icon={Utensils} box="bg-green-100" tone="text-green-600" label="Chefs" value={roleStats.chef || 0} />
+                <Tile icon={CreditCard} box="bg-blue-100" tone="text-blue-600" label="Cashiers" value={roleStats.cashier || 0} />
             </div>
 
-            {/* Filters and Search */}
-            <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 mb-6">
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    <div className="flex-1 relative">
-                        <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search staff by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                        />
-                    </div>
-                    <Listbox value={roleFilter} onChange={setRoleFilter}>
-                        <div className="relative w-full sm:max-w-xs">
-                            <ListboxButton className="w-full px-3 sm:px-4 py-2 text-left border border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex justify-between items-center">
-                                <span className="flex items-center">
-                                    {roleFilter === "owner" && <Crown className="w-4 h-4 mr-2 text-yellow-500" />}
-                                    {roleFilter === "chef" && <Utensils className="w-4 h-4 mr-2 text-green-500" />}
-                                    {roleFilter === "cashier" && <CreditCard className="w-4 h-4 mr-2 text-blue-500" />}
-                                    {roleFilter === "all" && <Users className="w-4 h-4 mr-2" />}
-                                    {
-                                        {
-                                            all: "All Roles",
-                                            owner: "Owners",
-                                            chef: "Chefs",
-                                            cashier: "Cashiers",
-                                        }[roleFilter]
-                                    }
-                                </span>
-                                <ChevronsUpDown className="w-4 h-4 text-gray-400" />
-                            </ListboxButton>
-
-                            <ListboxOptions className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 ring-1 ring-black ring-opacity-5 focus:outline-none text-sm sm:text-base">
-                                <ListboxOption
-                                    value="all"
-                                    className={({ active }) =>
-                                        `cursor-pointer select-none px-4 py-2 flex items-center ${active ? "bg-blue-100" : ""}`
-                                    }
-                                >
-                                    <Users className="w-4 h-4 mr-2" />
-                                    All Roles
-                                </ListboxOption>
-
-                                <ListboxOption
-                                    value="owner"
-                                    className={({ active }) =>
-                                        `cursor-pointer select-none px-4 py-2 flex items-center ${active ? "bg-blue-100" : ""}`
-                                    }
-                                >
-                                    <Crown className="w-4 h-4 mr-2 text-yellow-500" />
-                                    Owners
-                                </ListboxOption>
-
-                                <ListboxOption
-                                    value="chef"
-                                    className={({ active }) =>
-                                        `cursor-pointer select-none px-4 py-2 flex items-center ${active ? "bg-blue-100" : ""}`
-                                    }
-                                >
-                                    <Utensils className="w-4 h-4 mr-2 text-green-500" />
-                                    Chefs
-                                </ListboxOption>
-
-                                <ListboxOption
-                                    value="cashier"
-                                    className={({ active }) =>
-                                        `cursor-pointer select-none px-4 py-2 flex items-center ${active ? "bg-blue-100" : ""}`
-                                    }
-                                >
-                                    <CreditCard className="w-4 h-4 mr-2 text-blue-500" />
-                                    Cashiers
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </div>
-                    </Listbox>
-                </div>
+            <StaffFilters
+                search={searchTerm}
+                onSearch={setSearchTerm}
+                role={roleFilter}
+                onRole={setRoleFilter}
+                className="mb-6"
+                selectWidth="sm:max-w-xs"
+            >
                 {totalFilteredStaff !== totalStaff && (
                     <div className="mt-3 text-sm text-gray-600">
                         Showing {totalFilteredStaff} of {totalStaff} staff members
                     </div>
                 )}
-            </div>
+            </StaffFilters>
 
-            {/* Restaurant Groups */}
             <div className="space-y-6">
-                {filteredGroupedStaff.length === 0 ? (
+                {groups.length === 0 ? (
                     <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="rounded-full bg-gray-100 p-6 mb-6">
-                                <Users size={48} className="text-gray-400" />
-                            </div>
-                            <div>
-                                <p className="text-gray-600 text-2xl font-bold">No staff members found</p>
-                                <p className="text-gray-500">
-                                    {searchTerm || roleFilter !== "all"
-                                        ? "Try adjusting your search or filters"
-                                        : "Add your first team member to get started"}
-                                </p>
-                            </div>
-                        </div>
+                        <NoStaff filtered={Boolean(searchTerm) || roleFilter !== "all"} />
                     </div>
                 ) : (
-                    filteredGroupedStaff.map((restaurant, index) => (
+                    groups.map((restaurant, index) => (
                         <div key={index} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                            {/* Restaurant Header */}
                             <div className="bg-gray-50 border-b border-gray-200 px-4 sm:px-6 py-4">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-blue-100 rounded-lg">
@@ -332,7 +99,6 @@ export default function AllStaff() {
                                 </div>
                             </div>
 
-                            {/* Desktop Table */}
                             <div className="hidden lg:block">
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
@@ -346,91 +112,20 @@ export default function AllStaff() {
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
                                             {restaurant.staff.map((member) => (
-                                                <tr key={member._id} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="py-4 px-2">
-                                                        <div className="flex items-center gap-2 justify-center">
-                                                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                                                <span className="text-blue-600 font-semibold text-sm">
-                                                                    {member.name
-                                                                        .split(" ")
-                                                                        .map((n) => n[0])
-                                                                        .join("")
-                                                                        .toUpperCase()}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex flex-col items-start gap-1">
-                                                                <p className="font-medium text-gray-900">{member.name}</p>
-                                                                <InvitePending member={member} />
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-1 text-center">
-                                                        <span className={getRoleBadge(member.role)}>
-                                                            {getRoleIcon(member.role)}
-                                                            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-4 px-1">
-                                                        <div className="flex items-center gap-2 justify-center">
-                                                            <Mail size={16} className="text-gray-400" />
-                                                            <span className="text-gray-900">{member.email}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-1">
-                                                        <div className="flex items-center gap-2 justify-center">
-                                                            <Calendar size={16} className="text-gray-400" />
-                                                            <span className="text-gray-900">{formatDate(member.createdAt)}</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                <StaffRow key={member._id} member={member} />
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
 
-                            {/* Mobile Cards */}
                             <div className="lg:hidden p-4 space-y-3">
                                 {restaurant.staff.map((member) => (
-                                    <div
+                                    <StaffCard
                                         key={member._id}
-                                        data-member={member._id}
+                                        member={member}
                                         className="bg-gray-50 rounded-xl border border-gray-100 p-4"
-                                    >
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-12 h-12 shrink-0 bg-blue-100 rounded-full flex items-center justify-center">
-                                                <span className="text-blue-600 font-semibold text-sm">
-                                                    {member.name
-                                                        .split(" ")
-                                                        .map((n) => n[0])
-                                                        .join("")
-                                                        .toUpperCase()}
-                                                </span>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-gray-900 truncate">{member.name}</p>
-                                                <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                                                    <span className={getRoleBadge(member.role)}>
-                                                        {getRoleIcon(member.role)}
-                                                        {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                                                    </span>
-                                                    <InvitePending member={member} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between py-4">
-                                            <div className="flex flex-col gap-1 items-start justify-center min-w-0 flex-1">
-                                                <div className="flex items-center gap-2 min-w-0 max-w-full">
-                                                    <Mail size={16} className="text-gray-400 shrink-0" />
-                                                    <span className="text-gray-900 text-sm truncate">{member.email}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Calendar size={16} className="text-gray-400" />
-                                                    <span className="text-gray-900 text-sm">{formatDate(member.createdAt)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    />
                                 ))}
                             </div>
                         </div>

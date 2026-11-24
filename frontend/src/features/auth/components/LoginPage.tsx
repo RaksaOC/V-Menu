@@ -51,7 +51,7 @@ export default function LoginPage() {
                 resSlug: role === "owner" ? undefined : resSlug,
             });
             router.push(role === "owner" ? `/owner` : `/${resSlug}/${realRole}`);
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
         }
     };

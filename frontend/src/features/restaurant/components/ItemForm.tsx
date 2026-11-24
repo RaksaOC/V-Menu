@@ -1,10 +1,12 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { ImageIcon, Trash2, Upload, X } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
 import { toCents } from "@/lib/money";
-import { PHOTO_TYPES, usePhoto } from "./use-photo";
+import PhotoField from "./PhotoField";
+import TagsField from "./TagsField";
+import { usePhoto } from "./use-photo";
 import { checkItem, DISH_TAGS, ITEM_DESCRIPTION_MAX, type ItemFieldErrors } from "../item-rules";
 import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
 
@@ -28,7 +30,6 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
     const categoryFieldId = useId();
     const descriptionId = useId();
     const formId = useId();
-    const fileId = useId();
     const photo = usePhoto(item?.image ?? "");
     const [name, setName] = useState(item?.name ?? "");
     const [price, setPrice] = useState(item ? String(item.priceCents / 100) : ""); // typed in dollars, saved in cents (CL-07);
@@ -100,48 +101,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
     return (
         <Modal title={item ? "Edit Menu Item" : "Add Menu Item"} onClose={onClose} footer={footer}>
             <form id={formId} onSubmit={submit} noValidate className="space-y-5">
-                <div className="space-y-2">
-                    <span className="block text-sm font-semibold">Item Image</span>
-                    <div className="flex items-start gap-4">
-                        <div className="relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-[var(--r-card)] border border-dashed border-[var(--line)] bg-[var(--card)]">
-                            {photo.preview ? (
-                                <>
-                                    <img src={photo.preview} alt="Preview" className="h-full w-full object-cover" />
-                                    <button
-                                        type="button"
-                                        aria-label="Remove the chosen photo"
-                                        onClick={() => photo.reset(item?.image ?? "")}
-                                        className="absolute right-1.5 top-1.5 rounded-full bg-[var(--bad)] p-1 text-white"
-                                    >
-                                        <X size={12} aria-hidden />
-                                    </button>
-                                </>
-                            ) : (
-                                <ImageIcon size={24} aria-hidden className="text-[var(--muted)]" />
-                            )}
-                        </div>
-                        <div className="space-y-2 text-sm">
-                            <input id={fileId} type="file" accept={PHOTO_TYPES} onChange={photo.choose} className="sr-only" />
-                            <label
-                                htmlFor={fileId}
-                                className="inline-flex cursor-pointer items-center gap-2 rounded-[var(--r-chip)] border border-[var(--line)] px-3 py-2 font-medium hover:bg-[var(--card)]"
-                            >
-                                <Upload size={16} aria-hidden /> Choose Image
-                            </label>
-                            <p className="text-xs text-[var(--muted)]">JPG, PNG or WebP, up to 5 MB</p>
-                            {photo.progress !== null && (
-                                <p className="text-xs text-[var(--accent-text)]" aria-live="polite">
-                                    Uploading… {photo.progress}%
-                                </p>
-                            )}
-                            {(photo.error || errors.image) && (
-                                <p role="alert" className="text-xs text-[var(--bad)]">
-                                    {photo.error || errors.image}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <PhotoField photo={photo} original={item?.image ?? ""} error={errors.image} />
                 <Input
                     label="Item Name"
                     value={name}
@@ -193,25 +153,7 @@ export default function ItemForm({ item, categories, onClose, onSave, onDelete }
                         </p>
                     )}
                 </div>
-                <fieldset className="space-y-2">
-                    <legend className="text-sm font-semibold text-[var(--ink)]">Tags</legend>
-                    <div className="flex flex-wrap gap-2">
-                        {DISH_TAGS.map((tag) => (
-                            <label
-                                key={tag}
-                                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[var(--r-chip)] border border-[var(--line)] px-3 text-sm has-[:checked]:border-[var(--ink)] has-[:checked]:bg-[var(--card)]"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={tags.includes(tag)}
-                                    onChange={(e) => setTags((all) => (e.target.checked ? [...all, tag] : all.filter((t) => t !== tag)))}
-                                />
-                                {tag}
-                            </label>
-                        ))}
-                    </div>
-                    {errors.tags && <p className="text-xs text-[var(--bad)]">{errors.tags}</p>}
-                </fieldset>
+                <TagsField tags={tags} setTags={setTags} error={errors.tags} />
                 {categories && (
                     <div className="space-y-1.5">
                         <label htmlFor={categoryFieldId} className="block text-sm font-semibold text-[var(--ink)]">
