@@ -41,7 +41,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
-    expect(await prepareDatabase()).toBe(true); // dropping the database drops the indexes; the service builds them at startup
+    expect((await prepareDatabase()).tableNameIndex).toBe(true); // dropping the database drops the indexes; the service builds them at startup
 });
 
 const create = (body: object, slug = SLUG) => request(app).post(`/api/menu/${slug}/tables`).set(owner).send(body);
@@ -99,8 +99,8 @@ describe("table names are unique per restaurant (VM-16)", () => {
             { name: "4", resId },
             { name: "4", resId },
         ]);
-        expect(await prepareDatabase()).toBe(false);
+        expect((await prepareDatabase()).tableNameIndex).toBe(false);
         await Table.deleteOne({ name: "4" });
-        expect(await prepareDatabase()).toBe(true);
+        expect((await prepareDatabase()).tableNameIndex).toBe(true);
     });
 });

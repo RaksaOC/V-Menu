@@ -8,11 +8,9 @@ const port = Number(process.env.PORT ?? 4102);
 
 await mongoose.connect(process.env.MONGODB_URI!);
 logger.info("connected to MongoDB");
-await prepareDatabase(); // VM-16: the unique table-name index
-
-// CL-07: the data migration, before the first request.
-const migrated = await prepareDatabase();
-if (migrated.migrated) logger.info(migrated, "migrated dish prices to cents");
+// Before the first request: prices in cents (CL-07), table link tokens (SEC-04), indexes (VM-16).
+const { prices } = await prepareDatabase();
+if (prices.migrated) logger.info(prices, "migrated dish prices to cents");
 
 const server = createApp().listen(port, () => logger.info({ port }, "menu-service listening"));
 

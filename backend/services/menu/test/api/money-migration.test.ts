@@ -26,7 +26,7 @@ beforeEach(async () => {
 describe("dish prices to cents (CL-07)", () => {
     it("adds priceCents and keeps the old price", async () => {
         await items().insertMany([old("A", 2.35), old("B", 0.1), old("C", 5)]);
-        expect(await prepareDatabase()).toEqual({ migrated: 3, rounded: 0 });
+        expect((await prepareDatabase()).prices).toEqual({ migrated: 3, rounded: 0 });
         const saved = await items().find().sort({ name: 1 }).toArray();
         expect(saved.map((i) => [i.price, i.priceCents])).toEqual([
             [2.35, 235],
@@ -37,20 +37,20 @@ describe("dish prices to cents (CL-07)", () => {
 
     it("is safe to run twice", async () => {
         await items().insertOne(old("A", 2.5));
-        expect((await prepareDatabase()).migrated).toBe(1);
-        expect(await prepareDatabase()).toEqual({ migrated: 0, rounded: 0 });
+        expect((await prepareDatabase()).prices.migrated).toBe(1);
+        expect((await prepareDatabase()).prices).toEqual({ migrated: 0, rounded: 0 });
     });
 
     it("counts prices that weren't whole cents", async () => {
         await items().insertOne(old("A", 1.005));
-        expect(await prepareDatabase()).toEqual({ migrated: 1, rounded: 1 });
+        expect((await prepareDatabase()).prices).toEqual({ migrated: 1, rounded: 1 });
         expect((await items().findOne())!.priceCents).toBe(101);
     });
 
     it("picks up a price the previous version changed after a rollback", async () => {
         await items().insertOne(old("A", 2.5, { priceCents: 250 }));
         await items().updateOne({}, { $set: { price: 3.75 } }); // the old code only knows `price`
-        expect((await prepareDatabase()).migrated).toBe(1);
+        expect((await prepareDatabase()).prices.migrated).toBe(1);
         expect((await items().findOne())!.priceCents).toBe(375);
     });
 
