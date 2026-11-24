@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { ToastHost } from "@/components/ui";
+import { Button, ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import { placeOrder as sendOrder } from "@/features/customer/api";
 import { clearCart, MAX_ORDER_LINES, readCart, readOrderNote, saveCart, saveOrderNote, toOrderBody } from "@/features/customer/cart";
@@ -76,7 +76,7 @@ export default function CartPage() {
     const placeOrder = async () => {
         setOrderError(null);
         if (!cartItems.length) {
-            toast.error("No items in cart! 🛒");
+            toast.error("Your cart is empty.");
             return;
         }
 
@@ -117,16 +117,16 @@ export default function CartPage() {
 
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+            <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
                 <CartHeader onBack={backToMenu} />
 
-                <main className="px-4 sm:px-6 py-8 pb-32">
-                    <div className="max-w-4xl mx-auto">
+                <main className="px-4 pb-40 pt-6 sm:px-6">
+                    <div className="mx-auto max-w-3xl">
                         {cartItems.length > 0 ? (
                             <>
                                 <CartSummary itemCount={itemCount} totalCents={totalCents} />
 
-                                <div className="space-y-4">
+                                <ul className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
                                     {cartItems.map((cartItem, index) => (
                                         <CartItemCard
                                             key={index}
@@ -138,7 +138,7 @@ export default function CartPage() {
                                             setNote={setNote}
                                         />
                                     ))}
-                                </div>
+                                </ul>
                                 <KitchenNote
                                     value={orderNote}
                                     onChange={(note) => {
@@ -146,14 +146,15 @@ export default function CartPage() {
                                         saveOrderNote(slug, table, note);
                                     }}
                                 />
-                                <div className={"w-full flex justify-center items-center mt-6"}>
-                                    <button
+                                <div className="mt-6 flex justify-center">
+                                    <Button
+                                        variant="outline"
+                                        className="min-h-11"
+                                        icon={<Plus size={16} aria-hidden />}
                                         onClick={backToMenu}
-                                        className=" text-sm mt-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold p-2 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 flex items-center justify-center gap-1"
                                     >
-                                        <Plus size={16} />
                                         Add more
-                                    </button>
+                                    </Button>
                                 </div>
                             </>
                         ) : (

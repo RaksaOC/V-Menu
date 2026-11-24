@@ -21,7 +21,7 @@ describe("addToCart", () => {
     it("adds a new dish with its quantity and saves the cart", () => {
         add({ item: kuyTeav, quantity: 1 });
         expect(saved()).toEqual([{ item: kuyTeav, quantity: 1 }]);
-        expect(toast.success).toHaveBeenCalledWith("Added to cart! 🛒", expect.any(Object));
+        expect(toast.success).toHaveBeenCalledWith("Added to cart!", expect.any(Object));
     });
 
     it("adds one to a dish that is already in the cart", () => {

@@ -99,7 +99,7 @@ export default function CustomerPage() {
     return (
         <>
             <ToastHost />
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+            <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
                 <MenuHeader heading={heading} nameLoaded={restaurantName !== undefined} table={table} link={link} />
 
                 {!problem && !isLoading && sections.length > 0 && (
@@ -107,20 +107,18 @@ export default function CustomerPage() {
                 )}
 
                 {/* Main Content */}
-                <main className="px-4 sm:px-6 py-8 pb-24">
-                    <div className="max-w-6xl mx-auto">
-                        {/* Section Header */}
-                        <div className="mb-8">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-2">Our Menu</h2>
-                            <div className="h-1 w-16 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full"></div>
-                        </div>
+                <main className="px-4 pb-28 pt-6 sm:px-6">
+                    <div className="mx-auto max-w-6xl">
+                        <h2 className="mb-6 font-[family-name:var(--f-display)] text-2xl font-semibold tracking-[var(--d-track)]">
+                            Our Menu
+                        </h2>
 
                         {problem ? (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
                                 <TableProblem kind={problem} table={table} onRetry={load} />
                             </div>
                         ) : isLoading ? (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
                                 <Skeleton variant="menu" count={3} className="contents" />
                             </div>
                         ) : shown.length > 0 ? (
@@ -132,17 +130,20 @@ export default function CustomerPage() {
                                         aria-labelledby={`${sectionId(section)}-title`}
                                         className="scroll-mt-36"
                                     >
-                                        <h3 id={`${sectionId(section)}-title`} className="mb-4 text-lg font-semibold text-gray-800">
+                                        <h3
+                                            id={`${sectionId(section)}-title`}
+                                            className="mb-3 font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-[var(--muted)]"
+                                        >
                                             {section.name}
                                         </h3>
-                                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
                                             {section.items.map(card)}
                                         </div>
                                     </section>
                                 ))}
                             </div>
                         ) : query.trim() ? (
-                            <p className="py-12 text-center text-gray-500">No dishes match “{query.trim()}”.</p>
+                            <p className="py-12 text-center text-[var(--muted)]">No dishes match “{query.trim()}”.</p>
                         ) : (
                             <NoDishes />
                         )}
@@ -150,7 +151,7 @@ export default function CustomerPage() {
                 </main>
 
                 {/* the cart bar, hidden while the table can't take orders */}
-                {!problem && <MenuCartBar cartHref={`${link.base}/cart`} />}
+                {!problem && <MenuCartBar slug={resSlug} table={cartId} cartHref={`${link.base}/cart`} />}
             </div>
         </>
     );

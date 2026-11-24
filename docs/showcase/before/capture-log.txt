@@ -389,3 +389,24 @@ ok   CL-11-owner-all-staff-1280-dark
 ok   CL-11-owner-staff-1280-dark
 ok   CL-11-owner-categories-1280-dark
 ok   CL-11-owner-item-form-1280-dark
+# ONLY=VM-33 final (2026-11-24T03:44:26.960Z)
+ok   VM-33-final-menu-360
+ok   VM-33-final-menu-with-cart-360
+ok   VM-33-final-cart-360
+ok   VM-33-final-cart-empty-360
+ok   VM-33-final-not-found-360
+ok   VM-33-final-menu-360-dark
+ok   VM-33-final-menu-with-cart-360-dark
+ok   VM-33-final-cart-360-dark
+ok   VM-33-final-cart-empty-360-dark
+ok   VM-33-final-not-found-360-dark
+ok   VM-33-final-menu-1280
+ok   VM-33-final-menu-with-cart-1280
+ok   VM-33-final-cart-1280
+ok   VM-33-final-cart-empty-1280
+ok   VM-33-final-not-found-1280
+ok   VM-33-final-menu-1280-dark
+ok   VM-33-final-menu-with-cart-1280-dark
+ok   VM-33-final-cart-1280-dark
+ok   VM-33-final-cart-empty-1280-dark
+ok   VM-33-final-not-found-1280-dark

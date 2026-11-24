@@ -70,7 +70,7 @@ describe("dark mode on the restaurant's page (VM-32)", () => {
         ["/login", true],
         ["/demo-bistro/cashier/login", true],
         ["/owner", false],
-        ["/demo-bistro/customer/T1", false],
+        ["/demo-bistro/customer/T1", true], // VM-33: the customer's pages have dark styles now
         ["/demo-bistro/cashier/dashboard", false],
     ])("%s: dark is %s, before first paint and after navigation", (path, dark) => {
         localStorage.setItem("vm-theme", "dark");

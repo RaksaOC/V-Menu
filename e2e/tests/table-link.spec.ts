@@ -48,7 +48,7 @@ test("a customer orders through the link, and the confirmation stays on it", asy
     await context.clearCookies();
     await page.goto(`/${SLUG}/t/${t1.qrToken}`);
     await page.getByRole("button", { name: "Add to Cart" }).first().click();
-    await page.getByRole("button", { name: "View Cart" }).click();
+    await page.getByRole("link", { name: /view order/i }).click();
     await expect(page).toHaveURL(new RegExp(`/${SLUG}/t/${t1.qrToken}/cart$`));
     const placed = page.waitForRequest((r) => r.method() === "POST" && r.url().endsWith(`/api/orders/${SLUG}`));
     await page.getByRole("button", { name: "Place Order" }).click();

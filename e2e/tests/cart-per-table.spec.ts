@@ -14,7 +14,7 @@ test("a cart at T1 doesn't follow the customer to T2, and T2's order reaches the
     // order the second dish at T2
     await page.goto(`/${SLUG}/customer/T2`);
     await page.getByRole("button", { name: "Add to Cart" }).nth(1).click();
-    await page.getByRole("button", { name: "View Cart" }).click();
+    await page.getByRole("link", { name: /view order/i }).click();
     const placed = page.waitForResponse((r) => r.url().endsWith(`/api/orders/${SLUG}`) && r.request().method() === "POST");
     await page.getByRole("button", { name: "Place Order" }).click();
     const order = await (await placed).json();

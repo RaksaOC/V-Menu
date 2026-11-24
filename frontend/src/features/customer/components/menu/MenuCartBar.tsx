@@ -1,29 +1,32 @@
+"use client";
+
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { useMoney } from "@/components/money/MoneyProvider";
+import { useCart } from "@/features/customer/use-cart";
 
-/** The bar fixed at the bottom with "View Cart". */
-export default function MenuCartBar({ cartHref }: { cartHref: string }) {
+/** VM-33: the bar at the bottom of the menu: what's in the cart and "View order". Hidden while the
+ *  cart is empty. */
+export default function MenuCartBar({ slug, table, cartHref }: { slug: string; table: string; cartHref: string }) {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
+    const cart = useCart(slug, table);
+    const count = cart.reduce((sum, line) => sum + line.quantity, 0);
+    if (count === 0) return null;
+    const totalCents = cart.reduce((sum, line) => sum + line.item.priceCents * line.quantity, 0);
+
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-            {/* Backdrop blur effect */}
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-lg border-t border-gray-200/50"></div>
-
-            <div className="relative p-4">
-                <div className="max-w-6xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-100 rounded-full">
-                            <ShoppingCart size={20} className="text-emerald-600" />
-                        </div>
-                        <span className="text-gray-700 font-medium">Your Order</span>
-                    </div>
-
-                    <Link href={cartHref}>
-                        <button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95">
-                            View Cart
-                        </button>
-                    </Link>
-                </div>
-            </div>
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4">
+            <Link
+                href={cartHref}
+                className="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-3 rounded-[var(--r-card)] bg-[var(--btn-bg)] px-5 text-[var(--btn-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            >
+                <span className="font-[family-name:var(--f-mono)] text-sm font-semibold uppercase tracking-[var(--label-track)]">
+                    {count} {count === 1 ? "item" : "items"} · {money(totalCents)}
+                </span>
+                <span className="flex items-center gap-1.5 font-semibold">
+                    View order <ArrowRight size={18} aria-hidden />
+                </span>
+            </Link>
         </div>
     );
 }

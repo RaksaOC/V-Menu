@@ -1768,6 +1768,42 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-33: the customer menu and cart in Deep Lab, light and dark, phone and desktop: the menu,
+// a cart with two dishes, an empty cart, and a problem state (VM-04). No order is placed.
+for (const vp of [PHONE, DESKTOP]) {
+    for (const theme of ["light", "dark"] as const) {
+        await step(`VM-33 final ${vp.width} ${theme}`, async () => {
+            const { context, page } = await newPage(browser, vp, theme);
+            const c = { page, theme, width: vp.width };
+            const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as {
+                categories: { items: { _id: string; name: string; priceCents: number; image: string; isEnabled: boolean }[] }[];
+            };
+            const dishes = menu.categories.flatMap((s) => s.items).filter((d) => d.isEnabled);
+            await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
+            await settle(page);
+            await shot(c, "VM-33-final-menu", false);
+            await page.evaluate(
+                ([key, lines]) => localStorage.setItem(key, lines),
+                [`cart:${SLUG}:${TABLE}`, JSON.stringify(dishes.slice(0, 2).map((item, i) => ({ item, quantity: 2 - i })))],
+            );
+            await page.reload();
+            await settle(page);
+            await shot(c, "VM-33-final-menu-with-cart", false);
+            await page.goto(`${BASE}/${SLUG}/customer/${TABLE}/cart`);
+            await settle(page);
+            await shot(c, "VM-33-final-cart");
+            await page.evaluate((key) => localStorage.removeItem(key), `cart:${SLUG}:${TABLE}`);
+            await page.reload();
+            await settle(page);
+            await shot(c, "VM-33-final-cart-empty", false);
+            await page.goto(`${BASE}/no-such-restaurant/customer/${TABLE}`);
+            await settle(page);
+            await shot(c, "VM-33-final-not-found", false);
+            await context.close();
+        });
+    }
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

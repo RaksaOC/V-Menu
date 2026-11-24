@@ -26,7 +26,7 @@ test("a customer orders at the demo table and the kitchen sees it", { tag: "@pos
     await expect(page.getByRole("heading", { name: "Our Menu" })).toBeVisible();
     await page.getByRole("button", { name: "Add to Cart" }).first().click();
     await expect(page.getByText("Added to cart!")).toBeVisible();
-    await page.getByRole("button", { name: "View Cart" }).click();
+    await page.getByRole("link", { name: /view order/i }).click();
     const placed = page.waitForResponse((r) => r.url().endsWith(`/api/orders/${SLUG}`) && r.request().method() === "POST");
     await page.getByRole("button", { name: "Place Order" }).click();
     const response = await placed;
