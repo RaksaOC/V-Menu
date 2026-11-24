@@ -1965,9 +1965,17 @@ for (const [vp, theme] of [
         await settle(page);
         await page.locator("header button").first().click({ timeout: 5000 });
         await page.getByRole("menuitem", { name: "Sign Out", exact: true }).click({ timeout: 5000 });
-        await page.waitForTimeout(1500);
-        await settle(page);
-        await shot({ page, theme, width: vp.width }, "SEC-01-sign-out-failed", false);
+        // the message closes after 4 s, so wait for it (or, before the fix, for the login page)
+        await page
+            .getByText(/Couldn't sign out/)
+            .waitFor({ timeout: 3000 })
+            .catch(() => {});
+        await page.waitForTimeout(300);
+        await page.screenshot({
+            path: join(OUT, `SEC-01-sign-out-failed-${vp.width}${theme === "dark" ? "-dark" : ""}.png`),
+            animations: "disabled",
+        });
+        results.push(`ok   SEC-01-sign-out-failed-${vp.width}${theme === "dark" ? "-dark" : ""}`);
         await context.close();
     });
 }
