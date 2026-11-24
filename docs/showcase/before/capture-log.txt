@@ -494,3 +494,26 @@ ok   VM-35-final-cashier-menu-1280-dark
 ok   VM-35-final-owner-overview-1280-dark
 ok   VM-35-final-owner-menu-1280-dark
 ok   VM-35-final-owner-tables-1280-dark
+# ONLY=VM-36 final (2026-11-24T05:16:40.202Z)
+ok   VM-36-final-signup-360
+ok   VM-36-final-login-360
+ok   VM-36-final-cashier-login-360
+ok   VM-36-final-landing-360
+ok   VM-36-final-no-table-360
+ok   VM-36-final-owner-menu-360
+ok   VM-36-final-signup-360-dark
+ok   VM-36-final-login-360-dark
+ok   VM-36-final-cashier-login-360-dark
+ok   VM-36-final-landing-360-dark
+ok   VM-36-final-no-table-360-dark
+ok   VM-36-final-owner-menu-360-dark
+ok   VM-36-final-signup-1280
+ok   VM-36-final-login-1280
+ok   VM-36-final-cashier-login-1280
+ok   VM-36-final-landing-1280
+ok   VM-36-final-no-table-1280
+ok   VM-36-final-signup-1280-dark
+ok   VM-36-final-login-1280-dark
+ok   VM-36-final-cashier-login-1280-dark
+ok   VM-36-final-landing-1280-dark
+ok   VM-36-final-no-table-1280-dark
