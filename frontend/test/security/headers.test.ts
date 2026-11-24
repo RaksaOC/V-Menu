@@ -72,6 +72,40 @@ describe("content security policy", () => {
     });
 });
 
+describe("object storage in the policy (PHOTOS-S3)", () => {
+    it("the browser may post photos to storage and load them from it: only its origin, from config", () => {
+        const csp = directives(contentSecurityPolicy({ dev: false, analytics: false, storage: "https://files.example.com/some/path" }));
+        expect(csp["connect-src"]).toContain("https://files.example.com");
+        expect(csp["img-src"]).toContain("https://files.example.com");
+        expect(csp["connect-src"]).not.toContain("https://files.example.com/some/path");
+        expect(csp["form-action"]).toEqual(["'self'"]); // the upload is a fetch, not a form submit
+    });
+
+    it("leaves storage out when it isn't configured, and ignores a value that isn't an http(s) URL", () => {
+        const all = (storage?: string | null) =>
+            Object.values(directives(contentSecurityPolicy({ dev: false, analytics: false, storage }))).flat();
+        expect(all(undefined)).toEqual(all(null));
+        expect(all("")).toEqual(all(null));
+        expect(all("javascript:alert(1)")).toEqual(all(null));
+        expect(all("not a url")).toEqual(all(null));
+    });
+
+    it("next.config reads the storage address from S3_PUBLIC_URL", async () => {
+        const before = process.env.S3_PUBLIC_URL;
+        process.env.S3_PUBLIC_URL = "http://127.0.0.1:9400";
+        try {
+            const { default: config } = await import("../../next.config");
+            const rules = await config.headers!(); // read when the headers are built
+            const csp = Object.values(asMap(rules[0].headers)).find((v) => v.includes("default-src"))!;
+            expect(directives(csp)["connect-src"]).toContain("http://127.0.0.1:9400");
+            expect(directives(csp)["img-src"]).toContain("http://127.0.0.1:9400");
+        } finally {
+            if (before === undefined) delete process.env.S3_PUBLIC_URL;
+            else process.env.S3_PUBLIC_URL = before;
+        }
+    });
+});
+
 describe("next.config", () => {
     it("adds the headers to every page, but leaves /api to the services (Helmet)", async () => {
         const { default: config } = await import("../../next.config");

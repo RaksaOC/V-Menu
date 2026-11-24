@@ -3,6 +3,7 @@
 import { Readable } from "node:stream";
 import type { CategoriesRepo, CategoryRecord } from "../../src/repositories/categories.repo.js";
 import type { ImagesRepo } from "../../src/repositories/images.repo.js";
+import type { PhotoStore, SignedUpload } from "../../src/repositories/photo-store.js";
 import type { ItemRecord, ItemsRepo } from "../../src/repositories/items.repo.js";
 import { newQrToken } from "../../src/qr-token.js";
 import { TableNameTaken, type TableRecord, type TablesRepo } from "../../src/repositories/tables.repo.js";
@@ -44,6 +45,9 @@ export function fakeItems(): ItemsRepo & { all: ItemRecord[] } {
         },
         async findEnabled(resId, ids) {
             return all.filter((i) => i.resId === resId && i.isEnabled && ids.includes(i._id));
+        },
+        async countWithImage(resId, image) {
+            return all.filter((i) => i.resId === resId && i.image === image).length;
         },
         async clearCategory(resId, categoryId) {
             const moved = all.filter((i) => i.resId === resId && i.categoryId === categoryId);
@@ -144,8 +148,13 @@ export function fakeTables(): TablesRepo & { all: TableRecord[] } {
     };
 }
 
-export function fakeImages(): ImagesRepo & { files: Map<string, { resId: string; data: Buffer }>; failRemove: boolean } {
-    const files = new Map<string, { resId: string; data: Buffer }>();
+/** The GridFS photos from before PHOTOS-S3. `save` stands in for the old upload. */
+export function fakeImages(): ImagesRepo & {
+    files: Map<string, { resId: string; data: Buffer; movedTo?: string }>;
+    save(webp: Buffer, resId: string): Promise<string>;
+    failRemove: boolean;
+} {
+    const files = new Map<string, { resId: string; data: Buffer; movedTo?: string }>();
     return {
         files,
         failRemove: false,
@@ -164,6 +173,83 @@ export function fakeImages(): ImagesRepo & { files: Map<string, { resId: string;
         async remove(resId, id) {
             if (this.failRemove) throw new Error("storage down");
             if (files.get(id)?.resId === resId) files.delete(id);
+        },
+        async unmoved() {
+            return [...files].filter(([, f]) => !f.movedTo).map(([id, f]) => ({ id, resId: f.resId, length: f.data.length }));
+        },
+        async read(id) {
+            return Buffer.from(files.get(id)!.data);
+        },
+        async markMoved(id, key) {
+            files.get(id)!.movedTo = key;
+        },
+    };
+}
+
+/** PHOTOS-S3: object storage in memory. `browserPost` puts a file where a signed form would. */
+export function fakePhotoStore(): PhotoStore & {
+    objects: Map<string, { data: Buffer; contentType: string; cacheControl?: string }>;
+    browserPost(key: string, data: Buffer, contentType?: string): void;
+    signed: SignedUpload[];
+    down: boolean;
+    failPut: (key: string) => boolean;
+    failDelete: boolean;
+    setupCalls: number;
+} {
+    const objects = new Map<string, { data: Buffer; contentType: string; cacheControl?: string }>();
+    const check = (store: { down: boolean }) => {
+        if (store.down) throw new Error("storage down");
+    };
+    return {
+        objects,
+        signed: [],
+        down: false,
+        failPut: () => false,
+        failDelete: false,
+        setupCalls: 0,
+        browserPost(key, data, contentType = "image/jpeg") {
+            objects.set(key, { data, contentType });
+        },
+        async setup() {
+            check(this);
+            this.setupCalls++;
+        },
+        async signUpload(key, contentType, maxBytes) {
+            const form: SignedUpload = {
+                key,
+                url: "http://storage.test/vmenu-photos",
+                fields: { key, "Content-Type": contentType, policy: "test" },
+                expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
+                maxBytes,
+            };
+            this.signed.push(form);
+            return form;
+        },
+        async size(key) {
+            check(this);
+            return objects.get(key)?.data.length ?? null;
+        },
+        async get(key) {
+            check(this);
+            const o = objects.get(key);
+            if (!o) throw new Error(`no object ${key}`);
+            return Buffer.from(o.data);
+        },
+        async put(key, data, contentType) {
+            check(this);
+            if (this.failPut(key)) throw new Error(`put ${key} failed`);
+            objects.set(key, { data: Buffer.from(data), contentType, cacheControl: "public, max-age=31536000, immutable" });
+        },
+        async delete(keys) {
+            check(this);
+            if (this.failDelete) throw new Error("delete failed");
+            for (const k of keys) objects.delete(k);
+        },
+        async link(key) {
+            return `http://storage.test/vmenu-photos/${key}?X-Amz-Signature=test`;
+        },
+        async isUp() {
+            return !this.down;
         },
     };
 }
