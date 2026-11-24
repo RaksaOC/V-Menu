@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CheckCircle2, ChefHat, Clock, Plus, Receipt } from "lucide-react";
 import { getTableBill, getTableOrder, type TableBill, type TableOrderView } from "@/features/customer/api";
+import { useTableLink } from "@/features/customer/table-link";
 import { apiErrorMessage } from "@/lib/api";
 import { CUSTOMER_STATUS, isFinal } from "@/lib/order-status";
 
@@ -14,10 +15,9 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "nume
 /** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far.
  *  VM-27: its status, checked every 10 seconds until it's served or cancelled. */
 export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number } = {}) {
-    const params = useParams<{ res: string; table: string; orderId: string }>();
-    const slug = String(params.res);
-    const table = decodeURIComponent(String(params.table));
-    const menuHref = `/${slug}/customer/${encodeURIComponent(table)}`;
+    const params = useParams<{ orderId: string }>();
+    const link = useTableLink(); // SEC-04: the table's link token, or its name on the old pages
+    const menuHref = link.base;
 
     const [order, setOrder] = useState<TableOrderView | null>(null);
     const [bill, setBill] = useState<TableBill | null>(null);
@@ -25,13 +25,15 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
 
     const finished = order ? isFinal(order.status) : false;
     const load = useCallback(() => {
-        getTableOrder(slug, table, String(params.orderId))
+        getTableOrder(link, String(params.orderId))
             .then(setOrder)
             .catch((err) => setError(apiErrorMessage(err, "Couldn't load this order.")));
-        getTableBill(slug, table)
+        getTableBill(link)
             .then(setBill)
             .catch(() => setBill(null)); // the list is a bonus; the order above is what matters
-    }, [slug, table, params.orderId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- link is rebuilt each render; its parts are listed
+    }, [link.slug, link.token, link.name, params.orderId]);
+    const table = order?.table ?? bill?.table ?? link.name; // the server's name for the table
 
     // once when the page opens
     useEffect(load, [load]);
@@ -49,7 +51,7 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
             <header className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 px-4 py-6 text-white">
                 <div className="mx-auto flex max-w-2xl items-center gap-3">
                     <ChefHat size={28} aria-hidden />
-                    <p className="text-sm font-medium text-emerald-50">Table {table}</p>
+                    {table && <p className="text-sm font-medium text-emerald-50">Table {table}</p>}
                 </div>
             </header>
 

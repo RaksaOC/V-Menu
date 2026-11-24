@@ -985,6 +985,253 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-16: the owner adds a table with a name that's already used ("patio"). Before, a second
+// "patio" was created; now the popup says the name is taken. The test tables are removed after.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-16 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        const api = `${BASE}/api/menu/${SLUG}/tables`;
+        const patios = async () =>
+            ((await (await page.request.get(api)).json()) as { _id: string; name: string }[]).filter((t) => t.name === "patio");
+        try {
+            if ((await patios()).length === 0) await page.request.post(api, { data: { type: "manual", name: "patio" } });
+            await page.goto(`${BASE}/owner`);
+            await settle(page);
+            await page
+                .getByRole("button", { name: /^\s*Tables\s*$/i })
+                .first()
+                .click({ timeout: 5000 });
+            await settle(page);
+            await page.getByRole("button", { name: "Add Table" }).first().click({ timeout: 5000 });
+            await page.getByRole("radio", { name: "Choose a name" }).check();
+            await page.getByRole("textbox", { name: "Table name" }).fill("patio");
+            await page.getByRole("dialog").getByRole("button", { name: "Add Table" }).click();
+            await page.waitForTimeout(1200);
+            await shot(c, "VM-16-add-taken-name", false);
+        } finally {
+            for (const t of await patios()) await page.request.delete(`${api}/${t._id}`);
+            await context.close();
+        }
+    });
+}
+
+// VM-17: the owner's item popups. Add Item with no name and a negative price, then Edit a dish
+// with a name that's too long (121 characters): before, the server refused it and only a toast
+// said "Could not save the dish"; now the reason is shown under the field. Nothing is saved.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-17 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page.getByRole("button", { name: "Menu", exact: true }).click({ timeout: 5000 });
+        await settle(page);
+        await page.getByRole("button", { name: "Add Item" }).click({ timeout: 5000 });
+        await page.getByLabel("Price ($)").fill("-1");
+        await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+        await page.waitForTimeout(500);
+        await shot(c, "VM-17-add-item-errors", false);
+        await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
+        await page.getByRole("button", { name: "Edit Fried Rice" }).click({ timeout: 5000 });
+        await page.getByLabel("Item Name").fill("Fried Rice ".repeat(11) + "x"); // 122 characters; the limit is 120
+        await page.getByRole("dialog").getByRole("button", { name: "Save Changes" }).click();
+        await page.waitForTimeout(1200);
+        await shot(c, "VM-17-edit-item-too-long", false);
+        await context.close();
+    });
+}
+
+// VM-21: the customer's heading shows the restaurant's name instead of its slug, and the
+// cashier's QR popup says which restaurant the code belongs to.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-21 ${vp.width} ${theme}`, async () => {
+        {
+            const { context, page } = await newPage(browser, vp, theme);
+            await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
+            await settle(page);
+            await shot({ page, theme, width: vp.width }, "VM-21-customer-heading", false);
+            await context.close();
+        }
+        const { context, page } = await newPage(browser, vp, theme, "cashier");
+        await context.addInitScript(() => localStorage.setItem("dashboardSection", "tables"));
+        await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(page);
+        await page.getByRole("button", { name: "View QR Code" }).first().click({ timeout: 5000 });
+        await page.getByRole("img", { name: /^QR code for table / }).waitFor({ timeout: 5000 });
+        await shot({ page, theme, width: vp.width }, "VM-21-qr-popup", false);
+        await context.close();
+    });
+}
+
+// VM-26: Fish Amok gets a description and tags, and Fried Rice is switched off. The customer's
+// menu, the owner's item form and the cashier's menu. Both dishes are put back afterwards.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-26 ${vp.width} ${theme}`, async () => {
+        const after = PHASE === "after";
+        const owner = await newPage(browser, vp, theme, "owner");
+        const api = `${BASE}/api/menu/${SLUG}/items`;
+        const dishes = (await (await owner.page.request.get(api)).json()) as { _id: string; name: string }[];
+        const amok = dishes.find((d) => d.name === "Fish Amok")!;
+        const rice = dishes.find((d) => d.name === "Fried Rice")!;
+        try {
+            await owner.page.request.put(`${api}/${amok._id}`, {
+                data: { description: "Steamed fish curry with coconut, in a banana leaf", tags: ["spicy", "contains nuts"] },
+            });
+            await owner.page.request.patch(`${api}/${rice._id}/availability`, { data: { isEnabled: false } });
+            {
+                const { context, page } = await newPage(browser, vp, theme);
+                await page.goto(`${BASE}/${SLUG}/customer/${TABLE}`);
+                await settle(page);
+                await shot({ page, theme, width: vp.width }, "VM-26-customer-menu", vp === PHONE);
+                await context.close();
+            }
+            const c = { page: owner.page, theme, width: vp.width };
+            await owner.page.goto(`${BASE}/owner`);
+            await settle(owner.page);
+            await owner.page.getByRole("button", { name: "Menu", exact: true }).click({ timeout: 5000 });
+            await settle(owner.page);
+            await owner.page.getByRole("button", { name: "Edit Fish Amok" }).click({ timeout: 5000 });
+            await owner.page.waitForTimeout(400);
+            await shot(c, "VM-26-owner-item-form", false);
+            {
+                const { context, page } = await newPage(browser, vp, theme, "cashier");
+                await context.addInitScript(() => localStorage.setItem("dashboardSection", "menu"));
+                await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+                await settle(page);
+                await shot({ page, theme, width: vp.width }, "VM-26-cashier-menu", vp === PHONE);
+                await context.close();
+            }
+        } finally {
+            await owner.page.request.patch(`${api}/${rice._id}/availability`, { data: { isEnabled: true } });
+            if (after) await owner.page.request.put(`${api}/${amok._id}`, { data: { description: "", tags: [] } });
+            await owner.context.close();
+        }
+    });
+}
+
+// VM-32: /<slug> was a template with invented dishes and reviews; now it's the real restaurant.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+    [PHONE, "dark"],
+] as const) {
+    await step(`VM-32 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme);
+        await page.goto(`${BASE}/${SLUG}`);
+        await settle(page);
+        await shot({ page, theme, width: vp.width }, "VM-32-restaurant-page", false);
+        await context.close();
+    });
+}
+
+// SEC-04: the QR popup shows the table's own link, the owner's edit popup can reset it, and a link
+// that's no longer valid says what to do. The last two don't exist before.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`SEC-04 ${vp.width} ${theme}`, async () => {
+        const after = PHASE === "after";
+        {
+            const { context, page } = await newPage(browser, vp, theme, "cashier");
+            await context.addInitScript(() => localStorage.setItem("dashboardSection", "tables"));
+            await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+            await settle(page);
+            await page.getByRole("button", { name: "View QR Code" }).first().click({ timeout: 5000 });
+            await page.getByRole("img", { name: /^QR code for table / }).waitFor({ timeout: 5000 });
+            await shot({ page, theme, width: vp.width }, "SEC-04-qr-popup", false);
+            await context.close();
+        }
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page
+            .getByRole("button", { name: /^\s*Tables\s*$/i })
+            .first()
+            .click({ timeout: 5000 });
+        await settle(page);
+        await page.getByRole("button", { name: "Edit Table" }).first().click({ timeout: 5000 });
+        await page.waitForTimeout(400);
+        await shot(c, "SEC-04-edit-table", false);
+        if (after) {
+            await page.getByRole("dialog").getByRole("button", { name: "Reset QR code" }).click();
+            await page.waitForTimeout(300);
+            await shot(c, "SEC-04-reset-confirm", false); // not confirmed: the seeded table keeps its link
+            await page.goto(`${BASE}/${SLUG}/t/AAAAAAAAAAAAAAAAAAAAAA`);
+            await settle(page);
+            await shot(c, "SEC-04-invalid-link", false);
+        }
+        await context.close();
+    });
+}
+
+// VM-15: a table with an unpaid bill can't be renamed or deleted; the popup says why. Before the
+// change the save went through (shown filled in, not saved, so the seeded table keeps its name).
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-15 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "owner");
+        const c = { page, theme, width: vp.width };
+        // an unpaid bill at T1: one order, as a customer would place it
+        const menu = await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json();
+        const dish = menu.categories
+            .flatMap((cat: { items: { _id: string; isEnabled: boolean }[] }) => cat.items)
+            .find((i: { isEnabled: boolean }) => i.isEnabled);
+        await page.request.post(`${BASE}/api/orders/${SLUG}`, {
+            data: { table: "T1", orderedItems: [{ item: { _id: dish._id }, quantity: 1 }] },
+        });
+        await page.goto(`${BASE}/owner`);
+        await settle(page);
+        await page
+            .getByRole("button", { name: /^\s*Tables\s*$/i })
+            .first()
+            .click({ timeout: 5000 });
+        await settle(page);
+        await page.getByRole("button", { name: "Edit Table" }).first().click({ timeout: 5000 });
+        const dialog = page.getByRole("dialog");
+        await dialog.getByRole("textbox", { name: "Table name" }).fill("Patio");
+        await page.waitForTimeout(300);
+        if (PHASE !== "after") {
+            await shot(c, "VM-15-rename", false);
+            await context.close();
+            return;
+        }
+        await dialog.getByRole("button", { name: "Save Changes" }).click();
+        await dialog.getByText(/has an unpaid bill/).waitFor({ timeout: 5000 });
+        await shot(c, "VM-15-rename", false);
+        await dialog.getByRole("textbox", { name: "Table name" }).fill("T1");
+        await dialog.getByRole("button", { name: "Delete" }).click();
+        await dialog.getByRole("button", { name: "Delete" }).click();
+        await dialog.getByRole("alert").waitFor({ timeout: 5000 });
+        await page.waitForTimeout(300);
+        await shot(c, "VM-15-delete", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);

@@ -5,8 +5,9 @@ import { Plus, Printer, Table as TableIcon } from "lucide-react";
 import { Button, Chip, Skeleton, toast } from "@/components/ui";
 import { printQrCards } from "@/components/qr/print";
 import { tableUrl } from "@/lib/table-url";
-import { apiStatus } from "@/lib/api";
-import { createTable, deleteTable, getTables, setTableAvailability, updateTable } from "@/features/restaurant/api";
+import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
+import { useRestaurantName } from "@/lib/public-restaurant";
+import { createTable, deleteTable, getTables, resetTableQrToken, setTableAvailability, updateTable } from "@/features/restaurant/api";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 import TableCard from "./TableCard";
 import TableForm from "./TableForm";
@@ -18,6 +19,7 @@ import type { CreateTableBody, Table } from "@vmenu/contracts";
  */
 export default function Tables({ role }: { role: "owner" | "cashier" }) {
     const slug = useRestaurantSlug();
+    const restaurantName = useRestaurantName(slug) ?? undefined; // VM-21: on the QR popup and printed cards
     const [tables, setTables] = useState<Table[]>([]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState<Table | "new" | null>(null);
@@ -54,8 +56,10 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
             await createTable(slug, input);
             setEditing(null);
             await load();
-        } catch {
-            toast.error("Could not add the table");
+            return "ok" as const;
+        } catch (err) {
+            // VM-16: a taken name is 409, said in the popup next to the name
+            return apiErrorCode(err) === "NAME_TAKEN" && input.type === "manual" ? ("taken" as const) : ("error" as const);
         }
     }
 
@@ -66,7 +70,20 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
             await load();
             return "ok" as const;
         } catch (err) {
+            if (apiErrorCode(err) === "TABLE_HAS_OPEN_BILL") return { reason: apiErrorMessage(err, "") }; // VM-15
             return apiStatus(err) === 409 || apiStatus(err) === 400 ? ("taken" as const) : ("error" as const);
+        }
+    }
+
+    // SEC-04: a new QR link for the table, e.g. when a printed code was taken
+    async function resetQr(id: string) {
+        try {
+            const table = await resetTableQrToken(slug, id);
+            setEditing(null);
+            await load();
+            toast.info(`Table ${table.name} has a new QR code. Print it and replace the old one.`);
+        } catch {
+            toast.error("Could not reset the QR code");
         }
     }
 
@@ -75,8 +92,11 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
             await deleteTable(slug, id);
             setEditing(null);
             await load();
-        } catch {
-            toast.error("Could not delete the table");
+            return "ok" as const;
+        } catch (err) {
+            // VM-15: a table with an unpaid bill stays; the popup says why
+            if (apiErrorCode(err) === "TABLE_HAS_OPEN_BILL") return { reason: apiErrorMessage(err, "") };
+            return "error" as const;
         }
     }
 
@@ -99,7 +119,9 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                         <Button
                             variant="outline"
                             icon={<Printer size={16} aria-hidden />}
-                            onClick={() => printQrCards(tables.map((t) => ({ tableName: t.name, url: tableUrl(slug, t.name) })))}
+                            onClick={() =>
+                                printQrCards(tables.map((t) => ({ restaurantName, tableName: t.name, url: tableUrl(slug, t.qrToken) })))
+                            }
                         >
                             Print all QR codes
                         </Button>
@@ -116,9 +138,9 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {tables.map((table) =>
                         role === "owner" ? (
-                            <TableCard key={table._id} role="owner" table={table} onEdit={setEditing} />
+                            <TableCard key={table._id} role="owner" table={table} restaurantName={restaurantName} onEdit={setEditing} />
                         ) : (
-                            <TableCard key={table._id} role="cashier" table={table} onToggle={toggle} />
+                            <TableCard key={table._id} role="cashier" table={table} restaurantName={restaurantName} onToggle={toggle} />
                         ),
                     )}
                 </div>
@@ -138,6 +160,7 @@ export default function Tables({ role }: { role: "owner" | "cashier" }) {
                     onClose={() => setEditing(null)}
                     onCreate={create}
                     onRename={rename}
+                    onResetQr={resetQr}
                     onDelete={remove}
                 />
             )}

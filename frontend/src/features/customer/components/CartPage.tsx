@@ -5,10 +5,11 @@ import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
 import { getMenu, placeOrder as sendOrder } from "@/features/customer/api";
 import { clearCart, readCart, reconcileCart, saveCart, toOrderBody } from "@/features/customer/cart";
-import { dishesOf } from "@/features/customer/menu";
+import { orderableDishes } from "@/features/customer/menu";
 import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useTableLink } from "@/features/customer/table-link";
 import { AlertCircle, ArrowLeft, ShoppingBag, Receipt, Plus, RotateCcw } from "lucide-react";
 import { addToCart } from "@/features/customer/cart";
 import type { MenuItem } from "@vmenu/contracts";
@@ -20,11 +21,10 @@ export default function CartPage() {
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     // VM-06: why the last order failed, and whether trying again could help
     const [orderError, setOrderError] = useState<{ message: string; retry: boolean } | null>(null);
-    const params = useParams();
-
     // VM-05: this restaurant's and table's own cart; the order goes to the table in the URL.
-    const slug = String(params.res ?? "");
-    const table = String(params.table ?? "");
+    // SEC-04: by its link token; the table's name only on the old pages.
+    const link = useTableLink();
+    const { slug, cartId: table } = link;
 
     useEffect(() => {
         setCartItems(readCart(slug, table));
@@ -64,7 +64,7 @@ export default function CartPage() {
     const dropUnavailable = async () => {
         const before = readCart(slug, table);
         try {
-            reconcileCart(slug, table, dishesOf(await getMenu(slug)));
+            reconcileCart(slug, table, orderableDishes(await getMenu(slug)));
         } catch {
             return "Check your cart and try again.";
         }
@@ -86,11 +86,11 @@ export default function CartPage() {
         setIsPlacingOrder(true);
 
         try {
-            const order = await sendOrder(slug, toOrderBody(table, cartItems));
+            const order = await sendOrder(slug, toOrderBody(link, cartItems));
             clearCart(slug, table); // straight away, so the same cart can't be sent twice
             setCartItems([]);
             // VM-07: the order's confirmation, with its number and the server's prices
-            router.push(`/${slug}/customer/${encodeURIComponent(table)}/orders/${order._id}`);
+            router.push(`${link.base}/orders/${order._id}`);
         } catch (error) {
             // VM-06: say why, and keep the cart. Dishes that went off the menu are taken out of it.
             const message = apiErrorMessage(error, "Couldn't place the order. Please try again.");
@@ -121,7 +121,7 @@ export default function CartPage() {
                         <div className="max-w-4xl mx-auto">
                             <div className="flex items-center justify-between w-full">
                                 <button
-                                    onClick={() => router.push(`/${params.res}/customer/${params.table}`)}
+                                    onClick={() => router.push(link.base)}
                                     className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold py-2.5 px-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
                                 >
                                     <ArrowLeft size={18} />
@@ -135,7 +135,7 @@ export default function CartPage() {
                                         </div>
                                         <h1 className="text-2xl font-bold tracking-tight">Your Cart</h1>
                                     </div>
-                                    {/*<p className="text-emerald-100 text-sm">Table {params.table}</p>*/}
+                                    {/*<p className="text-emerald-100 text-sm">Table {link.name}</p>*/}
                                 </div>
                             </div>
                         </div>
@@ -182,7 +182,7 @@ export default function CartPage() {
                                 </div>
                                 <div className={"w-full flex justify-center items-center mt-6"}>
                                     <button
-                                        onClick={() => router.push(`/${params.res}/customer/${params.table}`)}
+                                        onClick={() => router.push(link.base)}
                                         className=" text-sm mt-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold p-2 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 flex items-center justify-center gap-1"
                                     >
                                         <Plus size={16} />
@@ -199,7 +199,7 @@ export default function CartPage() {
                                     <h2 className="text-3xl font-bold text-gray-700 mb-3">Your cart is empty</h2>
                                     <p className="text-gray-500 mb-6">Start adding some delicious items to your order!</p>
                                     <button
-                                        onClick={() => router.push(`/${params.res}/customer/${params.table}`)}
+                                        onClick={() => router.push(link.base)}
                                         className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
                                     >
                                         Browse Menu

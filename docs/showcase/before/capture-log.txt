@@ -202,3 +202,51 @@ ok   VM-20-cashier-360
 ok   SEC-08-signup-short-password-1280
 ok   SEC-08-signup-short-password-1280-dark
 ok   SEC-08-signup-short-password-360
+# ONLY=VM-16 (2026-11-23T16:59:56.587Z)
+ok   VM-16-add-taken-name-1280
+ok   VM-16-add-taken-name-1280-dark
+ok   VM-16-add-taken-name-360
+# ONLY=VM-17 (2026-11-23T17:10:32.654Z)
+ok   VM-17-add-item-errors-1280
+ok   VM-17-edit-item-too-long-1280
+ok   VM-17-add-item-errors-1280-dark
+ok   VM-17-edit-item-too-long-1280-dark
+ok   VM-17-add-item-errors-360
+ok   VM-17-edit-item-too-long-360
+# ONLY=VM-21 (2026-11-23T17:23:57.683Z)
+ok   VM-21-customer-heading-1280
+ok   VM-21-qr-popup-1280
+ok   VM-21-customer-heading-1280-dark
+ok   VM-21-qr-popup-1280-dark
+ok   VM-21-customer-heading-360
+ok   VM-21-qr-popup-360
+# ONLY=VM-26 (2026-11-23T17:31:34.662Z)
+ok   VM-26-customer-menu-1280
+ok   VM-26-owner-item-form-1280
+ok   VM-26-cashier-menu-1280
+ok   VM-26-customer-menu-1280-dark
+ok   VM-26-owner-item-form-1280-dark
+ok   VM-26-cashier-menu-1280-dark
+ok   VM-26-customer-menu-360
+ok   VM-26-owner-item-form-360
+ok   VM-26-cashier-menu-360
+# ONLY=VM-32 (2026-11-23T17:45:53.686Z)
+ok   VM-32-restaurant-page-1280
+ok   VM-32-restaurant-page-1280-dark
+ok   VM-32-restaurant-page-360
+ok   VM-32-restaurant-page-360-dark
+# ONLY=SEC-04 (2026-11-23T17:58:48.697Z)
+ok   SEC-04-qr-popup-1280
+ok   SEC-04-edit-table-1280
+ok   SEC-04-qr-popup-1280-dark
+ok   SEC-04-edit-table-1280-dark
+ok   SEC-04-qr-popup-360
+ok   SEC-04-edit-table-360
+# ONLY=VM-15 (2026-11-23T19:21:12.445Z)
+FAIL VM-15 1280 light: Unexpected token 'I', "Internal S"... is not valid JSON
+FAIL VM-15 1280 dark: Unexpected token 'I', "Internal S"... is not valid JSON
+FAIL VM-15 360 light: Unexpected token 'I', "Internal S"... is not valid JSON
+# ONLY=VM-15 (2026-11-23T19:22:04.198Z)
+ok   VM-15-rename-1280
+ok   VM-15-rename-1280-dark
+ok   VM-15-rename-360

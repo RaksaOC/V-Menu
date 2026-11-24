@@ -1,4 +1,5 @@
 import { baseApp, finish, lookupRestaurant as defaultLookup, type LookupRestaurant } from "@vmenu/common";
+import { httpOpenBills, type OpenBillsFor } from "./clients/open-bills.js";
 import { mongoCategoriesRepo, type CategoriesRepo } from "./repositories/categories.repo.js";
 import { mongoImagesRepo, type ImagesRepo } from "./repositories/images.repo.js";
 import { mongoItemsRepo, type ItemsRepo } from "./repositories/items.repo.js";
@@ -23,6 +24,8 @@ interface Deps {
     tables?: TablesRepo;
     images?: ImagesRepo;
     categories?: CategoriesRepo;
+    /** VM-15: order-service, asked before a table is renamed or deleted */
+    openBills?: OpenBillsFor;
 }
 
 /** Builds the Express app: wires the repositories into the services, and mounts the routers (CL-04). */
@@ -33,6 +36,7 @@ export function createApp({
     tables = mongoTablesRepo,
     images = mongoImagesRepo,
     categories = mongoCategoriesRepo,
+    openBills = httpOpenBills,
 }: Deps = {}) {
     const ctx: RouteContext = {
         services: {
@@ -43,6 +47,7 @@ export function createApp({
             internal: internalService({ items, tables }),
         },
         ...restaurantFrom(lookupRestaurant),
+        openBills,
     };
 
     const app = baseApp();

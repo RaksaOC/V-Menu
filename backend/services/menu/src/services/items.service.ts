@@ -44,21 +44,22 @@ export function itemsService({ items, images, categories }: { items: ItemsRepo; 
     }
 
     return {
-        /** What customers see (VM-25): the dishes that are on, by category in the owner's order,
-         *  by name within one; empty categories left out; dishes with no category last, as "Other". */
+        /** What customers see (VM-25): the dishes by category in the owner's order, by name within
+         *  one; empty categories left out; dishes with no category last, as "Other". VM-26: a dish
+         *  that's off stays on the menu, after the others, for the page to show as sold out. */
         async publicMenu(resId: string): Promise<PublicMenu> {
-            const [all, sections] = await Promise.all([items.list(resId, { enabledOnly: true }), categories.list(resId)]);
-            const byName = (a: ItemRecord, b: ItemRecord) => a.name.localeCompare(b.name);
+            const [all, sections] = await Promise.all([items.list(resId), categories.list(resId)]);
+            const inMenuOrder = (a: ItemRecord, b: ItemRecord) => Number(b.isEnabled) - Number(a.isEnabled) || a.name.localeCompare(b.name);
             const known = new Set(sections.map((c) => String(c._id)));
             const grouped: MenuSection[] = sections.map((c) => ({
                 _id: String(c._id),
                 name: c.name,
-                items: all.filter((i) => i.categoryId === String(c._id)).sort(byName),
+                items: all.filter((i) => i.categoryId === String(c._id)).sort(inMenuOrder),
             }));
             grouped.push({
                 _id: null,
                 name: OTHER_CATEGORY,
-                items: all.filter((i) => !i.categoryId || !known.has(i.categoryId)).sort(byName),
+                items: all.filter((i) => !i.categoryId || !known.has(i.categoryId)).sort(inMenuOrder),
             });
             return { categories: grouped.filter((s) => s.items.length > 0) };
         },

@@ -6,8 +6,10 @@ import type { MenuItem, PlaceOrderBody } from "@vmenu/contracts";
 export type CartItem = { item: MenuItem; quantity: number };
 
 /** What the cart sends: the dish ids and quantities; menu-service supplies the names and prices. */
-export function toOrderBody(table: string, items: CartItem[]): PlaceOrderBody {
-    return { table, orderedItems: items.map((l) => ({ item: { _id: l.item._id }, quantity: l.quantity })) };
+export function toOrderBody(table: { token: string | null; name: string }, items: CartItem[]): PlaceOrderBody {
+    const orderedItems = items.map((l) => ({ item: { _id: l.item._id }, quantity: l.quantity }));
+    // SEC-04: the link token, never the table's name; the name only on the old pages
+    return table.token ? { qrToken: table.token, orderedItems } : { table: table.name, orderedItems };
 }
 
 // The customer's cart, kept in localStorage until the order is placed.

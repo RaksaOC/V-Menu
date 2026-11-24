@@ -42,6 +42,20 @@ describe("menu", () => {
         expect(fieldsOf(C.CreateItemBody, { name: "A", price: 1, image: "/x", isEnabled: "yes" })).toEqual(["isEnabled"]);
     });
 
+    it("a price is a number from 0, or numeric text; anything else is refused, never turned into 0 (VM-17)", () => {
+        const price = (value: unknown) => C.UpdateItemBody.safeParse({ price: value });
+        expect(price(0).data).toEqual({ price: 0 });
+        expect(price(" 2.5 ").data).toEqual({ price: 2.5 });
+        for (const bad of ["", "  ", null, true, [], "abc", "1e999", -5, "-1"]) expect(price(bad).success, JSON.stringify(bad)).toBe(false);
+        expect(price(-5).error?.issues[0].message).toBe("Must be 0 or more");
+        expect(price("").error?.issues[0].message).toBe("Required");
+        expect(price("abc").error?.issues[0].message).toBe("Must be a number");
+        // money has cents: the form's old step="0.01" stopped this only in the browser
+        expect(price(2.35).success).toBe(true);
+        expect(price(1e300).success).toBe(true);
+        expect(price(2.555).error?.issues[0].message).toBe("At most 2 decimal places");
+    });
+
     it("UpdateItemBody: any subset, each still checked", () => {
         ok(C.UpdateItemBody, {});
         ok(C.UpdateItemBody, { price: 6 });
@@ -68,8 +82,77 @@ describe("menu", () => {
         expect(fieldsOf(C.UpdateTableBody, { name: "" })).toEqual(["name"]);
         ok(C.MenuItem, { _id: ID, name: "A", price: 1, image: "/x", isEnabled: true });
         fieldsOf(C.MenuItem, { _id: ID, name: "A", price: "1", image: "/x", isEnabled: true });
-        ok(C.Table, { _id: ID, name: "1", isEnabled: false });
+        ok(C.Table, { _id: ID, name: "1", isEnabled: false, qrToken: "AbCdEfGhIjKlMnOpQrSt_-" });
         ok(C.UploadedPhoto, { url: "/api/menu/x/images/" + ID });
+    });
+});
+
+describe("dish descriptions and tags (VM-26)", () => {
+    const dish = { name: "Amok", price: 5, image: "/x.png" };
+    it("a description is optional, trimmed, up to 300 characters, and can be emptied", () => {
+        expect(C.CreateItemBody.parse({ ...dish, description: "  Steamed fish curry  " }).description).toBe("Steamed fish curry");
+        expect(C.UpdateItemBody.parse({ description: "   " })).toEqual({ description: "" });
+        ok(C.CreateItemBody, { ...dish, description: "x".repeat(300) });
+        expect(fieldsOf(C.CreateItemBody, { ...dish, description: "x".repeat(301) })).toEqual(["description"]);
+        expect(fieldsOf(C.CreateItemBody, { ...dish, description: 7 })).toEqual(["description"]);
+    });
+
+    it("tags come from the fixed list, each once", () => {
+        expect(C.DISH_TAGS).toEqual(expect.arrayContaining(["vegetarian", "spicy", "contains nuts"]));
+        expect(C.CreateItemBody.parse({ ...dish, tags: ["spicy", "vegetarian", "spicy"] }).tags).toEqual(["spicy", "vegetarian"]);
+        expect(C.UpdateItemBody.parse({ tags: [] })).toEqual({ tags: [] });
+        expect(fieldsOf(C.CreateItemBody, { ...dish, tags: ["tasty"] })).toEqual(["tags.0"]);
+        expect(fieldsOf(C.CreateItemBody, { ...dish, tags: "spicy" })).toEqual(["tags"]);
+    });
+
+    it("a dish from the API may carry them; older dishes have neither", () => {
+        const id = "665f00000000000000000001";
+        ok(C.MenuItem, { _id: id, ...dish, isEnabled: false, description: "Hot", tags: ["spicy"] });
+        ok(C.MenuItem, { _id: id, ...dish, isEnabled: true });
+    });
+});
+
+describe("table links (SEC-04)", () => {
+    const TOKEN = "AbCdEfGhIjKlMnOpQrSt_-";
+    const line = { item: { _id: "665f00000000000000000001" }, quantity: 1 };
+
+    it("a link token is 16 random bytes in base64url", () => {
+        ok(C.QrToken, TOKEN);
+        for (const bad of ["", "short", `${TOKEN}x`, "AbCdEfGhIjKlMnOpQrSt/+", 7]) expect(C.QrToken.safeParse(bad).success).toBe(false);
+    });
+
+    it("an order names its table by link token, or by name; never both, never neither", () => {
+        expect(C.PlaceOrderBody.parse({ qrToken: TOKEN, orderedItems: [line] })).toEqual({ qrToken: TOKEN, orderedItems: [line] });
+        ok(C.PlaceOrderBody, { table: "1", orderedItems: [line] });
+        expect(fieldsOf(C.PlaceOrderBody, { qrToken: TOKEN, table: "1", orderedItems: [line] })).toEqual(["table"]);
+        expect(fieldsOf(C.PlaceOrderBody, { orderedItems: [line] })).toEqual(["table"]);
+        expect(fieldsOf(C.PlaceOrderBody, { qrToken: "nope", orderedItems: [line] })).toEqual(["qrToken"]);
+    });
+
+    it("so does the order check, and its answer says which table it was", () => {
+        const items = [{ _id: "665f00000000000000000001", quantity: 1 }];
+        ok(C.OrderCheckRequest, { qrToken: TOKEN, items });
+        expect(fieldsOf(C.OrderCheckRequest, { items })).toEqual(["table"]);
+        const dish = { _id: "665f00000000000000000001", name: "A", price: 1, image: "/x", isEnabled: true };
+        expect(C.OrderCheckResponse.parse({ table: "T1", items: [{ item: dish, quantity: 1 }] }).table).toBe("T1");
+    });
+
+    it("what a customer learns from a token is only the table's name and whether it's open", () => {
+        expect(C.TableLink.parse({ table: "T1", isOpen: true, qrToken: TOKEN, _id: "x" })).toEqual({ table: "T1", isOpen: true });
+    });
+});
+
+describe("a table's unpaid bill (VM-15)", () => {
+    it("order-service answers whether one is open", () => {
+        ok(C.OpenBillCheck, { open: true });
+        fieldsOf(C.OpenBillCheck, { open: "yes" });
+    });
+});
+
+describe("public restaurant info (VM-21)", () => {
+    it("is only a name and a slug: anything else is dropped", () => {
+        const safe = C.PublicRestaurant.parse({ name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1", email: "o@x.com" });
+        expect(safe).toEqual({ name: "Mee Keav", slug: "mee-keav-abc123" });
     });
 });
 
@@ -112,7 +195,8 @@ describe("internal calls", () => {
             "items.0._id",
             "items.0.quantity",
         ]);
-        expect(fieldsOf(C.OrderCheckRequest, { items: [{ _id: ID, quantity: 1.5 }] }).sort()).toEqual(["items.0.quantity", "table"]);
+        expect(fieldsOf(C.OrderCheckRequest, { table: "1", items: [{ _id: ID, quantity: 1.5 }] })).toEqual(["items.0.quantity"]);
+        expect(fieldsOf(C.OrderCheckRequest, { items: [{ _id: ID, quantity: 1 }] })).toEqual(["table"]); // SEC-04: or a qrToken
         fieldsOf(C.OrderCheckRequest, { table: "1", items: Array(101).fill({ _id: ID, quantity: 1 }) });
     });
 

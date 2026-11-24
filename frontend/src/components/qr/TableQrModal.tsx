@@ -9,14 +9,16 @@ import { printQrCards, qrDataUrl } from "@/components/qr/print";
 interface Props {
     slug: string;
     tableName: string;
-    /** Shown above the code; optional until there is a public restaurant-name lookup (VM-21). */
+    /** SEC-04: the table's link token; the code opens /<slug>/t/<token>. */
+    qrToken: string;
+    /** Shown above the code and on the printed card (VM-21). */
     restaurantName?: string;
     onClose: () => void;
 }
 
 /** The QR code for one table, with Download PNG and Print (VM-01). Used by owner and cashier. */
-export default function TableQrModal({ slug, tableName, restaurantName, onClose }: Props) {
-    const url = tableUrl(slug, tableName);
+export default function TableQrModal({ slug, tableName, qrToken, restaurantName, onClose }: Props) {
+    const url = tableUrl(slug, qrToken);
     const [dataUrl, setDataUrl] = useState<string | null>(null);
     const [failed, setFailed] = useState(false);
 

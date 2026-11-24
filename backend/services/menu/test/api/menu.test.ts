@@ -1,4 +1,5 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -14,6 +15,7 @@ const RESTAURANTS = {
     "other-xyz789": { _id: "665f00000000000000000002", name: "Other", slug: "other-xyz789", ownerId: "owner2" },
 };
 const app = createApp({
+    openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
     lookupRestaurant: async (_req, slug) => {
         const r = RESTAURANTS[slug as keyof typeof RESTAURANTS];
         if (!r) throw notFound("Restaurant not found");
@@ -47,13 +49,50 @@ beforeEach(async () => {
 const addItem = (body: object) => request(app).post(`/api/menu/${SLUG}/items`).set(owner).send(body);
 
 describe("menu items", () => {
-    it("owner adds an item; customers only see enabled ones", async () => {
+    it("owner adds an item; customers see a switched-off one as sold out, after the others (VM-26)", async () => {
+        await addItem({ name: "Lok Lak", price: 4, image: PHOTO, isEnabled: false });
         await addItem({ name: "Kuy Teav", price: 2.5, image: PHOTO });
-        const hidden = await addItem({ name: "Lok Lak", price: 4, image: PHOTO, isEnabled: false });
-        expect(hidden.status).toBe(201);
         const pub = await request(app).get(`/api/menu/${SLUG}/public/items`);
         // VM-25: grouped by category; with none set, everything is under Other
-        expect(pub.body).toMatchObject({ categories: [{ _id: null, name: "Other", items: [{ name: "Kuy Teav" }] }] });
+        expect(pub.body).toMatchObject({
+            categories: [
+                {
+                    _id: null,
+                    name: "Other",
+                    items: [
+                        { name: "Kuy Teav", isEnabled: true },
+                        { name: "Lok Lak", isEnabled: false },
+                    ],
+                },
+            ],
+        });
+    });
+
+    it("a description and tags are saved, shown to customers, and can be cleared (VM-26)", async () => {
+        const { body: dish } = await addItem({
+            name: "Amok",
+            price: 5,
+            image: PHOTO,
+            description: " Steamed fish curry ",
+            tags: ["spicy", "contains nuts", "spicy"],
+        });
+        expect(dish).toMatchObject({ description: "Steamed fish curry", tags: ["spicy", "contains nuts"] });
+        const pub = await request(app).get(`/api/menu/${SLUG}/public/items`);
+        expect(pub.body.categories[0].items[0]).toMatchObject({ description: "Steamed fish curry", tags: ["spicy", "contains nuts"] });
+        const cleared = await request(app).put(`/api/menu/${SLUG}/items/${dish._id}`).set(owner).send({ description: "", tags: [] });
+        expect(cleared.body).toMatchObject({ description: "", tags: [] });
+    });
+
+    it("a sold-out dish is on the public menu but can't be ordered (VM-26)", async () => {
+        const { body: dish } = await addItem({ name: "Amok", price: 5, image: PHOTO, isEnabled: false });
+        const { body: table } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "C3" });
+        await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
+        const res = await request(app)
+            .post(`/internal/restaurants/${RES_ID}/order-check`)
+            .set("x-internal-key", "internal-test-key")
+            .send({ table: "C3", items: [{ _id: dish._id, quantity: 1 }] });
+        expect(res.status).toBe(409);
+        expect(res.body.code).toBe("ITEMS_UNAVAILABLE");
     });
 
     it("ignores a resId in the body", async () => {
@@ -129,6 +168,31 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
         expect(res.status).toBe(400);
         expect(res.body.code).toBe("INVALID_INPUT");
         expect(Object.keys(res.body.fields).sort()).toEqual(["image", "name", "price"]);
+    });
+
+    // VM-17: an edit with a bad value used to answer 200 and change nothing (or, for an empty
+    // price, set it to 0). Now each bad field is a 400 that names it, and the dish is unchanged.
+    it.each([
+        [{ price: -5 }, "price", "Must be 0 or more"],
+        [{ price: "" }, "price", "Required"],
+        [{ price: null }, "price", "Must be a number"],
+        [{ price: "abc" }, "price", "Must be a number"],
+        [{ name: "" }, "name", "Required"],
+        [{ name: "   " }, "name", "Required"],
+        [{ name: "x".repeat(121) }, "name", "At most 120 characters"],
+        [{ image: "" }, "image", "Required"],
+        [{ isEnabled: "yes" }, "isEnabled", "Must be true or false"],
+        [{ categoryId: "nope" }, "categoryId", "Must be a 24-character id"],
+        [{ description: "x".repeat(301) }, "description", "At most 300 characters"], // VM-26
+        [{ tags: ["tasty"] }, "tags.0", "Not one of the dish tags"], // VM-26
+    ])("editing a dish with %j is a 400 naming %s, and changes nothing", async (body, field, message) => {
+        const { body: dish } = await addItem({ name: "Amok", price: 5, image: PHOTO });
+        const res = await request(app).put(`/api/menu/${SLUG}/items/${dish._id}`).set(owner).send(body);
+        expect(res.status).toBe(400);
+        expect(res.body).toMatchObject({ code: "INVALID_INPUT", fields: { [field]: message } });
+        expect(Object.keys(res.body.fields)).toEqual([field]);
+        const [after] = (await request(app).get(`/api/menu/${SLUG}/items`).set(owner)).body;
+        expect(after).toMatchObject({ name: "Amok", price: 5, image: PHOTO, isEnabled: true });
     });
 
     it("a manual table needs its name", async () => {

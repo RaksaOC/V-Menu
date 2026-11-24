@@ -177,6 +177,7 @@ Each service reads its own `backend/services/<name>/.env` (see its `.env.example
 | `COOKIE_SECURE` | restaurant | `false` only for plain-http hosts other than localhost |
 | `RESTAURANT_SERVICE_URL` | menu, order | |
 | `MENU_SERVICE_URL` | order | |
+| `ORDER_SERVICE_URL` | menu | asked before a table is renamed or deleted (VM-15) |
 
 The frontend only needs the public Firebase web config, plus the three service URLs if they are not on the defaults.
 

@@ -28,6 +28,8 @@ for (const s of services) {
     let env = readFileSync(`backend/services/${s}/.env.example`, "utf8");
     for (const [k, v] of Object.entries(shared)) env = env.replace(new RegExp(`^${k}=.*$`, "m"), `${k}=${v}`);
     if (projectId) env = env.replace(/^FIREBASE_PROJECT_ID=.*$/m, `FIREBASE_PROJECT_ID=${projectId}`);
+    // SEC-04: on your own machine, tables can also be opened by name (/<slug>/customer/T1)
+    env = env.replace(/^ALLOW_TABLE_NAME_LINKS=.*$/m, "ALLOW_TABLE_NAME_LINKS=true");
     writeFileSync(target, env, { mode: 0o600 });
     console.log(`wrote ${target}`);
 }

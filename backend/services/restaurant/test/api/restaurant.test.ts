@@ -226,3 +226,23 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
         expect(Object.keys(res.body.fields).sort()).toEqual(["email", "role"]);
     });
 });
+
+describe("public restaurant info (VM-21)", () => {
+    it("needs no sign-in, and answers only the name and slug", async () => {
+        const slug = await signUp();
+        const res = await request(app).get(`/api/restaurants/${slug}/public`);
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({ name: "Mee Keav", slug }); // no id, owner id or email
+    });
+
+    it("an unknown restaurant is a 404 with a code the page can explain", async () => {
+        const res = await request(app).get("/api/restaurants/nobody-here/public");
+        expect(res.status).toBe(404);
+        expect(res.body.code).toBe("RESTAURANT_NOT_FOUND");
+    });
+
+    it("the owner's routes next to it still need a sign-in", async () => {
+        const slug = await signUp();
+        expect((await request(app).get(`/api/restaurants/${slug}/staff`)).status).toBe(401);
+    });
+});

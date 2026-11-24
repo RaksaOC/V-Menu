@@ -7,7 +7,9 @@ import TableQrModal from "@/components/qr/TableQrModal";
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 import type { Table } from "@vmenu/contracts";
 
-type Props = { table: Table } & ({ role: "owner"; onEdit: (table: Table) => void } | { role: "cashier"; onToggle: (table: Table) => void });
+type Props = { table: Table; restaurantName?: string } & (
+    { role: "owner"; onEdit: (table: Table) => void } | { role: "cashier"; onToggle: (table: Table) => void }
+);
 
 /** One table, for the owner (edit) and the cashier (open/close); both can show its QR code (CL-09). */
 export default function TableCard(props: Props) {
@@ -49,7 +51,15 @@ export default function TableCard(props: Props) {
                     View QR Code
                 </Button>
             </div>
-            {showQr && <TableQrModal slug={slug} tableName={table.name} onClose={() => setShowQr(false)} />}
+            {showQr && (
+                <TableQrModal
+                    slug={slug}
+                    tableName={table.name}
+                    qrToken={table.qrToken}
+                    restaurantName={props.restaurantName}
+                    onClose={() => setShowQr(false)}
+                />
+            )}
         </Card>
     );
 }

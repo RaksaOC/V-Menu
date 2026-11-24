@@ -3,6 +3,7 @@ import {
     callerHeaders,
     listRoutes,
     mismatches,
+    NO_APP_TOKEN,
     only,
     PUBLIC,
     trackRoutes,
@@ -31,6 +32,7 @@ const clients: Clients = {
     listOwnerRestaurants: async (_req, ownerId) => [A, B].filter((r) => r.ownerId === ownerId),
     menuCounts: async () => ({ numOfTables: 1, numOfActiveTables: 1, numOfItems: 1 }),
     orderCheck: async (_req, _resId, body) => ({ items: body.items.map((l) => ({ item: DISH, quantity: l.quantity })) }),
+    tableByToken: async () => ({ name: "1" }), // SEC-04
 };
 const app = createApp({
     clients,
@@ -49,6 +51,8 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/orders/:slug", PUBLIC], // customers order without signing in
     ["GET /api/orders/:slug/tables/:table/orders/:id", PUBLIC], // only that table's order (VM-07)
     ["GET /api/orders/:slug/tables/:table/open-bill", PUBLIC],
+    ["GET /api/orders/:slug/t/:token/orders/:id", PUBLIC], // SEC-04: the link token is the proof
+    ["GET /api/orders/:slug/t/:token/open-bill", PUBLIC],
     ["GET /api/orders/:slug/kitchen", only(["chef"])],
     ["GET /api/orders/:slug/kitchen/history", only(["chef"])],
     ["PATCH /api/orders/:slug/kitchen/:id/status", only(["chef"])],
@@ -58,6 +62,7 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /api/orders/:slug/overview", only(["owner", "cashier"])],
     ["GET /api/orders/owner/restaurants", only(["owner"], { ownData: true })],
     ["GET /api/orders/owner/overview", only(["owner"], { ownData: true })],
+    ["GET /internal/restaurants/:resId/tables/:name/open-bill", NO_APP_TOKEN], // VM-15, for menu-service
 ];
 
 let mongo: MongoMemoryServer;
@@ -87,7 +92,10 @@ function urlFor(route: string) {
     return route
         .split(" ")[1]
         .replace(":slug", A.slug)
+        .replace(":resId", A._id)
+        .replace(":name", "1")
         .replace(":table", "1")
+        .replace(":token", "AbCdEfGhIjKlMnOpQrSt_-")
         .replace(":orderId", ids.orderA)
         .replace(/orders\/:id/, `orders/${ids.orderA}`)
         .replace(/kitchen\/:id/, `kitchen/${ids.orderA}`)

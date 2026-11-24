@@ -1,4 +1,5 @@
 import { assertId, notFound } from "@vmenu/common";
+import type { OpenBillCheck } from "@vmenu/contracts";
 import type { BillsRepo } from "../repositories/bills.repo.js";
 import type { OrderRecord, OrdersRepo } from "../repositories/orders.repo.js";
 
@@ -31,6 +32,12 @@ function view(order: OrderRecord) {
 
 export function tableService({ orders, bills }: { orders: OrdersRepo; bills: BillsRepo }) {
     return {
+        /** VM-15: for menu-service, before a table is renamed or deleted. */
+        async hasOpenBill(resId: string, table: string): Promise<OpenBillCheck> {
+            assertId(resId, "restaurant id");
+            return { open: (await bills.findOpen(resId, table)) !== null };
+        },
+
         /** One order, only if it was placed at this table. */
         async order(resId: string, table: string, id: string) {
             assertId(id, "order id");

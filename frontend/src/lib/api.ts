@@ -56,3 +56,14 @@ export function apiErrorCode(err: unknown): string | undefined {
     const code = (err.response?.data as { code?: unknown } | undefined)?.code;
     return typeof code === "string" ? code : undefined;
 }
+
+/** VM-17: what a 400 says is wrong, per field ({ price: "Must be 0 or more" }), if it says. */
+export function apiErrorFields(err: unknown): Record<string, string> | undefined {
+    if (!axios.isAxiosError(err) || err.response?.status !== 400) return undefined;
+    const fields = (err.response.data as { fields?: unknown } | undefined)?.fields;
+    if (!fields || typeof fields !== "object") return undefined;
+    // A list's item is named "tags.0": it belongs to the "tags" field.
+    const byField: Record<string, string> = {};
+    for (const [path, message] of Object.entries(fields as Record<string, string>)) byField[path.split(".")[0]] ??= message;
+    return byField;
+}

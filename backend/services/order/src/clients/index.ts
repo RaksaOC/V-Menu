@@ -1,6 +1,13 @@
 import type { Request } from "express";
 import { callService, HttpError, type Schema } from "@vmenu/common";
-import { MenuCounts, OrderCheckResponse, RestaurantRefList, type OrderCheckRequest, type RestaurantRef } from "@vmenu/contracts";
+import {
+    MenuCounts,
+    OrderCheckResponse,
+    RestaurantRefList,
+    TableByToken,
+    type OrderCheckRequest,
+    type RestaurantRef,
+} from "@vmenu/contracts";
 
 export type { MenuCounts, OrderLine, RestaurantRef } from "@vmenu/contracts";
 
@@ -19,6 +26,8 @@ export interface Clients {
     listOwnerRestaurants(req: Request, ownerId: string): Promise<RestaurantRef[]>;
     menuCounts(req: Request, resId: string): Promise<MenuCounts>;
     orderCheck(req: Request, resId: string, body: OrderCheckRequest): Promise<OrderCheckResponse>;
+    /** SEC-04: the table a link token belongs to, or 404. */
+    tableByToken(req: Request, resId: string, token: string): Promise<TableByToken>;
 }
 
 export const httpClients: Clients = {
@@ -33,6 +42,10 @@ export const httpClients: Clients = {
             method: "POST",
             body: JSON.stringify(body),
         }).then(checked(OrderCheckResponse, "menu-service")),
+    tableByToken: (req, resId, token) =>
+        callService(process.env.MENU_SERVICE_URL!, `/internal/restaurants/${resId}/tables/by-token/${encodeURIComponent(token)}`, req).then(
+            checked(TableByToken, "menu-service"),
+        ),
 };
 
 /** The clients with the incoming request already applied (it carries the caller's identity and
@@ -41,6 +54,7 @@ export interface BoundClients {
     listOwnerRestaurants(ownerId: string): Promise<RestaurantRef[]>;
     menuCounts(resId: string): Promise<MenuCounts>;
     orderCheck(resId: string, body: OrderCheckRequest): Promise<OrderCheckResponse>;
+    tableByToken(resId: string, token: string): Promise<TableByToken>;
 }
 
 export function bindClients(clients: Clients, req: Request): BoundClients {
@@ -48,5 +62,6 @@ export function bindClients(clients: Clients, req: Request): BoundClients {
         listOwnerRestaurants: (ownerId) => clients.listOwnerRestaurants(req, ownerId),
         menuCounts: (resId) => clients.menuCounts(req, resId),
         orderCheck: (resId, body) => clients.orderCheck(req, resId, body),
+        tableByToken: (resId, token) => clients.tableByToken(req, resId, token),
     };
 }

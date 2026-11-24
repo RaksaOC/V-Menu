@@ -48,6 +48,7 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/auth/memberships", NO_APP_TOKEN],
     ["GET /api/auth/me", only(["owner", "cashier", "chef"], { ownData: true })],
     ["POST /api/auth/sign-out-everywhere", only(["owner", "cashier", "chef"], { ownData: true })],
+    ["GET /api/restaurants/:slug/public", PUBLIC], // VM-21: the name a customer sees
     ["GET /api/restaurants", ownersOwnData],
     ["POST /api/restaurants", ownersOwnData],
     ["GET /api/staff", ownersOwnData],

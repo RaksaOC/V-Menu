@@ -59,6 +59,7 @@ services:
     environment:
       MONGODB_URI: mongodb://mongo:27017/vmenu_menu
       RESTAURANT_SERVICE_URL: http://restaurant-service:4101
+      ORDER_SERVICE_URL: http://order-service:4103 # VM-15
     depends_on:
       mongo:
         condition: service_healthy

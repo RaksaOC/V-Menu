@@ -1,22 +1,26 @@
 import { z } from "zod";
-import { IsoDate, ObjectId, label, pageOf, text } from "./common.js";
-import { OrderLine } from "./internal.js";
+import { IsoDate, ObjectId, QrToken, label, pageOf, text } from "./common.js";
+import { OrderLine, withOneTable } from "./internal.js";
 
 // order-service: orders, bills and the dashboards (CL-05).
 
 /** What the cart sends. The browser's prices are ignored: menu-service supplies them. */
-export const PlaceOrderBody = z.object({
-    table: label(40),
-    orderedItems: z
-        .array(
-            z.object({
-                item: z.object({ _id: ObjectId }),
-                quantity: z.number("Must be a number").int("Must be a whole number").min(1, "At least 1").max(99, "At most 99"),
-            }),
-        )
-        .min(1, "At least one item")
-        .max(100, "At most 100 items"),
-});
+export const PlaceOrderBody = withOneTable(
+    z.object({
+        /** SEC-04: customers send the table's link token; a name works only where that setting is on. */
+        table: label(40).optional(),
+        qrToken: QrToken.optional(),
+        orderedItems: z
+            .array(
+                z.object({
+                    item: z.object({ _id: ObjectId }),
+                    quantity: z.number("Must be a number").int("Must be a whole number").min(1, "At least 1").max(99, "At most 99"),
+                }),
+            )
+            .min(1, "At least one item")
+            .max(100, "At most 100 items"),
+    }),
+);
 export type PlaceOrderBody = z.infer<typeof PlaceOrderBody>;
 
 /** CL-06: the field is `isPaid`. The old `isPayed` is still accepted for one release. */

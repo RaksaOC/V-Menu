@@ -3,7 +3,29 @@ import { IsoDate, ObjectId, text } from "./common.js";
 
 // menu-service: dishes and tables (CL-05).
 
-const Price = z.coerce.number("Must be a number").refine(Number.isFinite, "Must be a number").pipe(z.number().min(0, "Can't be negative"));
+// VM-17: a number from 0, or numeric text (a form field). Anything else is refused, never quietly
+// turned into a number: "", null and true used to become 0 or 1.
+const Price = z.preprocess(
+    (v) => (typeof v === "string" && v.trim() !== "" ? Number(v) : v),
+    z
+        .number({
+            error: ({ input }) => (input === undefined || (typeof input === "string" && !input.trim()) ? "Required" : "Must be a number"),
+        })
+        .min(0, "Must be 0 or more")
+        .refine((v) => Number(v.toFixed(2)) === v, "At most 2 decimal places"),
+);
+
+/** VM-26: the labels a dish can carry. The browser has a copy (item-rules.ts); a test compares them. */
+export const DISH_TAGS = [
+    "vegetarian",
+    "vegan",
+    "spicy",
+    "contains nuts",
+    "contains dairy",
+    "contains gluten",
+    "contains seafood",
+] as const;
+const DishTag = z.enum(DISH_TAGS, "Not one of the dish tags");
 
 export const CreateItemBody = z.object({
     name: text(120),
@@ -12,6 +34,14 @@ export const CreateItemBody = z.object({
     isEnabled: z.boolean("Must be true or false").optional(),
     /** VM-25: one of this restaurant's categories, or null for "Other". */
     categoryId: ObjectId.nullable().optional(),
+    /** VM-26: optional; "" clears it. */
+    description: z.string("Must be text").trim().max(300, "At most 300 characters").optional(),
+    /** VM-26: each tag once; [] clears them. */
+    tags: z
+        .array(DishTag, "Must be a list")
+        .max(DISH_TAGS.length, `At most ${DISH_TAGS.length} tags`)
+        .transform((tags) => [...new Set(tags)])
+        .optional(),
 });
 export type CreateItemBody = z.infer<typeof CreateItemBody>;
 
@@ -43,6 +73,8 @@ export const MenuItem = z.object({
     image: z.string(),
     isEnabled: z.boolean(),
     categoryId: z.string().nullable().optional(),
+    description: z.string().optional(), // VM-26: older dishes have neither
+    tags: z.array(z.string()).optional(),
     resId: z.string().optional(),
     createdAt: IsoDate.optional(),
     updatedAt: IsoDate.optional(),
@@ -53,11 +85,17 @@ export const Table = z.object({
     _id: z.string(),
     name: z.string(),
     isEnabled: z.boolean(),
+    /** SEC-04: the secret part of this table's QR code. Staff only. */
+    qrToken: z.string(),
     resId: z.string().optional(),
     createdAt: IsoDate.optional(),
     updatedAt: IsoDate.optional(),
 });
 export type Table = z.infer<typeof Table>;
+
+/** SEC-04: all a customer learns from a table's link token. */
+export const TableLink = z.object({ table: z.string(), isOpen: z.boolean() });
+export type TableLink = z.infer<typeof TableLink>;
 
 /** The answer to a photo upload: the URL to save on the item. */
 export const UploadedPhoto = z.object({ url: z.string() });
@@ -81,6 +119,6 @@ export type ReorderCategoriesBody = z.infer<typeof ReorderCategoriesBody>;
 export const MenuSection = z.object({ _id: z.string().nullable(), name: z.string(), items: z.array(MenuItem) });
 export type MenuSection = z.infer<typeof MenuSection>;
 
-/** GET /api/menu/:slug/public/items: the dishes that are on, by category, in the owner's order. */
+/** GET /api/menu/:slug/public/items: every dish, by category, in the owner's order. A dish that is off is shown as sold out (VM-26). */
 export const PublicMenu = z.object({ categories: z.array(MenuSection) });
 export type PublicMenu = z.infer<typeof PublicMenu>;

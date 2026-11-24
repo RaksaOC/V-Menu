@@ -1,6 +1,6 @@
 import { AlertTriangle, DoorClosed, RotateCw, SearchX } from "lucide-react";
 
-export type TableProblemKind = "closed" | "no-restaurant" | "no-table" | "error";
+export type TableProblemKind = "closed" | "no-restaurant" | "no-table" | "invalid-link" | "error";
 
 const COPY: Record<TableProblemKind, { title: (table: string) => string; body: string }> = {
     closed: {
@@ -14,6 +14,11 @@ const COPY: Record<TableProblemKind, { title: (table: string) => string; body: s
     "no-table": {
         title: (t) => `We couldn't find table ${t}`,
         body: "This table may have been renamed or removed. Please ask a staff member for help.",
+    },
+    // SEC-04: a wrong, old or reset link. The same words whatever the reason.
+    "invalid-link": {
+        title: () => "This table link isn't valid",
+        body: "Please scan the QR code on your table again. If it still doesn't work, ask a staff member.",
     },
     error: { title: () => "Something went wrong", body: "We couldn't load the menu. Please check your connection and try again." },
 };
