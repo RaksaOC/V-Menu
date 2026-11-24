@@ -29,3 +29,6 @@ ok   VM-02-add-item-with-photo-1280
 ok   VM-35-owner-overview-1280-dark
 ok   VM-35-owner-tables-1280-dark
 ok   VM-35-owner-menu-1280-dark
+# ONLY=CL-10 (2026-11-23T11:00:57.027Z)
+ok   CL-10-toast-added-to-cart-360
+ok   CL-10-toast-added-to-cart-360-dark

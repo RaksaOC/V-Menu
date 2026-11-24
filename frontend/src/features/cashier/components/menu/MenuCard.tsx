@@ -1,8 +1,7 @@
 import {useEffect, useState} from "react";
-import {toast} from "react-toastify";
+import {toast} from "@/lib/toast";
 import 'react-toastify/dist/ReactToastify.css';
 import {MoreVertical, DollarSign, Eye, EyeOff} from "lucide-react";
-import axios from "axios";
 
 interface Props {
     id: string;
@@ -18,15 +17,7 @@ const MenuCard = ({id, name, price, image, isEnabled, onToggle}: Props) => {
 
     const handleToggle = () => {
         setEnabled(!enabled);
-        toast.info(`${name} ${enabled ? "Disabled" : "Enabled"}!`, {
-            position: "top-center",
-            autoClose: 1000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: false,
-            draggable: false,
-            theme: "light",
-        });
+        toast.info(`${name} ${enabled ? "Disabled" : "Enabled"}!`);
     };
 
     return (

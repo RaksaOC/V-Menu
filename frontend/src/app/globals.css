@@ -101,3 +101,23 @@ button {
 ::selection {
   background: var(--accent-soft);
 }
+
+/* CL-10: the one toast style (lib/toast.ts). Deep Lab tokens, so it follows light and dark. */
+.Toastify__toast.vm-toast {
+  background: var(--bg, #fff);
+  color: var(--ink, #000);
+  border: 1px solid var(--line, #d9d9dd);
+  border-radius: var(--r-chip, 8px);
+  box-shadow: var(--pop, 0 8px 24px rgba(0, 0, 0, 0.1));
+  font-family: var(--f-body, inherit);
+  font-size: 0.95rem;
+  min-height: 0;
+  padding: 10px 14px;
+}
+.Toastify__toast--success.vm-toast { border-left: 4px solid var(--ok, #00695a); }
+.Toastify__toast--info.vm-toast { border-left: 4px solid var(--accent, #ff7759); }
+.Toastify__toast--error.vm-toast { border-left: 4px solid var(--bad, #b30000); }
+.Toastify__toast--success.vm-toast .Toastify__toast-icon svg { fill: var(--ok, #00695a); }
+.Toastify__toast--info.vm-toast .Toastify__toast-icon svg { fill: var(--accent, #ff7759); }
+.Toastify__toast--error.vm-toast .Toastify__toast-icon svg { fill: var(--bad, #b30000); }
+.Toastify__toast.vm-toast .Toastify__close-button { color: var(--muted, #63637a); opacity: 1; }

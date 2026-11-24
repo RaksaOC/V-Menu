@@ -1,7 +1,7 @@
 'use client'
 
 import {useEffect, useState} from "react";
-import api from "@/lib/api";
+import {getAllStaff, type RestaurantStaff} from "@/features/staff/api";
 import {
     Calendar,
     ChevronsUpDown,
@@ -17,12 +17,6 @@ import {
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/react";
 import {prettyDate} from "@/lib/dates";
 import {TenantOutput} from "@/lib/types/Tenant";
-
-// Type for grouped staff data
-interface RestaurantStaff {
-    resName: string;
-    staff: TenantOutput[];
-}
 
 const getRoleBadge = (role: string) => {
     const baseClasses = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium";
@@ -60,8 +54,7 @@ export default function AllStaff() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get("/api/staff");
-                setStaffData(response.data);
+                setStaffData(await getAllStaff());
                 setLoading(false);
             } catch (e) {
                 console.error(e);

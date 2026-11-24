@@ -3,11 +3,10 @@
 import Card from "@/features/kitchen/components/OrderCard";
 import {useEffect, useState} from "react";
 import {OrderOutput} from "@/lib/types/Order";
-import axios from "axios";
 import {useParams, useRouter} from "next/navigation";
 import {ArrowLeft, Bell, ChefHat, Clock, History as His} from "lucide-react";
 import Link from "next/link";
-import api from "@/lib/api";
+import {getKitchenOrders} from "@/features/kitchen/api";
 
 export default function History() {
     const router = useRouter();
@@ -16,8 +15,7 @@ export default function History() {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await api.get(`/api/orders/${params.res}/kitchen`);
-                setOrders(response.data.filter((order: OrderOutput) => order.isDone));
+                setOrders((await getKitchenOrders(String(params.res))).filter((order: OrderOutput) => order.isDone));
             } catch (err) {
                 console.log(err);
             }

@@ -6,10 +6,10 @@ import {ItemOutput} from "@/lib/types/Item";
 import Link from "next/link";
 import {useParams, useRouter} from "next/navigation";
 import {useEffect, useState} from "react";
-import axios from "axios";
 import {ToastContainer} from "react-toastify";
 import SkeletonMenuCard from "@/components/ui/skeletons/SkeletonMenuCard";
-import api from "@/lib/api";
+import {apiStatus} from "@/lib/api";
+import {checkTable, getMenu} from "@/features/customer/api";
 
 export default function CustomerPage() {
     const [items, setItems] = useState<ItemOutput[]>([]);
@@ -19,12 +19,12 @@ export default function CustomerPage() {
     const [isChecked, setChecked] = useState<boolean>(false);
 
     useEffect(() => {
-        const checkTable = async () => {
+        const verifyTable = async () => {
             try {
-                await api.get(`/api/menu/${params.res}/public/tables/${encodeURIComponent(params.table?.toString() ?? "")}`);
+                await checkTable(String(params.res), params.table?.toString() ?? "");
                 setChecked(true);
-            } catch (error: any) {
-                if (error.response?.status === 404) {
+            } catch (error) {
+                if (apiStatus(error) === 404) {
                     router.push(`/${params.res}/customer`);
                 } else {
                     console.error("API error:", error);
@@ -32,7 +32,7 @@ export default function CustomerPage() {
             }
         };
 
-        checkTable();
+        verifyTable();
     }, []);
 
     const table = params.table;
@@ -43,9 +43,7 @@ export default function CustomerPage() {
         localStorage.setItem("table", JSON.stringify(table));
         const fetchItems = async () => {
             try {
-                const res = await axios.get(`/api/menu/${resSlug}/public/items`);
-                const data = await res.data;
-                setItems(data);
+                setItems(await getMenu(String(resSlug)));
             } catch (err) {
                 console.log(err);
             } finally {

@@ -1,10 +1,9 @@
 import {useEffect, useState} from "react";
 import TableCard from "./TableCard";
-import {toast} from "react-toastify";
-import axios from "axios";
+import {toast} from "@/lib/toast";
 import SkeletonTableCard from "@/components/ui/skeletons/SkeletonTableCard";
 import {TableOutput} from "@/lib/types/Table";
-import api from "@/lib/api";
+import {getTables, setTableAvailability} from "@/features/cashier/api";
 import {Table, TrendingUp, Users, AlertCircle} from "lucide-react";
 import {useParams} from "next/navigation";
 
@@ -17,8 +16,7 @@ export default function Tables() {
     useEffect(() => {
         async function fetchTables() {
             try {
-                const response = await api.get(`/api/menu/${params.res}/tables`);
-                setTables(response.data);
+                setTables(await getTables(String(params.res)));
             } catch (err) {
                 console.log(err);
             } finally {
@@ -34,7 +32,7 @@ export default function Tables() {
             if (t._id === id) {
                 const updatedTable = {...t, isEnabled: !t.isEnabled};
                 // Send updated table to backend
-                api.patch(`/api/menu/${params.res}/tables/${id}/availability`, {isEnabled: updatedTable.isEnabled});
+                setTableAvailability(String(params.res), id, updatedTable.isEnabled);
                 return updatedTable;
             }
             return t;
@@ -43,15 +41,7 @@ export default function Tables() {
         setTables(updatedTables);
 
         const toggledTable = tables.find(t => t._id === id);
-        toast.info(`Table ${toggledTable?.name} ${toggledTable?.isEnabled ? 'Closed' : 'Opened'}!`, {
-            position: "top-center",
-            autoClose: 1000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: false,
-            draggable: false,
-            theme: "light",
-        });
+        toast.info(`Table ${toggledTable?.name} ${toggledTable?.isEnabled ? 'Closed' : 'Opened'}!`);
     }
 
     const openTables = tables.filter(table => table.isEnabled).length;

@@ -2,7 +2,7 @@ import {CheckCircle, Pencil, XCircle} from "lucide-react";
 import {useContext, useState} from "react";
 import EditItemPopup from "./EditItemPopup";
 import {ItemOutput} from "@/lib/types/Item";
-import api from "@/lib/api";
+import {deleteMenuItem, updateMenuItem} from "@/features/owner/api";
 import {ResContext} from "@/features/owner/ResContext";
 
 interface Props {
@@ -23,19 +23,13 @@ const MenuCard = ({id, name, price, image, isEnabled, onModified}: Props) => {
     }
 
     async function handleOnSave(editedItem: ItemOutput) {
-        const response = await api.put(`/api/menu/${resSlug}/items/${editedItem._id}`, editedItem);
-        if (response.status === 200) {
-            console.log(response);
-        }
+        await updateMenuItem(resSlug, editedItem);
         setIsEditing(false);
         onModified();
     }
 
     async function handleOnDelete(id: string) {
-        const response = await api.delete(`/api/menu/${resSlug}/items/${id}`);
-        if (response.status === 200) {
-            console.log(response);
-        }
+        await deleteMenuItem(resSlug, id);
         setIsEditing(false);
         onModified();
     }
