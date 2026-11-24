@@ -102,6 +102,35 @@ describe("kitchen", () => {
     });
 });
 
+describe("kitchen history (VM-10)", () => {
+    it("pages finished orders newest first, 20 by default and at most 100", async () => {
+        const { placing, kitchen } = setup();
+        for (let i = 0; i < 23; i++) {
+            const o = await placing.place(R1._id, { table: String(i), orderedItems: [line()] });
+            await kitchen.markDone(R1._id, o._id);
+        }
+        await placing.place(R1._id, { table: "cooking", orderedItems: [line()] });
+        const first = await kitchen.history(R1._id, {});
+        expect(first).toMatchObject({ page: 1, limit: 20, total: 23, pages: 2 });
+        expect(first.orders.map((o) => o.table).slice(0, 2)).toEqual(["22", "21"]);
+        const second = await kitchen.history(R1._id, { page: "2" });
+        expect(second.orders.map((o) => o.table)).toEqual(["2", "1", "0"]);
+        expect((await kitchen.history(R1._id, { limit: "1000" })).limit).toBe(100);
+        expect((await kitchen.history(R1._id, { page: "9" })).orders).toEqual([]);
+        expect(await status(kitchen.history(R1._id, { page: "0" }))).toBe(400);
+        expect(await status(kitchen.history(R1._id, { limit: "-3" }))).toBe(400);
+        expect(await status(kitchen.history(R1._id, { page: "1.5" }))).toBe(400);
+    });
+
+    it("the queue never has finished orders", async () => {
+        const { placing, kitchen } = setup();
+        const o = await placing.place(R1._id, { table: "1", orderedItems: [line()] });
+        await placing.place(R1._id, { table: "2", orderedItems: [line()] });
+        await kitchen.markDone(R1._id, o._id);
+        expect((await kitchen.queue(R1._id)).map((x) => x.table)).toEqual(["2"]);
+    });
+});
+
 describe("bills", () => {
     it("lists newest first with their orders, and marks paid or unpaid", async () => {
         const { placing, billing } = setup();

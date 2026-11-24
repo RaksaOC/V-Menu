@@ -16,8 +16,10 @@ export interface OrderRecord {
 export interface OrdersRepo {
     create(order: { table: string; orderedItems: OrderLine[]; resId: string }): Promise<OrderRecord>;
     countFor(resIds: string[], where?: { isDone?: boolean }): Promise<number>;
-    /** oldest first */
-    listForKitchen(resId: string): Promise<OrderRecord[]>;
+    /** unfinished orders, oldest first (VM-10) */
+    listActive(resId: string): Promise<OrderRecord[]>;
+    /** finished orders, newest first, one page, and how many there are in all (VM-10) */
+    pageDone(resId: string, skip: number, limit: number): Promise<{ orders: OrderRecord[]; total: number }>;
     /** null when there's no such order in this restaurant */
     markDone(resId: string, id: string): Promise<OrderRecord | null>;
     listDone(resIds: string[]): Promise<OrderRecord[]>;
@@ -33,7 +35,14 @@ export const mongoOrdersRepo: OrdersRepo = {
         return (await Order.create(order)).toObject() as unknown as OrderRecord;
     },
     countFor: (resIds, where = {}) => Order.countDocuments({ ...inRestaurants(resIds), ...where }),
-    listForKitchen: (resId) => Order.find({ resId }).sort({ createdAt: 1 }).lean<OrderRecord[]>(),
+    listActive: (resId) => Order.find({ resId, isDone: false }).sort({ createdAt: 1 }).lean<OrderRecord[]>(),
+    async pageDone(resId, skip, limit) {
+        const [orders, total] = await Promise.all([
+            Order.find({ resId, isDone: true }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean<OrderRecord[]>(),
+            Order.countDocuments({ resId, isDone: true }),
+        ]);
+        return { orders, total };
+    },
     markDone: (resId, id) => Order.findOneAndUpdate({ _id: id, resId }, { isDone: true }, { new: true }).lean<OrderRecord>(),
     get: (resId, id) => Order.findOne({ _id: id, resId }).lean<OrderRecord>(),
     listDone: (resIds) => Order.find({ ...inRestaurants(resIds), isDone: true }).lean<OrderRecord[]>(),

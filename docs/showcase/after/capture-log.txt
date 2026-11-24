@@ -98,3 +98,10 @@ ok   VM-07-after-order-1280-dark
 ok   VM-07-after-order-3s-1280-dark
 ok   VM-07-after-order-360
 ok   VM-07-after-order-3s-360
+# ONLY=VM-10 (2026-11-23T13:42:29.651Z)
+ok   VM-10-kitchen-history-1280
+ok   VM-10-kitchen-history-end-1280
+ok   VM-10-kitchen-history-1280-dark
+ok   VM-10-kitchen-history-end-1280-dark
+ok   VM-10-kitchen-history-360
+ok   VM-10-kitchen-history-end-360

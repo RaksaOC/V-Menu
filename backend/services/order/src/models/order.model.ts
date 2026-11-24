@@ -19,4 +19,7 @@ const orderSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
+// VM-10: the kitchen's queue (unfinished, oldest first) and its history (finished, newest first).
+orderSchema.index({ resId: 1, isDone: 1, createdAt: 1 });
+
 export const Order = mongoose.model("Order", orderSchema, "orders");

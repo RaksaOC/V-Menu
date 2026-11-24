@@ -6,6 +6,7 @@ import { createApp } from "../../src/app.js";
 import { signAppToken, HttpError, notFound } from "@vmenu/common";
 import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
+import { Order } from "../../src/models/order.model.js";
 import { mongoBillsRepo } from "../../src/repositories/bills.repo.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
@@ -195,4 +196,67 @@ describe("what the customer sees after ordering (VM-07)", () => {
         const res = await tableApi("1", "/open-bill");
         expect(res.body).toEqual({ table: "1", orders: [], total: 0 });
     });
+});
+
+describe("kitchen queue and history (VM-10)", () => {
+    const kitchen = (path = "") => request(app).get(`/api/orders/${R.slug}/kitchen${path}`).set(chef);
+    const done = (id: string) => request(app).patch(`/api/orders/${R.slug}/kitchen/${id}/done`).set(chef);
+
+    it("the queue has unfinished orders only, oldest first (the default, and ?status=active)", async () => {
+        const a = (await place("1")).body;
+        const b = (await place("2")).body;
+        const c = (await place("1")).body;
+        await done(b._id);
+        for (const path of ["?status=active", ""]) {
+            const res = await kitchen(path);
+            expect(res.status).toBe(200);
+            expect(res.body.map((o: { _id: string }) => o._id)).toEqual([a._id, c._id]);
+        }
+        expect((await kitchen("?status=everything")).status).toBe(400);
+    });
+
+    it("history: finished orders, newest first, 20 to a page, with the total", async () => {
+        const docs = Array.from({ length: 25 }, (_, i) => ({
+            table: "1",
+            resId: R._id,
+            isDone: true,
+            orderedItems: [{ item: ITEM, quantity: 1 }],
+            createdAt: new Date(Date.UTC(2026, 0, 1, 0, i)),
+        }));
+        await Order.insertMany([...docs, { ...docs[0], isDone: false, createdAt: new Date(Date.UTC(2026, 0, 2)) }]);
+        const first = await kitchen("/history?page=1&limit=20");
+        expect(first.status).toBe(200);
+        expect(first.body).toMatchObject({ page: 1, limit: 20, total: 25, pages: 2 });
+        expect(first.body.orders).toHaveLength(20);
+        expect(first.body.orders.every((o: { isDone: boolean }) => o.isDone)).toBe(true);
+        expect(new Date(first.body.orders[0].createdAt).getUTCMinutes()).toBe(24); // newest first
+        const second = await kitchen("/history?page=2");
+        expect(second.body.orders).toHaveLength(5);
+        expect(new Date(second.body.orders[4].createdAt).getUTCMinutes()).toBe(0);
+        expect((await kitchen("/history?limit=500")).body.limit).toBe(100);
+        expect((await kitchen("/history?page=0")).status).toBe(400);
+        expect((await kitchen("/history?page=abc")).status).toBe(400);
+    });
+
+    it("only the chef can read them", async () => {
+        expect((await request(app).get(`/api/orders/${R.slug}/kitchen/history`).set(cashier)).status).toBe(403);
+    });
+
+    it("is backed by an index, and answers fast with 5,000 orders", async () => {
+        await Order.createIndexes();
+        const names = (await Order.listIndexes()).map((i: { name: string }) => i.name);
+        expect(names).toContain("resId_1_isDone_1_createdAt_1");
+        const many = Array.from({ length: 5000 }, (_, i) => ({
+            table: String(i % 30),
+            resId: R._id,
+            isDone: i % 1000 !== 0, // 5 still cooking
+            orderedItems: [{ item: ITEM, quantity: 1 }],
+        }));
+        await Order.insertMany(many);
+        await kitchen("?status=active"); // warm up
+        const started = performance.now();
+        const res = await kitchen("?status=active");
+        expect(res.body).toHaveLength(5);
+        expect(performance.now() - started).toBeLessThan(200);
+    }, 30_000);
 });

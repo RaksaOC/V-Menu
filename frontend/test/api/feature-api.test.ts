@@ -1,3 +1,5 @@
+import { http, HttpResponse } from "msw";
+import { server } from "../msw";
 import { describe, expect, it } from "vitest";
 import { answer } from "./helpers";
 
@@ -36,9 +38,29 @@ describe("customer api", () => {
 });
 
 describe("kitchen api", () => {
-    it("loads the kitchen orders", async () => {
-        answer("get", "/api/orders/demo-bistro/kitchen", [order]);
-        expect(await kitchen.getKitchenOrders("demo-bistro")).toEqual([order]);
+    it("loads only the orders still to cook (VM-10)", async () => {
+        const seen: string[] = [];
+        server.use(
+            http.get("*/api/orders/demo-bistro/kitchen", ({ request }) => {
+                seen.push(new URL(request.url).search);
+                return HttpResponse.json([order]);
+            }),
+        );
+        expect(await kitchen.getActiveOrders("demo-bistro")).toEqual([order]);
+        expect(seen).toEqual(["?status=active"]);
+    });
+
+    it("loads one page of the kitchen history (VM-10)", async () => {
+        const page = { orders: [order], page: 2, limit: 20, total: 21, pages: 2 };
+        const seen: string[] = [];
+        server.use(
+            http.get("*/api/orders/demo-bistro/kitchen/history", ({ request }) => {
+                seen.push(new URL(request.url).search);
+                return HttpResponse.json(page);
+            }),
+        );
+        expect(await kitchen.getKitchenHistory("demo-bistro", 2)).toEqual(page);
+        expect(seen).toEqual(["?page=2&limit=20"]);
     });
 
     it("marks an order done", async () => {
@@ -177,7 +199,7 @@ describe("errors", () => {
     it("falls back to a general message when the server sends none", async () => {
         const { apiErrorMessage } = await import("@/lib/api");
         answer("get", "/api/orders/demo-bistro/kitchen", {}, 500);
-        const err = await kitchen.getKitchenOrders("demo-bistro").catch((e) => e);
+        const err = await kitchen.getActiveOrders("demo-bistro").catch((e: unknown) => e);
         expect(apiErrorMessage(err, "Could not load the orders")).toBe("Could not load the orders");
     });
 
