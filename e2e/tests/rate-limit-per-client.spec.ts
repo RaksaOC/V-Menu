@@ -12,7 +12,8 @@ test("two clients have separate sign-in rate-limit counters", async ({ request }
     let b = random();
     while (b === a) b = random();
     const hit = async (ip: string) =>
-        (await request.post("/api/auth/logout", { headers: { "X-Forwarded-For": ip } })).headers()["ratelimit"];
+        // a sign-in request with no ID token: refused (400), but counted. SEC-01: logout isn't limited
+        (await request.post("/api/auth/memberships", { headers: { "X-Forwarded-For": ip }, data: {} })).headers()["ratelimit"];
 
     const first = remaining(await hit(a));
     const second = remaining(await hit(a));

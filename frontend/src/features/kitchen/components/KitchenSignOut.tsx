@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { LogOut } from "lucide-react";
-import { navigation, signOut } from "@/lib/session";
+import { navigation, signOut, SIGN_OUT_FAILED } from "@/lib/session";
+import { toast } from "@/lib/toast";
 import { BAND_BUTTON } from "@/features/kitchen/band";
 
 /** VM-19: signs the chef out, for a tablet the whole kitchen shares. */
@@ -11,8 +12,10 @@ export default function KitchenSignOut({ slug }: { slug: string }) {
 
     async function leave() {
         setBusy(true);
-        await signOut(); // the cookie goes first, so the login page doesn't open on a live session
-        navigation.to(`/${slug}/kitchen/login`);
+        // the cookie goes first, so the login page doesn't open on a live session (SEC-01)
+        if (await signOut()) return navigation.to(`/${slug}/kitchen/login`);
+        toast.error(SIGN_OUT_FAILED);
+        setBusy(false);
     }
 
     return (

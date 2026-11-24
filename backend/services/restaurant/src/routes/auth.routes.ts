@@ -22,6 +22,16 @@ export function authRoutes({ services }: RouteContext) {
     r.get("/me", requireRole("owner", "cashier", "chef"), async (req, res) => {
         res.json(await services.auth.me(req.user!));
     });
+    // SEC-01: signing out comes before the sign-in rate limit, so it always works. Clearing a cookie
+    // or ending sessions gives nobody access, so there's nothing for the limit to protect here.
+    r.post("/logout", (_req, res) => {
+        res.clearCookie("token", { ...cookieOptions(), maxAge: undefined }).json({ message: "Signed out" });
+    });
+    // SEC-03: ends this account's sessions on every device, then this browser's cookie
+    r.post("/sign-out-everywhere", requireRole("owner", "cashier", "chef"), async (req, res) => {
+        await services.auth.signOutEverywhere(req.user!.uid);
+        res.clearCookie("token", { ...cookieOptions(), maxAge: undefined }).json({ message: "Signed out everywhere" });
+    });
     r.use(rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false, handler: rateLimitHandler }));
     r.post("/signup", async (req, res) => {
         res.status(201).json(await services.auth.signup(req.body));
@@ -32,14 +42,6 @@ export function authRoutes({ services }: RouteContext) {
     r.post("/login", async (req, res) => {
         const { token, role, hours } = await services.auth.login(req.body);
         res.cookie("token", token, cookieOptions(hours)).json({ role });
-    });
-    r.post("/logout", (_req, res) => {
-        res.clearCookie("token", { ...cookieOptions(), maxAge: undefined }).json({ message: "Signed out" });
-    });
-    // SEC-03: ends this account's sessions on every device, then this browser's cookie
-    r.post("/sign-out-everywhere", requireRole("owner", "cashier", "chef"), async (req, res) => {
-        await services.auth.signOutEverywhere(req.user!.uid);
-        res.clearCookie("token", { ...cookieOptions(), maxAge: undefined }).json({ message: "Signed out everywhere" });
     });
     return r;
 }

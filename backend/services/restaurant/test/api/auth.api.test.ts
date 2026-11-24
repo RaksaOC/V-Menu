@@ -149,7 +149,7 @@ describe("failed sign-ins are counted (SEC-10)", () => {
         const limited = createApp({ verifyIdToken: async () => ({ uid: "u", email: "u@x.com", emailVerified: true }) });
         const before = await failures("rate_limited");
         let last: request.Response | undefined;
-        for (let i = 0; i < 31; i++) last = await request(limited).post("/api/auth/logout");
+        for (let i = 0; i < 31; i++) last = await request(limited).post("/api/auth/memberships").send({}); // SEC-01: not logout, which is never limited
         expect(last!.status).toBe(429);
         expect(last!.text).toBe("Too many requests, please try again later.");
         expect(await failures("rate_limited")).toBe(before + 1);
