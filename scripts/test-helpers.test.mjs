@@ -48,10 +48,13 @@ test(`every backend test file has at most ${MAX_TEST_LINES} lines`, () => {
     );
 });
 
-test("order tests build their data with builders: anOrder().withLines(3).paid().build()", () => {
-    const builders = SERVICE_TESTS.filter((f) => f.startsWith("backend/services/order/")).filter((f) =>
-        /export function anOrder\(/.test(read(f)),
-    );
+test("order tests build their data with builders: anOrder(), aBill().paid()", () => {
+    const order = SERVICE_TESTS.filter((f) => f.startsWith("backend/services/order/"));
+    const builders = order.filter((f) => /export function anOrder\(/.test(read(f)));
     assert.equal(builders.length, 1, "one anOrder() builder in the order tests");
-    assert.ok(matching(SERVICE_TESTS, /anOrder\(\)/).length >= 3, "used by several test files");
+    const users = matching(
+        order.filter((f) => f.endsWith(".test.ts")),
+        /anOrder\(\)/,
+    );
+    assert.ok(users.length >= 2, `used by the tests (now: ${users.join(", ") || "none"})`);
 });
