@@ -199,7 +199,8 @@ backend/                     one npm workspace with one package-lock.json (npm i
   services/
     restaurant/              restaurant-service: src/app.ts routes, src/models.ts
     menu/                    menu-service
-    order/                   order-service (src/lib/clients.ts: its calls to the other two)
+    order/                   order-service, in layers (CL-04): src/routes (HTTP only) -> src/services (rules)
+                             -> src/repositories (MongoDB) -> src/models; src/clients: its calls to the other two
 e2e/                         Playwright end-to-end tests (frontend and services together)
 infra/
   compose/                   docker-compose.yml (local stack), docker-compose.prod.yml (server)
