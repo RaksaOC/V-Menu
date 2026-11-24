@@ -7,6 +7,10 @@ const billSchema = new mongoose.Schema(
         table: { type: String, required: true },
         orders: [{ type: mongoose.Schema.Types.ObjectId, ref: "Order" }],
         isPaid: { type: Boolean, default: false },
+        // CL-06: the old name, written with isPaid for one release so the previous version still
+        // works after a rollback. Remove it (and its writes in bills.repo.ts and the back-fill in
+        // migrations/is-paid.ts) in the release after this one is in production.
+        isPayed: Boolean,
         resId: { type: String, required: true, index: true },
         // VM-30: the customer pressed "Request bill" or "Call staff". Cleared when paid or dismissed.
         billRequestedAt: Date,

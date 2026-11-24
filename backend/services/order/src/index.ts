@@ -11,9 +11,10 @@ logger.info("connected to MongoDB");
 
 // CL-06: migrations, then indexes, before the first request.
 const migrated = await prepareDatabase();
-if (migrated.bills.renamed || migrated.bills.droppedIndexes.length) logger.info(migrated.bills, "migrated bills from isPayed to isPaid");
-if (migrated.orders.migrated || migrated.orders.droppedIndexes.length)
-    logger.info(migrated.orders, "migrated orders from isDone to status");
+// CL-06, VM-27: the old field names are kept and back-filled for one release (for a rollback)
+const { bills, orders } = migrated;
+if (bills.renamed || bills.backfilled || bills.droppedIndexes.length) logger.info(bills, "migrated bills from isPayed to isPaid");
+if (orders.migrated || orders.backfilled || orders.droppedIndexes.length) logger.info(orders, "migrated orders from isDone to status");
 if (migrated.money.migrated) logger.info(migrated.money, "migrated order lines to cents");
 
 const server = createApp().listen(port, () => logger.info({ port }, "order-service listening"));

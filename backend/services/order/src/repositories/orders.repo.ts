@@ -81,10 +81,18 @@ export interface OrdersRepo {
 const inRestaurants = (resIds: string[]) => ({ resId: mongoose.trusted({ $in: resIds }) });
 const FINISHED: OrderStatus[] = ["served", "cancelled"];
 
+/** VM-27: the old `isDone` (the kitchen pressed Done) for a status. Written for one release, for a rollback. */
+export const isDoneFor = (status: OrderStatus) => status === "ready" || status === "served";
+
 export const mongoOrdersRepo: OrdersRepo = {
     async create(order) {
         const at = new Date();
-        const created = await Order.create({ ...order, status: "pending", statusHistory: [{ status: "pending", at, by: "customer" }] });
+        const created = await Order.create({
+            ...order,
+            status: "pending",
+            isDone: false,
+            statusHistory: [{ status: "pending", at, by: "customer" }],
+        });
         return created.toObject() as unknown as OrderRecord;
     },
     async setBill(resId, id, billId) {
@@ -122,7 +130,7 @@ export const mongoOrdersRepo: OrdersRepo = {
     setStatus: (resId, id, from, to, change, extra = {}) =>
         Order.findOneAndUpdate(
             { _id: id, resId, status: from },
-            { $set: { status: to, ...extra }, $push: { statusHistory: { status: to, ...change } } },
+            { $set: { status: to, isDone: isDoneFor(to), ...extra }, $push: { statusHistory: { status: to, ...change } } },
             { new: true },
         ).lean<OrderRecord>(),
     get: (resId, id) => Order.findOne({ _id: id, resId }).lean<OrderRecord>(),
