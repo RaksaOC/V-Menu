@@ -72,6 +72,10 @@ interface Screen {
     ready: (page: Page) => Locator;
     /** also at phone width (360 px) */
     phone?: boolean;
+    /** VM-34: the kitchen's active orders, made up for the picture: how many */
+    kitchenOrders?: number;
+    /** the recorded data to answer from, if not the screen's own */
+    data?: string;
 }
 
 const SCREENS: Screen[] = [
@@ -82,7 +86,21 @@ const SCREENS: Screen[] = [
         ready: (p) => p.getByRole("button", { name: "Add to Cart" }).first(),
     },
     { name: "cart", path: `/${SLUG}/customer/T1/cart`, phone: true, ready: (p) => p.getByRole("button", { name: "Place Order" }) },
-    { name: "kitchen", path: `/${SLUG}/kitchen`, as: "chef", ready: (p) => p.getByRole("region", { name: "New" }) },
+    // VM-34: the kitchen with 3, 0 and 12 orders
+    ...(
+        [
+            ["kitchen", 3],
+            ["kitchen-empty", 0],
+            ["kitchen-busy", 12],
+        ] as const
+    ).map(([name, n]): Screen => ({
+        name,
+        path: `/${SLUG}/kitchen`,
+        as: "chef",
+        kitchenOrders: n,
+        data: "kitchen",
+        ready: (p) => p.getByRole("region", { name: "New" }),
+    })),
     ...(["overview", "tables", "orders", "menu"] as const).map((section): Screen => ({
         name: `cashier-${section}`,
         path: `/${SLUG}/cashier/dashboard`,
@@ -99,6 +117,29 @@ const SCREENS: Screen[] = [
     },
 ];
 
+/** VM-34: n active orders for the kitchen, of different ages (so all three age chips show), at
+ *  tables T1 to T4, some with notes. Their times are fixed against the recorded clock. */
+function kitchenOrders(n: number, data: Fixtures) {
+    const now = data.recordedAt + 5 * 60_000;
+    const statuses = ["pending", "preparing", "ready"] as const;
+    const dishes = data.cart.map((l) => l.item);
+    return Array.from({ length: n }, (_, i) => {
+        const at = new Date(now - [2, 8, 20][i % 3]! * 60_000 - i * 60_000).toISOString();
+        return {
+            _id: `665f0000000000000000${String(i + 1).padStart(4, "0")}`,
+            table: `T${(i % 4) + 1}`,
+            status: statuses[i % 3],
+            statusHistory: [],
+            createdAt: at,
+            orderedAt: at,
+            ...(i === 0 && { note: "birthday table" }),
+            orderedItems: dishes
+                .slice(0, (i % 2) + 1)
+                .map((item, k) => ({ item, quantity: k + 1, ...(i === 0 && k === 0 && { note: "no chilli" }) })),
+        };
+    });
+}
+
 const VIEWPORTS = { desktop: { width: 1280, height: 800 }, phone: { width: 360, height: 780 } };
 
 for (const screen of SCREENS) {
@@ -106,18 +147,23 @@ for (const screen of SCREENS) {
         for (const size of screen.phone ? (["desktop", "phone"] as const) : (["desktop"] as const)) {
             const shot = `${screen.name}-${theme}${screen.phone ? `-${size}` : ""}.png`;
             test(`${shot}`, async ({ page, baseURL }) => {
-                const har = join(DATA, `${screen.name}.har`);
+                const har = join(DATA, `${screen.data ?? screen.name}.har`);
                 test.skip(!RECORD && !existsSync(har), `no recorded data: ${har}`);
                 await page.setViewportSize(VIEWPORTS[size]);
                 if (RECORD) await page.routeFromHAR(har, { url: "**/api/**", update: true, updateContent: "embed", updateMode: "minimal" });
                 else {
-                    const local = test.info().outputPath(`${screen.name}.har`);
+                    const local = test.info().outputPath(`${screen.data ?? screen.name}.har`);
                     writeFileSync(local, readFileSync(har, "utf8").replaceAll(ORIGIN, new URL(baseURL!).origin));
                     await page.routeFromHAR(local, { url: "**/api/**", notFound: "abort" });
                 }
                 if (!RECORD) await page.clock.setFixedTime(fixtures().recordedAt + 5 * 60_000);
+                if (screen.kitchenOrders !== undefined) {
+                    const orders = kitchenOrders(screen.kitchenOrders, fixtures());
+                    await page.route(`**/api/orders/${SLUG}/kitchen?status=active`, (route) => route.fulfill({ json: orders }));
+                }
                 const storage = {
                     "vm-theme": theme,
+                    "vm-kitchen-theme": theme, // VM-34: the kitchen keeps its own choice
                     [`cart:${SLUG}:T1`]: JSON.stringify(RECORD || existsSync(fixturesFile) ? fixtures().cart : []),
                     ...screen.storage,
                 };

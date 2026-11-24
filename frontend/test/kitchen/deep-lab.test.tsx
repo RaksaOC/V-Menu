@@ -81,7 +81,7 @@ describe("card", () => {
         expect(container.querySelector("article")!.className).toContain("bg-[var(--card)]");
         const table = screen.getByRole("heading", { name: "Table T4" });
         expect(table.className).toContain("font-[family-name:var(--f-mono)]");
-        expect(screen.getByText("#A1B2C").className).toContain("text-[var(--muted)]");
+        expect(screen.getByText("Order #0A1B2C").className).toContain("text-[var(--muted)]");
         expect(screen.getByText("2×").className).toContain("font-[family-name:var(--f-mono)]");
         expect(screen.getByText("no chilli").className).toContain("text-[var(--accent-text)]");
     });

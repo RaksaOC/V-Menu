@@ -112,21 +112,21 @@ describe("the kitchen board (VM-29)", () => {
 
     it("Start service unlocks the sound; a new order plays it and its card flashes once", async () => {
         render(<KitchenBoard pollMs={50} sound={sound} />);
-        await screen.findByText("Table T1");
+        await screen.findByRole("heading", { name: "Table T1" });
         fireEvent.click(screen.getByRole("button", { name: "Start service" }));
         await waitFor(() => expect(sound.unlock).toHaveBeenCalled());
         expect(sound.play).not.toHaveBeenCalled(); // the orders already there are not new
         queue = [...queue, order(3, 0)];
-        const fresh = await screen.findByText("Table T3");
+        const fresh = await screen.findByRole("heading", { name: "Table T3" });
         await waitFor(() => expect(sound.play).toHaveBeenCalledTimes(1));
         expect(fresh.closest("article")!.dataset.new).toBe("true");
-        expect(screen.getByText("Table T1").closest("article")!.dataset.new).toBeUndefined();
+        expect(screen.getByRole("heading", { name: "Table T1" }).closest("article")!.dataset.new).toBeUndefined();
     });
 
     it("kiosk mode: full screen, large table numbers, oldest order first", async () => {
         queue = [order(2, 7), order(1, 20)];
         render(<KitchenBoard pollMs={60_000} sound={sound} />);
-        await screen.findByText("Table T1");
+        await screen.findByRole("heading", { name: "Table T1" });
         fireEvent.click(screen.getByRole("button", { name: "Kiosk mode" }));
         expect(document.documentElement.requestFullscreen).toHaveBeenCalled();
         const column = screen.getByRole("region", { name: "New" });

@@ -4,8 +4,9 @@ import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
 // Light/dark switch. Sets both hooks the styles read: data-theme (deep-lab tokens) and the
-// .dark class (Tailwind's dark: variant), and remembers the choice for every page.
-export function ThemeToggle({ className }: { className?: string }) {
+// .dark class (Tailwind's dark: variant), and remembers the choice for every page. VM-34: the
+// kitchen keeps its own choice, under its own key.
+export function ThemeToggle({ className, storageKey = "vm-theme" }: { className?: string; storageKey?: string }) {
     const [dark, setDark] = useState(false);
     useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
 
@@ -15,7 +16,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         root.classList.toggle("dark", next);
         root.dataset.theme = next ? "dark" : "light";
         try {
-            localStorage.setItem("vm-theme", next ? "dark" : "light");
+            localStorage.setItem(storageKey, next ? "dark" : "light");
         } catch {}
         setDark(next);
     };

@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ChevronLeft, ChevronRight, History as His } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Order } from "@vmenu/contracts";
+import { ThemeToggle } from "@/components/marketing/tour/ThemeToggle";
+import { BAND_BUTTON } from "@/features/kitchen/band";
+import { KITCHEN_THEME_KEY } from "@/theme/ThemeSync";
 import { getKitchenHistory, type KitchenHistoryPage } from "@/features/kitchen/api";
 import KitchenSignOut from "@/features/kitchen/components/KitchenSignOut";
 import Card from "@/features/kitchen/components/OrderCard";
@@ -22,76 +25,55 @@ export default function History() {
     const orders: Order[] = data?.orders ?? [];
     const pages = data?.pages ?? 1;
 
+    const pagerButton =
+        "flex min-h-11 items-center gap-1 rounded-[var(--r-chip)] border border-[var(--line)] px-4 font-medium hover:bg-[var(--card)] disabled:opacity-40";
     return (
-        <>
-            <header className="relative bg-gradient-to-r from-slate-700 via-gray-700 to-slate-800 text-white overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 bg-black/5">
-                    <div
-                        className={`absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]`}
-                    ></div>
-                </div>
-                <div className="relative px-6 py-8">
-                    <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+            <header className="vm-band px-4 py-5 sm:px-6">
+                <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 className="font-[family-name:var(--f-display)] text-3xl font-semibold tracking-[var(--d-track)]">
+                            Kitchen History
+                        </h1>
+                        <p className="mt-1 font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-white/80">
+                            Served and cancelled orders
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button type="button" onClick={() => router.push(`/${params.res}/kitchen`)} className={BAND_BUTTON}>
+                            <ArrowLeft size={18} aria-hidden />
+                            View Orders
+                        </button>
+                        <ThemeToggle storageKey={KITCHEN_THEME_KEY} className={BAND_BUTTON} />
                         <KitchenSignOut slug={String(params.res)} />
-                        <div className="text-center mb-6">
-                            <div className="flex items-center justify-center gap-4 mb-4">
-                                <div className="p-3 bg-white/15 rounded-full backdrop-blur-sm">
-                                    <His size={32} className="text-white" />
-                                </div>
-                                <h1 className="text-4xl font-bold tracking-tight">Kitchen History</h1>
-                            </div>
-                            <p className="text-slate-200 text-lg">View completed orders</p>
-                        </div>
                     </div>
                 </div>
             </header>
-            <div className="w-full min-h-screen flex flex-col justify-start items-center bg-white">
-                <div className={"back-button-wrapper flex w-full justify-center"}>
-                    <div className="back-button flex justify-start w-full py-4 max-w-[1024px]">
-                        <div className="bg-zinc-600 backdrop-blur-sm rounded-2xl px-3 py-2 text-center border border-zinc-500 flex items-center justify-center">
-                            <button
-                                onClick={() => router.push(`/${params.res}/kitchen`)}
-                                className="bg-zinc-600 flex items-center justify-center text-white"
-                            >
-                                <ArrowLeft />
-                                <p>View Orders</p>
-                            </button>
-                        </div>
+            <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+                {orders.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {orders.map((order) => (
+                            <Card key={order._id} order={order} />
+                        ))}
                     </div>
-                </div>
-                <div className={"container flex flex-col justify-center items-center w-full max-w-[1024px]"}>
-                    {orders.length > 0 ? (
-                        orders.map((order) => <Card key={order._id} order={order} />)
-                    ) : (
-                        <h1 className="mt-[50vh] text-4xl text-center">No Orders To Display</h1>
-                    )}
-                    {data && data.total > 0 && (
-                        <nav aria-label="History pages" className="flex w-full items-center justify-between gap-4 py-6 text-slate-700">
-                            <button
-                                type="button"
-                                onClick={() => setPage((p) => p - 1)}
-                                disabled={page <= 1}
-                                className="flex items-center gap-1 rounded-xl border border-slate-300 px-4 py-2 font-medium disabled:opacity-40"
-                            >
-                                <ChevronLeft size={18} aria-hidden /> Previous
-                            </button>
-                            <p className="text-center text-sm">
-                                Page {data.page} of {pages}
-                                <span className="block text-slate-500">{data.total} finished orders</span>
-                            </p>
-                            <button
-                                type="button"
-                                onClick={() => setPage((p) => p + 1)}
-                                disabled={page >= pages}
-                                className="flex items-center gap-1 rounded-xl border border-slate-300 px-4 py-2 font-medium disabled:opacity-40"
-                            >
-                                Next <ChevronRight size={18} aria-hidden />
-                            </button>
-                        </nav>
-                    )}
-                </div>
-            </div>
-        </>
+                ) : (
+                    <p className="py-16 text-center text-[var(--muted)]">No Orders To Display</p>
+                )}
+                {data && data.total > 0 && (
+                    <nav aria-label="History pages" className="flex w-full items-center justify-between gap-4 py-6">
+                        <button type="button" onClick={() => setPage((p) => p - 1)} disabled={page <= 1} className={pagerButton}>
+                            <ChevronLeft size={18} aria-hidden /> Previous
+                        </button>
+                        <p className="text-center font-[family-name:var(--f-mono)] text-sm">
+                            Page {data.page} of {pages}
+                            <span className="block text-[var(--muted)]">{data.total} finished orders</span>
+                        </p>
+                        <button type="button" onClick={() => setPage((p) => p + 1)} disabled={page >= pages} className={pagerButton}>
+                            Next <ChevronRight size={18} aria-hidden />
+                        </button>
+                    </nav>
+                )}
+            </main>
+        </div>
     );
 }
