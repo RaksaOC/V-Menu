@@ -1,15 +1,15 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { BarChart3, UtensilsCrossed, Users, ShoppingBag, ChevronRight } from "lucide-react";
 import Menu from "@/features/restaurant/components/Menu";
 import Tables from "@/features/restaurant/components/Tables";
-import Orders from "./orders/Orders";
 import Overview from "@/features/restaurant/components/Overview";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { ToastHost } from "@/components/ui";
-import { useParams } from "next/navigation";
-import { BarChart3, UtensilsCrossed, Users, ShoppingBag, ChevronRight } from "lucide-react";
 import { useMe } from "@/lib/use-me";
+import Orders from "./orders/Orders";
 
 const Dashboard = () => {
     const slug = String(useParams()?.res ?? "");

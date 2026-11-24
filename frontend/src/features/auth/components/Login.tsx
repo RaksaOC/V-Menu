@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { toast } from "@/lib/toast";
 import { createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, type User } from "firebase/auth";
+import { toast } from "@/lib/toast";
 import { auth } from "@/lib/firebase";
 import { getMemberships } from "@/features/auth/api";
 import { firebaseCode, signInMessage } from "@/features/auth/login-errors";

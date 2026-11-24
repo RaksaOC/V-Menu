@@ -2,8 +2,8 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Trash2 } from "lucide-react";
-import { Button, Input, Modal } from "@/components/ui";
 import type { AddStaffBody, StaffMember } from "@vmenu/contracts";
+import { Button, Input, Modal } from "@/components/ui";
 
 type Role = "cashier" | "chef";
 

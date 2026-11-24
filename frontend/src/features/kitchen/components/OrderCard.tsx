@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import { Clock, ArrowRight, Users, Hash } from "lucide-react";
+import type { Order } from "@vmenu/contracts";
 import { formatDateTime } from "@/lib/dates";
 import { useMoney } from "@/components/money/MoneyProvider";
-import { Clock, ArrowRight, Users, Hash } from "lucide-react";
 import { Chip } from "@/components/ui";
 import { NEXT_ACTION, STATUS_LABEL, STATUS_TONE } from "@/lib/order-status";
-import type { Order } from "@vmenu/contracts";
 import { AGE_CHIP_CLASS, ageLabel, ageTone } from "@/features/kitchen/kitchen-screen";
 
 interface CardProps {

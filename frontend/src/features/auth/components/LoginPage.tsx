@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ResSelect } from "./ResSelect";
-import { Login, LoginDetails } from "./Login";
-import { RoleSelect } from "@/features/auth/components/RoleSelect";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { RoleSelect } from "@/features/auth/components/RoleSelect";
 import { ToastHost } from "@/components/ui";
 import { login, type StaffRole } from "@/features/auth/api";
-import { useRouter } from "next/navigation";
+import { Login, LoginDetails } from "./Login";
+import { ResSelect } from "./ResSelect";
 
 export default function LoginPage() {
     const router = useRouter();

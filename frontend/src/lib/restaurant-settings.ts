@@ -1,5 +1,5 @@
-import api, { seg } from "@/lib/api";
 import type { RestaurantSettings, UpdateSettingsBody } from "@vmenu/contracts";
+import api, { seg } from "@/lib/api";
 
 /** VM-24: how the restaurant shows prices, its name, and its payment QR. No sign-in needed. */
 export async function getRestaurantSettings(slug: string): Promise<RestaurantSettings> {

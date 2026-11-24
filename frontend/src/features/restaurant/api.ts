@@ -1,5 +1,5 @@
-import api, { seg } from "@/lib/api";
 import type { Category, CreateItemBody, CreateTableBody, MenuItem, Overview, Table } from "@vmenu/contracts";
+import api, { seg } from "@/lib/api";
 
 // CL-09: the calls the owner and the cashier both make about one restaurant (tables, menu,
 // overview), in one place. owner/api.ts and cashier/api.ts re-export what each role uses.

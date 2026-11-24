@@ -32,7 +32,7 @@ interface Props {
 export default function KitchenPage({ pollMs = 5000, sound }: Props = {}) {
     const params = useParams();
     const slug = String(params.res);
-    const connection = useConnectionStatus();
+    const { lost, succeeded, failed } = useConnectionStatus();
     const [orders, setOrders] = useState<Order[]>([]);
     const [totalOrders, setTotalOrders] = useState(0);
     const previousOrderIdsRef = useRef<string[]>([]);
@@ -59,13 +59,13 @@ export default function KitchenPage({ pollMs = 5000, sound }: Props = {}) {
             setTotalOrders(activeOrders.length);
             previousOrderIdsRef.current = activeOrders.map((order: Order) => order._id);
             setNow(Date.now());
-            connection.succeeded();
+            succeeded();
         };
         const fetchOrders = async () => {
             try {
                 show(await getActiveOrders(slug));
             } catch (err) {
-                connection.failed();
+                failed();
                 console.error("Initial fetch error:", err);
             }
         };
@@ -88,13 +88,13 @@ export default function KitchenPage({ pollMs = 5000, sound }: Props = {}) {
                 show(activeOrders);
             } catch (err) {
                 // VM-03: after 2 failures in a row the screen says so (a 401 goes to the login page)
-                connection.failed();
+                failed();
                 console.error("Polling error:", err);
             }
         }, pollMs);
 
         return () => clearInterval(intervalId);
-    }, []);
+    }, [slug, pollMs, succeeded, failed]); // all stable: this runs once per board
 
     const startService = async () => setSoundState((await player.unlock()) ? "on" : "unavailable");
 
@@ -131,7 +131,7 @@ export default function KitchenPage({ pollMs = 5000, sound }: Props = {}) {
 
     return (
         <div data-kiosk={kiosk || undefined} className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
-            {connection.lost && <ConnectionLostBar />}
+            {lost && <ConnectionLostBar />}
             {kiosk ? (
                 <header className="flex flex-wrap items-center justify-between gap-3 bg-slate-800 px-6 py-3 text-white">
                     <h1 className="flex items-center gap-3 text-2xl font-bold">

@@ -1,9 +1,9 @@
 import { Calendar, Mail, Pencil } from "lucide-react";
 import type { StaffMember } from "@vmenu/contracts";
 import { formatDate } from "@/lib/dates";
+import { initials } from "../staff-list";
 import InvitePending from "./InvitePending";
 import RoleBadge from "./RoleBadge";
-import { initials } from "../staff-list";
 
 /** One member in the desktop staff table. With `onEdit`, the last cell is an edit button. */
 export default function StaffRow({ member, onEdit }: { member: StaffMember; onEdit?: () => void }) {

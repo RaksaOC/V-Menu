@@ -23,12 +23,7 @@ function level(config, rule) {
     return m?.[1];
 }
 
-const RULES = [
-    "@typescript-eslint/no-explicit-any",
-    "@typescript-eslint/no-unused-vars",
-    "no-console",
-    "import/order",
-];
+const RULES = ["@typescript-eslint/no-explicit-any", "@typescript-eslint/no-unused-vars", "no-console", "import/order"];
 
 test("the backend has its own lint config and script", () => {
     assert.ok(existsSync(join(root, "backend/eslint.config.mjs")), "backend/eslint.config.mjs");

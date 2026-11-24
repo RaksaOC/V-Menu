@@ -2,8 +2,8 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { QrCode, Trash2 } from "lucide-react";
-import { Button, Input, Modal } from "@/components/ui";
 import type { CreateTableBody, Table } from "@vmenu/contracts";
+import { Button, Input, Modal } from "@/components/ui";
 
 /** What a save or delete came to; a string is the server's own reason (VM-15: an unpaid bill). */
 type Result = "ok" | "taken" | "error" | { reason: string } | undefined;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Printer, Table as TableIcon } from "lucide-react";
+import type { CreateTableBody, Table } from "@vmenu/contracts";
 import { Button, Chip, Skeleton, toast } from "@/components/ui";
 import { printQrCards } from "@/components/qr/print";
 import { tableUrl } from "@/lib/table-url";
@@ -11,7 +12,6 @@ import { createTable, deleteTable, getTables, resetTableQrToken, setTableAvailab
 import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
 import TableCard from "./TableCard";
 import TableForm from "./TableForm";
-import type { CreateTableBody, Table } from "@vmenu/contracts";
 
 /**
  * A restaurant's tables (CL-09; was two copies). The owner adds, renames, deletes and prints QR

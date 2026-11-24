@@ -1,5 +1,5 @@
-import api, { seg } from "@/lib/api";
 import type { AddStaffBody, StaffMember } from "@vmenu/contracts";
+import api, { seg } from "@/lib/api";
 
 /** Staff grouped by restaurant, for the owner's "Staff management" page. */
 export interface RestaurantStaff {

@@ -1,5 +1,5 @@
-import api, { seg } from "@/lib/api";
 import type { OwnerOverview, OwnerRestaurantOverview, Restaurant } from "@vmenu/contracts";
+import api from "@/lib/api";
 
 export type { OwnerOverview, TopSeller } from "@vmenu/contracts";
 

@@ -2,13 +2,13 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Trash2 } from "lucide-react";
+import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
 import { Button, Input, Modal } from "@/components/ui";
 import { toCents } from "@/lib/money";
+import { checkItem, DISH_TAGS, ITEM_DESCRIPTION_MAX, type ItemFieldErrors } from "../item-rules";
 import PhotoField from "./PhotoField";
 import TagsField from "./TagsField";
 import { usePhoto } from "./use-photo";
-import { checkItem, DISH_TAGS, ITEM_DESCRIPTION_MAX, type ItemFieldErrors } from "../item-rules";
-import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
 
 const PLACEHOLDER = "/images/img.png";
 

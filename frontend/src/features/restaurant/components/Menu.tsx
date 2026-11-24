@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Store, Tags } from "lucide-react";
+import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
 import { Button, Skeleton, toast } from "@/components/ui";
 import {
     createMenuItem,
@@ -16,7 +17,6 @@ import { apiErrorFields, apiErrorMessage } from "@/lib/api";
 import MenuCard from "./MenuCard";
 import ItemForm from "./ItemForm";
 import CategoriesManager from "./CategoriesManager";
-import type { Category, CreateItemBody, MenuItem } from "@vmenu/contracts";
 
 const ALL = "all";
 const OTHER = "other";

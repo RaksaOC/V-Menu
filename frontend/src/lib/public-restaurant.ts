@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api, { seg } from "@/lib/api";
 import type { PublicRestaurant } from "@vmenu/contracts";
+import api, { seg } from "@/lib/api";
 
 /** VM-21: a restaurant's public details (no sign-in). Shared by the customer and staff screens. */
 export async function getPublicRestaurant(slug: string): Promise<PublicRestaurant> {

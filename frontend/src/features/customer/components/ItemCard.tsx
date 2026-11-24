@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { addToCart } from "../cart";
 import { Plus } from "lucide-react";
-import { DishTags } from "@/components/ui";
 import type { MenuItem } from "@vmenu/contracts";
+import { DishTags } from "@/components/ui";
 import { useMoney } from "@/components/money/MoneyProvider";
+import { addToCart } from "../cart";
 
 // A description longer than this is folded to three lines, with a "More" button.
 const LONG_DESCRIPTION = 90;

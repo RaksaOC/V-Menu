@@ -1,7 +1,7 @@
 import { CheckCircle, Pencil, XCircle } from "lucide-react";
+import type { MenuItem } from "@vmenu/contracts";
 import { Card, Chip, DishTags } from "@/components/ui";
 import { useMoney } from "@/components/money/MoneyProvider";
-import type { MenuItem } from "@vmenu/contracts";
 
 type Props = { item: MenuItem } & (
     { role: "owner"; onEdit: (item: MenuItem) => void } | { role: "cashier"; onToggle: (item: MenuItem) => void }
