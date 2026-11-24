@@ -3,7 +3,7 @@ import jsQR from "jsqr";
 import { PNG } from "pngjs";
 import { SLUG, signInAs } from "./support/auth";
 
-// VM-01: a table's QR code opens that table's menu.
+// B4: the QR journey. VM-01: a table's QR code opens that table's menu.
 test("the cashier's View QR Code shows a code that opens the table's menu", async ({ page, context, baseURL }) => {
     await signInAs(context, baseURL!, "cashier");
     await context.addInitScript(() => localStorage.setItem("dashboardSection", "tables"));
@@ -27,4 +27,5 @@ test("the cashier's View QR Code shows a code that opens the table's menu", asyn
     // scanning it opens the menu
     await page.goto(code!.data);
     await expect(page.getByRole("heading", { name: "Our Menu" })).toBeVisible();
+    await expect(page.getByText(`Table ${table}`, { exact: true })).toBeVisible(); // that table's menu
 });

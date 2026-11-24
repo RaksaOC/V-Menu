@@ -16,7 +16,8 @@ async function as(role: "owner" | "cashier", baseURL: string): Promise<APIReques
     return playwrightRequest.newContext({ baseURL, extraHTTPHeaders: { cookie: `token=${await staffToken(role)}` } });
 }
 
-export async function ownTable(baseURL: string, prefix = "E2E"): Promise<OwnTable> {
+/** `open: false` leaves it closed, as a new table starts (VM-04). */
+export async function ownTable(baseURL: string, prefix = "E2E", { open = true } = {}): Promise<OwnTable> {
     const owner = await as("owner", baseURL);
     const cashier = await as("cashier", baseURL);
     const name = `${prefix}-${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`.slice(0, 20);
@@ -24,13 +25,13 @@ export async function ownTable(baseURL: string, prefix = "E2E"): Promise<OwnTabl
     if (!res.ok()) throw new Error(`could not make table ${name}: ${res.status()} ${await res.text()}`);
     const table = (await res.json()) as { _id: string; name: string };
     // new tables start closed (VM-04); the cashier opens it, as at a real table
-    await cashier.patch(`/api/menu/${SLUG}/tables/${table._id}/availability`, { data: { isEnabled: true } });
+    if (open) await cashier.patch(`/api/menu/${SLUG}/tables/${table._id}/availability`, { data: { isEnabled: true } });
     return {
         name: table.name,
         _id: table._id,
         remove: async () => {
-            const open = (await (await cashier.get(`/api/orders/${SLUG}/bills?status=open`)).json()) as { _id: string; table: string }[];
-            for (const b of open.filter((b) => b.table === table.name))
+            const bills = (await (await cashier.get(`/api/orders/${SLUG}/bills?status=open`)).json()) as { _id: string; table: string }[];
+            for (const b of bills.filter((b) => b.table === table.name))
                 await cashier.patch(`/api/orders/${SLUG}/bills/${b._id}`, { data: { isPaid: true } });
             await owner.delete(`/api/menu/${SLUG}/tables/${table._id}`);
             await owner.dispose();
