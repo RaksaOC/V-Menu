@@ -1948,6 +1948,30 @@ for (const vp of [PHONE, DESKTOP]) {
     }
 }
 
+// SEC-01 (review follow-up): Sign Out when the server doesn't clear the cookie (here, a 429 from the
+// sign-in rate limit). Before: the page goes to the login screen as if signed out. After: it says
+// sign-out failed and stays.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`SEC-01 ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "cashier");
+        await page.route("**/api/auth/logout", (route) =>
+            route.fulfill({ status: 429, contentType: "text/plain", body: "Too many requests, please try again later." }),
+        );
+        await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(page);
+        await page.locator("header button").first().click({ timeout: 5000 });
+        await page.getByRole("menuitem", { name: "Sign Out", exact: true }).click({ timeout: 5000 });
+        await page.waitForTimeout(1500);
+        await settle(page);
+        await shot({ page, theme, width: vp.width }, "SEC-01-sign-out-failed", false);
+        await context.close();
+    });
+}
+
 await browser.close();
 // A partial run (ONLY) adds to the log instead of replacing the full run's log.
 if (ONLY) appendFileSync(join(OUT, "capture-log.txt"), `# ONLY=${ONLY.source} (${new Date().toISOString()})\n${results.join("\n")}\n`);
