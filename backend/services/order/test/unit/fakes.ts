@@ -62,6 +62,13 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
                 .sort((a, b) => +b.createdAt - +a.createdAt)
                 .map(withOrders);
         },
+        async get(resId, id) {
+            const b = all.find((x) => x._id === id && x.resId === resId);
+            return b ? withOrders(b) : null;
+        },
+        async hasOtherOpenBill(resId, table, exceptId) {
+            return all.some((b) => b.resId === resId && b.table === table && !b.isPayed && b._id !== exceptId);
+        },
         async setPaid(resId, id, isPayed) {
             const b = all.find((x) => x._id === id && x.resId === resId);
             if (!b) return null;

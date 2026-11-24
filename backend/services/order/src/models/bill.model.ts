@@ -12,4 +12,7 @@ const billSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
+// VM-08: at most one open (unpaid) bill per table, enforced by MongoDB itself.
+billSchema.index({ resId: 1, table: 1 }, { unique: true, partialFilterExpression: { isPayed: false }, name: "one_open_bill_per_table" });
+
 export const Bill = mongoose.model("TableOrder", billSchema, "table_orders");

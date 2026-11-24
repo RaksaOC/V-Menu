@@ -5,6 +5,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { signAppToken, HttpError, notFound } from "@vmenu/common";
 import type { Clients } from "../../src/clients/index.js";
+import { Bill } from "../../src/models/bill.model.js";
+import { mongoBillsRepo } from "../../src/repositories/bills.repo.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 
@@ -48,6 +50,7 @@ afterAll(async () => {
 beforeEach(async () => {
     menuUp = true;
     await mongoose.connection.db!.dropDatabase();
+    await Bill.createIndexes(); // dropDatabase drops them too
 });
 
 const place = (table = "1", quantity = 2) =>
@@ -94,5 +97,55 @@ describe("kitchen and cashier", () => {
         await request(app).patch(`/api/orders/${R.slug}/kitchen/${order._id}/done`).set(chef);
         const res = await request(app).get("/api/orders/owner/overview").set(owner);
         expect(res.body).toMatchObject({ numOfMoneyEarned: 7.5, totalItemsSold: 3, topSellingItems: [{ name: "Kuy Teav", quantity: 3 }] });
+    });
+});
+
+describe("one open bill per table (VM-08)", () => {
+    const bills = async () =>
+        (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body as {
+            _id: string;
+            table: string;
+            isPayed: boolean;
+            orders: unknown[];
+        }[];
+    const setPaid = (id: string, isPayed: boolean) =>
+        request(app).patch(`/api/orders/${R.slug}/bills/${id}`).set(cashier).send({ isPayed });
+
+    it("10 orders joining a table's bill at the same moment make exactly 1 open bill", async () => {
+        // The bill upsert itself, as placing an order does it, 10 at once: without the unique
+        // index, every run made several open bills.
+        const orderIds = Array.from({ length: 10 }, () => new mongoose.Types.ObjectId().toString());
+        await Promise.all(orderIds.map((id) => mongoBillsRepo.addToOpenBill(R._id, "1", id)));
+        const open = await Bill.find({ resId: R._id, table: "1", isPayed: false }).lean();
+        expect(open).toHaveLength(1);
+        expect(open[0].orders.map(String).sort()).toEqual([...orderIds].sort());
+    });
+
+    it("10 orders placed at the same moment end up on exactly 1 open bill", async () => {
+        const results = await Promise.all(Array.from({ length: 10 }, () => place("1", 1)));
+        expect(results.map((r) => r.status)).toEqual(Array(10).fill(201));
+        const open = (await bills()).filter((b) => b.table === "1" && !b.isPayed);
+        expect(open).toHaveLength(1);
+        expect(open[0].orders).toHaveLength(10);
+    });
+
+    it("re-opening a paid bill while the table has another open bill gives 409", async () => {
+        await place();
+        const [first] = await bills();
+        expect((await setPaid(first._id, true)).status).toBe(200);
+        await place(); // the table's next visit: a new open bill
+        const res = await setPaid(first._id, false);
+        expect(res.status).toBe(409);
+        expect(res.body.code).toBe("TABLE_HAS_OPEN_BILL");
+        expect((await bills()).filter((b) => !b.isPayed)).toHaveLength(1);
+    });
+
+    it("re-opening a paid bill is fine when the table has no other open bill", async () => {
+        await place();
+        const [first] = await bills();
+        await setPaid(first._id, true);
+        const res = await setPaid(first._id, false);
+        expect(res.status).toBe(200);
+        expect(res.body.isPayed).toBe(false);
     });
 });

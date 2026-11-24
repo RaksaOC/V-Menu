@@ -1,5 +1,5 @@
-import { assertId, badRequest, notFound } from "@vmenu/common";
-import type { BillsRepo } from "../repositories/bills.repo.js";
+import { assertId, badRequest, HttpError, notFound } from "@vmenu/common";
+import { OpenBillExists, type BillsRepo } from "../repositories/bills.repo.js";
 
 /** The cashier's bills, one per table visit. */
 export function billsService({ bills }: { bills: BillsRepo }) {
@@ -9,9 +9,22 @@ export function billsService({ bills }: { bills: BillsRepo }) {
         async setPaid(resId: string, id: string, isPayed: boolean) {
             assertId(id, "bill id");
             if (typeof isPayed !== "boolean") throw badRequest("isPayed must be true or false");
-            const bill = await bills.setPaid(resId, id, isPayed);
-            if (!bill) throw notFound("Bill not found");
-            return bill;
+            // VM-08: re-opening a paid bill would give the table two open bills if it has a new one.
+            const tableHasOpenBill = () =>
+                new HttpError(409, "This table already has an open bill. Add to that one instead.", "TABLE_HAS_OPEN_BILL");
+            if (!isPayed) {
+                const current = await bills.get(resId, id);
+                if (!current) throw notFound("Bill not found");
+                if (current.isPayed && (await bills.hasOtherOpenBill(resId, current.table, id))) throw tableHasOpenBill();
+            }
+            try {
+                const bill = await bills.setPaid(resId, id, isPayed);
+                if (!bill) throw notFound("Bill not found");
+                return bill;
+            } catch (err) {
+                if (err instanceof OpenBillExists) throw tableHasOpenBill(); // lost a race with a new order
+                throw err;
+            }
         },
     };
 }
