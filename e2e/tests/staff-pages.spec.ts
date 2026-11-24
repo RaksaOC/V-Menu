@@ -32,5 +32,9 @@ test("an owner who signs in to the cashier screen is still signed in as owner", 
     await expect(page).toHaveURL(new RegExp(`/${SLUG}/cashier/dashboard$`));
     await page.goto("/owner");
     await expect(page).toHaveURL(/\/owner$/);
-    await expect(page.getByRole("button", { name: "Sign Out" })).toBeVisible();
+    // the header's account button shows who /api/auth/me says is signed in: the owner session answered
+    await expect(page.locator("header").getByRole("button").first()).toContainText("Demo Owner");
+    await page.goto(`/${SLUG}/cashier/dashboard`); // and the cashier sign-in is still there too
+    await expect(page).toHaveURL(new RegExp(`/${SLUG}/cashier/dashboard$`));
+    await expect(page.getByText(/V-Menu Cashier/)).toBeVisible();
 });
