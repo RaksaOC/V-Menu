@@ -160,3 +160,17 @@ ok   VM-27-kitchen-360
 ok   VM-27-customer-status-360
 ok   VM-27-cashier-bill-360
 ok   VM-27-cashier-cancel-360
+# ONLY=VM-13 (2026-11-23T16:37:28.175Z)
+ok   VM-13-check-inbox-1280
+ok   VM-13-not-verified-yet-1280
+ok   VM-13-check-inbox-1280-dark
+ok   VM-13-not-verified-yet-1280-dark
+ok   VM-13-check-inbox-360
+ok   VM-13-not-verified-yet-360
+# ONLY=VM-13 (2026-11-23T16:38:13.962Z)
+ok   VM-13-check-inbox-1280
+ok   VM-13-not-verified-yet-1280
+ok   VM-13-check-inbox-1280-dark
+ok   VM-13-not-verified-yet-1280-dark
+ok   VM-13-check-inbox-360
+ok   VM-13-not-verified-yet-360

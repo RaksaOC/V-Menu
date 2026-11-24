@@ -26,7 +26,7 @@ test.describe("Firebase sign-in, against the Auth emulator (B6)", () => {
         await context.route(/^https:\/\/[a-z0-9-]+\.googleapis\.com\//, (route) => route.abort("blockedbyclient"));
     });
 
-    test("a new owner signs up, then signs in on the owner login page", async ({ page, context }) => {
+    test("a new owner signs up, verifies the email (VM-13), then signs in on the owner login page", async ({ page, context }) => {
         const email = firebase.testEmail("owner");
         const password = "e2e-password-1";
 
@@ -36,8 +36,16 @@ test.describe("Firebase sign-in, against the Auth emulator (B6)", () => {
         await page.locator("form input[type=email]").fill(email);
         await page.locator("form input[type=password]").fill(password);
         await page.locator("form [type=submit]").click();
-        await expect(page).toHaveURL(/\/login$/, { timeout: 15_000 });
+
+        // VM-13: a verification email, and "Check your inbox" until it's followed
+        await expect(page.getByRole("heading", { name: "Check your inbox" })).toBeVisible({ timeout: 15_000 });
         expect(await firebase.userExists(email)).toBe(true); // the account is in the emulator
+        await page.getByRole("button", { name: "I've verified my email" }).click();
+        await expect(page.getByText(/not verified yet/i)).toBeVisible();
+        const mail = await firebase.latestEmail(email, "VERIFY_EMAIL");
+        await firebase.verifyEmail(mail.oobCode);
+        await page.getByRole("button", { name: "I've verified my email" }).click();
+        await expect(page).toHaveURL(/\/login$/, { timeout: 15_000 });
 
         await context.clearCookies();
         await page.goto("/owner/login");

@@ -36,10 +36,17 @@ describe("Firebase ID tokens (B6)", () => {
     it("accepts an emulator token once the emulator confirms it", async () => {
         const fetchFn = lookup([{ localId: "uid-1", email: "owner@e2e.test" }]);
         const token = unsigned(claims());
-        expect(await firebaseVerifier(EMULATOR, fetchFn)(token)).toEqual({ uid: "uid-1", email: "owner@e2e.test" });
+        expect(await firebaseVerifier(EMULATOR, fetchFn)(token)).toEqual({ uid: "uid-1", email: "owner@e2e.test", emailVerified: false });
         const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
         expect(url).toBe("http://auth-emulator:9099/identitytoolkit.googleapis.com/v1/accounts:lookup?key=emulator");
         expect(JSON.parse(String(init.body))).toEqual({ idToken: token });
+    });
+
+    it("says whether the email is verified (VM-13)", async () => {
+        const verify = firebaseVerifier(EMULATOR, lookup([{ localId: "uid-1" }]));
+        expect((await verify(unsigned(claims({ email_verified: true })))).emailVerified).toBe(true);
+        expect((await verify(unsigned(claims({ email_verified: "true" })))).emailVerified).toBe(false); // only a real true
+        expect((await verify(unsigned(claims()))).emailVerified).toBe(false);
     });
 
     it("rejects tokens for another project, expired ones, ones without an email, and ones the emulator doesn't know", async () => {

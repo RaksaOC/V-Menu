@@ -1,9 +1,9 @@
 // Import the functions you need from the SDKs you need
 
 import { initializeApp } from "firebase/app";
+import { AUTH_EMULATOR_URL } from "./auth-emulator";
 import { getAnalytics } from "firebase/analytics";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
-import { AUTH_EMULATOR_URL } from "./auth-emulator";
 import { getStorage } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
 
@@ -27,7 +27,8 @@ const app = initializeApp(firebaseConfig);
 
 // Analytics needs `window`; skip it during server rendering / next build
 // and a measurement ID; staging builds have none (Analytics is production only)
-export const analytics = typeof window !== "undefined" && firebaseConfig.measurementId ? getAnalytics(app) : null;
+// and none in e2e builds (B6), which must not reach real Google services
+export const analytics = typeof window !== "undefined" && firebaseConfig.measurementId && !AUTH_EMULATOR_URL ? getAnalytics(app) : null;
 export const auth = getAuth(app);
 // B6: e2e builds only; every real build has no emulator URL
 if (AUTH_EMULATOR_URL) connectAuthEmulator(auth, AUTH_EMULATOR_URL, { disableWarnings: true });

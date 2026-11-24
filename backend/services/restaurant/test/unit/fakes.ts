@@ -1,7 +1,7 @@
 // In-memory repositories for the service unit tests (CL-04): no MongoDB. Like MongoDB, they hand
 // out copies, so a service can't change stored data without calling the repository.
 import type { RestaurantRecord, RestaurantsRepo } from "../../src/repositories/restaurants.repo.js";
-import type { MembershipRecord, MembershipsRepo } from "../../src/repositories/memberships.repo.js";
+import type { MembershipRecord, MembershipsRepo, Person } from "../../src/repositories/memberships.repo.js";
 
 let seq = 0;
 export const newId = () => (++seq).toString(16).padStart(24, "0");
@@ -32,6 +32,9 @@ export function fakeRestaurants(): RestaurantsRepo & { all: RestaurantRecord[] }
     };
 }
 
+// like the repo: by account, or by email only when it's verified (VM-13)
+const matches = (t: MembershipRecord, who: Person) => t.tenantId === who.uid || (who.emailVerified && t.email === who.email);
+
 export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] } {
     const all: MembershipRecord[] = [];
     const find = (resId: string, id: string) => all.find((t) => t._id === id && t.resId === resId);
@@ -43,11 +46,11 @@ export function fakeMemberships(): MembershipsRepo & { all: MembershipRecord[] }
         async firstFor(uid) {
             return copy(all.find((t) => t.tenantId === uid));
         },
-        async forPerson(uid, email) {
-            return all.filter((t) => t.tenantId === uid || t.email === email).map((t) => ({ ...t }));
+        async forPerson(who) {
+            return all.filter((t) => matches(t, who)).map((t) => ({ ...t }));
         },
-        async hasRole(resId, role, { uid, email }) {
-            return all.some((t) => t.resId === resId && t.role === role && (t.tenantId === uid || t.email === email));
+        async hasRole(resId, role, who) {
+            return all.some((t) => t.resId === resId && t.role === role && matches(t, who));
         },
         async inRestaurants(resIds) {
             return all.filter((t) => resIds.includes(t.resId)).map((t) => ({ ...t }));

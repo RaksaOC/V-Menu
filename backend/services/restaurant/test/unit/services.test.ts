@@ -14,11 +14,12 @@ const owner = (uid = ALICE.uid) => ({ uid, email: `${uid}@x.test`, role: "owner"
 function setup() {
     const restaurants = fakeRestaurants();
     const memberships = fakeMemberships();
-    // the fake Firebase: an ID token "id:<uid>" is <uid>; anything else is refused
+    // the fake Firebase: "id:<uid>[:<email>]" is a verified sign-in, "unverified:<uid>:<email>" one
+    // whose email isn't verified yet (VM-13); anything else is refused
     const verifyIdToken = async (t: string) => {
-        if (!t.startsWith("id:")) throw new Error("bad token");
-        const uid = t.slice(3);
-        return { uid, email: `${uid}@x.test` };
+        const [kind, uid, email] = t.split(":");
+        if ((kind !== "id" && kind !== "unverified") || !uid) throw new Error("bad token");
+        return { uid, email: email ?? `${uid}@x.test`, emailVerified: kind === "id" };
     };
     const places = restaurantsService({ restaurants, memberships });
     return {
@@ -164,5 +165,38 @@ describe("staff", () => {
         expect(await status(staff.remove(owner(), r.slug, newId()))).toBe(404);
         expect((await staff.remove(owner(), r.slug, added._id)).name).toBe("Robert");
         expect(await status(staff.list(owner(), "nope"))).toBe(404);
+    });
+});
+
+describe("staff roles matched by email need a verified email (VM-13)", () => {
+    // Bob is the bistro's cashier by email; his account isn't linked yet (no tenantId).
+    async function bistroWithBob() {
+        const s = setup();
+        const r = await s.places.createForOwner("Bistro", { uid: "owner", email: "owner@x.test", name: "Ory" });
+        await s.memberships.createMany([{ name: "Bob", tenantId: "", email: "bob@x.test", role: "cashier", resId: String(r._id) }]);
+        return { ...s, slug: r.slug };
+    }
+
+    it("someone who signed up with Bob's email but hasn't verified it gets 401", async () => {
+        const { auth, slug } = await bistroWithBob();
+        expect(await status(auth.login({ idToken: "unverified:mallory:bob@x.test", role: "cashier", resSlug: slug }))).toBe(401);
+    });
+
+    it("Bob, with his email verified, gets in", async () => {
+        const { auth, slug } = await bistroWithBob();
+        const res = await auth.login({ idToken: "id:bob:bob@x.test", role: "cashier", resSlug: slug });
+        expect(res.role).toBe("cashier");
+    });
+
+    it("the roles list shows nothing for an unverified email match", async () => {
+        const { auth, slug } = await bistroWithBob();
+        expect(await auth.memberships({ idToken: "unverified:mallory:bob@x.test" })).toEqual({});
+        expect(await auth.memberships({ idToken: "id:bob:bob@x.test" })).toEqual({ [`Bistro - ${slug}`]: ["cashier"] });
+    });
+
+    it("a match by account still works before the email is verified (the owner, right after sign-up)", async () => {
+        const { auth, slug } = await bistroWithBob();
+        expect((await auth.login({ idToken: "unverified:owner:owner@x.test", role: "owner" })).role).toBe("owner");
+        expect((await auth.login({ idToken: "unverified:owner:owner@x.test", role: "chef", resSlug: slug })).role).toBe("chef");
     });
 });

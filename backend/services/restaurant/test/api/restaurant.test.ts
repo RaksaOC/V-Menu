@@ -9,12 +9,13 @@ process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
 process.env.INTERNAL_API_KEY = "internal-test-key";
 process.env.COOKIE_SECURE = "false";
 
-// Fake Firebase: an "ID token" here is just "uid:email".
+// Fake Firebase: an "ID token" here is just "uid:email", or "uid:email:unverified" for an account
+// whose email isn't verified yet (VM-13).
 const app = createApp({
     verifyIdToken: async (t) => {
-        const [uid, email] = t.split(":");
+        const [uid, email, unverified] = t.split(":");
         if (!uid || !email) throw new Error("bad token");
-        return { uid, email };
+        return { uid, email, emailVerified: unverified !== "unverified" };
     },
 });
 
@@ -65,6 +66,18 @@ describe("sign-up and sign-in", () => {
         expect(res.headers["set-cookie"][0]).toMatch(/^token=[^;]+;.*HttpOnly.*SameSite=Lax/i);
         expect(JSON.stringify(res.body)).not.toMatch(/eyJ/); // no JWT anywhere in the answer
         expect(res.body.appToken).toBeUndefined();
+    });
+
+    it("a staff email match counts only when the email is verified (VM-13)", async () => {
+        const slug = await signUp();
+        const { _id: resId } = (await mongoose.connection.db!.collection("restaurants").findOne({ slug }))!;
+        await mongoose.connection
+            .db!.collection("tenants")
+            .insertOne({ name: "Bob", tenantId: null, email: "bob@x.com", role: "cashier", resId: String(resId) });
+        const login = (idToken: string) => request(app).post("/api/auth/login").send({ idToken, role: "cashier", resSlug: slug });
+        expect((await login("mallory:bob@x.com:unverified")).status).toBe(401);
+        expect((await request(app).post("/api/auth/memberships").send({ idToken: "mallory:bob@x.com:unverified" })).body).toEqual({});
+        expect((await login("bob:bob@x.com")).status).toBe(200);
     });
 
     it("blocks a NoSQL-injection style email", async () => {

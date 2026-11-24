@@ -39,7 +39,7 @@ export function authService({ restaurants, memberships, verifyIdToken, places }:
         /** Which restaurants and roles this person has: { "Name - slug": ["owner", "cashier"] } */
         async memberships(body: unknown) {
             const who = await identity(body);
-            const roles = await memberships.forPerson(who.uid, who.email);
+            const roles = await memberships.forPerson(who);
             const byId = new Map((await restaurants.byIds([...new Set(roles.map((t) => t.resId))])).map((r) => [String(r._id), r]));
             const map: Record<string, string[]> = {};
             for (const t of roles) {
