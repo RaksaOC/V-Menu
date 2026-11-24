@@ -3,7 +3,7 @@ export { default as Button } from "./Button";
 export { default as Card } from "./Card";
 export { default as Chip } from "./Chip";
 export { default as DishTags } from "./DishTags";
-export { default as Input } from "./Input";
+export { default as Input, FIELD } from "./Input";
 export { default as Modal } from "./Modal";
 export { default as Skeleton } from "./Skeleton";
 export { default as ConnectionLostBar } from "./ConnectionLostBar";

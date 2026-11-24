@@ -95,11 +95,11 @@ export default function Staff() {
             <div className=" space-y-4 sm:space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Staff Management</h1>
-                        <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your restaurant team members</p>
+                        <h1 className="text-xl sm:text-2xl font-bold text-[var(--ink)]">Staff Management</h1>
+                        <p className="text-[var(--body)] mt-1 text-sm sm:text-base">Manage your restaurant team members</p>
                     </div>
                     <button
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--btn-bg)] text-[var(--btn-ink)] rounded-lg hover:opacity-90 transition-colors w-full sm:w-auto"
                         onClick={() => setShowAddStaff(!showAddStaff)}
                     >
                         <Plus size={20} />
@@ -118,19 +118,19 @@ export default function Staff() {
                 />
 
                 {/* the table on wide screens */}
-                <div className="hidden lg:block bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="hidden lg:block bg-[var(--bg)] rounded-xl border border-[var(--line)] overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
+                            <thead className="bg-[var(--card)] border-b border-[var(--line)]">
                                 <tr>
-                                    <th className="text-center py-4 px-2   font-semibold text-gray-900">Staff Member</th>
-                                    <th className="text-center py-4 px-1 font-semibold text-gray-900">Role</th>
-                                    <th className="text-center py-4 px-1 font-semibold text-gray-900">Email</th>
-                                    <th className="text-center py-4 px-1 font-semibold text-gray-900">Joined</th>
-                                    <th className="text-center py-4 px-2 font-semibold text-gray-900">Modify</th>
+                                    <th className="text-center py-4 px-2 font-semibold text-[var(--ink)]">Staff Member</th>
+                                    <th className="text-center py-4 px-1 font-semibold text-[var(--ink)]">Role</th>
+                                    <th className="text-center py-4 px-1 font-semibold text-[var(--ink)]">Email</th>
+                                    <th className="text-center py-4 px-1 font-semibold text-[var(--ink)]">Joined</th>
+                                    <th className="text-center py-4 px-2 font-semibold text-[var(--ink)]">Modify</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-[var(--line)]">
                                 {filteredStaff.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="text-center py-12">
@@ -148,7 +148,7 @@ export default function Staff() {
                 {/* cards on phones */}
                 <div className="lg:hidden space-y-3">
                     {filteredStaff.length === 0 ? (
-                        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                        <div className="bg-[var(--bg)] rounded-xl border border-[var(--line)] p-8 text-center">
                             <NoStaff filtered={filtered} small />
                         </div>
                     ) : (
@@ -156,7 +156,7 @@ export default function Staff() {
                             <StaffCard
                                 key={member._id}
                                 member={member}
-                                className="bg-white rounded-xl border border-gray-200 p-4"
+                                className="bg-[var(--bg)] rounded-xl border border-[var(--line)] p-4"
                                 onEdit={edit(member)}
                             />
                         ))

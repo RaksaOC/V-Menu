@@ -32,13 +32,13 @@ export default function AllRestaurants({ onManage }: Props) {
             <div className="w-full">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {Array.from({ length: 6 }).map((_, index) => (
-                        <div key={index} className="bg-gray-50 rounded-2xl p-6 animate-pulse border border-gray-200">
+                        <div key={index} className="bg-[var(--card)] rounded-2xl p-6 border border-[var(--line)]">
                             <div className="flex items-center justify-between">
                                 <div className="flex-1">
-                                    <div className="h-4 bg-gray-200 rounded-lg mb-3 w-24"></div>
-                                    <div className="h-8 bg-gray-200 rounded-lg w-16"></div>
+                                    <div className="h-4 bg-[var(--surface-2)] rounded-lg mb-3 w-24"></div>
+                                    <div className="h-8 bg-[var(--surface-2)] rounded-lg w-16"></div>
                                 </div>
-                                <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                                <div className="w-12 h-12 bg-[var(--surface-2)] rounded-xl"></div>
                             </div>
                         </div>
                     ))}
@@ -51,10 +51,10 @@ export default function AllRestaurants({ onManage }: Props) {
         <div className="w-full space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-800 mb-1">All Restaurant Overview</h2>
-                    <p className="text-gray-600 text-sm">Real-time dashboard statistics for all restaurants</p>
+                    <h2 className="text-xl font-semibold text-[var(--ink)] mb-1">All Restaurant Overview</h2>
+                    <p className="text-[var(--body)] text-sm">Real-time dashboard statistics for all restaurants</p>
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="flex items-center space-x-2 text-sm text-[var(--body)]">
                     <TrendingUp size={16} />
                     <span>Live data</span>
                 </div>
@@ -63,10 +63,10 @@ export default function AllRestaurants({ onManage }: Props) {
             {overviewData && overviewData.length > 0 ? (
                 overviewData.map((restaurant, restaurantIndex) => (
                     <div key={restaurantIndex} className="space-y-4">
-                        <div className="flex items-center justify-between gap-3 pb-2 border-b border-gray-200">
-                            <h3 className="text-lg font-semibold text-gray-800">{restaurant.resName}</h3>
+                        <div className="flex items-center justify-between gap-3 pb-2 border-b border-[var(--line)]">
+                            <h3 className="text-lg font-semibold text-[var(--ink)]">{restaurant.resName}</h3>
                             <button
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base justify-center"
+                                className="bg-[var(--btn-bg)] hover:opacity-90 text-[var(--btn-ink)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm md:text-base justify-center"
                                 onClick={() => onManage(restaurant.resId)}
                             >
                                 <UtensilsCrossed size={16} /> Manage {restaurant.resName}
@@ -84,11 +84,11 @@ export default function AllRestaurants({ onManage }: Props) {
                 ))
             ) : (
                 <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-                    <div className="bg-gray-100 rounded-full p-4 mb-4">
-                        <TrendingUp size={32} className="text-gray-400" />
+                    <div className="bg-[var(--card)] rounded-full p-4 mb-4">
+                        <TrendingUp size={32} className="text-[var(--muted)]" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-600 mb-2">No Data Available</h3>
-                    <p className="text-gray-500">Overview statistics will appear here once data is available.</p>
+                    <h3 className="text-xl font-semibold text-[var(--body)] mb-2">No Data Available</h3>
+                    <p className="text-[var(--muted)]">Overview statistics will appear here once data is available.</p>
                 </div>
             )}
         </div>

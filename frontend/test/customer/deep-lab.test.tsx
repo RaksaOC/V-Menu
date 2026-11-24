@@ -114,9 +114,6 @@ describe("dark mode", () => {
             "/demo-bistro/t/abc/orders/665f00000000000000000011",
         ])
             expect(darkReady(p), p).toBe(true);
-        // the cashier and owner screens stay light until VM-35 (the kitchen has dark styles since VM-34)
-        expect(darkReady("/demo-bistro/cashier/dashboard")).toBe(false);
-        expect(darkReady("/owner")).toBe(false);
     });
 });
 

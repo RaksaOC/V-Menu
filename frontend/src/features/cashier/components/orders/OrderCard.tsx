@@ -33,9 +33,9 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder, on
     const subOrders = order.orders;
 
     return (
-        <article className="rounded-2xl overflow-hidden bg-none w-full p-4  ">
+        <article className="rounded-2xl overflow-hidden bg-none w-full p-4">
             <div className="flex justify-between items-center mb-2">
-                <h3 className="text-xl font-bold text-zinc-800 dark:text-white mb-2.5">Table {order.table}</h3>
+                <h3 className="text-xl font-bold text-[var(--ink)] mb-2.5">Table {order.table}</h3>
                 {isNew && (
                     <Chip tone="accent" className="font-bold tracking-wide">
                         NEW
@@ -46,7 +46,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder, on
             {/* VM-30: the customer asked for the bill, or for a staff member */}
             <RequestBadges order={order} onDismissRequest={onDismissRequest} />
 
-            <div className="bg-none  rounded-xl p-3 mb-4 border border-slate-500">
+            <div className="bg-none rounded-xl p-3 mb-4 border border-[var(--line)]">
                 {subOrders.length > 0 ? (
                     subOrders.map((subOrder, index) => (
                         <BillOrder
@@ -60,16 +60,16 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder, on
                         />
                     ))
                 ) : (
-                    <p className="text-zinc-500 dark:text-zinc-400">No orders found.</p>
+                    <p className="text-[var(--muted)]">No orders found.</p>
                 )}
                 {subOrders.length > 0 && (
                     <div
                         role="group"
                         aria-label="Bill total"
-                        className="mx-4 mt-2 flex items-center justify-between border-t border-zinc-300 pt-3 dark:border-zinc-600"
+                        className="mx-4 mt-2 flex items-center justify-between border-t border-[var(--line)] pt-3"
                     >
-                        <span className="font-semibold text-zinc-700 dark:text-zinc-200">Bill total</span>
-                        <span className="text-lg font-bold text-zinc-900 dark:text-white">{money(order.totalCents)}</span>
+                        <span className="font-semibold text-[var(--body)]">Bill total</span>
+                        <span className="text-lg font-bold text-[var(--ink)]">{money(order.totalCents)}</span>
                     </div>
                 )}
             </div>
@@ -93,7 +93,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder, on
                         setShowInvoice((prev) => !prev);
                         onSeen?.(order._id);
                     }}
-                    className="flex-1 flex items-center justify-center space-x-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-3 px-4 rounded-xl transition-all duration-200"
+                    className="flex-1 flex items-center justify-center space-x-2 bg-[var(--card)] hover:bg-[var(--card)] text-[var(--body)] font-medium py-3 px-4 rounded-xl transition-all duration-200"
                 >
                     {showInvoice ? <EyeOff size={16} /> : <Eye size={16} />}
                     <span>{showInvoice ? "Hide Invoice" : "View Invoice"}</span>
@@ -102,7 +102,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder, on
                 {!order.isPaid && (
                     <button
                         onClick={() => onMarkPaid(order._id)}
-                        className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-green-500/25"
+                        className="flex-1 flex items-center justify-center space-x-2 bg-[var(--btn-bg)] text-[var(--btn-ink)] font-medium py-3 px-4 rounded-xl transition-all duration-200"
                     >
                         <DollarSign size={16} />
                         <span>Mark as Paid</span>

@@ -1,56 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-// One figure on the owner's overview, sliding in after `delay` ms.
+// One figure on the owner's overview (VM-35): a large mono figure under a mono uppercase label.
 interface StatCardProps {
     title: string;
     value: string | number;
-    icon: React.ComponentType<{ size?: number; className?: string }>;
-    color: string;
-    bgColor: string;
-    textColor: string;
+    icon: React.ComponentType<{ size?: number; className?: string; "aria-hidden"?: boolean }>;
     subtitle?: string;
+    /** shown with a coral edge and "Needs attention" */
     isUrgent?: boolean;
-    delay?: number;
 }
 
-export const StatCard = ({ title, value, icon: Icon, color, bgColor, textColor, subtitle, isUrgent = false, delay = 0 }: StatCardProps) => {
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const timer = setTimeout(() => setIsVisible(true), delay);
-        return () => clearTimeout(timer);
-    }, [delay]);
-
-    return (
-        <div
-            className={`
-        relative bg-white rounded-3xl p-6 shadow-md border border-slate-200
-        transition-all duration-700 ease-out transform
-        ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}
-        hover:shadow-xl hover:-translate-y-2
-        ${isUrgent ? "ring-2 ring-amber-300 ring-opacity-50" : ""}
-      `}
-        >
-            {isUrgent && <div className="absolute -top-2 -right-2 w-4 h-4 bg-amber-400 rounded-full animate-pulse"></div>}
-
-            <div className="flex items-center justify-between mb-4">
-                <div className={`${bgColor} p-3 rounded-2xl`}>
-                    <div className={`bg-gradient-to-br ${color} p-3 rounded-xl shadow-lg`}>
-                        <Icon size={24} className="text-white" />
-                    </div>
-                </div>
-                {isUrgent && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">Urgent</span>}
-            </div>
-
-            <div>
-                <h3 className={`text-sm font-semibold ${textColor} uppercase tracking-wide mb-2`}>{title}</h3>
-                <div className="flex items-baseline space-x-2">
-                    <span className="text-3xl font-bold text-gray-800">
-                        {typeof value === "number" ? value.toLocaleString("en-US") : value}
-                    </span>
-                    {subtitle && <span className="text-sm text-gray-500">{subtitle}</span>}
-                </div>
-            </div>
+export const StatCard = ({ title, value, icon: Icon, subtitle, isUrgent = false }: StatCardProps) => (
+    <div
+        className={`relative rounded-[var(--r-card)] border bg-[var(--card)] p-5 ${isUrgent ? "border-[var(--accent)]" : "border-[var(--line)]"}`}
+    >
+        <div className="mb-3 flex items-start justify-between gap-3">
+            <h3 className="font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-[var(--muted)]">
+                {title}
+            </h3>
+            <Icon size={20} aria-hidden className="shrink-0 text-[var(--muted)]" />
         </div>
-    );
-};
+        <div className="flex flex-wrap items-baseline gap-2">
+            <span className="font-[family-name:var(--f-mono)] text-3xl font-semibold text-[var(--ink)]">
+                {typeof value === "number" ? value.toLocaleString("en-US") : value}
+            </span>
+            {subtitle && <span className="text-sm text-[var(--muted)]">{subtitle}</span>}
+            {isUrgent && <span className="text-xs font-semibold text-[var(--accent-text)]">Needs attention</span>}
+        </div>
+    </div>
+);

@@ -95,7 +95,7 @@ const OwnerDashboard = () => {
             />
         ) : (
             <div className="space-y-6">
-                <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
+                <div className="bg-[var(--bg)] rounded-xl p-4 md:p-6 border border-[var(--line)]">
                     {/* VM-24: totals across restaurants use their currency when they all share one */}
                     <MoneyProvider settings={sharedMoney(restaurants)}>
                         {activeItem === "overview" && <AllOverview />}
@@ -109,7 +109,7 @@ const OwnerDashboard = () => {
     const sidebar = <OwnerSidebar activeItem={activeItem} onManage={handleManageRestaurants} onQuickAction={handleQuickAction} />;
 
     return (
-        <div className="w-full min-h-screen bg-gray-50">
+        <div className="w-full min-h-screen bg-[var(--card)]">
             <ToastHost />
             <DashboardHeader
                 title="V-Menu Owner"
@@ -126,7 +126,7 @@ const OwnerDashboard = () => {
             </MobileSidebar>
 
             <div className="flex">
-                <div className="hidden lg:block fixed mt-20 inset-y-0 w-72 bg-white border-r border-gray-200 h-full p-6 space-y-8">
+                <div className="hidden lg:block fixed mt-20 inset-y-0 w-72 bg-[var(--bg)] border-r border-[var(--line)] h-full p-6 space-y-8">
                     {sidebar}
                 </div>
 
