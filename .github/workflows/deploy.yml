@@ -187,19 +187,10 @@ jobs:
           cache: npm
           cache-dependency-path: e2e/package-lock.json
 
-      - name: Demo data
-        id: demo
-        run: node scripts/check-demo-data.mjs "$TARGET"
-
-      # SEC-02: the pages must send the security headers (landing, a customer page, staff logins).
-      - name: Security headers
-        if: '!cancelled()'
-        run: node scripts/check-headers.mjs "$TARGET" / /demo-bistro/customer/T1 /owner/login /demo-bistro/cashier/login
-
-      # Short-lived (10 min) chef and cashier tokens for the demo restaurant, so the browser tests
-      # can read the kitchen queue and cancel their test order. Only this step sees JWT_SECRET.
+      # Short-lived (10 min) chef and cashier tokens for the demo restaurant, as its seeded owner
+      # (SEC-03: the only user the seed gives those roles), so the checks can read T1's QR link
+      # (SEC-04), read the kitchen queue and cancel their test order. Only this step sees JWT_SECRET.
       - name: Staff tokens
-        if: steps.demo.outcome == 'success' && !cancelled()
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
@@ -208,6 +199,17 @@ jobs:
             echo "::add-mask::$token"
             echo "${role^^}_TOKEN=$token" >> "$GITHUB_ENV"
           done
+
+      # Reads T1's QR link token with CASHIER_TOKEN: links by table name are off on the servers.
+      - name: Demo data
+        id: demo
+        if: '!cancelled()'
+        run: node scripts/check-demo-data.mjs "$TARGET"
+
+      # SEC-02: the pages must send the security headers (landing, a customer page, staff logins).
+      - name: Security headers
+        if: '!cancelled()'
+        run: node scripts/check-headers.mjs "$TARGET" / /demo-bistro/customer/T1 /owner/login /demo-bistro/cashier/login
 
       - name: Install the browser tests
         if: steps.demo.outcome == 'success' && !cancelled()
