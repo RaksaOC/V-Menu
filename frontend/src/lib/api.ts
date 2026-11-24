@@ -34,3 +34,10 @@ export function apiErrorMessage(err: unknown, fallback = "Something went wrong. 
 export const seg = (value: string) => encodeURIComponent(value);
 
 export default api;
+
+/** The machine-readable `code` an API error carries (e.g. "TABLE_CLOSED"), if any. */
+export function apiErrorCode(err: unknown): string | undefined {
+    if (!axios.isAxiosError(err)) return undefined;
+    const code = (err.response?.data as { code?: unknown } | undefined)?.code;
+    return typeof code === "string" ? code : undefined;
+}

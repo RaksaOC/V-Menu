@@ -4,54 +4,42 @@ import ItemCard from "@/features/customer/components/ItemCard";
 import {ShoppingCart, Store, Utensils} from "lucide-react"
 import {ItemOutput} from "@/lib/types/Item";
 import Link from "next/link";
-import {useParams, useRouter} from "next/navigation";
-import {useEffect, useState} from "react";
+import {useParams} from "next/navigation";
+import {useCallback, useEffect, useState} from "react";
 import {ToastContainer} from "react-toastify";
 import SkeletonMenuCard from "@/components/ui/skeletons/SkeletonMenuCard";
-import {apiStatus} from "@/lib/api";
+import {apiErrorCode} from "@/lib/api";
+import TableProblem, {type TableProblemKind} from "@/features/customer/components/TableProblem";
 import {checkTable, getMenu} from "@/features/customer/api";
 
 export default function CustomerPage() {
     const [items, setItems] = useState<ItemOutput[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [problem, setProblem] = useState<TableProblemKind | null>(null);
     const params = useParams();
-    const router = useRouter();
-    const [isChecked, setChecked] = useState<boolean>(false);
+    const table = String(params.table ?? "");
+    const resSlug = String(params.res ?? "");
+
+    // VM-04: check the table, then load the menu. Every failure is explained on this page
+    // (closed table, unknown restaurant or table, or a server error with Try again).
+    const load = useCallback(async () => {
+        setIsLoading(true);
+        setProblem(null);
+        try {
+            await checkTable(resSlug, table);
+            localStorage.setItem("table", JSON.stringify(table));
+            setItems(await getMenu(resSlug));
+        } catch (error) {
+            const code = apiErrorCode(error);
+            setProblem(code === "TABLE_CLOSED" ? "closed" : code === "RESTAURANT_NOT_FOUND" ? "no-restaurant" : code === "TABLE_NOT_FOUND" ? "no-table" : "error");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [resSlug, table]);
 
     useEffect(() => {
-        const verifyTable = async () => {
-            try {
-                await checkTable(String(params.res), params.table?.toString() ?? "");
-                setChecked(true);
-            } catch (error) {
-                if (apiStatus(error) === 404) {
-                    router.push(`/${params.res}/customer`);
-                } else {
-                    console.error("API error:", error);
-                }
-            }
-        };
-
-        verifyTable();
-    }, []);
-
-    const table = params.table;
-    const resSlug = params.res;
-
-    useEffect(() => {
-        if (!isChecked) return;
-        localStorage.setItem("table", JSON.stringify(table));
-        const fetchItems = async () => {
-            try {
-                setItems(await getMenu(String(resSlug)));
-            } catch (err) {
-                console.log(err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchItems();
-    }, [isChecked]);
+        load();
+    }, [load]);
 
     return (
         <>
@@ -104,7 +92,9 @@ export default function CustomerPage() {
 
                         {/* Items Grid */}
                         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {isLoading ? (
+                            {problem ? (
+                                <TableProblem kind={problem} table={table} onRetry={load}/>
+                            ) : isLoading ? (
                                 <>
                                     <SkeletonMenuCard isLight={true}/>
                                     <SkeletonMenuCard isLight={true}/>
@@ -136,8 +126,9 @@ export default function CustomerPage() {
                     </div>
                 </main>
 
-                {/* Enhanced Fixed Cart Bar */
+                {/* Enhanced Fixed Cart Bar (hidden while the table can't take orders) */
                 }
+                {!problem && (
                 <div className="fixed bottom-0 left-0 right-0 z-50">
                     {/* Backdrop blur effect */}
                     <div className="absolute inset-0 bg-white/80 backdrop-blur-lg border-t border-gray-200/50"></div>
@@ -160,6 +151,7 @@ export default function CustomerPage() {
                         </div>
                     </div>
                 </div>
+                )}
             </div>
         </>
     )

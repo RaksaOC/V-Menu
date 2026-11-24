@@ -88,7 +88,7 @@ describe("order check (internal)", () => {
         const { body: table } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "A1" });
         const check = (t: string) =>
             request(app).post(`/internal/restaurants/${RES_ID}/order-check`).set("x-internal-key", "internal-test-key").send({ table: t, items: [{ _id: item._id, quantity: 2 }] });
-        expect((await check("A1")).status).toBe(409);
+        expect((await check("A1")).status).toBe(409); // new tables start closed
         await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
         const ok = await check("A1");
         expect(ok.body.items[0]).toMatchObject({ item: { name: "Bai Sach Chrouk", price: 3 }, quantity: 2 });
