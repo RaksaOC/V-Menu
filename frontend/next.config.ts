@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { securityHeaders } from "./security-headers";
 
 // The browser only ever calls /api/* on this site. Next forwards each prefix to the service
 // that owns it, so the frontend has no database access and no server secrets of its own.
@@ -13,6 +14,20 @@ const nextConfig: NextConfig = {
     devIndicators: false,
     // existing unused-import lint errors would otherwise fail production builds
     eslint: { ignoreDuringBuilds: true },
+    // SEC-02: security headers on every page. The CSP starts as report-only; build with
+    // CSP_MODE=enforce to enforce it (a build argument of the frontend image).
+    async headers() {
+        return [
+            {
+                source: "/((?!api/).*)",
+                headers: securityHeaders({
+                    dev: process.env.NODE_ENV !== "production",
+                    analytics: Boolean(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID),
+                    mode: process.env.CSP_MODE === "enforce" ? "enforce" : "report-only",
+                }),
+            },
+        ];
+    },
     async rewrites() {
         return [
             { source: "/api/auth/:path*", destination: `${RESTAURANT}/api/auth/:path*` },
