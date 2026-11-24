@@ -284,6 +284,38 @@ for (const [vp, theme] of [
     });
 }
 
+// VM-11: the cashier is on Orders when a customer at T2 orders. Before: nothing changes until a
+// reload. After: within 10 s the bill appears, marked NEW. Then the history view.
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-11 cashier live bills ${vp.width} ${theme}`, async () => {
+        const { context, page } = await newPage(browser, vp, theme, "cashier");
+        const all = (await (await page.request.get(`${BASE}/api/orders/${SLUG}/bills`)).json()) as {
+            _id: string;
+            table: string;
+            isPayed: boolean;
+        }[];
+        for (const b of all.filter((b) => b.table === "T2" && !b.isPayed))
+            await page.request.patch(`${BASE}/api/orders/${SLUG}/bills/${b._id}`, { data: { isPayed: true } });
+        await context.addInitScript(() => localStorage.setItem("dashboardSection", "orders"));
+        await page.goto(`${BASE}/${SLUG}/cashier/dashboard`);
+        await settle(page);
+        const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as object[];
+        await page.request.post(`${BASE}/api/orders/${SLUG}`, {
+            data: { table: "T2", isDone: false, orderedItems: [{ item: menu[0], quantity: 2 }] },
+        });
+        await page.waitForTimeout(11_000);
+        await shot({ page, theme, width: vp.width }, "VM-11-orders-after-new-order");
+        await page.getByRole("button", { name: /view order history/i }).click();
+        await page.waitForTimeout(1500);
+        await shot({ page, theme, width: vp.width }, "VM-11-order-history");
+        await context.close();
+    });
+}
+
 // VM-03: the kitchen when its sign-in ends, and when it can't reach the server.
 for (const theme of ["light", "dark"] as const) {
     await step(`VM-03 kitchen ${theme}`, async () => {

@@ -71,6 +71,21 @@ describe("kitchen api", () => {
 });
 
 describe("cashier api", () => {
+    it("asks for open bills, and one page of paid bills (VM-11)", async () => {
+        const seen: string[] = [];
+        const page = { bills: [], page: 3, limit: 20, total: 41, pages: 3 };
+        server.use(
+            http.get("*/api/orders/demo-bistro/bills", ({ request }) => {
+                const url = new URL(request.url);
+                seen.push(url.search);
+                return HttpResponse.json(url.searchParams.get("status") === "paid" ? page : []);
+            }),
+        );
+        await cashier.getOpenBills("demo-bistro");
+        expect(await cashier.getPaidBills("demo-bistro", 3)).toEqual(page);
+        expect(seen).toEqual(["?status=open", "?status=paid&page=3&limit=20"]);
+    });
+
     it("loads tables, dishes, bills and the overview", async () => {
         const bill = { _id: "b1", table: "T1", isPayed: false, createdAt: "x", orders: [] };
         const overview = { numOfActiveTables: 1, numOfUnpaidOrders: 0, numOfTables: 4, numOfItems: 4, numOfOrders: 2, numOfPayments: 1 };
@@ -80,7 +95,7 @@ describe("cashier api", () => {
         answer("get", "/api/orders/demo-bistro/overview", overview);
         expect(await cashier.getTables("demo-bistro")).toEqual([table]);
         expect(await cashier.getMenuItems("demo-bistro")).toEqual([dish]);
-        expect(await cashier.getBills("demo-bistro")).toEqual([bill]);
+        expect(await cashier.getOpenBills("demo-bistro")).toEqual([bill]); // VM-11
         expect(await cashier.getOverview("demo-bistro")).toEqual(overview);
     });
 

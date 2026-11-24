@@ -63,11 +63,15 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
         async countFor(resIds, isPayed) {
             return all.filter((b) => resIds.includes(b.resId) && b.isPayed === isPayed).length;
         },
-        async listWithOrders(resId) {
+        async listOpen(resId) {
             return all
-                .filter((b) => b.resId === resId)
+                .filter((b) => b.resId === resId && !b.isPayed)
                 .sort((a, b) => +b.createdAt - +a.createdAt)
                 .map(withOrders);
+        },
+        async pagePaid(resId, skip, limit) {
+            const paid = all.filter((b) => b.resId === resId && b.isPayed).sort((a, b) => +b.updatedAt! - +a.updatedAt!);
+            return { bills: paid.slice(skip, skip + limit).map(withOrders), total: paid.length };
         },
         async findOpen(resId, table) {
             const b = all.find((x) => x.resId === resId && x.table === table && !x.isPayed);
@@ -84,6 +88,7 @@ export function fakeBills(orders: { all: OrderRecord[] }): BillsRepo & { all: (O
             const b = all.find((x) => x._id === id && x.resId === resId);
             if (!b) return null;
             b.isPayed = isPayed;
+            b.updatedAt = new Date(Date.UTC(2026, 0, 1, 0, 0, clock++));
             return withOrders(b);
         },
     };
