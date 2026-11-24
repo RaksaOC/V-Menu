@@ -199,6 +199,25 @@ jobs:
           expect_tag staging "$V1"
           echo "::endgroup::"
 
+          echo "::group::10. a failed rollback puts back the version that was running"
+          deploy staging "$V2" "$SHA2"
+          expect_tag staging "$V2"
+          # V1's menu-service no longer starts, so going back to V1 fails part-way
+          docker tag "ghcr.io/raksaoc/vmenu-menu-service:$V1" vmenu-test-menu-service-v1
+          printf 'FROM alpine:3.20\nCMD ["false"]\n' | docker build -q -t "ghcr.io/raksaoc/vmenu-menu-service:$V1" -
+          if deploy staging --rollback; then
+            echo "::error::a rollback to a version that doesn't start should fail"; exit 1
+          fi
+          expect_tag staging "$V2"
+          running staging | grep -q "$SHA2" || { echo "::error::staging's menu-service isn't back on $V2"; exit 1; }
+          storage_ready staging || { echo "::error::staging's menu-service isn't ready after the failed rollback"; exit 1; }
+          sudo grep -q "^TAG=$V2$" /srv/vmenu/staging/.env || { echo "::error::staging's .env doesn't name $V2"; exit 1; }
+          sudo tail -n2 /srv/vmenu/staging/deploy-history.log | grep -P "\tauto-rollback\t$V2\tok\t" \
+            || { echo "::error::no auto-rollback $V2 ok line in the history"; exit 1; }
+          https staging.localhost
+          docker tag vmenu-test-menu-service-v1 "ghcr.io/raksaoc/vmenu-menu-service:$V1"
+          echo "::endgroup::"
+
       - name: Backup
         run: |
           set -euo pipefail

@@ -189,7 +189,18 @@ case $ACTION in
             result rollback "$target"
         else
             record rollback "$target" failed
-            die "rollback failed. Check: docker compose -p vmenu-$ENV_NAME ps"
+            # The target didn't start (or failed its checks), and run_tag may have left some
+            # containers on it: put back the version that was running, as a failed deploy does.
+            # The tag history is unchanged, so $from is still the current version.
+            log "rollback failed, putting $from back"
+            if run_tag "$from" local; then
+                record auto-rollback "$from" ok
+                log "back on $from"
+            else
+                record auto-rollback "$from" failed
+                log "could not restore $from either"
+            fi
+            die "rollback of $ENV_NAME to $target failed. Check: docker compose -p vmenu-$ENV_NAME ps"
         fi
         ;;
 

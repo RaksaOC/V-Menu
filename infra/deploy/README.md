@@ -375,6 +375,8 @@ Once a staging deploy has passed its smoke test, the `post-deploy` job in `deplo
 
 `rollback.yml` runs `remote-deploy.sh <env> --rollback`, which redeploys the tag in `.previous_tag`. It uses the images already on the server and downloads only missing ones, so it doesn't wait on GHCR, and it gets the build that actually ran even if that tag was pushed again since. The same applies when a failed deploy puts the previous tag back.
 
+If the rollback's target doesn't start or fails its checks, the script puts back the version that was running, the same way a failed deploy does: `deploy-history.log` gets `rollback <target> failed`, then `auto-rollback <current> ok` (or `failed`), and the run stays red. The tag history doesn't change, so you can fix the cause and roll back again.
+
 - Run it from the branch that matches the environment: `staging` for staging, `main` for production. Any other branch is refused by the environment's branch rule ("Branch main is not allowed to deploy to staging").
 - Only the repo owner can roll back production.
 - `deploy-test.yml` measures the rollback time on every run (see its job summary).
@@ -398,4 +400,5 @@ Every push to an `infra/**` branch that touches these files runs **Deploy test**
 - checks HTTPS through Caddy;
 - checks that a missing image and a wrong commit are both refused while staging stays up;
 - records a failed post-deploy check, and refuses one for production;
+- checks that a rollback whose target doesn't start puts back the version that was running (scenario 10; `scripts/deploy-rollback.test.mjs` checks the same with a stand-in `docker`, in the repo checks);
 - runs a backup.
