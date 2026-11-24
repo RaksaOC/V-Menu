@@ -96,7 +96,8 @@ done
 compose() { docker compose -f compose.yml -f compose.server.yml "$@"; }
 compose pull --quiet
 # Recreate, because a changed config file is not picked up by a running container.
-if ! compose up -d --force-recreate --remove-orphans --wait --wait-timeout 120; then
+# Up to 5 minutes: Alloy can take 3 when the server is busy (for example during an app deploy).
+if ! compose up -d --force-recreate --remove-orphans --wait --wait-timeout 300; then
     compose ps -a || true
     compose logs --no-color --tail 30 || true
     exit 1
