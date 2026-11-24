@@ -12,8 +12,10 @@ export default defineConfig({
             exclude: ["src/index.ts", "src/seed.ts"],
             reporter: ["text", "text-summary", "json-summary", "html"],
             reportsDirectory: "coverage",
-            // CI fails below these. The business rules (CL-04) must stay almost fully covered.
-            thresholds: { lines: 70, "src/services/**": { lines: 90, functions: 90, branches: 90, statements: 90 } },
+            // B3: CI fails below these. The lines minimum started at today's number (96%, 2026-11-23);
+            // raise it as tests are added, never lower it (scripts/coverage.test.mjs). Target: 80%.
+            // The business rules (CL-04) must stay almost fully covered.
+            thresholds: { lines: 96, "src/services/**": { lines: 90, functions: 90, branches: 90, statements: 90 } },
         },
     },
 });

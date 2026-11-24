@@ -15,5 +15,16 @@ export default defineConfig({
         setupFiles: ["./test/setup.ts"],
         css: false,
         restoreMocks: true,
+        coverage: {
+            provider: "v8",
+            // Every source file counts, even ones no test imports yet.
+            include: ["src/**/*.{ts,tsx}"],
+            exclude: ["src/**/*.d.ts", "src/lib/types/**"],
+            reporter: ["text-summary", "json-summary", "html"],
+            reportsDirectory: "coverage",
+            // B3: CI fails below this. It started at today's number (34%, 2026-11-23); raise it as
+            // tests are added, never lower it (scripts/coverage.test.mjs). Target: 60%.
+            thresholds: { lines: 34 },
+        },
     },
 });
