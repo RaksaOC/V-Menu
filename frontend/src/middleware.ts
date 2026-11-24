@@ -55,6 +55,11 @@ export function middleware(req: NextRequest) {
                     return NextResponse.redirect(new URL(`/owner/login`, req.url));
                 }
             }
+
+            // VM-19: a staff token belongs to one restaurant; another's pages go to that one's login
+            if (roleMatches && expectedRole !== "owner" && decoded.resSlug !== resSlugInUrl && !isLoginPage) {
+                return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
+            }
         } catch (err) {
             // If token is invalid and not already on login page.tsx
             if (!isLoginPage && roleInUrl !== "owner") {

@@ -1,11 +1,14 @@
 import mongoose from "mongoose";
+import { newQrToken } from "../qr-token.js";
 
-// A table customers order from (its QR code opens /<slug>/customer/<name>).
+// A table customers order from (its QR code opens /<slug>/t/<qrToken>, SEC-04).
 const tableSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true, maxlength: 40 },
         isEnabled: { type: Boolean, default: true },
         resId: { type: String, required: true, index: true },
+        // SEC-04: sparse, because tables from before it get theirs at startup (db.ts)
+        qrToken: { type: String, default: newQrToken, index: { unique: true, sparse: true } },
     },
     { timestamps: true },
 );

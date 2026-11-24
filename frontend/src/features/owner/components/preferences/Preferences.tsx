@@ -1,263 +1,198 @@
-import { Settings, Bell, Shield, Palette, Globe, Database, Mail, Smartphone, Clock, Users } from "lucide-react";
+"use client";
 
-export default function Preferences() {
+import { useContext, useEffect, useId, useState } from "react";
+import { QrCode, Save, Trash2, Upload } from "lucide-react";
+import type { RestaurantSettings } from "@vmenu/contracts";
+import { Button, Input } from "@/components/ui";
+import { MoneyProvider, Price } from "@/components/money/MoneyProvider";
+import { ResContext } from "@/lib/restaurant-context";
+import { getRestaurantSettings, saveRestaurantSettings } from "@/lib/restaurant-settings";
+import { uploadMenuPhoto } from "@/features/restaurant/api";
+import { apiErrorMessage } from "@/lib/api";
+
+type Currency = RestaurantSettings["currency"];
+const CURRENCIES: { value: Currency; label: string; hint: string }[] = [
+    { value: "USD", label: "US dollars ($)", hint: "$2.50" },
+    { value: "KHR", label: "Riel (៛)", hint: "Prices converted at your rate, rounded to 100 riel" },
+    { value: "both", label: "Both ($ and ៛)", hint: "Dollars first, then riel" },
+];
+const RATE_ERROR = "Enter a whole number between 1,000 and 10,000";
+const validRate = (rate: string) => /^\d+$/.test(rate.trim()) && Number(rate) >= 1000 && Number(rate) <= 10000;
+
+/**
+ * VM-24: the restaurant's settings. How prices show on every page (US dollars, riel or both, at
+ * the owner's exchange rate), and the payment QR (for example KHQR) printed on the invoice.
+ * Prices themselves are still typed and kept in US dollars.
+ */
+export default function Preferences({ onSaved }: { onSaved?: (settings: RestaurantSettings) => void }) {
+    const slug = useContext(ResContext);
+    const fileId = useId();
+    const [loaded, setLoaded] = useState(false);
+    const [loadError, setLoadError] = useState("");
+    const [currency, setCurrency] = useState<Currency>("USD");
+    const [rate, setRate] = useState("4100");
+    const [qr, setQr] = useState<string | null>(null);
+    const [rateError, setRateError] = useState("");
+    const [uploading, setUploading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+
+    useEffect(() => {
+        if (!slug) return;
+        let current = true;
+        getRestaurantSettings(slug)
+            .then((s) => {
+                if (!current) return;
+                setCurrency(s.currency);
+                setRate(String(s.khrPerUsd));
+                setQr(s.paymentQrUrl);
+                setLoaded(true);
+            })
+            .catch((e) => current && setLoadError(apiErrorMessage(e, "We couldn't load the settings.")));
+        return () => {
+            current = false;
+        };
+    }, [slug]);
+
+    const changed = () => setStatus(null);
+
+    async function upload(file: File | undefined) {
+        if (!file) return;
+        setUploading(true);
+        changed();
+        try {
+            setQr(await uploadMenuPhoto(slug, file));
+        } catch (e) {
+            setStatus({ ok: false, text: apiErrorMessage(e, "We couldn't upload the QR code.") });
+        } finally {
+            setUploading(false);
+        }
+    }
+
+    async function save() {
+        if (!validRate(rate)) return setRateError(RATE_ERROR);
+        setSaving(true);
+        try {
+            const saved = await saveRestaurantSettings(slug, { currency, khrPerUsd: Number(rate), paymentQrUrl: qr });
+            setStatus({ ok: true, text: "Saved" });
+            onSaved?.(saved);
+        } catch (e) {
+            setStatus({ ok: false, text: apiErrorMessage(e, "We couldn't save the settings.") });
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    if (loadError) return <p className="text-red-600">{loadError}</p>;
+    if (!loaded) return <p className="text-gray-500">Loading settings…</p>;
+
+    const preview = { currency, khrPerUsd: validRate(rate) ? Number(rate) : 4100 };
     return (
-        <div className="space-y-4 relative">
-            {/* Background Content - Slightly Blurred */}
-            <div className=" pointer-events-none select-none opacity-70">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                    <div>
-                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Preferences</h1>
-                        <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                            Customize your restaurant settings and manage your business preferences
-                        </p>
-                    </div>
-                    <button className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg w-full sm:w-auto">
-                        <Settings size={20} />
-                        <span>Save Changes</span>
-                    </button>
-                </div>
-
-                {/* Settings Categories */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* General Settings */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Settings size={20} className="text-blue-600" />
-                            </div>
-                            <h2 className="text-lg font-semibold text-gray-900">General Settings</h2>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Restaurant Name</label>
-                                <input
-                                    type="text"
-                                    placeholder="Bella Vista Restaurant"
-                                    className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600"
-                                    disabled
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Business Hours</label>
-                                <select className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600" disabled>
-                                    <option>9:00 AM - 10:00 PM</option>
-                                </select>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">Enable Online Orders</span>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">Table Reservations</span>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Notification Settings */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                                <Bell size={20} className="text-green-600" />
-                            </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">Email Notifications</span>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">SMS Alerts</span>
-                                <div className="w-12 h-6 bg-gray-300 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full"></div>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">Order Updates</span>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">Low Stock Alerts</span>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Security Settings */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-red-100 rounded-lg">
-                                <Shield size={20} className="text-red-600" />
-                            </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Security</h2>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Change Password</label>
-                                <input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600"
-                                    disabled
-                                />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">Two-Factor Authentication</span>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                            <button className="w-full h-10 bg-red-50 text-red-600 border border-red-200 rounded-lg font-medium" disabled>
-                                View Login History
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Appearance Settings */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-purple-100 rounded-lg">
-                                <Palette size={20} className="text-purple-600" />
-                            </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Appearance</h2>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Theme</label>
-                                <select className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600" disabled>
-                                    <option>Light Mode</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
-                                <select className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600" disabled>
-                                    <option>English (US)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Date Format</label>
-                                <select className="w-full h-10 px-3 border border-gray-300 rounded-lg text-gray-600" disabled>
-                                    <option>MM/DD/YYYY</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Payment Settings */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-yellow-100 rounded-lg">
-                                <Database size={20} className="text-yellow-600" />
-                            </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Payment & Billing</h2>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Methods</label>
-                                <div className="p-3 border border-gray-300 rounded-lg text-gray-600 text-sm">
-                                    Visa ending in 4242 • Default
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">Auto-renewal</span>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                            <button className="w-full h-10 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg font-medium" disabled>
-                                View Billing History
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Integration Settings */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-indigo-100 rounded-lg">
-                                <Globe size={20} className="text-indigo-600" />
-                            </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Integrations</h2>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <span className="text-sm font-medium text-gray-700">Google Analytics</span>
-                                    <p className="text-xs text-gray-500">Track website visitors</p>
-                                </div>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <span className="text-sm font-medium text-gray-700">POS System</span>
-                                    <p className="text-xs text-gray-500">Square integration</p>
-                                </div>
-                                <div className="w-12 h-6 bg-blue-500 rounded-full flex items-center px-1">
-                                    <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 mt-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                            <Globe size={24} className="text-blue-600 mb-2" />
-                            <span className="text-sm text-gray-700 font-medium">Website Settings</span>
-                            <span className="text-xs text-gray-500">Domain & SEO</span>
-                        </div>
-                        <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                            <Database size={24} className="text-green-600 mb-2" />
-                            <span className="text-sm text-gray-700 font-medium">Data Backup</span>
-                            <span className="text-xs text-gray-500">Export & Restore</span>
-                        </div>
-                        <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                            <Mail size={24} className="text-purple-600 mb-2" />
-                            <span className="text-sm text-gray-700 font-medium">Email Setup</span>
-                            <span className="text-xs text-gray-500">SMTP Configuration</span>
-                        </div>
-                        <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                            <Users size={24} className="text-orange-600 mb-2" />
-                            <span className="text-sm text-gray-700 font-medium">User Management</span>
-                            <span className="text-xs text-gray-500">Roles & Permissions</span>
-                        </div>
-                    </div>
-                </div>
+        <div className="max-w-2xl space-y-6 text-gray-900">
+            <div>
+                <h2 className="text-xl font-bold sm:text-2xl">Preferences</h2>
+                <p className="mt-1 text-sm text-gray-600">How prices show on every page, and the payment QR on the printed invoice.</p>
             </div>
 
-            {/* Coming Soon Overlay */}
-            <div className="absolute inset-0 bg-white/80  flex items-center justify-center">
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-xl p-8 sm:p-12 text-center max-w-md mx-4">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Settings size={32} className="text-blue-600" />
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Coming Soon</h2>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
-                        We&apos;re working hard to bring you advanced preference settings. This feature will allow you to customize every
-                        aspect of your restaurant management experience.
+            <section className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+                <fieldset className="space-y-2">
+                    <legend className="mb-2 text-sm font-semibold">Currency</legend>
+                    {CURRENCIES.map((c) => (
+                        <label
+                            key={c.value}
+                            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 ${currency === c.value ? "border-blue-600 bg-blue-50" : "border-gray-200"}`}
+                        >
+                            <input
+                                type="radio"
+                                name="currency"
+                                value={c.value}
+                                checked={currency === c.value}
+                                onChange={() => {
+                                    setCurrency(c.value);
+                                    changed();
+                                }}
+                                className="mt-1"
+                            />
+                            <span>
+                                <span className="block font-medium">{c.label}</span>
+                                <span className="block text-xs text-gray-500">{c.hint}</span>
+                            </span>
+                        </label>
+                    ))}
+                </fieldset>
+
+                <Input
+                    label="Riel per US dollar"
+                    inputMode="numeric"
+                    value={rate}
+                    error={rateError || undefined}
+                    hint="Used to show riel. Dish prices stay in US dollars."
+                    onChange={(e) => {
+                        setRate(e.target.value);
+                        setRateError("");
+                        changed();
+                    }}
+                />
+
+                <p className="text-sm text-gray-600">
+                    A $2.50 dish shows as{" "}
+                    <MoneyProvider settings={preview}>
+                        <Price cents={250} className="text-gray-900" />
+                    </MoneyProvider>
+                </p>
+            </section>
+
+            <section className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+                <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold">
+                        <QrCode size={16} aria-hidden /> Payment QR
+                    </h3>
+                    <p className="mt-1 text-xs text-gray-500">
+                        For example your KHQR. It&apos;s printed on the invoice so guests can pay by scanning. JPG, PNG or WebP, up to 5 MB.
                     </p>
-                    <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
-                        <Clock size={16} />
-                        <span>Expected: Next Update</span>
-                    </div>
                 </div>
+                {qr && (
+                    <div className="flex flex-wrap items-end gap-4">
+                        {/* the owner's uploaded photo, served by menu-service */}
+                        <img src={qr} alt="Payment QR" className="h-40 w-40 rounded border border-gray-200 bg-white object-contain" />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            icon={<Trash2 size={14} aria-hidden />}
+                            onClick={() => {
+                                setQr(null);
+                                changed();
+                            }}
+                        >
+                            Remove QR
+                        </Button>
+                    </div>
+                )}
+                <input
+                    id={fileId}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={(e) => upload(e.target.files?.[0])}
+                />
+                <label
+                    htmlFor={fileId}
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-50"
+                >
+                    <Upload size={16} aria-hidden />
+                    {uploading ? "Uploading…" : "Upload payment QR"}
+                </label>
+            </section>
+
+            <div className="flex flex-wrap items-center gap-3">
+                <Button icon={<Save size={16} aria-hidden />} loading={saving} disabled={uploading} onClick={save}>
+                    Save settings
+                </Button>
+                {status && (
+                    <p role="status" className={`text-sm ${status.ok ? "text-green-700" : "text-red-600"}`}>
+                        {status.text}
+                    </p>
+                )}
             </div>
         </div>
     );

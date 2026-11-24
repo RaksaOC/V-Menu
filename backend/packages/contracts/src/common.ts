@@ -13,6 +13,9 @@ export type StaffRole = z.infer<typeof StaffRole>;
 /** A MongoDB id as the API sends it. */
 export const ObjectId = z.string("Must be an id").regex(/^[a-f0-9]{24}$/i, "Must be a 24-character id");
 
+/** SEC-04: a table's link token: 16 random bytes in base64url. */
+export const QrToken = z.string("Must be a table link").regex(/^[A-Za-z0-9_-]{22}$/, "Must be a table link");
+
 /** Trimmed text, 1 to `max` characters. */
 export const text = (max: number) =>
     z
@@ -30,6 +33,13 @@ export const Email = z
     .toLowerCase()
     .max(200, "At most 200 characters")
     .email("Must be an email address");
+
+/** CL-07: an amount of money: whole cents, never negative, at most $1,000,000. */
+export const Cents = z
+    .number("Must be a number")
+    .int("Must be a whole number of cents")
+    .min(0, "Can't be negative")
+    .max(100_000_000, "At most $1,000,000");
 
 /** Dates arrive as ISO strings in JSON. */
 export const IsoDate = z.string();

@@ -9,6 +9,10 @@ export function internalRoutes({ services }: RouteContext) {
     r.get("/restaurants/by-slug/:slug", async (req, res) => {
         res.json(await services.restaurants.bySlug(String(req.params.slug)));
     });
+    // SEC-03: every service checks here that a session is still current
+    r.get("/sessions/version", async (req, res) => {
+        res.json(await services.auth.sessionVersion(req.query));
+    });
     r.get("/restaurants", async (req, res) => {
         res.json(await services.restaurants.forOwner(req.query));
     });

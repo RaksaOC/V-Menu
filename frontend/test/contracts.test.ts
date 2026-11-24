@@ -23,10 +23,22 @@ describe("frontend fixtures match @vmenu/contracts", () => {
         expect(NEXT_STATUS).toEqual(C.NEXT_STATUS);
     });
 
+    it("the cart's limit on lines is the contract's (VM-22)", async () => {
+        const { MAX_ORDER_LINES, LINE_NOTE_MAX, ORDER_NOTE_MAX } = await import("@/features/customer/cart");
+        expect(MAX_ORDER_LINES).toBe(C.MAX_ORDER_LINES);
+        expect(LINE_NOTE_MAX).toBe(C.LINE_NOTE_MAX); // VM-28
+        expect(ORDER_NOTE_MAX).toBe(C.ORDER_NOTE_MAX);
+    });
+
     it("what the cart sends is a valid PlaceOrderBody (and no isDone)", async () => {
         const { toOrderBody } = await import("@/features/customer/cart");
-        const body = toOrderBody("T1", [{ item: F.dish, quantity: 2 }]);
-        expect(C.PlaceOrderBody.parse(body)).toEqual({ table: "T1", orderedItems: [{ item: { _id: F.dish._id }, quantity: 2 }] });
+        const lines = [{ item: F.dish, quantity: 2 }];
+        const orderedItems = [{ item: { _id: F.dish._id }, quantity: 2 }];
+        const body = toOrderBody({ token: null, name: "T1" }, lines);
+        expect(C.PlaceOrderBody.parse(body)).toEqual({ table: "T1", orderedItems });
         expect(body).not.toHaveProperty("isDone");
+        // SEC-04: through a table's link, the token goes and the name doesn't
+        const QR = "AbCdEfGhIjKlMnOpQrSt_-";
+        expect(C.PlaceOrderBody.parse(toOrderBody({ token: QR, name: "" }, lines))).toEqual({ qrToken: QR, orderedItems });
     });
 });

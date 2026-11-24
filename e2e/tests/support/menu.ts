@@ -3,12 +3,14 @@
 export interface Dish {
     _id: string;
     name: string;
-    price: number;
+    priceCents: number;
+    isEnabled?: boolean;
 }
 type Menu = Dish[] | { categories: { _id: string | null; name: string; items: Dish[] }[] };
 
-/** Every dish on the menu, in one list. */
-export const dishesOf = (menu: Menu): Dish[] => (Array.isArray(menu) ? menu : menu.categories.flatMap((c) => c.items));
+/** Every dish that can be ordered, in one list. VM-26: sold-out dishes are on the menu, but not here. */
+export const dishesOf = (menu: Menu): Dish[] =>
+    (Array.isArray(menu) ? menu : menu.categories.flatMap((c) => c.items)).filter((dish) => dish.isEnabled !== false);
 
 /** The same menu without the dishes `keep` rejects, in the same shape. */
 export function withoutDishes(menu: Menu, keep: (dish: Dish) => boolean): Menu {

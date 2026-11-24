@@ -198,6 +198,11 @@ jobs:
       - name: Smoke test (order -> kitchen queue)
         run: node scripts/smoke.mjs
 
+      # SEC-11: on its own throwaway MongoDB, the staging user can't reach production's databases
+      # and the other way round, with the same roles as on the server.
+      - name: Database users reach only their own databases
+        run: bash scripts/check-db-isolation.sh
+
       - name: Container status and logs
         if: failure()
         run: |

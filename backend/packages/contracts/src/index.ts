@@ -4,5 +4,6 @@
 export * from "./common.js";
 export * from "./internal.js";
 export * from "./menu.js";
+export * from "./money.js";
 export * from "./orders.js";
 export * from "./restaurants.js";

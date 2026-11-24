@@ -11,7 +11,7 @@ const { default: OrderCard } = await import("@/features/cashier/components/order
 const dish = (name: string, price: number) => ({
     _id: `665f0000000000000000${name.length}${name.length}${name.length}${name.length}`.slice(0, 24),
     name,
-    price,
+    priceCents: Math.round(price * 100),
     image: "/x.jpg",
     isEnabled: true,
 });
@@ -33,6 +33,13 @@ const BILL = {
     isPaid: false,
     createdAt: "2026-11-23T10:00:00Z",
     orders: [SERVED, CANCELLED, PREPARING],
+    // VM-31: the server's lines and totals, with the cancelled order left out
+    lines: [
+        { _id: "fish", name: "Fish Amok", priceCents: 500, quantity: 2, totalCents: 1000 },
+        { _id: "rice", name: "Rice", priceCents: 100, quantity: 2, totalCents: 200 },
+    ],
+    subtotalCents: 1200,
+    totalCents: 1200,
 };
 
 describe("the cashier's bill", () => {
@@ -51,7 +58,7 @@ describe("the cashier's bill", () => {
         fireEvent.click(screen.getByRole("button", { name: "View Invoice" }));
         const invoice = screen.getByRole("dialog");
         expect(within(invoice).queryByText("Lok Lak")).toBeNull();
-        expect(within(invoice).getByText("$12.00")).toBeTruthy(); // 2 × 5 + 2 × 1
+        expect(within(within(invoice).getByText("Total").closest("div")!).getByText("$12.00")).toBeTruthy(); // 2 × 5 + 2 × 1
     });
 
     it("cancels an order with a reason, asking for one first", () => {

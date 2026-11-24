@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { toast } from "@/lib/toast";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getMemberships } from "@/features/auth/api";
-import { Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ArrowRight } from "lucide-react";
+import { firebaseCode, signInMessage } from "@/features/auth/login-errors";
+import { PASSWORD_RULE, passwordProblem } from "@/features/auth/password-rule";
+import { CheckInbox } from "@/features/auth/components/CheckInbox";
+import { LoginForm, type LoginProblems } from "@/features/auth/components/LoginForm";
 
 export interface LoginDetails {
     email: string;
@@ -15,166 +18,80 @@ interface Props {
 }
 
 export function Login({ onSuccess }: Props) {
-    const [form, setForm] = useState({ email: "", password: "" });
-    const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({});
+    // VM-12: invited staff create their account here ("create"); everyone else signs in
+    const [mode, setMode] = useState<"signin" | "create">("signin");
+    // VM-13: an account whose email isn't verified yet, waiting on "Check your inbox"
+    const [unverified, setUnverified] = useState<User | null>(null);
+    const creating = mode === "create";
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-        if (formErrors[e.target.name as keyof typeof formErrors]) {
-            setFormErrors({ ...formErrors, [e.target.name]: undefined });
-        }
-    };
+    /** On to choosing a restaurant and role, with a token that says what Firebase knows now. */
+    async function carryOn(user: User) {
+        const idToken = await user.getIdToken(true);
+        onSuccess({ email: (user.email ?? "").toLowerCase(), idToken }, await getMemberships(idToken));
+    }
 
-    const validateForm = () => {
-        const errors: { email?: string; password?: string } = {};
-
-        if (!form.email) {
-            errors.email = "Email is required";
-        } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-            errors.email = "Please enter a valid email address";
-        }
-
-        if (!form.password) {
-            errors.password = "Password is required";
-        } else if (form.password.length < 6) {
-            errors.password = "Password must be at least 6 characters";
-        }
-
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!validateForm()) return;
-        setLoading(true);
+    /** Asks Firebase to email a verification link; the panel's "Send it again" covers a failure. */
+    async function askToVerify(user: User) {
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
-            const idToken = await userCredential.user.getIdToken();
-            const memberships = await getMemberships(idToken);
-            const logInDetail = {
-                email: form.email.toLowerCase(),
-                idToken,
-            };
-            onSuccess(logInDetail, memberships);
-        } catch (err: any) {
-            console.error("Login error:", err?.message);
-            toast.error("Login failed");
-        } finally {
-            setLoading(false);
+            await sendEmailVerification(user);
+        } catch (err) {
+            console.error("Verification email:", firebaseCode(err));
         }
-    };
+        setUnverified(user);
+    }
 
-    const handleForgotPassword = () => {
-        toast.info("Password reset functionality will be implemented soon");
-    };
+    async function createAccount(email: string, password: string): Promise<LoginProblems | void> {
+        try {
+            const { user } = await createUserWithEmailAndPassword(auth, email, password);
+            await askToVerify(user);
+        } catch (err) {
+            const code = firebaseCode(err);
+            console.error("Create account error:", code);
+            if (code === "auth/email-already-in-use") return { email: "This email already has an account. Sign in instead." };
+            if (code === "auth/weak-password" || code === "auth/password-does-not-meet-requirements") return { password: PASSWORD_RULE };
+            toast.error("Couldn't create the account");
+        }
+    }
+
+    async function signIn(email: string, password: string): Promise<LoginProblems | void> {
+        try {
+            const { user } = await signInWithEmailAndPassword(auth, email, password);
+            const idToken = await user.getIdToken();
+            const memberships = await getMemberships(idToken);
+            // VM-13: an invite only counts once the email is verified, so with no roles yet that's
+            // the likely reason; an account that already has roles (an owner) goes straight on
+            if (!user.emailVerified && Object.keys(memberships).length === 0) await askToVerify(user);
+            else onSuccess({ email: email.toLowerCase(), idToken }, memberships);
+        } catch (err) {
+            console.error("Login error:", firebaseCode(err));
+            toast.error(signInMessage(err));
+        }
+    }
+
+    // after "I've verified my email": a fresh token, since the old one still says unverified
+    if (unverified) return <CheckInbox user={unverified} onVerified={() => carryOn(unverified)} />;
 
     return (
-        <div className="bg-[var(--bg)] border border-[var(--line)] rounded-2xl shadow-xl p-8 max-w-md w-full">
-            <h2 className="text-3xl font-bold text-center mb-6">V-Menu Log In</h2>
-
-            <form onSubmit={handleSubmit} className="space-y-5 mb-5">
-                {/* Email */}
-                <div className="space-y-1">
-                    <label htmlFor="email" className="block text-sm font-medium mb-1">
-                        Email Address
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                            <Mail size={18} />
-                        </div>
-                        <input
-                            type="email"
-                            name="email"
-                            id="email"
-                            placeholder="your@email.com"
-                            value={form.email}
-                            onChange={handleChange}
-                            className={`w-full pl-10 pr-4 py-3 rounded-lg bg-black/20 border focus:outline-none focus:ring-2 ${
-                                formErrors.email
-                                    ? "border-red-500 focus:ring-red-500"
-                                    : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"
-                            }`}
-                        />
-                    </div>
-                    {formErrors.email && (
-                        <div className="flex items-center text-red-500 text-sm mt-1">
-                            <AlertCircle size={14} className="mr-1" />
-                            {formErrors.email}
-                        </div>
-                    )}
-                </div>
-
-                {/* Password */}
-                <div className="space-y-1">
-                    <div className="flex items-center justify-between mb-1">
-                        <label htmlFor="password" className="block text-sm font-medium">
-                            Password
-                        </label>
-                        <button
-                            type="button"
-                            onClick={handleForgotPassword}
-                            className="text-sm text-blue-400 hover:text-blue-300 focus:outline-none"
-                        >
-                            Forgot Password?
-                        </button>
-                    </div>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                            <Lock size={18} />
-                        </div>
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            id="password"
-                            placeholder="••••••••"
-                            value={form.password}
-                            onChange={handleChange}
-                            className={`w-full pl-10 pr-10 py-3 rounded-lg bg-black/20 border focus:outline-none focus:ring-2 ${
-                                formErrors.password
-                                    ? "border-red-500 focus:ring-red-500"
-                                    : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"
-                            }`}
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
-                        >
-                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                    </div>
-                    {formErrors.password && (
-                        <div className="flex items-center text-red-500 text-sm mt-1">
-                            <AlertCircle size={14} className="mr-1" />
-                            {formErrors.password}
-                        </div>
-                    )}
-                </div>
-
-                {/* Submit */}
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition duration-300 flex items-center justify-center ${
-                        loading ? "bg-blue-600/70 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-                    }`}
-                >
-                    {loading ? (
-                        <>
-                            <Loader2 size={18} className="animate-spin mr-2" />
-                            Logging in...
-                        </>
-                    ) : (
-                        <>
-                            Login
-                            <ArrowRight size={18} className="ml-2" />
-                        </>
-                    )}
-                </button>
-            </form>
-        </div>
+        <LoginForm
+            title={creating ? "Create your account" : "V-Menu Log In"}
+            intro={creating ? "Invited by a restaurant? Use the email they invited. We'll send a link to verify it." : undefined}
+            submitLabel={creating ? "Create account" : "Login"}
+            busyLabel={creating ? "Creating..." : "Logging in..."}
+            canReset={!creating}
+            checkPassword={creating ? passwordProblem : undefined}
+            onSubmit={creating ? createAccount : signIn}
+            footer={
+                <p className="text-center text-sm text-[var(--muted)]">
+                    {creating ? "Already have an account? " : "New staff member? "}
+                    <button
+                        type="button"
+                        onClick={() => setMode(creating ? "signin" : "create")}
+                        className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                        {creating ? "Sign in" : "Create an account"}
+                    </button>
+                </p>
+            }
+        />
     );
 }

@@ -1,4 +1,5 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import mongoose from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -19,6 +20,7 @@ const RESTAURANTS: Record<string, { _id: string; name: string; slug: string; own
     [OTHER]: { _id: "665f00000000000000000002", name: "Other", slug: OTHER, ownerId: "owner1" },
 };
 const app = createApp({
+    openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
     lookupRestaurant: async (_req, slug) => {
         const r = RESTAURANTS[slug];
         if (!r) throw notFound("Restaurant not found");
@@ -39,7 +41,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
-    expect(await prepareDatabase()).toBe(true); // dropping the database drops the indexes; the service builds them at startup
+    expect((await prepareDatabase()).tableNameIndex).toBe(true); // dropping the database drops the indexes; the service builds them at startup
 });
 
 const create = (body: object, slug = SLUG) => request(app).post(`/api/menu/${slug}/tables`).set(owner).send(body);
@@ -97,8 +99,8 @@ describe("table names are unique per restaurant (VM-16)", () => {
             { name: "4", resId },
             { name: "4", resId },
         ]);
-        expect(await prepareDatabase()).toBe(false);
+        expect((await prepareDatabase()).tableNameIndex).toBe(false);
         await Table.deleteOne({ name: "4" });
-        expect(await prepareDatabase()).toBe(true);
+        expect((await prepareDatabase()).tableNameIndex).toBe(true);
     });
 });

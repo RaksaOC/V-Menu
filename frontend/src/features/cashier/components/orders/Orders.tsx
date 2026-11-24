@@ -2,7 +2,8 @@ import OrderCard from "./OrderCard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui";
 import ConnectionLostBar from "@/components/ui/ConnectionLostBar";
-import { getOpenBills, getPaidBills, setBillPaid, type PaidBillsPage, cancelOrder } from "@/features/cashier/api";
+import { getOpenBills, getPaidBills, setBillPaid, type PaidBillsPage, cancelOrder, dismissRequest } from "@/features/cashier/api";
+import type { TableRequestKind } from "@vmenu/contracts";
 import { apiErrorMessage } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { useConnectionStatus } from "@/lib/use-connection-status";
@@ -96,6 +97,16 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
         }
     };
 
+    // VM-30: the cashier has seen to a "bill requested" or "staff called"
+    const handleDismissRequest = async (billId: string, kind: TableRequestKind) => {
+        try {
+            await dismissRequest(slug, billId, kind);
+            await loadOpen();
+        } catch (err) {
+            toast.error(apiErrorMessage(err, "Couldn't clear it. Try again."));
+        }
+    };
+
     // ---- paid bills, a page at a time
     const [showHistory, setShowHistory] = useState(false);
     const [historyPage, setHistoryPage] = useState(1);
@@ -154,6 +165,7 @@ export default function Orders({ pollMs = BILLS_POLL_MS }: { pollMs?: number } =
                                         order={order}
                                         onMarkPaid={handleMarkPaid}
                                         onCancelOrder={handleCancelOrder}
+                                        onDismissRequest={handleDismissRequest}
                                         isNew={fresh.has(order._id)}
                                         onSeen={markSeen}
                                     />

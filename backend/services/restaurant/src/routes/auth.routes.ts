@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
+import { rateLimitHandler, requireRole } from "@vmenu/common";
 import { sessionHours } from "../services/session.js";
 import type { RouteContext } from "./context.js";
 
@@ -17,7 +18,11 @@ function cookieOptions(hours = sessionHours()) {
 /** /api/auth: sign-up and sign-in with a Firebase ID token, and sign-out. */
 export function authRoutes({ services }: RouteContext) {
     const r = Router();
-    r.use(rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false }));
+    // VM-20: read on every dashboard load, so it's outside the sign-in rate limit; it needs a session
+    r.get("/me", requireRole("owner", "cashier", "chef"), async (req, res) => {
+        res.json(await services.auth.me(req.user!));
+    });
+    r.use(rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: "draft-8", legacyHeaders: false, handler: rateLimitHandler }));
     r.post("/signup", async (req, res) => {
         res.status(201).json(await services.auth.signup(req.body));
     });
@@ -30,6 +35,11 @@ export function authRoutes({ services }: RouteContext) {
     });
     r.post("/logout", (_req, res) => {
         res.clearCookie("token", { ...cookieOptions(), maxAge: undefined }).json({ message: "Signed out" });
+    });
+    // SEC-03: ends this account's sessions on every device, then this browser's cookie
+    r.post("/sign-out-everywhere", requireRole("owner", "cashier", "chef"), async (req, res) => {
+        await services.auth.signOutEverywhere(req.user!.uid);
+        res.clearCookie("token", { ...cookieOptions(), maxAge: undefined }).json({ message: "Signed out everywhere" });
     });
     return r;
 }

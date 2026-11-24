@@ -1,3 +1,4 @@
+import { NO_OPEN_BILLS } from "../unit/fakes.js";
 import {
     CALLERS,
     callerHeaders,
@@ -30,6 +31,7 @@ const { mongoImagesRepo } = await import("../../src/repositories/images.repo.js"
 const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
 const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
 const app = createApp({
+    openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
     lookupRestaurant: async (_req, slug) => {
         const r = [A, B].find((x) => x.slug === slug);
         if (!r) throw notFound("Restaurant not found");
@@ -48,6 +50,7 @@ const MATRIX: [string, AccessRow][] = [
     ["GET /metrics", PUBLIC],
     ["GET /api/menu/:slug/public/items", PUBLIC],
     ["GET /api/menu/:slug/public/tables/:name", PUBLIC],
+    ["GET /api/menu/:slug/public/t/:token", PUBLIC], // SEC-04: the link token is the proof
     ["GET /api/menu/:slug/images/:id", PUBLIC],
     ["GET /api/menu/:slug/items", staff],
     ["PATCH /api/menu/:slug/items/:id/availability", staff],
@@ -60,6 +63,7 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/menu/:slug/tables", owner],
     ["PUT /api/menu/:slug/tables/:id", owner],
     ["DELETE /api/menu/:slug/tables/:id", owner],
+    ["POST /api/menu/:slug/tables/:id/qr-token", owner], // SEC-04
     ["GET /api/menu/:slug/categories", staff],
     ["POST /api/menu/:slug/categories", owner],
     ["PUT /api/menu/:slug/categories/order", owner],
@@ -67,6 +71,7 @@ const MATRIX: [string, AccessRow][] = [
     ["DELETE /api/menu/:slug/categories/:id", owner],
     ["GET /internal/restaurants/:resId/counts", NO_APP_TOKEN],
     ["POST /internal/restaurants/:resId/order-check", NO_APP_TOKEN],
+    ["GET /internal/restaurants/:resId/tables/by-token/:token", NO_APP_TOKEN], // SEC-04
 ];
 
 let mongo: MongoMemoryServer;
@@ -84,9 +89,11 @@ afterAll(async () => {
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
     const img = `/api/menu/${A.slug}/images/${"a".repeat(24)}`;
-    ids.itemA = String((await Item.create({ name: "Amok", price: 5, image: img, resId: A._id }))._id);
-    ids.tableA = String((await Table.create({ name: "T1", resId: A._id, isEnabled: true }))._id);
-    ids.itemB = String((await Item.create({ name: "B dish", price: 3, image: img, resId: B._id }))._id);
+    ids.itemA = String((await Item.create({ name: "Amok", priceCents: 500, image: img, resId: A._id }))._id);
+    const tableA = await Table.create({ name: "T1", resId: A._id, isEnabled: true });
+    ids.tableA = String(tableA._id);
+    ids.tokenA = String(tableA.get("qrToken")); // SEC-04
+    ids.itemB = String((await Item.create({ name: "B dish", priceCents: 300, image: img, resId: B._id }))._id);
     ids.tableB = String((await Table.create({ name: "B1", resId: B._id, isEnabled: true }))._id);
     ids.imageB = await mongoImagesRepo.save(Buffer.from("RIFF0000WEBPVP8 "), B._id);
     ids.categoryA = String((await Category.create({ name: "Mains", sortOrder: 0, resId: A._id }))._id);
@@ -100,6 +107,7 @@ function urlFor(route: string) {
         .replace(":slug", A.slug)
         .replace(":resId", A._id)
         .replace(":name", "T1")
+        .replace(":token", ids.tokenA)
         .replace(/items\/:id/, `items/${ids.itemA}`)
         .replace(/tables\/:id/, `tables/${ids.tableA}`)
         .replace(/categories\/:id/, `categories/${ids.categoryA}`)
@@ -152,7 +160,7 @@ describe("another restaurant's ids, through your own restaurant (SEC-07)", () =>
         const body = url().endsWith("/availability") ? { isEnabled: false } : method === "PUT" ? { name: "Renamed" } : {};
         const res = await send(method, url(), caller, {}, body);
         expect(res.status).toBe(404);
-        expect(await Item.findById(ids.itemB).lean()).toMatchObject({ name: "B dish", price: 3, isEnabled: true });
+        expect(await Item.findById(ids.itemB).lean()).toMatchObject({ name: "B dish", priceCents: 300, isEnabled: true });
         expect(await Table.findById(ids.tableB).lean()).toMatchObject({ name: "B1", isEnabled: true });
         expect(await Category.findById(ids.categoryB).lean()).toMatchObject({ name: "B drinks" });
     });

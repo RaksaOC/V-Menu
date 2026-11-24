@@ -10,6 +10,7 @@ export default defineConfig({
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url)),
             // CL-05: the API shapes, straight from the backend's source; zod from this package
+            "@vmenu/contracts/money": fileURLToPath(new URL("../backend/packages/contracts/src/money.ts", import.meta.url)),
             "@vmenu/contracts": fileURLToPath(new URL("../backend/packages/contracts/src/index.ts", import.meta.url)),
             zod: fileURLToPath(new URL("./node_modules/zod", import.meta.url)),
         },

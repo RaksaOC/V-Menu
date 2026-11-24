@@ -132,7 +132,7 @@ These are the same commands CI runs:
 |---|---|
 | `npm run check` | everything below except e2e, in order: format, lint, typecheck, import boundaries, tests |
 | `npm test` | backend tests (each service and `@vmenu/common`: Vitest, Supertest, in-memory MongoDB), frontend tests (Vitest, Testing Library, MSW) and the repo checks |
-| `npm run test:e2e` | Playwright against a running stack (`npm run dev` and `npm run seed` first) |
+| `npm run test:e2e` | Playwright against a running stack (`npm run dev` and `npm run seed` first). The suite places many orders, so set `ORDERS_PER_MINUTE=100000` and `ORDERS_PER_TABLE=100000` in `backend/services/order/.env` for that stack (CI does) |
 | `npm run lint` | ESLint on the frontend |
 | `npm run typecheck` | TypeScript for the backend workspace and the frontend |
 | `npm run deps` | import boundaries (dependency-cruiser, rules in `.dependency-cruiser.cjs`): no service imports another, routes don't reach models, packages don't import services, the frontend imports only `@vmenu/contracts` from the backend, and features don't import each other |
@@ -177,6 +177,7 @@ Each service reads its own `backend/services/<name>/.env` (see its `.env.example
 | `COOKIE_SECURE` | restaurant | `false` only for plain-http hosts other than localhost |
 | `RESTAURANT_SERVICE_URL` | menu, order | |
 | `MENU_SERVICE_URL` | order | |
+| `ORDER_SERVICE_URL` | menu | asked before a table is renamed or deleted (VM-15) |
 
 The frontend only needs the public Firebase web config, plus the three service URLs if they are not on the defaults.
 
@@ -239,6 +240,13 @@ docs/showcase/               before/after screenshots for each PR (capture.ts)
 
 Photo credits for the tour images are in `frontend/public/images/tour/CREDITS.md`.
 
+## Money and dates
+
+- **Money is whole cents** in the database and the API, in fields named `...Cents` (`priceCents`, `totalCents`, `revenueCents`). So `0.1 + 0.2` can't turn into `0.30000000000000004`.
+- **Two helpers** in `@vmenu/contracts` do the converting: `toCents()` for an amount someone typed and `formatMoney()` for showing it. The frontend imports them through `@/lib/money`.
+- **For one release** the API and the stored data also keep the old `price` in dollars (CL-07), so a page opened before a deploy keeps working and a rollback is safe.
+- **Dates** are ISO strings in the API. The frontend shows them with `formatDate()`, `formatTime()` and `formatDateTime()` from `@/lib/dates`, in the restaurant's time zone (default `Asia/Phnom_Penh`), not the device's.
+
 ## Naming
 
 One style, checked by `scripts/naming.test.mjs` (CL-06):
@@ -247,5 +255,5 @@ One style, checked by `scripts/naming.test.mjs` (CL-06):
 - **Every other file** is kebab-case, with dots for its role: `orders.service.ts`, `bills.repo.ts`, `use-photo.ts`, `table-url.ts`. What a file exports stays camelCase (`usePhoto`, `tableUrl`).
 - **Data:**
   - A bill is `isPaid`. It used to be `isPayed`. order-service renames the stored field at startup (`src/migrations/is-paid.ts`). For one release the API also accepts `isPayed` and sends it alongside `isPaid`.
-  - A person's role at one restaurant is a `Membership` (it used to be `Tenant`). The collection keeps its name, `tenants`, and `tenantId` is still the person's Firebase uid.
-  - The dashboard counts move from `numOfX` to `xCount` with VM-09.
+  - A person's role at one restaurant is a `Membership` (it used to be `Tenant`). The collection keeps its name, `tenants`, and `tenantId` is still the person's Firebase uid. VM-12: it is `null` for an invite until the person signs in with that email, verified, and the invite is linked to their account.
+  - Counts are `xCount`: `orderCount`, `paymentCount`, `unpaidBillCount`, `tableCount` (VM-09; they were `numOfX`). An amount of money is named for what it is, in cents: `revenueCents`, not a count. Only the internal call from order-service to menu-service still says `numOfX`; order-service renames them for the dashboards.

@@ -4,6 +4,7 @@ import { Readable } from "node:stream";
 import type { CategoriesRepo, CategoryRecord } from "../../src/repositories/categories.repo.js";
 import type { ImagesRepo } from "../../src/repositories/images.repo.js";
 import type { ItemRecord, ItemsRepo } from "../../src/repositories/items.repo.js";
+import { newQrToken } from "../../src/qr-token.js";
 import { TableNameTaken, type TableRecord, type TablesRepo } from "../../src/repositories/tables.repo.js";
 
 let seq = 0;
@@ -14,8 +15,8 @@ export function fakeItems(): ItemsRepo & { all: ItemRecord[] } {
     const find = (resId: string, id: string) => all.find((i) => i._id === id && i.resId === resId);
     return {
         all,
-        async list(resId, { enabledOnly = false } = {}) {
-            return all.filter((i) => i.resId === resId && (!enabledOnly || i.isEnabled));
+        async list(resId) {
+            return all.filter((i) => i.resId === resId);
         },
         async get(resId, id) {
             const found = find(resId, id);
@@ -112,11 +113,14 @@ export function fakeTables(): TablesRepo & { all: TableRecord[] } {
         async findByName(resId, name) {
             return all.find((t) => t.resId === resId && t.name === name) ?? null;
         },
+        async findByToken(resId, qrToken) {
+            return all.find((t) => t.resId === resId && t.qrToken === qrToken) ?? null;
+        },
         // Like the unique { resId, name } index (VM-16): a used name is refused at write time.
         async create(resId, fields) {
             await Promise.resolve(); // a write takes a moment, so parallel creates can race as they do on MongoDB
             if (all.some((t) => t.resId === resId && t.name === fields.name)) throw new TableNameTaken(fields.name);
-            const table = { _id: newId(), ...fields, resId };
+            const table = { _id: newId(), qrToken: newQrToken(), ...fields, resId };
             all.push(table);
             return table;
         },
@@ -163,3 +167,6 @@ export function fakeImages(): ImagesRepo & { files: Map<string, { resId: string;
         },
     };
 }
+
+/** VM-15: order-service, mocked: no table has an unpaid bill. */
+export const NO_OPEN_BILLS = { hasOpenBill: async () => false };

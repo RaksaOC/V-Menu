@@ -22,7 +22,7 @@ function setup() {
 }
 const dish = (name: string, categoryId?: string | null, isEnabled = true) => ({
     name,
-    price: 2,
+    priceCents: 200,
     image: PLACEHOLDER,
     categoryId,
     isEnabled,
@@ -104,7 +104,7 @@ describe("dishes in categories", () => {
         expect((await menu.update(A, soup._id, { categoryId: null })).categoryId).toBeNull();
     });
 
-    it("the public menu: categories in order, dishes by name, only what's on, empty ones left out, Other last", async () => {
+    it("the public menu: categories in order, dishes by name with sold-out ones last (VM-26), empty ones left out, Other last", async () => {
         const { sections, menu } = setup();
         const mains = await sections.create(A._id, { name: "Mains" });
         const drinks = await sections.create(A._id, { name: "Drinks" });
@@ -119,7 +119,7 @@ describe("dishes in categories", () => {
         const { categories } = await menu.publicMenu(A._id);
         expect(categories.map((c) => [c._id, c.name, c.items.map((i) => i.name)])).toEqual([
             [drinks._id, "Drinks", ["Iced Coffee"]],
-            [mains._id, "Mains", ["Amok", "Fried Rice"]],
+            [mains._id, "Mains", ["Amok", "Fried Rice", "Lok Lak"]],
             [null, "Other", ["Bread"]],
         ]);
         expect((await menu.publicMenu(B._id)).categories).toEqual([]);

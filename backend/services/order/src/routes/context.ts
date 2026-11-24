@@ -3,6 +3,7 @@ import { assertRestaurantAccess, type LookupRestaurant, type RestaurantRef } fro
 import type { billsService } from "../services/bills.service.js";
 import type { kitchenService } from "../services/kitchen.service.js";
 import type { ordersService } from "../services/orders.service.js";
+import type { requestsService } from "../services/requests.service.js";
 import type { statsService } from "../services/stats.service.js";
 import type { tableService } from "../services/table.service.js";
 
@@ -14,6 +15,7 @@ export interface RouteContext {
         bills: ReturnType<typeof billsService>;
         stats: ReturnType<typeof statsService>;
         table: ReturnType<typeof tableService>;
+        requests: ReturnType<typeof requestsService>;
     };
     restaurant(req: Request): Promise<RestaurantRef>;
 }

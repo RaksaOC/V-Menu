@@ -5,8 +5,9 @@ export interface TableRecord {
     name: string;
     isEnabled: boolean;
     resId: string;
+    qrToken: string; // SEC-04
 }
-export type TableFields = Partial<Pick<TableRecord, "name" | "isEnabled">>;
+export type TableFields = Partial<Pick<TableRecord, "name" | "isEnabled" | "qrToken">>;
 
 /** VM-16: another table of this restaurant already has the name (the unique index said so). */
 export class TableNameTaken extends Error {
@@ -32,6 +33,8 @@ export interface TablesRepo {
     list(resId: string): Promise<TableRecord[]>;
     get(resId: string, id: string): Promise<TableRecord | null>;
     findByName(resId: string, name: string): Promise<TableRecord | null>;
+    /** SEC-04: the table this link token belongs to, in this restaurant. */
+    findByToken(resId: string, qrToken: string): Promise<TableRecord | null>;
     /** Throws TableNameTaken when the name is used (VM-16). */
     create(resId: string, fields: Pick<TableRecord, "name" | "isEnabled">): Promise<TableRecord>;
     /** null when there's no such table in this restaurant. Throws TableNameTaken when the new name is used (VM-16). */
@@ -44,6 +47,7 @@ export const mongoTablesRepo: TablesRepo = {
     list: (resId) => Table.find({ resId }).lean<TableRecord[]>(),
     get: (resId, id) => Table.findOne({ _id: id, resId }).lean<TableRecord>(),
     findByName: (resId, name) => Table.findOne({ name, resId }).lean<TableRecord>(),
+    findByToken: (resId, qrToken) => Table.findOne({ qrToken, resId }).lean<TableRecord>(),
     create: (resId, fields) =>
         uniqueName(fields.name, async () => (await Table.create({ ...fields, resId })).toObject() as unknown as TableRecord),
     update: (resId, id, fields) =>

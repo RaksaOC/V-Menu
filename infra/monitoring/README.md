@@ -19,6 +19,8 @@ On the test laptop the agent and its helpers use about 130 MB of memory in total
 | Data | Source | Used for |
 |---|---|---|
 | Requests, errors, latency, Node.js health | each service's `/metrics` | Overview dashboard, alerts |
+| Orders by status, time to ready, oldest pending order, refused orders, photo uploads (B10) | order-service and menu-service `/metrics` | Kitchen row on the Overview dashboard, alert |
+| Refused requests (401, 403, 429) by service and reason (SEC-10) | every service's `/metrics` and logs | Security row on the Overview dashboard, alert |
 | Container CPU, memory, network | Docker stats | Overview dashboard, alerts |
 | Server CPU, memory, network, disk | `/proc`, `/sys`, Docker's disk | Overview dashboard, alerts |
 | Service and frontend logs | Docker logs, with customer IPs removed | Overview dashboard |
@@ -79,6 +81,40 @@ GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=<token> node infra/moni
 ```
 
 It is safe to run again. Alerts go to the stack's default contact point.
+
+## Kitchen metrics (B10)
+
+| Metric | What it means |
+|---|---|
+| `vmenu_orders_total{status}` | Orders that entered each status: `pending` when placed, then `preparing`, `ready`, `served` or `cancelled`. It counts steps, so one served order adds 1 to four statuses. |
+| `vmenu_order_ready_seconds` | Histogram: seconds from the customer's order to "ready" |
+| `vmenu_orders_pending_oldest_seconds` | How long the oldest pending order has waited, read from the database at each scrape. Orders placed over 24 hours ago don't count, so one forgotten order can't keep the alert on. |
+| `vmenu_orders_rate_limited_total` | Orders refused by the order rate limit. Stays at 0 until VM-22 adds the limit, which must call `countRateLimitedOrder()`. |
+| `vmenu_image_uploads_total{result}` | Photo uploads: `ok`, `not_a_photo`, `too_large`, `bad_request`, `denied`, `rate_limited` or `error` |
+
+The **Order pending for over 15 minutes** alert reads the third one. The agent only forwards metrics on its keep-list in `config.alloy`, which now includes every `vmenu_*` metric from the services.
+
+Counters restart at 0 when a service restarts, and `increase()` and `rate()` in the dashboard handle that. Each status and result is listed at 0 from the start, because `increase()` can't see a series' first value.
+
+## Failed access (SEC-10)
+
+Every request a service refuses with 401, 403 or 429 is counted in `vmenu_auth_failures_total{service, reason}` and written as one `access refused` log line.
+
+| Reason | Meaning |
+|---|---|
+| `no_token` | No session or key was sent |
+| `bad_token` | The session, Firebase sign-in or key isn't valid |
+| `expired` | The session has ended |
+| `wrong_role` | Signed in, but without the role this needs |
+| `other_restaurant` | Signed in, but for a different restaurant |
+| `rate_limited` | Over a rate limit |
+| `cross_site` | A write from another website |
+| `other` | Refused for a reason not listed above |
+
+- **The log line** has the request id, method, route, restaurant, role and reason. The email is masked (`s***@gmail.com`). It never has a token, a key, the query string or the request's headers.
+- **The answer to the caller doesn't change.** The reason is only in our logs and metrics.
+- **A refusal passed on from another service** is counted once, by the service that refused it.
+- **The Many refused requests alert** fires above 50 refusals in 5 minutes per environment. A signed-out kitchen screen doesn't trigger it, because a 401 sends that screen to the login page and stops its polling. If real traffic makes it noisy, raise the number in `alerts/vmenu-alerts.json`.
 
 ## DORA metrics
 

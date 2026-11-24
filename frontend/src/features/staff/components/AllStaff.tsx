@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { getAllStaff, type RestaurantStaff } from "@/features/staff/api";
 import { Calendar, ChevronsUpDown, CreditCard, Crown, Mail, Pencil, Search, Users, Utensils, Building2, House } from "lucide-react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
-import { prettyDate } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
+import InvitePending from "@/features/staff/components/InvitePending";
 import type { StaffMember } from "@vmenu/contracts";
 
 const getRoleBadge = (role: string) => {
@@ -357,8 +358,9 @@ export default function AllStaff() {
                                                                         .toUpperCase()}
                                                                 </span>
                                                             </div>
-                                                            <div>
+                                                            <div className="flex flex-col items-start gap-1">
                                                                 <p className="font-medium text-gray-900">{member.name}</p>
+                                                                <InvitePending member={member} />
                                                             </div>
                                                         </div>
                                                     </td>
@@ -377,9 +379,7 @@ export default function AllStaff() {
                                                     <td className="py-4 px-1">
                                                         <div className="flex items-center gap-2 justify-center">
                                                             <Calendar size={16} className="text-gray-400" />
-                                                            <span className="text-gray-900">
-                                                                {prettyDate(member.createdAt.toString(), false)}
-                                                            </span>
+                                                            <span className="text-gray-900">{formatDate(member.createdAt)}</span>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -392,9 +392,13 @@ export default function AllStaff() {
                             {/* Mobile Cards */}
                             <div className="lg:hidden p-4 space-y-3">
                                 {restaurant.staff.map((member) => (
-                                    <div key={member._id} className="bg-gray-50 rounded-xl border border-gray-100 p-4">
+                                    <div
+                                        key={member._id}
+                                        data-member={member._id}
+                                        className="bg-gray-50 rounded-xl border border-gray-100 p-4"
+                                    >
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <div className="w-12 h-12 shrink-0 bg-blue-100 rounded-full flex items-center justify-center">
                                                 <span className="text-blue-600 font-semibold text-sm">
                                                     {member.name
                                                         .split(" ")
@@ -404,28 +408,25 @@ export default function AllStaff() {
                                                 </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between gap-2 h-full">
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="font-medium text-gray-900 truncate">{member.name}</p>
-                                                    </div>
+                                                <p className="font-medium text-gray-900 truncate">{member.name}</p>
+                                                <div className="mt-1 flex flex-wrap items-center gap-1.5">
                                                     <span className={getRoleBadge(member.role)}>
                                                         {getRoleIcon(member.role)}
                                                         {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                                                     </span>
+                                                    <InvitePending member={member} />
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between py-4">
-                                            <div className="flex flex-col gap-1 items-start justify-center">
-                                                <div className="flex items-center gap-2">
-                                                    <Mail size={16} className="text-gray-400" />
+                                            <div className="flex flex-col gap-1 items-start justify-center min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 min-w-0 max-w-full">
+                                                    <Mail size={16} className="text-gray-400 shrink-0" />
                                                     <span className="text-gray-900 text-sm truncate">{member.email}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Calendar size={16} className="text-gray-400" />
-                                                    <span className="text-gray-900 text-sm">
-                                                        {prettyDate(member.createdAt.toString(), false)}
-                                                    </span>
+                                                    <span className="text-gray-900 text-sm">{formatDate(member.createdAt)}</span>
                                                 </div>
                                             </div>
                                         </div>

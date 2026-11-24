@@ -11,13 +11,17 @@ process.env.COOKIE_SECURE = "false";
 
 // Fake Firebase: an "ID token" here is just "uid:email", or "uid:email:unverified" for an account
 // whose email isn't verified yet (VM-13).
-const app = createApp({
-    verifyIdToken: async (t) => {
-        const [uid, email, unverified] = t.split(":");
-        if (!uid || !email) throw new Error("bad token");
-        return { uid, email, emailVerified: unverified !== "unverified" };
-    },
-});
+const newApp = () =>
+    createApp({
+        verifyIdToken: async (t) => {
+            const [uid, email, unverified] = t.split(":");
+            if (!uid || !email) throw new Error("bad token");
+            return { uid, email, emailVerified: unverified !== "unverified" };
+        },
+    });
+// A new app for each test: /api/auth allows 30 requests a minute per app, and this file signs up
+// and signs in far more often than that. The limit itself is tested below (SEC-10).
+let app = newApp();
 
 let mongo: MongoMemoryServer;
 beforeAll(async () => {
@@ -30,6 +34,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
     await mongoose.connection.db!.dropDatabase();
+    app = newApp();
 });
 
 async function signUp(uid = "owner1", email = "owner@x.com") {
@@ -89,9 +94,43 @@ describe("sign-up and sign-in", () => {
     });
 });
 
+describe("restaurant settings (VM-24)", () => {
+    it("anyone reads them; the owner changes them; they're kept", async () => {
+        const slug = await signUp();
+        const read = await request(app).get(`/api/restaurants/${slug}/settings`);
+        expect(read.status).toBe(200);
+        expect(read.body).toEqual({ name: "Mee Keav", currency: "USD", khrPerUsd: 4100, paymentQrUrl: null });
+        const token = await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" });
+        const qr = `/api/menu/${slug}/images/${"c".repeat(24)}`;
+        const saved = await request(app)
+            .put(`/api/restaurants/${slug}/settings`)
+            .set("authorization", `Bearer ${token}`)
+            .send({ currency: "KHR", khrPerUsd: 4050, paymentQrUrl: qr });
+        expect(saved.status).toBe(200);
+        expect((await request(app).get(`/api/restaurants/${slug}/settings`)).body).toEqual({
+            name: "Mee Keav",
+            currency: "KHR",
+            khrPerUsd: 4050,
+            paymentQrUrl: qr,
+        });
+    });
+
+    it("refuses another owner and a bad currency", async () => {
+        const slug = await signUp("owner1", "a@x.com");
+        await signUp("owner2", "b@x.com"); // a real owner, of another restaurant (SEC-03)
+        const other = await signAppToken({ uid: "owner2", email: "b@x.com", role: "owner" });
+        const mine = await signAppToken({ uid: "owner1", email: "a@x.com", role: "owner" });
+        const put = (t: string, body: object) =>
+            request(app).put(`/api/restaurants/${slug}/settings`).set("authorization", `Bearer ${t}`).send(body);
+        expect((await put(other, { currency: "KHR" })).status).toBe(403);
+        expect((await put(mine, { currency: "EUR" })).status).toBe(400);
+    });
+});
+
 describe("owner routes", () => {
     it("keeps owners out of restaurants they do not own", async () => {
         const slug = await signUp("owner1", "a@x.com");
+        await signUp("owner2", "b@x.com"); // a real owner, of another restaurant (SEC-03)
         const other = await signAppToken({ uid: "owner2", email: "b@x.com", role: "owner" });
         const res = await request(app).get(`/api/restaurants/${slug}/staff`).set("authorization", `Bearer ${other}`);
         expect(res.status).toBe(403);
@@ -115,6 +154,40 @@ describe("owner routes", () => {
         expect(removed.status).toBe(200);
     });
 
+    it("invites a cashier by email; their first verified sign-in links the account (VM-12)", async () => {
+        const slug = await signUp();
+        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
+        const invited = await request(app)
+            .post(`/api/restaurants/${slug}/staff`)
+            .set(auth)
+            .send({ name: "Dara", email: "dara@x.com", role: "cashier" });
+        expect(invited.status).toBe(201);
+        expect(invited.body.tenantId).toBeNull();
+        expect((await request(app).post("/api/auth/memberships").send({ idToken: "dara-uid:dara@x.com:unverified" })).body).toEqual({});
+        const roles = await request(app).post("/api/auth/memberships").send({ idToken: "dara-uid:dara@x.com" });
+        expect(roles.body).toEqual({ [`Mee Keav - ${slug}`]: ["cashier"] });
+        const [linked] = (await request(app).get(`/api/restaurants/${slug}/staff`).set(auth)).body.filter(
+            (m: { email: string }) => m.email === "dara@x.com",
+        );
+        expect(linked.tenantId).toBe("dara-uid");
+    });
+
+    it("changing a role into one the person already has here is a 409 (VM-18)", async () => {
+        const slug = await signUp();
+        const auth = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" })}` };
+        const add = (role: string) =>
+            request(app).post(`/api/restaurants/${slug}/staff`).set(auth).send({ name: "Sok", email: "sok@x.com", role });
+        await add("cashier");
+        const chef = await add("chef");
+        const res = await request(app).put(`/api/restaurants/${slug}/staff/${chef.body._id}`).set(auth).send({ role: "cashier" });
+        expect(res.status).toBe(409);
+        expect(res.body.message).toBe("This person already has that role here");
+        const rows = (await request(app).get(`/api/restaurants/${slug}/staff`).set(auth)).body.filter(
+            (m: { email: string }) => m.email === "sok@x.com",
+        );
+        expect(rows.map((m: { role: string }) => m.role).sort()).toEqual(["cashier", "chef"]);
+    });
+
     it("rejects a cashier token on owner routes", async () => {
         const token = await signAppToken({ uid: "u9", email: "v@x.com", role: "cashier" });
         const res = await request(app).get("/api/restaurants").set("authorization", `Bearer ${token}`);
@@ -132,6 +205,20 @@ describe("internal routes", () => {
 });
 
 // VM-03: staff stay signed in for a whole shift; the token and the cookie last as long.
+describe("who am I (VM-20)", () => {
+    it("answers with the signed-in person's name, from their cookie", async () => {
+        await signUp();
+        const login = await request(app).post("/api/auth/login").send({ idToken: "owner1:owner@x.com", role: "owner" });
+        const res = await request(app).get("/api/auth/me").set("cookie", login.headers["set-cookie"][0].split(";")[0]);
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({ name: "Ory", email: "owner@x.com", role: "owner" });
+    });
+
+    it("needs a session", async () => {
+        expect((await request(app).get("/api/auth/me")).status).toBe(401);
+    });
+});
+
 describe("session length (VM-03)", () => {
     // SEC-01: the token is only in the httpOnly cookie
     const cookieToken = (res: { headers: Record<string, unknown> }) =>
@@ -164,6 +251,7 @@ describe("session length (VM-03)", () => {
 
 describe("input checks name the fields (CL-05, VM-17)", () => {
     it("a bad staff member is a 400 with the fields to fix", async () => {
+        await signUp();
         const token = await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" });
         const auth = { authorization: `Bearer ${token}` };
         const { body: r } = await request(app).post("/api/restaurants").set(auth).send({ name: "Fields" });
@@ -174,5 +262,64 @@ describe("input checks name the fields (CL-05, VM-17)", () => {
         expect(res.status).toBe(400);
         expect(res.body.code).toBe("INVALID_INPUT");
         expect(Object.keys(res.body.fields).sort()).toEqual(["email", "role"]);
+    });
+});
+
+describe("public restaurant info (VM-21)", () => {
+    it("needs no sign-in, and answers only the name and slug", async () => {
+        const slug = await signUp();
+        const res = await request(app).get(`/api/restaurants/${slug}/public`);
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({ name: "Mee Keav", slug }); // no id, owner id or email
+    });
+
+    it("an unknown restaurant is a 404 with a code the page can explain", async () => {
+        const res = await request(app).get("/api/restaurants/nobody-here/public");
+        expect(res.status).toBe(404);
+        expect(res.body.code).toBe("RESTAURANT_NOT_FOUND");
+    });
+
+    it("the owner's routes next to it still need a sign-in", async () => {
+        const slug = await signUp();
+        expect((await request(app).get(`/api/restaurants/${slug}/staff`)).status).toBe(401);
+    });
+});
+
+describe("failed sign-ins are counted (SEC-10)", () => {
+    const failures = async (reason: string) => {
+        const { text } = await request(app).get("/metrics");
+        const line = text.split("\n").find((l) => l.startsWith("vmenu_auth_failures_total{") && l.includes(`reason="${reason}"`));
+        return line ? Number(line.split(" ").pop()) : 0;
+    };
+
+    it("no Firebase token", async () => {
+        const before = await failures("no_token");
+        expect((await request(app).post("/api/auth/login").send({ role: "owner" })).status).toBe(401);
+        expect(await failures("no_token")).toBe(before + 1);
+    });
+
+    it("a token Firebase doesn't confirm", async () => {
+        const before = await failures("bad_token");
+        expect((await request(app).post("/api/auth/login").send({ idToken: "nonsense", role: "owner" })).status).toBe(401);
+        expect(await failures("bad_token")).toBe(before + 1);
+    });
+
+    it("a real account without that role", async () => {
+        const slug = await signUp();
+        const before = await failures("wrong_role");
+        const asOwner = await request(app).post("/api/auth/login").send({ idToken: "someone:someone@x.com", role: "owner" });
+        const asChef = await request(app).post("/api/auth/login").send({ idToken: "someone:someone@x.com", role: "chef", resSlug: slug });
+        expect([asOwner.status, asChef.status]).toEqual([401, 401]);
+        expect(await failures("wrong_role")).toBe(before + 2);
+    });
+
+    it("the sign-in rate limit counts, and its answer stays the same", async () => {
+        const limited = createApp({ verifyIdToken: async () => ({ uid: "u", email: "u@x.com", emailVerified: true }) });
+        const before = await failures("rate_limited");
+        let last: request.Response | undefined;
+        for (let i = 0; i < 31; i++) last = await request(limited).post("/api/auth/logout");
+        expect(last!.status).toBe(429);
+        expect(last!.text).toBe("Too many requests, please try again later.");
+        expect(await failures("rate_limited")).toBe(before + 1);
     });
 });

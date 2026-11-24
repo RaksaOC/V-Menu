@@ -1,5 +1,6 @@
 import { assertId, HttpError, notFound } from "@vmenu/common";
 import { NEXT_STATUS, type UpdateOrderStatusBody } from "@vmenu/contracts";
+import { countOrderStatus, observeReady } from "../lib/order-metrics.js";
 import { pages, paging } from "./paging.js";
 import type { OrdersRepo } from "../repositories/orders.repo.js";
 
@@ -25,6 +26,9 @@ export function kitchenService({ orders }: { orders: OrdersRepo }) {
             if (NEXT_STATUS[order.status] !== status) throw refused();
             const moved = await orders.setStatus(resId, id, order.status, status, { at: new Date(), by });
             if (!moved) throw refused(); // someone else moved it first
+            // B10: count the step, and time order -> ready
+            countOrderStatus(status);
+            if (status === "ready") observeReady(order.orderedAt ?? order.createdAt);
             return moved;
         },
     };

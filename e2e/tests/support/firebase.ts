@@ -22,6 +22,15 @@ export async function isRunning(): Promise<boolean> {
     }
 }
 
+/** Why the emulator tests can't run against this stack, or "" when they can. */
+export async function emulatorProblem(request: { get(url: string): Promise<{ headers(): Record<string, string> }> }): Promise<string> {
+    if (!(await isRunning())) return `the Auth emulator isn't running at ${EMULATOR}`;
+    // only an E2E build puts the emulator's address in its CSP (frontend/security-headers.ts)
+    const headers = (await request.get("/login")).headers();
+    const csp = headers["content-security-policy"] ?? headers["content-security-policy-report-only"] ?? "";
+    return csp.includes(EMULATOR) ? "" : "this frontend isn't an E2E build";
+}
+
 /** A fresh, unique email, so tests don't trip over each other's users. */
 export const testEmail = (who: string) => `${who}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@e2e.test`;
 

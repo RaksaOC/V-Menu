@@ -37,6 +37,7 @@ Nobody logs into the server to deploy. The workflow writes the env files from Gi
 | `remote-deploy.sh` | Runs on the server: pull, start, wait for healthy, smoke test, auto-rollback on failure |
 | `ci-deploy.sh` | Runs in GitHub Actions: writes env files from secrets, copies them, calls `remote-deploy.sh` |
 | `backup-mongo.sh` | Daily `mongodump`, installed by `setup-server.sh` |
+| `mongo-users.js` | The database users and their roles, and a read-only check of them (SEC-11) |
 | `staging.env.example`, `prod.env.example` | Every secret and variable, and where it goes |
 | `../../.github/workflows/deploy.yml` | The deploy job (called by M3's release workflow, or run by hand), then the post-deploy checks of staging |
 | `../../.github/workflows/rollback.yml` | One-click rollback |
@@ -81,6 +82,33 @@ db.createUser({ user: "vmenu_prod", pwd: passwordPrompt(), roles: [
   { role: "readWrite", db: "vmenu_prod_orders" } ] })
 db.createUser({ user: "vmenu_backup", pwd: passwordPrompt(), roles: ["backup"] })
 ```
+
+#### Check the database users (SEC-11)
+
+Each environment's user must reach **only its own** databases. `mongo-users.js` holds the expected users and roles, and compares them with the real ones. It only reads: it doesn't change a user, and it doesn't print passwords.
+
+Run it on the server, as a Mongo admin, once now and after any change to the users:
+
+```bash
+scp infra/deploy/mongo-users.js <server>:/tmp/mongo-users.js    # from your machine
+# on the server:
+mongosh "mongodb://127.0.0.1:27017/admin" -u <admin> -p --quiet --file /tmp/mongo-users.js
+rm /tmp/mongo-users.js
+```
+
+- **Use the real database names.** The script expects the names in the table at the top of this file. Compare them with the database in each `MONGODB_URI_*` secret. If an environment uses other names, pass them for this run, and don't commit them:
+  ```bash
+  VMENU_STAGING_DBS=name1,name2,name3 VMENU_PROD_DBS=name4,name5,name6 mongosh ... --file /tmp/mongo-users.js
+  ```
+- **`ok` on every line:** nothing to do.
+- **`WRONG ...`:** it names the user and the role. Remove a role that shouldn't be there, or add a missing one, then run the check again:
+  ```js
+  db.getSiblingDB("admin").revokeRolesFromUser("<user>", [{ role: "<role>", db: "<database>" }])
+  db.getSiblingDB("admin").grantRolesToUser("<user>", [{ role: "readWrite", db: "<database>" }])
+  ```
+- **If the names differ from the table,** update the table and the two `.env.example` files, so the docs say what's real.
+
+CI proves the rules on a real MongoDB: `scripts/check-db-isolation.sh`, in the `integration` job, starts a throwaway MongoDB with these users. It checks that staging can't read or write production's databases and the other way round, and that the check catches a user with one role too many. You can run it locally with Docker.
 
 ### 3. Run the setup script
 
@@ -153,7 +181,31 @@ Create **`production`**:
 
 Branch rulesets (Settings → Rules → Rulesets):
 - **main: owner only**: restrict updates, block deletion and force pushes; bypass: repository admin.
-- **staging: PRs only**: require a pull request, block deletion and force pushes; bypass: repository admin.
+- **staging: PRs only**: require a pull request, block deletion and force pushes; bypass: repository admin. Require the status checks listed below.
+
+#### Required checks (B8)
+
+Set these on the **staging: PRs only** ruleset, under **Require status checks to pass**. The names must match exactly, including the brackets:
+
+<!-- required-checks -->
+- `test`: the gate over every package's tests, including the frontend's unit tests
+- `integration`: the real services, the smoke test and the database-user check (SEC-11)
+- `e2e`: every browser spec
+- `audit (frontend)`
+- `audit (services/restaurant-service)`
+- `audit (services/menu-service)`
+- `audit (services/order-service)`
+- `semgrep`: **add this one.** It's the code scan (SEC-09). It already fails a PR with a new high finding, but until it's required, that PR can still be merged.
+<!-- /required-checks -->
+
+- **Pick `semgrep` in lowercase.** `Semgrep OSS` is a different check, from the Semgrep app.
+- **Don't require** `validate`, `lint` or `vm-test`. They only run when certain files change, so every other PR would wait for them for ever. Don't require `deploy` either: it only runs after a merge.
+- **A job that's skipped counts as passed** on GitHub. So when `test` fails, `integration` and `e2e` show "skipped", and it's `test` that blocks the merge. Keep all three required.
+- **To compare with what's set now** (read-only):
+  ```bash
+  gh api repos/RaksaOC/V-Menu/rulesets/27796986 --jq '.rules[] | select(.type=="required_status_checks") | .parameters.required_status_checks[].context'
+  ```
+- `scripts/required-checks.test.mjs` fails if one of these jobs is renamed, stops running on every PR, or can no longer fail.
 
 Add these to **both** environments, with different values for each (see `staging.env.example` / `prod.env.example`):
 
@@ -178,6 +230,46 @@ Staging and production use separate Firebase projects, so a staging account neve
 The image build (`release.yml`) runs in the branch's environment, so staging's Variables override the repository ones. Analytics is only built into production.
 
 Add each hostname under its project's Firebase → Authentication → Settings → Authorized domains, or sign-in will fail there. The console rejects some hyphenated names such as `staging-v-menu.chanraksa.com`; add those with the Identity Toolkit API (`PATCH .../admin/v2/projects/<id>/config?updateMask=authorizedDomains`).
+
+### 7. Firebase hardening checklist (SEC-08)
+
+These are console settings, so code can't make them. Do each one in **both** projects unless it says otherwise, then tick it here in a PR. The Firebase "Browser key" is public by design (every visitor's browser gets it), so these settings are what stop other people using it against our projects.
+
+**1. Restrict the API key.** Google Cloud console → APIs & Services → Credentials → the "Browser key (auto created by Firebase)":
+
+- [ ] **Application restrictions → HTTP referrers:**
+  - production: `https://v-menu.chanraksa.com/*`
+  - staging: `https://staging-v-menu.chanraksa.com/*` and `http://localhost:*`
+  - each project's own `https://<project>.firebaseapp.com/*`, which Firebase uses for email links
+- [ ] **API restrictions → Restrict key:** only the **Identity Toolkit API** and the **Token Service API**. Production also needs the Firebase installations and analytics APIs while Analytics is on: check the key's usage in the console before removing them.
+
+**2. Authorized domains.** Firebase → Authentication → Settings → Authorized domains:
+
+- [ ] **production:** remove `localhost`. Only `v-menu.chanraksa.com` and the project's own `firebaseapp.com` / `web.app` domains stay.
+- [ ] **staging:** `staging-v-menu.chanraksa.com`, plus `localhost` for local work.
+
+**3. Email enumeration protection.** Authentication → Settings → User actions:
+
+- [ ] Turn **Email enumeration protection** on. The app no longer asks Firebase whether an email has an account (VM-12), and "Forgot password?" gives the same answer either way (VM-14), so nothing in the app depends on it being off.
+
+**4. Password policy.** Authentication → Settings → Password policy:
+
+- [ ] **Enforce** a password policy with a minimum length of **8** and **Require numeric character** on.
+- The app's forms already ask for 8 characters with a letter and a number when a password is set: the owner sign-up and "Create an account" at `/login`. Firebase's policy can't say "a letter" (only lowercase or uppercase), so the letter rule lives in the forms.
+- [ ] Leave **"Require password change on sign-in"** off at first. Turn it on later if old short passwords should be changed.
+
+**5. Email verification (VM-13).**
+
+- [ ] Nothing to switch on: the app already requires a verified email before an invite counts. Check that the verification and password-reset email templates read well (Authentication → Templates).
+
+**Check it.** `scripts/check-firebase-config.mjs` reads a project's settings (read only) and lists anything that doesn't match items 2 to 4. It needs a token that can read the project, for example `gcloud auth print-access-token` for an account with the Firebase Viewer role:
+
+```bash
+FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node scripts/check-firebase-config.mjs v-menu-e9835 production v-menu.chanraksa.com
+FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node scripts/check-firebase-config.mjs v-menu-staging staging staging-v-menu.chanraksa.com
+```
+
+It doesn't check the API key restrictions (item 1); look at those in the console.
 
 ## Everyday use
 

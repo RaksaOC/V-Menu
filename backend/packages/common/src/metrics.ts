@@ -32,3 +32,7 @@ export async function metricsHandler(_req: Request, res: Response) {
     res.set("Content-Type", registry.contentType);
     res.end(await registry.metrics());
 }
+
+/** prom-client itself, so each service can register its own metrics in `registry` (B10) without
+ *  a second copy of the library. */
+export { client as prom };

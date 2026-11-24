@@ -533,6 +533,138 @@
           }
         }
       ]
+    },
+    {
+      "uid": "vmenu-order-pending-too-long",
+      "title": "Order pending for over 15 minutes",
+      "condition": "C",
+      "for": "1m",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "{{ $labels.env }}: an order has been pending for over 15 minutes",
+        "description": "A customer is waiting and the kitchen hasn't started the order. Check the kitchen screen and the Kitchen row of the Overview dashboard. Orders placed over 24 hours ago don't count."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "max by (env) (vmenu_orders_pending_oldest_seconds{job=\"vmenu-services\",env=~\"staging|prod\"})",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    900
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
+    },
+    {
+      "uid": "vmenu-auth-failures-spike",
+      "title": "Many refused requests",
+      "condition": "C",
+      "for": "0s",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "isPaused": false,
+      "labels": {
+        "app": "vmenu",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "{{ $labels.env }}: over 50 requests refused in 5 minutes",
+        "description": "A jump in 401, 403 or 429 answers. It can be an attack, or a bad deploy that broke sign-in. Open the Security row of the Overview dashboard to see the reason, service and route."
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "grafanacloud-prom",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "expr": "sum by (env) (increase(vmenu_auth_failures_total{job=\"vmenu-services\",env=~\"staging|prod\"}[5m]))",
+            "instant": true,
+            "range": false,
+            "queryType": "instant",
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "A",
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            },
+            "conditions": [
+              {
+                "type": "query",
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    50
+                  ]
+                }
+              }
+            ],
+            "intervalMs": 1000,
+            "maxDataPoints": 43200
+          }
+        }
+      ]
     }
   ]
 }

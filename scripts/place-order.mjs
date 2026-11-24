@@ -18,13 +18,14 @@ async function call(method, path, body) {
 
 // VM-25: grouped by category ({ categories: [{ items }] }); older services answered a flat list
 const menu = await call("GET", `/api/menu/${slug}/public/items`);
-const items = Array.isArray(menu) ? menu : (menu?.categories ?? []).flatMap((c) => c.items);
+// VM-26: sold-out dishes are on the menu, but can't be ordered
+const items = (Array.isArray(menu) ? menu : (menu?.categories ?? []).flatMap((c) => c.items)).filter((i) => i.isEnabled !== false);
 if (!items.length) throw new Error(`No dishes for "${slug}": run npm run docker:seed first`);
 await call("GET", `/api/menu/${slug}/public/tables/${table}`);
 
 const cart = items.slice(0, 2).map((item, i) => ({ item: { _id: item._id }, quantity: i + 1 }));
 const order = await call("POST", `/api/orders/${slug}`, { table, orderedItems: cart });
-const total = order.orderedItems.reduce((sum, l) => sum + l.item.price * l.quantity, 0);
+const total = order.orderedItems.reduce((sum, l) => sum + l.item.priceCents * l.quantity, 0) / 100;
 console.log(`order ${order._id} placed at table ${table}:`);
-for (const l of order.orderedItems) console.log(`  ${l.quantity} x ${l.item.name} @ ${l.item.price}`);
+for (const l of order.orderedItems) console.log(`  ${l.quantity} x ${l.item.name} @ ${(l.item.priceCents / 100).toFixed(2)}`);
 console.log(`  total ${total.toFixed(2)}`);

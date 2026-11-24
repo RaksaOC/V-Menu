@@ -110,3 +110,28 @@ describe("Origin check on writes (CSRF)", () => {
         expect(res.status).toBe(403);
     });
 });
+
+describe("table links by name (SEC-04)", () => {
+    const before = process.env.ALLOW_TABLE_NAME_LINKS;
+    afterEach(() => {
+        if (before === undefined) delete process.env.ALLOW_TABLE_NAME_LINKS;
+        else process.env.ALLOW_TABLE_NAME_LINKS = before;
+    });
+
+    it("are off unless the setting is exactly true", async () => {
+        const { tableNameLinksAllowed } = await import("../src/table-links.js");
+        delete process.env.ALLOW_TABLE_NAME_LINKS;
+        expect(tableNameLinksAllowed()).toBe(false);
+        for (const value of ["false", "1", "TRUE", ""]) {
+            process.env.ALLOW_TABLE_NAME_LINKS = value;
+            expect(tableNameLinksAllowed()).toBe(false);
+        }
+        process.env.ALLOW_TABLE_NAME_LINKS = "true";
+        expect(tableNameLinksAllowed()).toBe(true);
+    });
+
+    it("a refused link is a 404 with a code the page can explain", async () => {
+        const { invalidTableLink } = await import("../src/table-links.js");
+        expect(invalidTableLink()).toMatchObject({ status: 404, code: "TABLE_LINK_INVALID" });
+    });
+});

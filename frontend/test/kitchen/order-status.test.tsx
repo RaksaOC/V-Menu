@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
 }));
 const { default: KitchenBoard } = await import("@/features/kitchen/components/KitchenBoard");
 
-const dish = { _id: "665f00000000000000000aaa", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
+const dish = { _id: "665f00000000000000000aaa", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
 const order = (n: number, status: string) => ({
     _id: `665f00000000000000000${n}0${n}`,
     table: `T${n}`,

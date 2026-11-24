@@ -31,6 +31,7 @@ const app = createApp({
     verifyIdToken: async () => {
         throw new Error("not a Firebase ID token");
     },
+    sessionLookup: async (_req, user) => user.tv ?? 0, // these callers have no membership rows (SEC-03 has its own tests)
 });
 
 const owner = only(["owner"]);
@@ -45,6 +46,9 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/auth/login", NO_APP_TOKEN], // Firebase ID token only
     ["POST /api/auth/signup", NO_APP_TOKEN],
     ["POST /api/auth/memberships", NO_APP_TOKEN],
+    ["GET /api/auth/me", only(["owner", "cashier", "chef"], { ownData: true })],
+    ["POST /api/auth/sign-out-everywhere", only(["owner", "cashier", "chef"], { ownData: true })],
+    ["GET /api/restaurants/:slug/public", PUBLIC], // VM-21: the name a customer sees
     ["GET /api/restaurants", ownersOwnData],
     ["POST /api/restaurants", ownersOwnData],
     ["GET /api/staff", ownersOwnData],
@@ -52,8 +56,11 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/restaurants/:slug/staff", owner],
     ["PUT /api/restaurants/:slug/staff/:id", owner],
     ["DELETE /api/restaurants/:slug/staff/:id", owner],
+    ["GET /api/restaurants/:slug/settings", PUBLIC], // VM-24: customers' pages show prices in the restaurant's currency
+    ["PUT /api/restaurants/:slug/settings", owner],
     ["GET /internal/restaurants", NO_APP_TOKEN],
     ["GET /internal/restaurants/by-slug/:slug", NO_APP_TOKEN],
+    ["GET /internal/sessions/version", NO_APP_TOKEN],
 ];
 
 let mongo: MongoMemoryServer;

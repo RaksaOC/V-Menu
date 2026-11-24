@@ -24,12 +24,12 @@ afterAll(() => {
 
 describe("menu-service answers, checked against @vmenu/contracts", () => {
     it("a well-formed order check passes through", async () => {
-        answer = { items: [{ item: { _id: ID, name: "Amok", price: 5, image: "/x", isEnabled: true }, quantity: 2 }] };
+        answer = { items: [{ item: { _id: ID, name: "Amok", priceCents: 500, image: "/x", isEnabled: true }, quantity: 2 }] };
         expect(await httpClients.orderCheck(req, ID, { table: "1", items: [{ _id: ID, quantity: 2 }] })).toEqual(answer);
     });
 
     it("an order check in another shape is refused with 502", async () => {
-        answer = { items: [{ item: { _id: ID, name: "Amok", price: "5" }, quantity: 2 }] };
+        answer = { items: [{ item: { _id: ID, name: "Amok", priceCents: "5" }, quantity: 2 }] };
         await expect(httpClients.orderCheck(req, ID, { table: "1", items: [{ _id: ID, quantity: 2 }] })).rejects.toMatchObject({
             status: 502,
         });

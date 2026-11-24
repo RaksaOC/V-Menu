@@ -14,8 +14,8 @@ vi.mock("next/navigation", () => ({
 
 const { default: CartPage } = await import("@/features/customer/components/CartPage");
 
-const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", price: 2.5, image: "/k.jpg", isEnabled: true };
-const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", price: 4, image: "/l.jpg", isEnabled: true };
+const kuyTeav = { _id: "665f00000000000000000011", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
+const lokLak = { _id: "665f00000000000000000012", name: "Lok Lak", priceCents: 400, image: "/l.jpg", isEnabled: true };
 
 // VM-05: the cart of this restaurant and table (the URL above is demo-bistro, table 1).
 const KEY = "cart:demo-bistro:1";

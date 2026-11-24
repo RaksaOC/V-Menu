@@ -9,7 +9,7 @@ const { ResContext } = await import("@/lib/restaurant-context");
 const { default: Tables } = await import("@/features/restaurant/components/Tables");
 
 const TABLES = "/api/menu/demo-bistro/tables";
-const PATIO = { _id: "665f000000000000000000a1", name: "patio", isEnabled: false };
+const PATIO = { _id: "665f000000000000000000a1", name: "patio", isEnabled: false, qrToken: "AbCdEfGhIjKlMnOpQrSt_-" };
 
 function owner() {
     answer("get", TABLES, [PATIO]);

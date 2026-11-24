@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import Invoice from "./Invoice";
-import { prettyDate } from "@/lib/dates";
+import { formatDateTime } from "@/lib/dates";
+import { useMoney } from "@/components/money/MoneyProvider";
 import { useParams } from "next/navigation";
-import { DollarSign, Eye, EyeOff, XCircle } from "lucide-react";
+import { BellRing, DollarSign, Eye, EyeOff, Receipt, X, XCircle } from "lucide-react";
 import { Button, Chip, Input } from "@/components/ui";
 import { BILL_STATUS_LABEL, STATUS_TONE } from "@/lib/order-status";
-import type { Bill, Order } from "@vmenu/contracts";
+import type { Bill, Order, TableRequestKind } from "@vmenu/contracts";
 
 interface Props {
     order: Bill;
@@ -17,11 +18,24 @@ interface Props {
     onSeen?: (id: string) => void;
     /** VM-27: cancel one order on this (open) bill, with a reason */
     onCancelOrder?: (billId: string, orderId: string, reason: string) => void;
+    /** VM-30: dismiss a "bill requested" or "staff called" badge */
+    onDismissRequest?: (billId: string, kind: TableRequestKind) => void;
 }
+
+/** VM-30: how long the customer has been waiting: "just now", "3 min". */
+const waited = (at: string) => {
+    const minutes = Math.floor((Date.now() - new Date(at).getTime()) / 60_000);
+    return minutes < 1 ? "just now" : `${minutes} min`;
+};
+const REQUEST_BADGES = [
+    { kind: "bill", field: "billRequestedAt", label: "BILL REQUESTED", name: "bill request", Icon: Receipt },
+    { kind: "staff", field: "staffCalledAt", label: "STAFF CALLED", name: "staff call", Icon: BellRing },
+] as const;
 
 const orderNumber = (id: string) => id.slice(-6).toUpperCase();
 
-function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: Props) {
+function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder, onDismissRequest }: Props) {
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
     const [showInvoice, setShowInvoice] = useState(false);
     const [cancelling, setCancelling] = useState<{ id: string; reason: string; error: string } | null>(null);
     const params = useParams();
@@ -48,13 +62,42 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                 {/*<span className="text-sm text-zinc-500 dark:text-zinc-400">Order ID: {order._id}</span>*/}
             </div>
 
+            {/* VM-30: the customer asked for the bill, or for a staff member */}
+            {REQUEST_BADGES.some(({ field }) => order[field]) && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                    {REQUEST_BADGES.map(({ kind, field, label, name, Icon }) => {
+                        const at = order[field];
+                        if (!at) return null;
+                        return (
+                            <span
+                                key={kind}
+                                className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-sm font-bold tracking-wide text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/20 dark:text-amber-100"
+                            >
+                                <Icon size={14} aria-hidden />
+                                {label} · {waited(at)}
+                                {!order.isPaid && onDismissRequest && (
+                                    <button
+                                        type="button"
+                                        aria-label={`Dismiss ${name}`}
+                                        onClick={() => onDismissRequest(order._id, kind)}
+                                        className="-mr-1 rounded-full p-0.5 hover:bg-amber-200 dark:hover:bg-amber-500/30"
+                                    >
+                                        <X size={14} aria-hidden />
+                                    </button>
+                                )}
+                            </span>
+                        );
+                    })}
+                </div>
+            )}
+
             <div className="bg-none  rounded-xl p-3 mb-4 border border-slate-500">
                 {subOrders.length > 0 ? (
                     subOrders.map((subOrder, index) => {
                         const cancelled = subOrder.status === "cancelled";
-                        const lines = subOrder.orderedItems.map((item) => (
+                        const lines = subOrder.orderedItems.map((item, line) => (
                             <div
-                                key={item.item._id}
+                                key={line} // VM-28: the same dish can be on two lines, with different notes
                                 className="flex items-center justify-between gap-2 border-b last:border-none border-zinc-200 dark:border-zinc-600 py-2"
                             >
                                 <div className="flex items-center gap-3">
@@ -62,11 +105,12 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                                     <div>
                                         <p className="text-zinc-800 dark:text-white font-semibold">{item.item.name}</p>
                                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                            ${item.item.price.toFixed(2)} × {item.quantity}
+                                            {money(item.item.priceCents)} × {item.quantity}
                                         </p>
+                                        {item.note && <p className="text-sm italic text-zinc-600 dark:text-zinc-300">“{item.note}”</p>}
                                     </div>
                                 </div>
-                                <p className="font-bold text-zinc-700 dark:text-white">${(item.item.price * item.quantity).toFixed(2)}</p>
+                                <p className="font-bold text-zinc-700 dark:text-white">{money(item.item.priceCents * item.quantity)}</p>
                             </div>
                         ));
                         return (
@@ -79,7 +123,7 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                                         )}
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <p className={"text-gray-400"}>{prettyDate(subOrder.createdAt)}</p>
+                                        <p className={"text-gray-400"}>{formatDateTime(subOrder.createdAt)}</p>
                                         {!order.isPaid && !cancelled && onCancelOrder && cancelling?.id !== subOrder._id && (
                                             <button
                                                 type="button"
@@ -139,16 +183,27 @@ function OrderCard({ order, onMarkPaid, isNew = false, onSeen, onCancelOrder }: 
                 ) : (
                     <p className="text-zinc-500 dark:text-zinc-400">No orders found.</p>
                 )}
+                {subOrders.length > 0 && (
+                    <div
+                        role="group"
+                        aria-label="Bill total"
+                        className="mx-4 mt-2 flex items-center justify-between border-t border-zinc-300 pt-3 dark:border-zinc-600"
+                    >
+                        <span className="font-semibold text-zinc-700 dark:text-zinc-200">Bill total</span>
+                        <span className="text-lg font-bold text-zinc-900 dark:text-white">{money(order.totalCents)}</span>
+                    </div>
+                )}
             </div>
 
             {showInvoice && (
                 <Invoice
-                    businessName={params.res as string}
-                    address={"Address will be supported soon"}
-                    phone={"(123) 456-7890"}
-                    invoiceId={`${order._id}`}
-                    date={prettyDate(new Date().toLocaleString())}
-                    items={subOrders.filter((sub) => sub.status !== "cancelled").flatMap((sub) => sub.orderedItems)}
+                    slug={params.res as string}
+                    table={order.table}
+                    billNumber={orderNumber(order._id)}
+                    date={formatDateTime(order.isPaid && order.updatedAt ? order.updatedAt : new Date())} // paid: when it was paid
+                    lines={order.lines}
+                    subtotalCents={order.subtotalCents}
+                    totalCents={order.totalCents}
                     onClose={() => setShowInvoice(false)}
                 />
             )}

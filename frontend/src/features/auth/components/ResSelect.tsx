@@ -45,6 +45,11 @@ export function ResSelect({ restaurantNames, onSelected, onBack }: ResSelectProp
                     }
                     <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">Select Restaurant</h2>
 
+                    {restaurantNames.length === 0 && (
+                        <p role="status" className="mx-auto max-w-sm text-center text-[var(--muted)]">
+                            No restaurant has given this account a role yet. Ask the owner to invite your email, then sign in again.
+                        </p>
+                    )}
                     <div className="flex justify-center items-center gap-4 flex-wrap">
                         {restaurantNames.map((name, index) => (
                             <motion.div

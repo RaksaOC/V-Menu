@@ -31,9 +31,12 @@ import { AddRestaurantPopup } from "@/features/owner/components/AddRestaurantPop
 import AllStaff from "@/features/staff/components/AllStaff";
 import AllOverview from "@/features/owner/components/AllOverview";
 import AllRestaurants from "@/features/owner/components/AllRestaurants";
+import { MoneyProvider, sharedMoney } from "@/components/money/MoneyProvider";
 import type { Restaurant } from "@vmenu/contracts";
+import { useMe } from "@/lib/use-me";
 
 const OwnerDashboard = () => {
+    const me = useMe(); // VM-20
     // temp fix for reloading res content when selected res changes
     const tabs = ["overview", "menu", "tables", "staff", "preferences"];
 
@@ -129,7 +132,17 @@ const OwnerDashboard = () => {
                 case "preferences":
                     return (
                         <ResContext.Provider value={selectedRestaurant.slug}>
-                            <Preferences></Preferences>
+                            <Preferences
+                                onSaved={({ currency, khrPerUsd, paymentQrUrl }) =>
+                                    setRestaurants((all) =>
+                                        all.map((r) =>
+                                            r._id === selectedRestaurant._id
+                                                ? { ...r, settings: { currency, khrPerUsd, paymentQrUrl } }
+                                                : r,
+                                        ),
+                                    )
+                                }
+                            />
                         </ResContext.Provider>
                     );
                 default:
@@ -253,7 +266,12 @@ const OwnerDashboard = () => {
                                 <p>Preferences</p>
                             </button>
                         </div>
-                        <div className={"bg-gray-50 rounded-lg p-6 mt-4"}>{renderMainContent()}</div>
+                        <div className={"bg-gray-50 rounded-lg p-6 mt-4"}>
+                            {/* VM-24: this restaurant's currency; reloaded on each tab, so a saved change shows */}
+                            <MoneyProvider key={`${selectedRestaurant?.slug}:${selectedTab}`} slug={selectedRestaurant?.slug ?? "-"}>
+                                {renderMainContent()}
+                            </MoneyProvider>
+                        </div>
                     </div>
                 </div>
             );
@@ -262,9 +280,12 @@ const OwnerDashboard = () => {
         return (
             <div className="space-y-6">
                 <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-                    {activeItem === "overview" && <AllOverview />}
-                    {activeItem === "restaurants" && <AllRestaurants onManage={handleManageRestaurant} />}
-                    {activeItem === "staff" && <AllStaff />}
+                    {/* VM-24: totals across restaurants use their currency when they all share one */}
+                    <MoneyProvider settings={sharedMoney(restaurants)}>
+                        {activeItem === "overview" && <AllOverview />}
+                        {activeItem === "restaurants" && <AllRestaurants onManage={handleManageRestaurant} />}
+                        {activeItem === "staff" && <AllStaff />}
+                    </MoneyProvider>
                 </div>
             </div>
         );
@@ -318,12 +339,13 @@ const OwnerDashboard = () => {
                 title="V-Menu Owner"
                 subtitle="Manage your restaurants"
                 roleLabel="Owner"
-                email="owner@gmail.com"
+                name={me?.name}
+                email={me?.email}
                 loginHref="/owner/login"
                 position="fixed"
                 onOpenMenu={() => setSidebarOpen(true)}
             />
-            <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={{ name: "John Doe", role: "Owner" }}>
+            <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={{ name: me?.name ?? "", role: "Owner" }}>
                 {sidebarContent}
             </MobileSidebar>
 
@@ -333,7 +355,7 @@ const OwnerDashboard = () => {
                     {sidebarContent}
                 </div>
 
-                <div className="flex-1 pt-24 lg:pt-26 pr-2 lg:pr-4 pl-2 lg:pl-76">{renderContent()}</div>
+                <div className="flex-1 min-w-0 pt-24 lg:pt-26 pr-2 lg:pr-4 pl-2 lg:pl-76">{renderContent()}</div>
             </div>
             {showAddRes && <AddRestaurantPopup onClose={() => setShowAddRes(false)} onSave={handleAddRestaurant} />}
         </div>

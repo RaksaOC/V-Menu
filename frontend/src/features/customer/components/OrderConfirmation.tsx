@@ -5,19 +5,19 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CheckCircle2, ChefHat, Clock, Plus, Receipt } from "lucide-react";
 import { getTableBill, getTableOrder, type TableBill, type TableOrderView } from "@/features/customer/api";
+import { useTableLink } from "@/features/customer/table-link";
 import { apiErrorMessage } from "@/lib/api";
+import { formatTime } from "@/lib/dates";
+import { useMoney } from "@/components/money/MoneyProvider";
 import { CUSTOMER_STATUS, isFinal } from "@/lib/order-status";
-
-const money = (n: number) => `$${n.toFixed(2)}`;
-const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
 /** VM-07: shown right after ordering. The order as the server saved it, and the table's orders so far.
  *  VM-27: its status, checked every 10 seconds until it's served or cancelled. */
 export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number } = {}) {
-    const params = useParams<{ res: string; table: string; orderId: string }>();
-    const slug = String(params.res);
-    const table = decodeURIComponent(String(params.table));
-    const menuHref = `/${slug}/customer/${encodeURIComponent(table)}`;
+    const money = useMoney(); // VM-24: prices in the restaurant's currency
+    const params = useParams<{ orderId: string }>();
+    const link = useTableLink(); // SEC-04: the table's link token, or its name on the old pages
+    const menuHref = link.base;
 
     const [order, setOrder] = useState<TableOrderView | null>(null);
     const [bill, setBill] = useState<TableBill | null>(null);
@@ -25,13 +25,15 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
 
     const finished = order ? isFinal(order.status) : false;
     const load = useCallback(() => {
-        getTableOrder(slug, table, String(params.orderId))
+        getTableOrder(link, String(params.orderId))
             .then(setOrder)
             .catch((err) => setError(apiErrorMessage(err, "Couldn't load this order.")));
-        getTableBill(slug, table)
+        getTableBill(link)
             .then(setBill)
             .catch(() => setBill(null)); // the list is a bonus; the order above is what matters
-    }, [slug, table, params.orderId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- link is rebuilt each render; its parts are listed
+    }, [link.slug, link.token, link.name, params.orderId]);
+    const table = order?.table ?? bill?.table ?? link.name; // the server's name for the table
 
     // once when the page opens
     useEffect(load, [load]);
@@ -49,7 +51,7 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
             <header className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 px-4 py-6 text-white">
                 <div className="mx-auto flex max-w-2xl items-center gap-3">
                     <ChefHat size={28} aria-hidden />
-                    <p className="text-sm font-medium text-emerald-50">Table {table}</p>
+                    {table && <p className="text-sm font-medium text-emerald-50">Table {table}</p>}
                 </div>
             </header>
 
@@ -76,7 +78,7 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
                             <div>
                                 <h1 className="text-xl font-bold text-slate-900">Order #{order.number} sent to the kitchen</h1>
                                 <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
-                                    <Clock size={14} aria-hidden /> Placed at {time(order.placedAt)}
+                                    <Clock size={14} aria-hidden /> Placed at {formatTime(order.placedAt)}
                                 </p>
                             </div>
                         </div>
@@ -109,16 +111,17 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
                                     <div>
                                         <p className="font-medium text-slate-900">{line.name}</p>
                                         <p className="text-sm text-slate-500">
-                                            {line.quantity} × {money(line.price)}
+                                            {line.quantity} × {money(line.priceCents)}
                                         </p>
+                                        {line.note && <p className="text-sm italic text-slate-600">“{line.note}”</p>}
                                     </div>
-                                    <p className="font-semibold text-slate-900">{money(line.total)}</p>
+                                    <p className="font-semibold text-slate-900">{money(line.totalCents)}</p>
                                 </li>
                             ))}
                         </ul>
                         <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-4">
                             <p className="font-semibold text-slate-700">Total</p>
-                            <p className="text-2xl font-bold text-emerald-700">{money(order.total)}</p>
+                            <p className="text-2xl font-bold text-emerald-700">{money(order.totalCents)}</p>
                         </div>
                     </section>
                 )}
@@ -133,7 +136,7 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
                                 <li key={o._id} className="flex items-center justify-between py-2.5 text-sm">
                                     <span className="text-slate-700">
                                         <span className="font-mono font-semibold">#{o.number}</span>
-                                        <span className="text-slate-400"> · {time(o.placedAt)}</span>
+                                        <span className="text-slate-400"> · {formatTime(o.placedAt)}</span>
                                         {o._id === order?._id && (
                                             <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
                                                 just now
@@ -142,17 +145,17 @@ export default function OrderConfirmation({ pollMs = 10_000 }: { pollMs?: number
                                     </span>
                                     {o.status === "cancelled" ? (
                                         <span className="text-slate-400">
-                                            <del>{money(o.total)}</del> cancelled
+                                            <del>{money(o.totalCents)}</del> cancelled
                                         </span>
                                     ) : (
-                                        <span className="font-semibold text-slate-900">{money(o.total)}</span>
+                                        <span className="font-semibold text-slate-900">{money(o.totalCents)}</span>
                                     )}
                                 </li>
                             ))}
                         </ul>
                         <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-3">
                             <p className="text-sm font-semibold text-slate-700">Bill so far</p>
-                            <p className="font-bold text-slate-900">{money(bill.total)}</p>
+                            <p className="font-bold text-slate-900">{money(bill.totalCents)}</p>
                         </div>
                         <p className="mt-2 text-xs text-slate-500">Pay at the counter when you&apos;re done.</p>
                     </section>

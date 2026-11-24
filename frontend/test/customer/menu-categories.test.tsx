@@ -13,7 +13,7 @@ const { default: CustomerMenu } = await import("@/features/customer/components/C
 const dish = (_id: string, name: string, categoryId: string | null) => ({
     _id,
     name,
-    price: 2,
+    priceCents: 200,
     image: "/images/img.png",
     isEnabled: true,
     categoryId,

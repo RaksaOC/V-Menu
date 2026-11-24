@@ -9,11 +9,13 @@ import type { Clients } from "../../src/clients/index.js";
 import { Bill } from "../../src/models/bill.model.js";
 import { Order } from "../../src/models/order.model.js";
 import { mongoBillsRepo } from "../../src/repositories/bills.repo.js";
+import { mongoOrdersRepo } from "../../src/repositories/orders.repo.js";
 
 process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
+process.env.INTERNAL_API_KEY = "internal-test-key";
 
 const R = { _id: "665f00000000000000000001", name: "Mee Keav", slug: "mee-keav-abc123", ownerId: "owner1" };
-const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
+const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 let menuUp = true;
 
 // Stand-ins for restaurant-service and menu-service.
@@ -26,6 +28,7 @@ const clients: Clients = {
         // The browser said the price was 0; the menu answers with the real one.
         return OrderCheckResponse.parse({ items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) }); // CL-05
     },
+    tableByToken: async () => ({ name: "1" }), // SEC-04
 };
 const app = createApp({
     clients,
@@ -66,13 +69,13 @@ async function serve(id: string) {
 const place = (table = "1", quantity = 2) =>
     request(app)
         .post(`/api/orders/${R.slug}`)
-        .send({ table, orderedItems: [{ item: { _id: ITEM._id, price: 0 }, quantity }] });
+        .send({ table, orderedItems: [{ item: { _id: ITEM._id, priceCents: 0 }, quantity }] });
 
 describe("placing orders", () => {
     it("uses the menu's price and groups orders into one open bill per table", async () => {
         const first = await place();
         expect(first.status).toBe(201);
-        expect(first.body.orderedItems[0].item.price).toBe(2.5);
+        expect(first.body.orderedItems[0].item.priceCents).toBe(250);
         await place();
         const bills = await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier);
         expect(bills.body).toHaveLength(1);
@@ -89,6 +92,138 @@ describe("placing orders", () => {
     });
 });
 
+describe("an order is never left off its bill (VM-23)", () => {
+    /** The real repository, whose bill update throws the first `times` calls. */
+    function flakyApp(times: number) {
+        let left = times;
+        const fail = () => {
+            if (left-- > 0) throw new Error("database hiccup");
+        };
+        const bills = {
+            ...mongoBillsRepo,
+            attachOrder: async (billId: string, orderId: string) => {
+                fail();
+                return mongoBillsRepo.attachOrder(billId, orderId);
+            },
+        };
+        return createApp({ clients, bills, lookupRestaurant: async () => R });
+    }
+    const send = (target: ReturnType<typeof createApp>) =>
+        request(target)
+            .post(`/api/orders/${R.slug}`)
+            .send({ table: "1", orderedItems: [{ item: { _id: ITEM._id }, quantity: 1 }] });
+
+    it("the bill update fails once: 201, and the order is on the bill with its id", async () => {
+        const res = await send(flakyApp(1));
+        expect(res.status).toBe(201);
+        expect(res.body).not.toHaveProperty("billId");
+        const [bill] = await Bill.find({ resId: R._id }).lean();
+        expect(bill.orders.map(String)).toEqual([res.body._id]);
+        expect(String((await Order.findById(res.body._id).lean())!.billId)).toBe(String(bill._id));
+    });
+
+    it("the bill update keeps failing: 503, no order, and no empty bill", async () => {
+        expect((await send(flakyApp(99))).status).toBe(503);
+        expect(await Order.countDocuments()).toBe(0);
+        expect(await Bill.countDocuments()).toBe(0);
+    });
+
+    it("the bill is paid between the two steps: the order moves to the table's new bill", async () => {
+        const { body: first } = await place();
+        const [paying] = await Bill.find({ resId: R._id }).lean();
+        const orders = {
+            ...mongoOrdersRepo,
+            create: async (order: Parameters<typeof mongoOrdersRepo.create>[0]) => {
+                const saved = await mongoOrdersRepo.create(order);
+                await Bill.updateOne({ _id: paying._id }, { isPaid: true }); // the cashier, at the wrong moment
+                return saved;
+            },
+        };
+        const res = await send(createApp({ clients, orders, lookupRestaurant: async () => R }));
+        expect(res.status).toBe(201);
+        const open = await Bill.findOne({ resId: R._id, isPaid: false }).lean();
+        expect(open!.orders.map(String)).toEqual([res.body._id]);
+        expect(String((await Order.findById(res.body._id).lean())!.billId)).toBe(String(open!._id));
+        expect((await Bill.findById(paying._id).lean())!.orders.map(String)).toEqual([first._id]);
+    });
+
+    it("the internal check lists an order that's on no bill, and not one that is", async () => {
+        const old = new Date(Date.now() - 3_600_000);
+        const line = [{ item: ITEM, quantity: 1 }];
+        const lost = await Order.create({ table: "1", resId: R._id, orderedItems: line, createdAt: old });
+        const billed = await Order.create({ table: "2", resId: R._id, orderedItems: line, createdAt: old });
+        await Bill.create({ table: "2", resId: R._id, isPaid: false, orders: [billed._id] });
+        const url = "/internal/orders/without-bill";
+        expect((await request(app).get(url)).status).toBe(401);
+        const res = await request(app).get(url).set("x-internal-key", "internal-test-key");
+        expect(res.status).toBe(200);
+        expect(res.body.count).toBe(1);
+        expect(res.body.orders).toMatchObject([{ _id: String(lost._id), table: "1", resId: R._id }]);
+    });
+});
+
+describe("table requests (VM-30)", () => {
+    const ask = (kind: string, table = "1") => request(app).post(`/api/orders/${R.slug}/tables/${table}/requests`).send({ kind });
+
+    it("the customer requests the bill; the cashier sees it, then dismisses it", async () => {
+        expect((await ask("bill")).status).toBe(409); // nothing ordered yet
+        await place("1", 1);
+        const asked = await ask("bill");
+        expect(asked.status).toBe(200);
+        expect(asked.body.kind).toBe("bill");
+        expect((await ask("bill")).status).toBe(429);
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        expect(bill.billRequestedAt).toBe(asked.body.at);
+        expect(bill.requestLog).toBeUndefined();
+        const dismissed = await request(app).delete(`/api/orders/${R.slug}/bills/${bill._id}/requests/bill`).set(cashier);
+        expect(dismissed.status).toBe(200);
+        expect(dismissed.body.billRequestedAt).toBeUndefined();
+    });
+
+    it("refuses a bad kind", async () => {
+        await place("1", 1);
+        expect((await ask("dance")).status).toBe(400);
+    });
+});
+
+describe("order notes (VM-28)", () => {
+    const send = (lineNote: string, note: string) =>
+        request(app)
+            .post(`/api/orders/${R.slug}`)
+            .send({ table: "1", note, orderedItems: [{ item: { _id: ITEM._id }, quantity: 1, note: lineNote }] });
+
+    it("are saved, trimmed, and shown to the kitchen", async () => {
+        const res = await send("  no chilli ", " birthday ");
+        expect(res.status).toBe(201);
+        expect(res.body).toMatchObject({ note: "birthday", orderedItems: [{ note: "no chilli" }] });
+        const kitchen = await request(app).get(`/api/orders/${R.slug}/kitchen`).set(chef);
+        expect(kitchen.body[0]).toMatchObject({ note: "birthday", orderedItems: [{ note: "no chilli" }] });
+    });
+
+    it("over-long notes get 400 and save nothing", async () => {
+        expect((await send("x".repeat(101), "")).status).toBe(400);
+        expect((await send("", "y".repeat(201))).status).toBe(400);
+        expect((await request(app).get(`/api/orders/${R.slug}/kitchen`).set(chef)).body).toEqual([]);
+    });
+});
+
+describe("bills carry their server totals (VM-31)", () => {
+    it("GET /bills and PATCH /bills/:id answer with lines, subtotal and total in cents", async () => {
+        await place("1", 2);
+        await place("1", 1);
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        expect(bill).toMatchObject({
+            lines: [{ _id: ITEM._id, name: "Kuy Teav", priceCents: 250, quantity: 3, totalCents: 750 }],
+            subtotalCents: 750,
+            totalCents: 750,
+        });
+        const paid = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
+        expect(paid.body).toMatchObject({ subtotalCents: 750, totalCents: 750 });
+        const history = await request(app).get(`/api/orders/${R.slug}/bills?status=paid`).set(cashier);
+        expect(history.body.bills[0]).toMatchObject({ subtotalCents: 750, totalCents: 750 });
+    });
+});
+
 describe("kitchen and cashier", () => {
     it("chef serves an order; cashier marks the bill paid", async () => {
         const { body: order } = await place();
@@ -99,14 +234,52 @@ describe("kitchen and cashier", () => {
         const paid = await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
         expect(paid.body.isPaid).toBe(true);
         const overview = await request(app).get(`/api/orders/${R.slug}/overview`).set(owner);
-        expect(overview.body).toMatchObject({ numOfOrders: 1, numOfPayments: 1, numOfUnpaidOrders: 0, numOfTables: 4 });
+        expect(overview.body).toMatchObject({ orderCount: 1, paymentCount: 1, unpaidBillCount: 0, tableCount: 4, revenueCents: 500 });
     });
+});
 
-    it("totals money and top sellers for the owner", async () => {
+describe("the owner's numbers come from paid bills (VM-09)", () => {
+    const payTable = async () => {
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
+    };
+
+    it("an order on an open bill isn't revenue, even once served; paying the bill makes it revenue", async () => {
         const { body: order } = await place("1", 3);
         await serve(order._id);
-        const res = await request(app).get("/api/orders/owner/overview").set(owner);
-        expect(res.body).toMatchObject({ numOfMoneyEarned: 7.5, totalItemsSold: 3, topSellingItems: [{ name: "Kuy Teav", quantity: 3 }] });
+        const before = await request(app).get("/api/orders/owner/overview").set(owner);
+        expect(before.body).toMatchObject({ revenueCents: 0, itemsSoldCount: 0, unpaidBillCount: 1, topSellingItems: [] });
+        await payTable();
+        const after = await request(app).get("/api/orders/owner/overview").set(owner);
+        expect(after.body).toMatchObject({
+            revenueCents: 750,
+            itemsSoldCount: 3,
+            avgItemsPerOrder: 3,
+            paymentCount: 1,
+            unpaidBillCount: 0,
+            topSellingItems: [{ _id: ITEM._id, name: "Kuy Teav", quantity: 3 }],
+            from: null,
+            to: null,
+        });
+        expect(after.body).not.toHaveProperty("numOfMoneyEarned");
+    });
+
+    it("?from=&to= keeps the bills paid in that range", async () => {
+        await place("1", 2);
+        await payTable();
+        const inRange = { from: new Date(Date.now() - 60_000).toISOString(), to: new Date(Date.now() + 60_000).toISOString() };
+        const now = await request(app).get("/api/orders/owner/overview").query(inRange).set(owner);
+        expect(now.body).toMatchObject({ revenueCents: 500, paymentCount: 1, orderCount: 1, ...inRange });
+        const lastYear = await request(app)
+            .get(`/api/orders/${R.slug}/overview`)
+            .query({ from: "2025-01-01T00:00:00.000Z", to: "2025-02-01T00:00:00.000Z" })
+            .set(owner);
+        expect(lastYear.body).toMatchObject({ revenueCents: 0, paymentCount: 0, orderCount: 0, tableCount: 4 });
+    });
+
+    it("answers 400 for a date that isn't one", async () => {
+        const res = await request(app).get("/api/orders/owner/overview").query({ from: "soon" }).set(owner);
+        expect(res.status).toBe(400);
     });
 });
 
@@ -124,7 +297,7 @@ describe("one open bill per table (VM-08)", () => {
         // The bill upsert itself, as placing an order does it, 10 at once: without the unique
         // index, every run made several open bills.
         const orderIds = Array.from({ length: 10 }, () => new mongoose.Types.ObjectId().toString());
-        await Promise.all(orderIds.map((id) => mongoBillsRepo.addToOpenBill(R._id, "1", id)));
+        await Promise.all(orderIds.map(async (id) => mongoBillsRepo.attachOrder(await mongoBillsRepo.openBillFor(R._id, "1"), id)));
         const open = await Bill.find({ resId: R._id, table: "1", isPaid: false }).lean();
         expect(open).toHaveLength(1);
         expect(open[0].orders.map(String).sort()).toEqual([...orderIds].sort());
@@ -170,8 +343,8 @@ describe("what the customer sees after ordering (VM-07)", () => {
             _id: order._id,
             number: order._id.slice(-6).toUpperCase(),
             table: "1",
-            lines: [{ name: "Kuy Teav", price: 2.5, quantity: 2, total: 5 }],
-            total: 5,
+            lines: [{ name: "Kuy Teav", priceCents: 250, quantity: 2, totalCents: 500 }],
+            totalCents: 500,
         });
         expect(new Date(res.body.placedAt).getTime()).toBeGreaterThan(Date.now() - 60_000);
         expect(JSON.stringify(res.body)).not.toContain(R._id); // nothing internal
@@ -192,8 +365,8 @@ describe("what the customer sees after ordering (VM-07)", () => {
         expect(res.status).toBe(200);
         expect(res.body.table).toBe("1");
         expect(res.body.orders).toHaveLength(2);
-        expect(res.body.orders.map((o: { total: number }) => o.total)).toEqual([5, 2.5]);
-        expect(res.body.total).toBe(7.5);
+        expect(res.body.orders.map((o: { totalCents: number }) => o.totalCents)).toEqual([500, 250]);
+        expect(res.body.totalCents).toBe(750);
         expect(JSON.stringify(res.body)).not.toContain(R._id);
     });
 
@@ -202,7 +375,32 @@ describe("what the customer sees after ordering (VM-07)", () => {
         const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
         await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
         const res = await tableApi("1", "/open-bill");
-        expect(res.body).toEqual({ table: "1", orders: [], total: 0 });
+        expect(res.body).toEqual({ table: "1", orders: [], lines: [], subtotalCents: 0, totalCents: 0, total: 0 });
+    });
+});
+
+describe("internal: does a table have an unpaid bill? (VM-15)", () => {
+    const ask = (name: string, key = "internal-test-key") =>
+        request(app)
+            .get(`/internal/restaurants/${R._id}/tables/${encodeURIComponent(name)}/open-bill`)
+            .set("x-internal-key", key);
+
+    it("yes while the table's bill is unpaid, no once it's paid, and no for a table without orders", async () => {
+        process.env.INTERNAL_API_KEY = "internal-test-key";
+        expect((await ask("1")).body).toEqual({ open: false });
+        await request(app)
+            .post(`/api/orders/${R.slug}`)
+            .send({ table: "1", orderedItems: [{ item: { _id: ITEM._id }, quantity: 1 }] });
+        expect((await ask("1")).body).toEqual({ open: true });
+        expect((await ask("2")).body).toEqual({ open: false });
+        const [bill] = (await request(app).get(`/api/orders/${R.slug}/bills`).set(cashier)).body;
+        await request(app).patch(`/api/orders/${R.slug}/bills/${bill._id}`).set(cashier).send({ isPaid: true });
+        expect((await ask("1")).body).toEqual({ open: false });
+    });
+
+    it("needs the internal key", async () => {
+        process.env.INTERNAL_API_KEY = "internal-test-key";
+        expect((await ask("1", "wrong-key-wrong-key")).status).toBe(401);
     });
 });
 
@@ -398,6 +596,6 @@ describe("order status over HTTP (VM-27)", () => {
         const queue = await request(app).get(`/api/orders/${R.slug}/kitchen`).set(chef);
         expect(queue.body.map((o: { _id: string }) => o._id)).toEqual([kept._id]);
         const open = await request(app).get(`/api/orders/${R.slug}/tables/1/open-bill`);
-        expect(open.body.total).toBe(5); // 2 × 2.50; the cancelled 3 aren't charged
+        expect(open.body.totalCents).toBe(500); // 2 × 2.50; the cancelled 3 aren't charged
     });
 });

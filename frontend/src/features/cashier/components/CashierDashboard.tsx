@@ -9,26 +9,18 @@ import DashboardHeader from "@/components/layout/DashboardHeader";
 import { ToastHost } from "@/components/ui";
 import { useParams } from "next/navigation";
 import { BarChart3, UtensilsCrossed, Users, ShoppingBag, ChevronRight } from "lucide-react";
+import { useMe } from "@/lib/use-me";
 
 const Dashboard = () => {
     const slug = String(useParams()?.res ?? "");
-    // VM-20 replaces this with the signed-in account's email.
-    const [email, setEmail] = useState("cashier@restaurants.com");
-    useEffect(() => setEmail(localStorage.getItem("userEmail") || "cashier@restaurants.com"), []);
-    const savedSection = localStorage.getItem("dashboardSection") || "overview";
-    const [section, setSection] = useState(savedSection);
+    const me = useMe(); // VM-20
+    // The saved section is only known in the browser. Until it's read nothing loads, so the server
+    // and the first browser render match, and the wrong section's data is never fetched.
+    const [section, setSection] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!savedSection) {
-            setSection("overview");
-        } else {
-            setSection(savedSection);
-        }
+        setSection(localStorage.getItem("dashboardSection") || "overview");
     }, []);
-
-    useEffect(() => {
-        localStorage.setItem("dashboardSection", section);
-    }, [section]);
 
     const navigationItems = [
         {
@@ -86,7 +78,8 @@ const Dashboard = () => {
                 title="V-Menu Cashier"
                 subtitle={slug}
                 roleLabel="Cashier"
-                email={email}
+                name={me?.name}
+                email={me?.email}
                 loginHref={`/${slug}/cashier/login`}
                 clock
             />

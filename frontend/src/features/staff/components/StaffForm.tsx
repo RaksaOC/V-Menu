@@ -5,47 +5,53 @@ import { Trash2 } from "lucide-react";
 import { Button, Input, Modal } from "@/components/ui";
 import type { AddStaffBody, StaffMember } from "@vmenu/contracts";
 
-/** A new member as the form collects them: the password goes to Firebase, the rest to the API. */
-export type NewStaffMember = AddStaffBody & { password: string };
-
 type Role = "cashier" | "chef";
 
 interface Props {
-    /** Without a member the form adds one (with a password); with a member it edits or removes them. */
+    /** Without a member the form invites one (VM-12); with a member it edits or removes them. */
     member?: StaffMember;
-    /** Set by the page when Firebase says the email already has an account. */
-    emailTaken?: boolean;
+    /** The server's answer about the email, e.g. this person already has that role here. */
+    emailError?: string;
+    /** The server's answer about the role: this person already has it here (VM-18). */
+    roleError?: string;
     onClose: () => void;
-    onAdd?: (input: NewStaffMember) => void;
+    onAdd?: (input: AddStaffBody) => void;
     onSave?: (member: StaffMember) => void;
     onDelete?: (id: string) => void;
 }
 
+/** Where staff sign in. The form only opens in the browser, so the full address is known. */
+const loginUrl = () => (typeof window === "undefined" ? "/login" : `${window.location.origin}/login`);
+
 /** Add and edit a staff member, in the shared Modal (CL-09; was AddStaffPopUp and EditStaffPopUp). */
-export default function StaffForm({ member, emailTaken = false, onClose, onAdd, onSave, onDelete }: Props) {
+export default function StaffForm({ member, emailError = "", roleError = "", onClose, onAdd, onSave, onDelete }: Props) {
     const formId = useId();
     const roleId = useId();
     const [name, setName] = useState(member?.name ?? "");
     const [email, setEmail] = useState(member?.email ?? "");
-    const [password, setPassword] = useState("");
     const [role, setRole] = useState<Role | "">(member && member.role !== "owner" ? member.role : "");
     const [tried, setTried] = useState(false);
+    // what was last sent: the server's errors are about those values
+    const [sent, setSent] = useState("");
+    const [sentRole, setSentRole] = useState("");
     const [confirmDelete, setConfirmDelete] = useState(false);
 
+    const badEmail = !member && !/\S+@\S+\.\S+/.test(email);
     const errors = {
         name: !name.trim() ? "Name is required" : "",
-        email: !member && !/\S+@\S+\.\S+/.test(email) ? "Enter a valid email" : emailTaken ? "This email already has an account" : "",
-        password: !member && password.length < 6 ? "At least 6 characters" : "",
-        role: !role ? "Choose a role" : "",
+        email: badEmail ? "Enter a valid email" : email === sent ? emailError : "",
+        role: !role ? "Choose a role" : role === sentRole ? roleError : "",
     };
-    const show = (key: keyof typeof errors) => (tried || (key === "email" && emailTaken) ? errors[key] || undefined : undefined);
+    const show = (key: keyof typeof errors) => (tried ? errors[key] || undefined : undefined);
 
     function submit(e: FormEvent) {
         e.preventDefault();
         setTried(true);
-        if (errors.name || errors.role || (!member && (errors.email || errors.password))) return;
+        if (errors.name || !role || badEmail) return;
+        setSent(email);
+        setSentRole(role);
         if (member) onSave?.({ ...member, name: name.trim(), role: role as Role });
-        else onAdd?.({ name: name.trim(), email: email.trim(), password, role: role as Role, tenantId: "" });
+        else onAdd?.({ name: name.trim(), email: email.trim(), role: role as Role });
     }
 
     const footer = confirmDelete ? (
@@ -74,13 +80,13 @@ export default function StaffForm({ member, emailTaken = false, onClose, onAdd, 
                 Cancel
             </Button>
             <Button type="submit" form={formId}>
-                {member ? "Save Changes" : "Add Staff"}
+                {member ? "Save Changes" : "Send invite"}
             </Button>
         </>
     );
 
     return (
-        <Modal title={member ? `Edit ${member.name}` : "Add Staff Member"} onClose={onClose} footer={footer}>
+        <Modal title={member ? `Edit ${member.name}` : "Invite Staff Member"} onClose={onClose} footer={footer}>
             <form id={formId} onSubmit={submit} className="space-y-4" noValidate>
                 <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" error={show("name")} />
                 <Input
@@ -91,17 +97,8 @@ export default function StaffForm({ member, emailTaken = false, onClose, onAdd, 
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. staff@example.com"
                     error={show("email")}
+                    hint={member ? undefined : `Tell them to create an account or sign in at ${loginUrl()} with this email.`}
                 />
-                {!member && (
-                    <Input
-                        label="Password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Minimum 6 characters"
-                        error={show("password")}
-                    />
-                )}
                 <div className="space-y-1.5">
                     <label htmlFor={roleId} className="block text-sm font-semibold">
                         Role

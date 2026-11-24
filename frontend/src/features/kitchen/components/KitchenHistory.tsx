@@ -1,6 +1,7 @@
 "use client";
 
 import Card from "@/features/kitchen/components/OrderCard";
+import KitchenSignOut from "@/features/kitchen/components/KitchenSignOut";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, History as His } from "lucide-react";
@@ -33,6 +34,7 @@ export default function History() {
                 </div>
                 <div className="relative px-6 py-8">
                     <div className="max-w-6xl mx-auto">
+                        <KitchenSignOut slug={String(params.res)} />
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center gap-4 mb-4">
                                 <div className="p-3 bg-white/15 rounded-full backdrop-blur-sm">

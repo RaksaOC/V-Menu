@@ -354,3 +354,42 @@ button {
     color: var(--muted, #63637a);
     opacity: 1;
 }
+
+/* VM-24: printing while an invoice is open prints only the invoice, in black on white. */
+@media print {
+    body:has([data-print]) * {
+        visibility: hidden;
+    }
+    body:has([data-print]) [data-print],
+    body:has([data-print]) [data-print] * {
+        visibility: visible;
+    }
+    body:has([data-print]) [data-print] {
+        position: fixed;
+        inset: 0 0 auto 0;
+        width: 100%;
+        background: #fff;
+        color: #000;
+    }
+}
+
+/* VM-29: a new order's card flashes its border once. With reduced motion it gets a still ring instead. */
+@keyframes vm-flash {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+    20%,
+    60% {
+        box-shadow: 0 0 0 6px var(--accent);
+    }
+}
+.vm-flash {
+    animation: vm-flash 1.6s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+    .vm-flash {
+        animation: none;
+        box-shadow: 0 0 0 4px var(--accent);
+    }
+}

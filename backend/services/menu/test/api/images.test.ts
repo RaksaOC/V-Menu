@@ -86,7 +86,7 @@ describe("photo upload (VM-02)", () => {
 
     it("an item saved with the uploaded URL shows on the customer menu", async () => {
         const { body } = await upload(photo);
-        const item = await request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", price: 5, image: body.url });
+        const item = await request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", priceCents: 500, image: body.url });
         expect(item.status).toBe(201);
         const menu = await request(app).get(`/api/menu/${SLUG}/public/items`);
         expect(menu.body.categories[0].items[0].image).toBe(body.url); // VM-25: grouped
@@ -171,7 +171,8 @@ describe("photo upload safety (SEC-05)", () => {
     });
 
     it("an item's image must be one of this restaurant's uploaded photos", async () => {
-        const add = (image: string) => request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", price: 5, image });
+        const add = (image: string) =>
+            request(app).post(`/api/menu/${SLUG}/items`).set(owner).send({ name: "Amok", priceCents: 500, image });
         expect((await add("https://tracker.example/pixel.jpg")).status).toBe(400);
         expect((await add("data:image/jpeg;base64,/9j/4AAQ")).status).toBe(400);
         expect((await add(`/api/menu/other-xyz789/images/${"a".repeat(24)}`)).status).toBe(400);
@@ -182,11 +183,11 @@ describe("photo upload safety (SEC-05)", () => {
     it("an existing item keeps its old image when other fields are edited", async () => {
         // items made before this change may still point elsewhere; editing the name must not fail
         const { Item } = await import("../../src/models/item.model.js");
-        const old = await Item.create({ name: "Old", price: 1, image: "https://images.example/old.jpg", resId: RES_ID });
+        const old = await Item.create({ name: "Old", priceCents: 100, image: "https://images.example/old.jpg", resId: RES_ID });
         const res = await request(app)
             .put(`/api/menu/${SLUG}/items/${old._id}`)
             .set(owner)
-            .send({ name: "Renamed", price: 1, image: "https://images.example/old.jpg" });
+            .send({ name: "Renamed", priceCents: 100, image: "https://images.example/old.jpg" });
         expect(res.status).toBe(200);
         expect(res.body.name).toBe("Renamed");
         const swap = await request(app)
@@ -194,5 +195,40 @@ describe("photo upload safety (SEC-05)", () => {
             .set(owner)
             .send({ image: "https://tracker.example/new.jpg" });
         expect(swap.status).toBe(400);
+    });
+});
+
+describe("photo upload metrics (B10)", () => {
+    const count = async (result: string) => {
+        const res = await request(app).get("/metrics");
+        const line = res.text.split("\n").find((l) => l.startsWith(`vmenu_image_uploads_total{result="${result}"} `));
+        return line ? Number(line.split(" ").pop()) : 0;
+    };
+
+    it("lists every result from the start, so a dashboard's increase() doesn't miss the first one after a restart", async () => {
+        const { text } = await request(app).get("/metrics");
+        for (const result of ["ok", "not_a_photo", "too_large", "bad_request", "denied", "rate_limited", "error"])
+            expect(text).toMatch(new RegExp(`^vmenu_image_uploads_total\\{result="${result}"\\} \\d+$`, "m"));
+    });
+
+    it("counts each upload by its result", async () => {
+        const before = { ok: await count("ok"), wrong: await count("not_a_photo"), big: await count("too_large") };
+        expect((await upload(photo)).status).toBe(201);
+        expect((await upload(Buffer.from("%PDF-1.7 not a photo"), "menu.pdf")).status).toBe(415);
+        expect((await upload(Buffer.alloc(6 * 1024 * 1024, 1), "huge.jpg")).status).toBe(413);
+        expect(await count("ok")).toBe(before.ok + 1);
+        expect(await count("not_a_photo")).toBe(before.wrong + 1);
+        expect(await count("too_large")).toBe(before.big + 1);
+    });
+
+    it("counts refused sign-ins and rate limits apart from bad files", async () => {
+        const denied = await count("denied");
+        expect((await upload(photo, "dish.jpg", cashier)).status).toBe(403);
+        expect(await count("denied")).toBe(denied + 1);
+        const limited = createApp({ lookupRestaurant, uploadsPerHour: 1 });
+        const rateLimited = await count("rate_limited");
+        await upload(photo, "a.jpg", owner, SLUG, limited);
+        expect((await upload(photo, "b.jpg", owner, SLUG, limited)).status).toBe(429);
+        expect(await count("rate_limited")).toBe(rateLimited + 1);
     });
 });
