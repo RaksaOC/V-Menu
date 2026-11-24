@@ -1,0 +1,76 @@
+// In-memory repositories for the service unit tests (CL-04): no MongoDB. Like MongoDB, they hand
+// out copies, so a service can't change stored data without calling the repository.
+import type { RestaurantRecord, RestaurantsRepo } from "../../src/repositories/restaurants.repo.js";
+import type { TenantRecord, TenantsRepo } from "../../src/repositories/tenants.repo.js";
+
+let seq = 0;
+export const newId = () => (++seq).toString(16).padStart(24, "0");
+const copy = <T extends object>(x: T | undefined) => (x ? { ...x } : null);
+
+export function fakeRestaurants(): RestaurantsRepo & { all: RestaurantRecord[] } {
+    const all: RestaurantRecord[] = [];
+    let clock = 0;
+    return {
+        all,
+        async bySlug(slug) {
+            return copy(all.find((r) => r.slug === slug));
+        },
+        async byIds(ids) {
+            return all.filter((r) => ids.includes(r._id)).map((r) => ({ ...r }));
+        },
+        async ownedBy(ownerId) {
+            return all
+                .filter((r) => r.ownerId === ownerId)
+                .sort((a, b) => +a.createdAt - +b.createdAt)
+                .map((r) => ({ ...r }));
+        },
+        async create(fields) {
+            const r = { _id: newId(), ...fields, createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, clock++)) };
+            all.push(r);
+            return { ...r };
+        },
+    };
+}
+
+export function fakeTenants(): TenantsRepo & { all: TenantRecord[] } {
+    const all: TenantRecord[] = [];
+    const find = (resId: string, id: string) => all.find((t) => t._id === id && t.resId === resId);
+    return {
+        all,
+        async isOwner(uid) {
+            return all.some((t) => t.tenantId === uid && t.role === "owner");
+        },
+        async firstFor(uid) {
+            return copy(all.find((t) => t.tenantId === uid));
+        },
+        async forPerson(uid, email) {
+            return all.filter((t) => t.tenantId === uid || t.email === email).map((t) => ({ ...t }));
+        },
+        async hasRole(resId, role, { uid, email }) {
+            return all.some((t) => t.resId === resId && t.role === role && (t.tenantId === uid || t.email === email));
+        },
+        async inRestaurants(resIds) {
+            return all.filter((t) => resIds.includes(t.resId)).map((t) => ({ ...t }));
+        },
+        async createMany(list) {
+            const made = list.map((t) => ({ _id: newId(), ...t }));
+            all.push(...made);
+            return made.map((t) => ({ ...t }));
+        },
+        async get(resId, id) {
+            return copy(find(resId, id));
+        },
+        async update(resId, id, fields) {
+            const t = find(resId, id);
+            if (!t) return null;
+            Object.assign(t, fields);
+            return { ...t };
+        },
+        async remove(resId, id) {
+            const t = find(resId, id);
+            if (!t) return null;
+            all.splice(all.indexOf(t), 1);
+            return { ...t };
+        },
+    };
+}

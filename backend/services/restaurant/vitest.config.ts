@@ -14,7 +14,8 @@ export default defineConfig({
             reportsDirectory: "coverage",
             // B3: CI fails below these. The lines minimum started at today's number (87%, 2026-11-23);
             // raise it as tests are added, never lower it (scripts/coverage.test.mjs). Target: 80%.
-            thresholds: { lines: 87 },
+            // The business rules (CL-04) must stay almost fully covered.
+            thresholds: { lines: 87, "src/services/**": { lines: 90, functions: 90, branches: 90, statements: 90 } },
         },
     },
 });
