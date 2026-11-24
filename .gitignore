@@ -37,3 +37,8 @@ yarn-error.log*
 .DS_Store
 .vercel
 .data/
+
+# OS and test output (CL-12)
+.DS_Store
+playwright-report/
+test-results/

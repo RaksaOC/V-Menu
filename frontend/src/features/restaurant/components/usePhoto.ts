@@ -19,14 +19,22 @@ export function usePhoto(initial = "") {
     const [error, setError] = useState("");
     const [progress, setProgress] = useState<number | null>(null);
 
-    useEffect(() => () => {
-        if (preview.startsWith("blob:")) URL.revokeObjectURL(preview);
-    }, [preview]);
+    useEffect(
+        () => () => {
+            if (preview.startsWith("blob:")) URL.revokeObjectURL(preview);
+        },
+        [preview],
+    );
 
     function choose(e: ChangeEvent<HTMLInputElement>) {
         const chosen = e.target.files?.[0];
         if (!chosen) return;
-        const problem = chosen.size > MAX_BYTES ? "Photos can be at most 5 MB" : !PHOTO_TYPES.split(",").includes(chosen.type) ? "Please choose a JPG, PNG or WebP photo" : "";
+        const problem =
+            chosen.size > MAX_BYTES
+                ? "Photos can be at most 5 MB"
+                : !PHOTO_TYPES.split(",").includes(chosen.type)
+                  ? "Please choose a JPG, PNG or WebP photo"
+                  : "";
         if (problem) {
             setError(problem);
             e.target.value = "";

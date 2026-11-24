@@ -71,7 +71,12 @@ export function Tour({ onClose }: { onClose: () => void }) {
                                     <p className={styles.lead}>{step.lead}</p>
                                     <ul className={styles.points}>
                                         {step.points.map((point, i) => (
-                                            <motion.li key={point} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 + i * 0.07 }}>
+                                            <motion.li
+                                                key={point}
+                                                initial={{ opacity: 0, y: 8 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.12 + i * 0.07 }}
+                                            >
                                                 {point}
                                             </motion.li>
                                         ))}
@@ -97,7 +102,11 @@ export function Tour({ onClose }: { onClose: () => void }) {
                     </div>
 
                     <footer className={styles.footer}>
-                        <nav className={styles.rail} style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }} aria-label="Tour steps">
+                        <nav
+                            className={styles.rail}
+                            style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}
+                            aria-label="Tour steps"
+                        >
                             {STEPS.map((s, i) => (
                                 <button
                                     key={s.id}
@@ -105,7 +114,9 @@ export function Tour({ onClose }: { onClose: () => void }) {
                                     onClick={() => go(i)}
                                     aria-current={i === index ? "step" : undefined}
                                 >
-                                    <span className={styles.railBar}>{i === index && <motion.span layoutId="rail-fill" className={styles.railFill} />}</span>
+                                    <span className={styles.railBar}>
+                                        {i === index && <motion.span layoutId="rail-fill" className={styles.railFill} />}
+                                    </span>
                                     <span className={styles.railLabel}>{s.label}</span>
                                 </button>
                             ))}

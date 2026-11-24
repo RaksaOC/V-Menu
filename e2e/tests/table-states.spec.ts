@@ -29,7 +29,11 @@ test("a server error offers Try again, which loads the menu", async ({ page }) =
     await page.route(`**/api/menu/${SLUG}/public/tables/**`, async (route) => {
         if (failed) return route.continue();
         failed = true;
-        await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ message: "A required service is unavailable" }) });
+        await route.fulfill({
+            status: 503,
+            contentType: "application/json",
+            body: JSON.stringify({ message: "A required service is unavailable" }),
+        });
     });
     await page.goto(`/${SLUG}/customer/T1`);
     await expect(page.getByRole("heading", { name: "Something went wrong" })).toBeVisible();

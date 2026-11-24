@@ -51,7 +51,9 @@ beforeEach(async () => {
 });
 
 const place = (table = "1", quantity = 2) =>
-    request(app).post(`/api/orders/${R.slug}`).send({ table, orderedItems: [{ item: { _id: ITEM._id, price: 0 }, quantity }] });
+    request(app)
+        .post(`/api/orders/${R.slug}`)
+        .send({ table, orderedItems: [{ item: { _id: ITEM._id, price: 0 }, quantity }] });
 
 describe("placing orders", () => {
     it("uses the menu's price and groups orders into one open bill per table", async () => {

@@ -95,7 +95,11 @@ describe("Print all QR codes", () => {
             { _id: "t1", name: "T1", isEnabled: true },
             { _id: "t2", name: "Patio 2", isEnabled: false },
         ]);
-        render(<ResContext.Provider value="demo-bistro"><Tables role="owner" /></ResContext.Provider>);
+        render(
+            <ResContext.Provider value="demo-bistro">
+                <Tables role="owner" />
+            </ResContext.Provider>,
+        );
         fireEvent.click(await screen.findByRole("button", { name: /print all qr codes/i }));
         expect(printing.printQrCards).toHaveBeenLastCalledWith([
             { tableName: "T1", url: tableUrl("demo-bistro", "T1") },

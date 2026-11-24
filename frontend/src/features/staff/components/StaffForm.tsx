@@ -58,7 +58,12 @@ export default function StaffForm({ member, emailTaken = false, onClose, onAdd, 
     ) : (
         <>
             {member && onDelete && (
-                <Button variant="outline" className="mr-auto" icon={<Trash2 size={16} aria-hidden />} onClick={() => setConfirmDelete(true)}>
+                <Button
+                    variant="outline"
+                    className="mr-auto"
+                    icon={<Trash2 size={16} aria-hidden />}
+                    onClick={() => setConfirmDelete(true)}
+                >
                     Remove
                 </Button>
             )}

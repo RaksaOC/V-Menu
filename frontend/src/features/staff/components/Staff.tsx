@@ -1,13 +1,13 @@
-import {useContext, useEffect, useState} from "react";
-import {addStaff, getStaff, removeStaff, updateStaff} from "@/features/staff/api";
-import {ResContext} from "@/features/owner/ResContext";
-import {Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, ChevronsUpDown, Pencil} from "lucide-react";
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/react";
+import { useContext, useEffect, useState } from "react";
+import { addStaff, getStaff, removeStaff, updateStaff } from "@/features/staff/api";
+import { ResContext } from "@/features/owner/ResContext";
+import { Users, Mail, Crown, Utensils, CreditCard, Calendar, Plus, Search, ChevronsUpDown, Pencil } from "lucide-react";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
 import StaffForm from "@/features/staff/components/StaffForm";
-import {TenantInput, TenantOutput} from "@/lib/types/Tenant";
-import {prettyDate} from "@/lib/dates";
-import {createUserWithEmailAndPassword, fetchSignInMethodsForEmail, UserCredential} from "firebase/auth";
-import {auth} from "@/lib/firebase";
+import { TenantInput, TenantOutput } from "@/lib/types/Tenant";
+import { prettyDate } from "@/lib/dates";
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, UserCredential } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function Staff() {
     const resSlug = useContext(ResContext);
@@ -60,10 +60,10 @@ export default function Staff() {
                 tenantId: uid,
             });
             setShowAddStaff(false);
-            setRefresh(prevState => !prevState);
+            setRefresh((prevState) => !prevState);
         } catch (error: any) {
             console.error("Firebase Error:", error);
-            if (error.code === 'auth/email-already-in-use') {
+            if (error.code === "auth/email-already-in-use") {
                 console.log("Caught: email already in use");
                 setEmailTaken(true);
                 return;
@@ -76,7 +76,7 @@ export default function Staff() {
         try {
             await updateStaff(resSlug, tenant);
             setShowEditStaff(false);
-            setRefresh(prevState => !prevState);
+            setRefresh((prevState) => !prevState);
         } catch (error) {
             console.error("Error editing staff:", error);
         }
@@ -86,7 +86,7 @@ export default function Staff() {
         try {
             await removeStaff(resSlug, id);
             setShowEditStaff(false);
-            setRefresh(prevState => !prevState);
+            setRefresh((prevState) => !prevState);
         } catch (err) {
             console.error("Error deleting staff:", err);
         }
@@ -95,13 +95,13 @@ export default function Staff() {
     const getRoleIcon = (role: string) => {
         switch (role) {
             case "owner":
-                return <Crown size={16} className="text-amber-600"/>;
+                return <Crown size={16} className="text-amber-600" />;
             case "chef":
-                return <Utensils size={16} className="text-green-600"/>;
+                return <Utensils size={16} className="text-green-600" />;
             case "cashier":
-                return <CreditCard size={16} className="text-blue-600"/>;
+                return <CreditCard size={16} className="text-blue-600" />;
             default:
-                return <Users size={16} className="text-gray-500"/>;
+                return <Users size={16} className="text-gray-500" />;
         }
     };
 
@@ -119,18 +119,21 @@ export default function Staff() {
         }
     };
 
-    const filteredStaff = staff.filter(member => {
-        const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            member.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredStaff = staff.filter((member) => {
+        const matchesSearch =
+            member.name.toLowerCase().includes(searchTerm.toLowerCase()) || member.email.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRole = roleFilter === "all" || member.role === roleFilter;
         return matchesSearch && matchesRole;
     });
 
     const getRoleStats = () => {
-        const stats = staff.reduce((acc, member) => {
-            acc[member.role] = (acc[member.role] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
+        const stats = staff.reduce(
+            (acc, member) => {
+                acc[member.role] = (acc[member.role] || 0) + 1;
+                return acc;
+            },
+            {} as Record<string, number>,
+        );
         return stats;
     };
 
@@ -171,24 +174,24 @@ export default function Staff() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                {[...Array(5)].map((_, i) => (
-                                    <th key={i} className="py-4 px-2">
-                                        <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
-                                    </th>
-                                ))}
-                            </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                            {[...Array(4)].map((_, i) => (
-                                <tr key={i} className="hover:bg-gray-50 transition-colors">
-                                    {[...Array(5)].map((_, j) => (
-                                        <td key={j} className="py-4 px-2 text-center">
-                                            <div className="h-4 w-24 bg-gray-200 rounded mx-auto"></div>
-                                        </td>
+                                <tr>
+                                    {[...Array(5)].map((_, i) => (
+                                        <th key={i} className="py-4 px-2">
+                                            <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
+                                        </th>
                                     ))}
                                 </tr>
-                            ))}
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {[...Array(4)].map((_, i) => (
+                                    <tr key={i} className="hover:bg-gray-50 transition-colors">
+                                        {[...Array(5)].map((_, j) => (
+                                            <td key={j} className="py-4 px-2 text-center">
+                                                <div className="h-4 w-24 bg-gray-200 rounded mx-auto"></div>
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -199,7 +202,6 @@ export default function Staff() {
 
     return (
         <>
-
             <div className=" space-y-4 sm:space-y-6">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -209,8 +211,9 @@ export default function Staff() {
                     </div>
                     <button
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
-                        onClick={() => setShowAddStaff(!showAddStaff)}>
-                        <Plus size={20}/>
+                        onClick={() => setShowAddStaff(!showAddStaff)}
+                    >
+                        <Plus size={20} />
                         <span className="sm:inline">Add Staff</span>
                     </button>
                 </div>
@@ -220,7 +223,7 @@ export default function Staff() {
                     <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
-                                <Users size={16} className="text-blue-600"/>
+                                <Users size={16} className="text-blue-600" />
                             </div>
                             <div>
                                 <p className="text-lg sm:text-2xl font-bold text-gray-900">{staff.length}</p>
@@ -232,7 +235,7 @@ export default function Staff() {
                     <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-1.5 sm:p-2 bg-amber-100 rounded-lg">
-                                <Crown size={16} className="text-amber-600"/>
+                                <Crown size={16} className="text-amber-600" />
                             </div>
                             <div>
                                 <p className="text-lg sm:text-2xl font-bold text-gray-900">{roleStats.owner || 0}</p>
@@ -244,7 +247,7 @@ export default function Staff() {
                     <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg">
-                                <Utensils size={16} className="text-green-600"/>
+                                <Utensils size={16} className="text-green-600" />
                             </div>
                             <div>
                                 <p className="text-lg sm:text-2xl font-bold text-gray-900">{roleStats.chef || 0}</p>
@@ -256,7 +259,7 @@ export default function Staff() {
                     <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
                         <div className="flex items-center gap-2 sm:gap-3">
                             <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
-                                <CreditCard size={16} className="text-blue-600"/>
+                                <CreditCard size={16} className="text-blue-600" />
                             </div>
                             <div>
                                 <p className="text-lg sm:text-2xl font-bold text-gray-900">{roleStats.cashier || 0}</p>
@@ -270,8 +273,7 @@ export default function Staff() {
                 <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <div className="flex-1 relative">
-                            <Search size={18}
-                                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"/>
+                            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search staff by name or email..."
@@ -282,50 +284,62 @@ export default function Staff() {
                         </div>
                         <Listbox value={roleFilter} onChange={setRoleFilter}>
                             <div className="relative w-full sm:max-w-3xs">
-                                <ListboxButton
-                                    className="w-full px-3 sm:px-4 py-2 text-left border border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex justify-between items-center">
-                                <span className="flex items-center">
-                                  {roleFilter === "owner" && <Crown className="w-4 h-4 mr-2 text-yellow-500"/>}
-                                    {roleFilter === "chef" && <Utensils className="w-4 h-4 mr-2 text-green-500"/>}
-                                    {roleFilter === "cashier" && <CreditCard className="w-4 h-4 mr-2 text-blue-500"/>}
-                                    {roleFilter === "all" && <Users className="w-4 h-4 mr-2"/>}
-                                    {{
-                                        all: "All Roles",
-                                        owner: "Owners",
-                                        chef: "Chefs",
-                                        cashier: "Cashiers",
-                                    }[roleFilter]}
-                                </span>
-                                    <ChevronsUpDown className="w-4 h-4 text-gray-400"/>
+                                <ListboxButton className="w-full px-3 sm:px-4 py-2 text-left border border-gray-200 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex justify-between items-center">
+                                    <span className="flex items-center">
+                                        {roleFilter === "owner" && <Crown className="w-4 h-4 mr-2 text-yellow-500" />}
+                                        {roleFilter === "chef" && <Utensils className="w-4 h-4 mr-2 text-green-500" />}
+                                        {roleFilter === "cashier" && <CreditCard className="w-4 h-4 mr-2 text-blue-500" />}
+                                        {roleFilter === "all" && <Users className="w-4 h-4 mr-2" />}
+                                        {
+                                            {
+                                                all: "All Roles",
+                                                owner: "Owners",
+                                                chef: "Chefs",
+                                                cashier: "Cashiers",
+                                            }[roleFilter]
+                                        }
+                                    </span>
+                                    <ChevronsUpDown className="w-4 h-4 text-gray-400" />
                                 </ListboxButton>
 
-                                <ListboxOptions
-                                    className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 ring-1 ring-black ring-opacity-5 focus:outline-none text-sm sm:text-base">
-                                    <ListboxOption value="all" className={({active}) =>
-                                        `cursor-pointer select-none px-4 py-2 flex items-center ${active ? 'bg-blue-100' : ''}`
-                                    }>
-                                        <Users className="w-4 h-4 mr-2"/>
+                                <ListboxOptions className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 ring-1 ring-black ring-opacity-5 focus:outline-none text-sm sm:text-base">
+                                    <ListboxOption
+                                        value="all"
+                                        className={({ active }) =>
+                                            `cursor-pointer select-none px-4 py-2 flex items-center ${active ? "bg-blue-100" : ""}`
+                                        }
+                                    >
+                                        <Users className="w-4 h-4 mr-2" />
                                         All Roles
                                     </ListboxOption>
 
-                                    <ListboxOption value="owner" className={({active}) =>
-                                        `cursor-pointer select-none px-4 py-2 flex items-center ${active ? 'bg-blue-100' : ''}`
-                                    }>
-                                        <Crown className="w-4 h-4 mr-2 text-yellow-500"/>
+                                    <ListboxOption
+                                        value="owner"
+                                        className={({ active }) =>
+                                            `cursor-pointer select-none px-4 py-2 flex items-center ${active ? "bg-blue-100" : ""}`
+                                        }
+                                    >
+                                        <Crown className="w-4 h-4 mr-2 text-yellow-500" />
                                         Owners
                                     </ListboxOption>
 
-                                    <ListboxOption value="chef" className={({active}) =>
-                                        `cursor-pointer select-none px-4 py-2 flex items-center ${active ? 'bg-blue-100' : ''}`
-                                    }>
-                                        <Utensils className="w-4 h-4 mr-2 text-green-500"/>
+                                    <ListboxOption
+                                        value="chef"
+                                        className={({ active }) =>
+                                            `cursor-pointer select-none px-4 py-2 flex items-center ${active ? "bg-blue-100" : ""}`
+                                        }
+                                    >
+                                        <Utensils className="w-4 h-4 mr-2 text-green-500" />
                                         Chefs
                                     </ListboxOption>
 
-                                    <ListboxOption value="cashier" className={({active}) =>
-                                        `cursor-pointer select-none px-4 py-2 flex items-center ${active ? 'bg-blue-100' : ''}`
-                                    }>
-                                        <CreditCard className="w-4 h-4 mr-2 text-blue-500"/>
+                                    <ListboxOption
+                                        value="cashier"
+                                        className={({ active }) =>
+                                            `cursor-pointer select-none px-4 py-2 flex items-center ${active ? "bg-blue-100" : ""}`
+                                        }
+                                    >
+                                        <CreditCard className="w-4 h-4 mr-2 text-blue-500" />
                                         Cashiers
                                     </ListboxOption>
                                 </ListboxOptions>
@@ -339,85 +353,87 @@ export default function Staff() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="text-center py-4 px-2   font-semibold text-gray-900">Staff Member</th>
-                                <th className="text-center py-4 px-1 font-semibold text-gray-900">Role</th>
-                                <th className="text-center py-4 px-1 font-semibold text-gray-900">Email</th>
-                                <th className="text-center py-4 px-1 font-semibold text-gray-900">Joined</th>
-                                <th className="text-center py-4 px-2 font-semibold text-gray-900">Modify</th>
-                            </tr>
+                                <tr>
+                                    <th className="text-center py-4 px-2   font-semibold text-gray-900">Staff Member</th>
+                                    <th className="text-center py-4 px-1 font-semibold text-gray-900">Role</th>
+                                    <th className="text-center py-4 px-1 font-semibold text-gray-900">Email</th>
+                                    <th className="text-center py-4 px-1 font-semibold text-gray-900">Joined</th>
+                                    <th className="text-center py-4 px-2 font-semibold text-gray-900">Modify</th>
+                                </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                            {filteredStaff.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="text-center py-12">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <div className={"rounded-full bg-gray-100 p-6 mb-6"}>
-                                                <Users size={48} className="text-gray-400"/>
-                                            </div>
-                                            <div>
-                                                <p className="text-gray-600 text-2xl font-bold">No staff members found</p>
-                                                <p className="text-gray-500">
-                                                    {searchTerm || roleFilter !== "all"
-                                                        ? "Try adjusting your search or filters"
-                                                        : "Add your first team member to get started"
-                                                    }
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredStaff.map((member) => (
-                                    <tr key={member._id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="py-4 px-2">
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <div
-                                                    className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                                    <span className="text-blue-600 font-semibold text-sm">
-                                                        {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                                    </span>
+                                {filteredStaff.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="text-center py-12">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className={"rounded-full bg-gray-100 p-6 mb-6"}>
+                                                    <Users size={48} className="text-gray-400" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-gray-900">{member.name}</p>
-                                                    {/*<p className="text-sm text-gray-500">ID: {member.tenantId}</p>*/}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-1 text-center">
-                                            <span className={getRoleBadge(member.role)}>
-                                                {getRoleIcon(member.role)}
-                                                {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-1">
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <Mail size={16} className="text-gray-400"/>
-                                                <span className="text-gray-900">{member.email}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-1">
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <Calendar size={16} className="text-gray-400"/>
-                                                <span
-                                                    className="text-gray-900">{prettyDate(member.createdAt.toString(), false)}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-1">
-                                            <div className="flex items-center gap-2 justify-center ">
-                                                <div
-                                                    onClick={() => {
-                                                        setShowEditStaff(true)
-                                                        setStaffToEdit(member)
-                                                    }}
-                                                    className="hover:bg-gray-200 p-3 rounded-full transition duration-200 ease-in-out cursor-pointer">
-                                                    <Pencil size={20} className="text-gray-400  "/>
+                                                    <p className="text-gray-600 text-2xl font-bold">No staff members found</p>
+                                                    <p className="text-gray-500">
+                                                        {searchTerm || roleFilter !== "all"
+                                                            ? "Try adjusting your search or filters"
+                                                            : "Add your first team member to get started"}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
+                                ) : (
+                                    filteredStaff.map((member) => (
+                                        <tr key={member._id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="py-4 px-2">
+                                                <div className="flex items-center gap-2 justify-center">
+                                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <span className="text-blue-600 font-semibold text-sm">
+                                                            {member.name
+                                                                .split(" ")
+                                                                .map((n) => n[0])
+                                                                .join("")
+                                                                .toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-gray-900">{member.name}</p>
+                                                        {/*<p className="text-sm text-gray-500">ID: {member.tenantId}</p>*/}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-1 text-center">
+                                                <span className={getRoleBadge(member.role)}>
+                                                    {getRoleIcon(member.role)}
+                                                    {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-1">
+                                                <div className="flex items-center gap-2 justify-center">
+                                                    <Mail size={16} className="text-gray-400" />
+                                                    <span className="text-gray-900">{member.email}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-1">
+                                                <div className="flex items-center gap-2 justify-center">
+                                                    <Calendar size={16} className="text-gray-400" />
+                                                    <span className="text-gray-900">{prettyDate(member.createdAt.toString(), false)}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-1">
+                                                <div className="flex items-center gap-2 justify-center ">
+                                                    <div
+                                                        onClick={() => {
+                                                            setShowEditStaff(true);
+                                                            setStaffToEdit(member);
+                                                        }}
+                                                        className="hover:bg-gray-200 p-3 rounded-full transition duration-200 ease-in-out cursor-pointer"
+                                                    >
+                                                        <Pencil size={20} className="text-gray-400  " />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -428,14 +444,13 @@ export default function Staff() {
                     {filteredStaff.length === 0 ? (
                         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
                             <div className="flex flex-col items-center gap-3">
-                                <Users size={48} className="text-gray-300"/>
+                                <Users size={48} className="text-gray-300" />
                                 <div>
                                     <p className="text-gray-500 font-medium">No staff members found</p>
                                     <p className="text-gray-400 text-sm">
                                         {searchTerm || roleFilter !== "all"
                                             ? "Try adjusting your search or filters"
-                                            : "Add your first team member to get started"
-                                        }
+                                            : "Add your first team member to get started"}
                                     </p>
                                 </div>
                             </div>
@@ -444,11 +459,14 @@ export default function Staff() {
                         filteredStaff.map((member) => (
                             <div key={member._id} className="bg-white rounded-xl border border-gray-200 p-4">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div
-                                        className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <span className="text-blue-600 font-semibold text-sm">
-                                        {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                    </span>
+                                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <span className="text-blue-600 font-semibold text-sm">
+                                            {member.name
+                                                .split(" ")
+                                                .map((n) => n[0])
+                                                .join("")
+                                                .toUpperCase()}
+                                        </span>
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2 h-full">
@@ -457,36 +475,36 @@ export default function Staff() {
                                                 {/*<p className="text-sm text-gray-500">ID: {member.tenantId}</p>*/}
                                             </div>
                                             <span className={getRoleBadge(member.role)}>
-                                            {getRoleIcon(member.role)}
+                                                {getRoleIcon(member.role)}
                                                 {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                                        </span>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between py-4">
                                     <div className="flex flex-col gap-1 items-start justify-center">
                                         <div className="flex items-center gap-2">
-                                            <Mail size={16} className="text-gray-400"/>
+                                            <Mail size={16} className="text-gray-400" />
                                             <span className="text-gray-900 text-sm truncate">{member.email}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Calendar size={16} className="text-gray-400"/>
-                                            <span
-                                                className="text-gray-900 text-sm">{prettyDate(member.createdAt.toString(), false)}</span>
+                                            <Calendar size={16} className="text-gray-400" />
+                                            <span className="text-gray-900 text-sm">{prettyDate(member.createdAt.toString(), false)}</span>
                                         </div>
                                     </div>
 
                                     <div
-                                        className={"p-2 rounded-full flex items-center justify-center border border-gray-200 mr-2.5 hover:bg-gray-100 transition duration-200 ease-in-out cursor-pointer"}
+                                        className={
+                                            "p-2 rounded-full flex items-center justify-center border border-gray-200 mr-2.5 hover:bg-gray-100 transition duration-200 ease-in-out cursor-pointer"
+                                        }
                                         onClick={() => {
-                                            setShowEditStaff(true)
-                                            setStaffToEdit(member)
-                                        }}>
-                                        <Pencil size={16} className="text-gray-400"/>
+                                            setShowEditStaff(true);
+                                            setStaffToEdit(member);
+                                        }}
+                                    >
+                                        <Pencil size={16} className="text-gray-400" />
                                     </div>
                                 </div>
-
-
                             </div>
                         ))
                     )}
@@ -503,7 +521,12 @@ export default function Staff() {
                 />
             )}
             {showEditStaff && staffToEdit && (
-                <StaffForm member={staffToEdit} onSave={handleEditStaff} onDelete={handleDeleteStaff} onClose={() => setShowEditStaff(false)}/>
+                <StaffForm
+                    member={staffToEdit}
+                    onSave={handleEditStaff}
+                    onDelete={handleDeleteStaff}
+                    onClose={() => setShowEditStaff(false)}
+                />
             )}
         </>
     );

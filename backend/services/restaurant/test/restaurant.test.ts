@@ -32,7 +32,9 @@ beforeEach(async () => {
 });
 
 async function signUp(uid = "owner1", email = "owner@x.com") {
-    const res = await request(app).post("/api/auth/signup").send({ idToken: `${uid}:${email}`, ownerName: "Ory", resName: "Mee Keav" });
+    const res = await request(app)
+        .post("/api/auth/signup")
+        .send({ idToken: `${uid}:${email}`, ownerName: "Ory", resName: "Mee Keav" });
     expect(res.status).toBe(201);
     return res.body.slug as string;
 }
@@ -58,7 +60,9 @@ describe("sign-up and sign-in", () => {
 
     it("blocks a NoSQL-injection style email", async () => {
         await signUp();
-        const res = await request(app).post("/api/auth/memberships").send({ idToken: { $ne: null } });
+        const res = await request(app)
+            .post("/api/auth/memberships")
+            .send({ idToken: { $ne: null } });
         expect(res.status).toBe(401);
     });
 });
@@ -75,7 +79,10 @@ describe("owner routes", () => {
         const slug = await signUp();
         const token = await signAppToken({ uid: "owner1", email: "owner@x.com", role: "owner" });
         const auth = { authorization: `Bearer ${token}` };
-        const added = await request(app).post(`/api/restaurants/${slug}/staff`).set(auth).send({ name: "Visal", email: "V@x.com", tenantId: "u9", role: "cashier" });
+        const added = await request(app)
+            .post(`/api/restaurants/${slug}/staff`)
+            .set(auth)
+            .send({ name: "Visal", email: "V@x.com", tenantId: "u9", role: "cashier" });
         expect(added.status).toBe(201);
         expect(added.body.email).toBe("v@x.com");
         const edited = await request(app).put(`/api/restaurants/${slug}/staff/${added.body._id}`).set(auth).send({ role: "chef" });

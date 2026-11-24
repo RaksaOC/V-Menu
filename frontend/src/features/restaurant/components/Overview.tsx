@@ -58,7 +58,9 @@ export default function Overview() {
                                 <p className="font-mono text-xs uppercase tracking-wide text-[var(--muted)]">{label}</p>
                                 <p className="mt-1 text-3xl font-bold">{value}</p>
                             </div>
-                            <span className={`rounded-[var(--r-chip)] p-2.5 ${urgent && value > 0 ? "bg-[var(--accent-soft)] text-[var(--accent-text)]" : "bg-[var(--card)] text-[var(--ink)]"}`}>
+                            <span
+                                className={`rounded-[var(--r-chip)] p-2.5 ${urgent && value > 0 ? "bg-[var(--accent-soft)] text-[var(--accent-text)]" : "bg-[var(--card)] text-[var(--ink)]"}`}
+                            >
                                 <Icon size={22} aria-hidden />
                             </span>
                         </div>
@@ -71,7 +73,10 @@ export default function Overview() {
                                     </span>
                                 </div>
                                 <div className="h-2 rounded-full bg-[var(--card)]">
-                                    <div className="h-2 rounded-full bg-[var(--accent)]" style={{ width: `${Math.min(pct(value, of), 100)}%` }} />
+                                    <div
+                                        className="h-2 rounded-full bg-[var(--accent)]"
+                                        style={{ width: `${Math.min(pct(value, of), 100)}%` }}
+                                    />
                                 </div>
                             </div>
                         )}

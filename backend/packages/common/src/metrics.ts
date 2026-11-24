@@ -19,7 +19,9 @@ export function metricsMiddleware(req: Request, res: Response, next: NextFunctio
     res.on("finish", () => {
         // Label with the route pattern (/api/menu/:slug/items), not the real URL, so each
         // restaurant or id does not create its own time series.
-        const base = req.baseUrl.replace(/^(\/api\/(?:menu|orders|restaurants))\/(?!owner$)[^/]+/, "$1/:slug").replace(/\/[0-9a-f]{24}(?=\/|$)/g, "/:id");
+        const base = req.baseUrl
+            .replace(/^(\/api\/(?:menu|orders|restaurants))\/(?!owner$)[^/]+/, "$1/:slug")
+            .replace(/\/[0-9a-f]{24}(?=\/|$)/g, "/:id");
         const route = req.route?.path ? `${base}${req.route.path}` : "unmatched";
         end({ method: req.method, route, status: String(res.statusCode) });
     });

@@ -23,13 +23,21 @@ const secret = () => new TextEncoder().encode(process.env.JWT_SECRET);
 const ISSUER = "v-menu";
 
 export async function signAppToken(user: AppUser, ttl = "1h") {
-    return new SignJWT({ ...user }).setProtectedHeader({ alg: "HS256" }).setIssuer(ISSUER).setIssuedAt().setExpirationTime(ttl).sign(secret());
+    return new SignJWT({ ...user })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuer(ISSUER)
+        .setIssuedAt()
+        .setExpirationTime(ttl)
+        .sign(secret());
 }
 
 function readToken(req: Request): string | null {
     const header = req.headers.authorization;
     if (header?.startsWith("Bearer ")) return header.slice(7);
-    const cookie = req.headers.cookie?.split(";").map((c) => c.trim()).find((c) => c.startsWith("token="));
+    const cookie = req.headers.cookie
+        ?.split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith("token="));
     return cookie ? decodeURIComponent(cookie.slice(6)) : null;
 }
 

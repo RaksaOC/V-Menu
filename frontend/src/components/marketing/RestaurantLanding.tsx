@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -36,39 +36,28 @@ export default function Res() {
                 animate={mounted ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: "easeOut" }}
             >
-                <h1 className="text-5xl font-extrabold mb-4 tracking-tight">
-                    Welcome to Ocean Bites
-                </h1>
+                <h1 className="text-5xl font-extrabold mb-4 tracking-tight">Welcome to Ocean Bites</h1>
                 <p className="text-gray-300 max-w-xl mx-auto text-lg">
                     Where modern ambiance meets authentic flavors. Your culinary escape awaits.
                 </p>
             </motion.section>
 
             {/* About */}
-            <motion.section
-                {...sectionProps}
-                className="relative z-10 max-w-4xl mx-auto px-6 py-16 text-center"
-            >
+            <motion.section {...sectionProps} className="relative z-10 max-w-4xl mx-auto px-6 py-16 text-center">
                 <h2 className="text-3xl font-semibold mb-4">About Us</h2>
                 <p className="text-gray-400 text-md">
-                    Ocean Bites is more than a restaurant — it&apos;s a modern dining experience.
-                    Located in the heart of the city, we serve gourmet meals crafted from fresh, local ingredients.
-                    Join us for a casual lunch or a romantic dinner in our cozy, modern space.
+                    Ocean Bites is more than a restaurant — it&apos;s a modern dining experience. Located in the heart of the city, we serve
+                    gourmet meals crafted from fresh, local ingredients. Join us for a casual lunch or a romantic dinner in our cozy, modern
+                    space.
                 </p>
             </motion.section>
 
             {/* Gallery */}
-            <motion.section
-                {...sectionProps}
-                className="relative z-10 max-w-5xl mx-auto px-6 py-16"
-            >
+            <motion.section {...sectionProps} className="relative z-10 max-w-5xl mx-auto px-6 py-16">
                 <h2 className="text-3xl font-semibold text-center mb-8">Gallery</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div
-                            key={i}
-                            className="rounded-xl overflow-hidden hover:scale-[1.03] transition-transform shadow-lg"
-                        >
+                        <div key={i} className="rounded-xl overflow-hidden hover:scale-[1.03] transition-transform shadow-lg">
                             <Image
                                 src={`/placeholder/gallery${i}.jpg`} // use real images here
                                 alt={`Gallery ${i}`}
@@ -82,10 +71,7 @@ export default function Res() {
             </motion.section>
 
             {/* Menu Highlights */}
-            <motion.section
-                {...sectionProps}
-                className="relative z-10 max-w-5xl mx-auto px-6 py-16"
-            >
+            <motion.section {...sectionProps} className="relative z-10 max-w-5xl mx-auto px-6 py-16">
                 <h2 className="text-3xl font-semibold text-center mb-8">Signature Dishes</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     {["Seared Salmon", "Truffle Pasta", "Gourmet Burger"].map((item, idx) => (
@@ -108,21 +94,15 @@ export default function Res() {
             </motion.section>
 
             {/* Testimonials */}
-            <motion.section
-                {...sectionProps}
-                className="relative z-10 max-w-4xl mx-auto px-6 py-16 text-center"
-            >
+            <motion.section {...sectionProps} className="relative z-10 max-w-4xl mx-auto px-6 py-16 text-center">
                 <h2 className="text-3xl font-semibold mb-8">What Our Guests Say</h2>
                 <div className="space-y-8">
                     {[
                         "Best dining experience I’ve had in a long time!",
                         "The ambiance is unmatched and the food is divine.",
-                        "Perfect date night spot. We’ll be back again soon!"
+                        "Perfect date night spot. We’ll be back again soon!",
                     ].map((quote, i) => (
-                        <blockquote
-                            key={i}
-                            className="bg-white/5 border border-white/10 rounded-xl p-6 text-gray-300 italic"
-                        >
+                        <blockquote key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 text-gray-300 italic">
                             “{quote}”
                         </blockquote>
                     ))}
@@ -130,10 +110,7 @@ export default function Res() {
             </motion.section>
 
             {/* Call to Action */}
-            <motion.section
-                {...sectionProps}
-                className="relative z-10 text-center py-20 px-6"
-            >
+            <motion.section {...sectionProps} className="relative z-10 text-center py-20 px-6">
                 <h2 className="text-4xl font-bold mb-4">Ready to Taste the Difference?</h2>
                 <p className="text-gray-400 mb-6">Reserve your table today or view our live menu.</p>
                 <div className="flex justify-center gap-4">

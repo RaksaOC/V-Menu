@@ -16,11 +16,7 @@ const owner = {
 };
 
 await mongoose.connect(process.env.MONGODB_URI!);
-await Restaurant.updateOne(
-    { _id: DEMO_RES_ID },
-    { $set: { name: "Demo Bistro", slug: DEMO_SLUG, ownerId: owner.uid } },
-    { upsert: true },
-);
+await Restaurant.updateOne({ _id: DEMO_RES_ID }, { $set: { name: "Demo Bistro", slug: DEMO_SLUG, ownerId: owner.uid } }, { upsert: true });
 for (const role of ["owner", "cashier", "chef"] as const) {
     await Tenant.updateOne(
         { resId: DEMO_RES_ID, role, tenantId: owner.uid },

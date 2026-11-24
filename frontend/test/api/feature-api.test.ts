@@ -119,7 +119,16 @@ describe("owner api", () => {
 });
 
 describe("staff api", () => {
-    const member = { _id: "s1", name: "Dara", tenantId: "u2", email: "dara@x.com", role: "cashier", resId: "r1", createdAt: "x", updatedAt: "x" };
+    const member = {
+        _id: "s1",
+        name: "Dara",
+        tenantId: "u2",
+        email: "dara@x.com",
+        role: "cashier",
+        resId: "r1",
+        createdAt: "x",
+        updatedAt: "x",
+    };
 
     it("lists staff for one restaurant and for all of them", async () => {
         answer("get", "/api/restaurants/demo-bistro/staff", [member]);

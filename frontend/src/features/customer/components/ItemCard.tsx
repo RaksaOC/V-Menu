@@ -1,6 +1,6 @@
-import {ItemOutput} from "@/lib/types/Item";
+import { ItemOutput } from "@/lib/types/Item";
 import { addToCart } from "../cart";
-import {Plus} from "lucide-react";
+import { Plus } from "lucide-react";
 
 interface CardProps {
     /** The restaurant and table whose cart the dish goes into (VM-05). */
@@ -17,11 +17,7 @@ export default function Card({ slug, table, _id, name, price, image }: CardProps
         <div className="bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:scale-[1.02] hover:border-emerald-200">
             {/* Image Container */}
             <div className="relative overflow-hidden">
-                <img
-                    src={image}
-                    alt={name}
-                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
-                />
+                <img src={image} alt={name} className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110" />
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>

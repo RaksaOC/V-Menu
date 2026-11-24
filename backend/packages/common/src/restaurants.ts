@@ -17,7 +17,11 @@ const TTL = 30_000;
 export const lookupRestaurant: LookupRestaurant = async (req, slug) => {
     const hit = cache.get(slug);
     if (hit && Date.now() - hit.at < TTL) return hit.value;
-    const value = await callService<RestaurantRef>(process.env.RESTAURANT_SERVICE_URL!, `/internal/restaurants/by-slug/${encodeURIComponent(slug)}`, req);
+    const value = await callService<RestaurantRef>(
+        process.env.RESTAURANT_SERVICE_URL!,
+        `/internal/restaurants/by-slug/${encodeURIComponent(slug)}`,
+        req,
+    );
     cache.set(slug, { at: Date.now(), value });
     return value;
 };

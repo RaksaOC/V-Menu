@@ -23,7 +23,16 @@ interface Props {
 }
 
 /** One header for the staff dashboards, by props (CL-09; was an owner and a cashier copy). */
-export default function DashboardHeader({ title, subtitle, roleLabel, email, loginHref, clock = false, position = "sticky", onOpenMenu }: Props) {
+export default function DashboardHeader({
+    title,
+    subtitle,
+    roleLabel,
+    email,
+    loginHref,
+    clock = false,
+    position = "sticky",
+    onOpenMenu,
+}: Props) {
     const [now, setNow] = useState<Date | null>(null);
     useEffect(() => {
         if (!clock) return;
@@ -50,8 +59,12 @@ export default function DashboardHeader({ title, subtitle, roleLabel, email, log
                 <div className="hidden items-center gap-3 rounded-[var(--r-chip)] border border-[var(--line)] px-4 py-2 md:flex">
                     <Clock size={16} aria-hidden className="text-[var(--accent-text)]" />
                     <div className="text-center">
-                        <div className="font-mono text-sm font-semibold">{now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}</div>
-                        <div className="text-xs text-[var(--muted)]">{now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</div>
+                        <div className="font-mono text-sm font-semibold">
+                            {now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}
+                        </div>
+                        <div className="text-xs text-[var(--muted)]">
+                            {now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                        </div>
                     </div>
                 </div>
             )}
@@ -84,7 +97,12 @@ export default function DashboardHeader({ title, subtitle, roleLabel, email, log
                     </MenuItems>
                 </Menu>
                 {onOpenMenu && (
-                    <button type="button" aria-label="Open the menu" onClick={onOpenMenu} className="rounded-[var(--r-chip)] p-2 hover:bg-[var(--card)] lg:hidden">
+                    <button
+                        type="button"
+                        aria-label="Open the menu"
+                        onClick={onOpenMenu}
+                        className="rounded-[var(--r-chip)] p-2 hover:bg-[var(--card)] lg:hidden"
+                    >
                         <MenuIcon size={22} aria-hidden />
                     </button>
                 )}

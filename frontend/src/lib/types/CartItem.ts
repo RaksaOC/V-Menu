@@ -1,6 +1,6 @@
-import {ItemOutput} from "@/lib/types/Item";
+import { ItemOutput } from "@/lib/types/Item";
 
 export type CartItem = {
-    item: ItemOutput,
+    item: ItemOutput;
     quantity: number;
-}
+};

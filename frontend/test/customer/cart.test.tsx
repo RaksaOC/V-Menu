@@ -68,7 +68,13 @@ describe("one cart per restaurant and table (VM-05)", () => {
     });
 
     it("drops dishes that are no longer on the menu, and refreshes the others", () => {
-        localStorage.setItem(cartKey(SLUG, T), JSON.stringify([{ item: kuyTeav, quantity: 2 }, { item: lokLak, quantity: 1 }]));
+        localStorage.setItem(
+            cartKey(SLUG, T),
+            JSON.stringify([
+                { item: kuyTeav, quantity: 2 },
+                { item: lokLak, quantity: 1 },
+            ]),
+        );
         const newPrice = { ...kuyTeav, price: 3 };
         expect(reconcileCart(SLUG, T, [newPrice])).toBe(1);
         expect(saved()).toEqual([{ item: newPrice, quantity: 2 }]);

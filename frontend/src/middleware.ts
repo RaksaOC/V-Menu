@@ -1,6 +1,6 @@
-import {NextResponse} from 'next/server';
-import type {NextRequest} from 'next/server';
-import {jwtDecode} from 'jwt-decode';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { jwtDecode } from "jwt-decode";
 
 interface DecodedToken {
     role?: string;
@@ -11,7 +11,7 @@ interface DecodedToken {
 
 export function middleware(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
-    const token = req.cookies.get('token')?.value;
+    const token = req.cookies.get("token")?.value;
 
     // Matches paths like /resSlug/cashier, /resSlug/kitchen, /resSlug/cashier/something
     const match = pathname.match(/^\/([^\/]+)\/(cashier|kitchen)(\/.*)?$/) || pathname.match(/^\/owner(\/.*)?$/);
@@ -34,9 +34,8 @@ export function middleware(req: NextRequest) {
         }
 
         try {
-            const decoded = jwtDecode<DecodedToken>(token)
+            const decoded = jwtDecode<DecodedToken>(token);
             if (decoded.exp && Date.now() / 1000 > decoded.exp) {
-
                 if (!isLoginPage && roleInUrl !== "owner") {
                     return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
                 } else if (!isLoginPage && roleInUrl === "owner") {
@@ -44,16 +43,15 @@ export function middleware(req: NextRequest) {
                 }
             }
 
-            const expectedRole = roleInUrl === 'cashier' ? 'cashier' :
-                roleInUrl === 'kitchen' ? 'chef' : roleInUrl === 'owner' ? 'owner' : null;
+            const expectedRole =
+                roleInUrl === "cashier" ? "cashier" : roleInUrl === "kitchen" ? "chef" : roleInUrl === "owner" ? "owner" : null;
 
             const roleMatches = decoded.role === expectedRole;
 
             if (!roleMatches) {
                 if (!isLoginPage && expectedRole !== "owner") {
                     return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
-                }
-                else if (!isLoginPage && expectedRole === "owner") {
+                } else if (!isLoginPage && expectedRole === "owner") {
                     return NextResponse.redirect(new URL(`/owner/login`, req.url));
                 }
             }
@@ -61,7 +59,7 @@ export function middleware(req: NextRequest) {
             // If token is invalid and not already on login page.tsx
             if (!isLoginPage && roleInUrl !== "owner") {
                 return NextResponse.redirect(new URL(`/${resSlugInUrl}/${roleInUrl}/login`, req.url));
-            }else if (!isLoginPage && roleInUrl === "owner") {
+            } else if (!isLoginPage && roleInUrl === "owner") {
                 return NextResponse.redirect(new URL(`/owner/login`, req.url));
             }
         }
@@ -71,5 +69,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/:res/:section/:path*', '/owner'],
+    matcher: ["/:res/:section/:path*", "/owner"],
 };

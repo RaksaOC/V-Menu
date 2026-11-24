@@ -45,10 +45,14 @@ const parser = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX
 export function receivePhoto(req: Request, res: Response, next: NextFunction) {
     parser(req, res, (err: unknown) => {
         if (err instanceof multer.MulterError) {
-            return next(err.code === "LIMIT_FILE_SIZE" ? new HttpError(413, "Photos can be at most 5 MB") : badRequest("Send one photo in the \"image\" field"));
+            return next(
+                err.code === "LIMIT_FILE_SIZE"
+                    ? new HttpError(413, "Photos can be at most 5 MB")
+                    : badRequest('Send one photo in the "image" field'),
+            );
         }
         if (err) return next(err);
-        if (!req.file) return next(badRequest("Send one photo in the \"image\" field"));
+        if (!req.file) return next(badRequest('Send one photo in the "image" field'));
         next();
     });
 }

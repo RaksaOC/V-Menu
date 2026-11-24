@@ -44,7 +44,12 @@ export default function ItemForm({ item, onClose, onSave, onDelete }: Props) {
         try {
             // VM-02: a new photo is uploaded first; the item stores its short URL.
             const uploaded = await photo.upload();
-            const fields = { name: name.trim(), price: parseFloat(price), image: uploaded ?? item?.image ?? PLACEHOLDER, isEnabled: item?.isEnabled ?? true };
+            const fields = {
+                name: name.trim(),
+                price: parseFloat(price),
+                image: uploaded ?? item?.image ?? PLACEHOLDER,
+                isEnabled: item?.isEnabled ?? true,
+            };
             onSave(item ? { _id: item._id, ...fields } : fields);
         } catch {
             // the photo field says why the upload failed
@@ -66,7 +71,12 @@ export default function ItemForm({ item, onClose, onSave, onDelete }: Props) {
     ) : (
         <>
             {item && onDelete && (
-                <Button variant="outline" className="mr-auto" icon={<Trash2 size={16} aria-hidden />} onClick={() => setConfirmDelete(true)}>
+                <Button
+                    variant="outline"
+                    className="mr-auto"
+                    icon={<Trash2 size={16} aria-hidden />}
+                    onClick={() => setConfirmDelete(true)}
+                >
                     Delete
                 </Button>
             )}

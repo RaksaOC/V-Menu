@@ -22,7 +22,8 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
     (response) => response,
     (err) => {
-        if (axios.isAxiosError(err) && err.response?.status === 401 && !String(err.config?.url ?? "").startsWith("/api/auth/")) endSession();
+        if (axios.isAxiosError(err) && err.response?.status === 401 && !String(err.config?.url ?? "").startsWith("/api/auth/"))
+            endSession();
         return Promise.reject(err);
     },
 );

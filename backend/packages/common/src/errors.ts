@@ -3,7 +3,11 @@ import mongoose from "mongoose";
 
 export class HttpError extends Error {
     /** `code` is a stable, machine-readable reason the frontend can switch on (e.g. TABLE_CLOSED). */
-    constructor(public status: number, message: string, public code?: string) {
+    constructor(
+        public status: number,
+        message: string,
+        public code?: string,
+    ) {
         super(message);
     }
 }

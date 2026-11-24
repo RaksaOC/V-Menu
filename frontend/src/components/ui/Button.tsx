@@ -22,7 +22,18 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 /** The one button (CL-09). Defaults to type="button", so it never submits a form by accident. */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-    { variant = "primary", size = "md", icon, loading = false, block = false, disabled, className = "", type = "button", children, ...rest },
+    {
+        variant = "primary",
+        size = "md",
+        icon,
+        loading = false,
+        block = false,
+        disabled,
+        className = "",
+        type = "button",
+        children,
+        ...rest
+    },
     ref,
 ) {
     return (

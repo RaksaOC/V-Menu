@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import {ReactNode, useEffect, useState} from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Menu from "@/features/restaurant/components/Menu";
 import Tables from "@/features/restaurant/components/Tables";
 import Orders from "./orders/Orders";
 import Overview from "@/features/restaurant/components/Overview";
 import DashboardHeader from "@/components/layout/DashboardHeader";
-import {ToastHost} from "@/components/ui";
-import {useParams} from "next/navigation";
-import {BarChart3, UtensilsCrossed, Users, ShoppingBag, ChevronRight} from "lucide-react";
+import { ToastHost } from "@/components/ui";
+import { useParams } from "next/navigation";
+import { BarChart3, UtensilsCrossed, Users, ShoppingBag, ChevronRight } from "lucide-react";
 
 const Dashboard = () => {
     const slug = String(useParams()?.res ?? "");
@@ -24,37 +24,37 @@ const Dashboard = () => {
         } else {
             setSection(savedSection);
         }
-    }, [])
+    }, []);
 
     useEffect(() => {
         localStorage.setItem("dashboardSection", section);
-    }, [section])
+    }, [section]);
 
     const navigationItems = [
         {
             id: "overview",
             label: "Overview",
             icon: BarChart3,
-            description: "Dashboard analytics"
+            description: "Dashboard analytics",
         },
         {
             id: "tables",
             label: "Tables",
             icon: Users,
-            description: "Manage seating"
+            description: "Manage seating",
         },
         {
             id: "orders",
             label: "Orders",
             icon: ShoppingBag,
-            description: "Order management"
+            description: "Order management",
         },
         {
             id: "menu",
             label: "Menu",
             icon: UtensilsCrossed,
-            description: "Menu items"
-        }
+            description: "Menu items",
+        },
     ];
 
     const handleSectionChange = (sectionId: string) => {
@@ -65,23 +65,23 @@ const Dashboard = () => {
     const renderContent = () => {
         switch (section) {
             case "overview":
-                return <Overview/>;
+                return <Overview />;
             case "orders":
-                return <Orders/>
+                return <Orders />;
             case "menu":
-                return <Menu role="cashier"/>;
+                return <Menu role="cashier" />;
             case "tables":
-                return <Tables role="cashier"/>
+                return <Tables role="cashier" />;
             default:
                 return null;
         }
     };
 
-    const currentSection = navigationItems.find(item => item.id === section);
+    const currentSection = navigationItems.find((item) => item.id === section);
 
     return (
         <div className="relative min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white">
-            <ToastHost/>
+            <ToastHost />
             <DashboardHeader
                 title="V-Menu Cashier"
                 subtitle={slug}
@@ -93,8 +93,7 @@ const Dashboard = () => {
 
             <div className="flex relative">
                 {/* Sidebar Navigation */}
-                <div
-                    className="w-72 hidden md:block bg-white fixed left-0 dark:bg-slate-800 min-h-[calc(100vh-88px)] border-r border-slate-200 dark:border-slate-700 p-6">
+                <div className="w-72 hidden md:block bg-white fixed left-0 dark:bg-slate-800 min-h-[calc(100vh-88px)] border-r border-slate-200 dark:border-slate-700 p-6">
                     <div className="mb-8">
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">Dashboard</h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400">Manage your restaurant operations</p>
@@ -116,36 +115,37 @@ const Dashboard = () => {
                                     }`}
                                 >
                                     <div className="flex items-center space-x-3">
-                                        <div className={`p-2 rounded-lg ${
-                                            isActive
-                                                ? "bg-blue-100 dark:bg-blue-900/30"
-                                                : "bg-slate-100 dark:bg-slate-700 group-hover:bg-slate-200 dark:group-hover:bg-slate-600"
-                                        }`}>
-                                            <Icon size={20}
-                                                  className={isActive ? "text-blue-600 dark:text-blue-400" : ""}/>
+                                        <div
+                                            className={`p-2 rounded-lg ${
+                                                isActive
+                                                    ? "bg-blue-100 dark:bg-blue-900/30"
+                                                    : "bg-slate-100 dark:bg-slate-700 group-hover:bg-slate-200 dark:group-hover:bg-slate-600"
+                                            }`}
+                                        >
+                                            <Icon size={20} className={isActive ? "text-blue-600 dark:text-blue-400" : ""} />
                                         </div>
                                         <div className="text-left">
                                             <div className="font-medium">{item.label}</div>
-                                            <div className={`text-xs ${
-                                                isActive
-                                                    ? "text-blue-600 dark:text-blue-400"
-                                                    : "text-slate-400 dark:text-slate-500"
-                                            }`}>
+                                            <div
+                                                className={`text-xs ${
+                                                    isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"
+                                                }`}
+                                            >
                                                 {item.description}
                                             </div>
                                         </div>
                                     </div>
-                                    <ChevronRight size={16} className={`transition-transform ${
-                                        isActive ? "rotate-90" : "group-hover:translate-x-1"
-                                    }`}/>
+                                    <ChevronRight
+                                        size={16}
+                                        className={`transition-transform ${isActive ? "rotate-90" : "group-hover:translate-x-1"}`}
+                                    />
                                 </button>
                             );
                         })}
                     </nav>
                 </div>
-                <div
-                    className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around items-center py-2 md:hidden">
-                    {navigationItems.map(item => {
+                <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-around items-center py-2 md:hidden">
+                    {navigationItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = section === item.id;
                         return (
@@ -154,7 +154,7 @@ const Dashboard = () => {
                                 onClick={() => handleSectionChange(item.id)}
                                 className={`flex flex-col items-center text-xs ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"}`}
                             >
-                                <Icon size={20}/>
+                                <Icon size={20} />
                                 <span>{item.label}</span>
                             </button>
                         );
@@ -169,15 +169,11 @@ const Dashboard = () => {
                             {currentSection && (
                                 <>
                                     <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                                        <currentSection.icon size={20} className="text-white"/>
+                                        <currentSection.icon size={20} className="text-white" />
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
-                                            {currentSection.label}
-                                        </h1>
-                                        <p className="text-slate-500 dark:text-slate-400">
-                                            {currentSection.description}
-                                        </p>
+                                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{currentSection.label}</h1>
+                                        <p className="text-slate-500 dark:text-slate-400">{currentSection.description}</p>
                                     </div>
                                 </>
                             )}
@@ -185,11 +181,8 @@ const Dashboard = () => {
                     </div>
 
                     {/* Content */}
-                    <div
-                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[600px]">
-                        <div className="p-6">
-                            {renderContent()}
-                        </div>
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[600px]">
+                        <div className="p-6">{renderContent()}</div>
                     </div>
                 </div>
             </div>

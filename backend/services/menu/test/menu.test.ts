@@ -31,7 +31,9 @@ beforeAll(async () => {
     mongo = await MongoMemoryServer.create();
     await mongoose.connect(mongo.getUri("menu"));
     owner = { authorization: `Bearer ${await signAppToken({ uid: "owner1", email: "o@x.com", role: "owner" })}` };
-    cashier = { authorization: `Bearer ${await signAppToken({ uid: "c1", email: "c@x.com", role: "cashier", resId: RES_ID, resSlug: SLUG })}` };
+    cashier = {
+        authorization: `Bearer ${await signAppToken({ uid: "c1", email: "c@x.com", role: "cashier", resId: RES_ID, resSlug: SLUG })}`,
+    };
     otherOwner = { authorization: `Bearer ${await signAppToken({ uid: "owner2", email: "p@x.com", role: "owner" })}` };
 });
 afterAll(async () => {
@@ -87,7 +89,10 @@ describe("order check (internal)", () => {
         const { body: item } = await addItem({ name: "Bai Sach Chrouk", price: 3, image: PHOTO });
         const { body: table } = await request(app).post(`/api/menu/${SLUG}/tables`).set(owner).send({ type: "manual", name: "A1" });
         const check = (t: string) =>
-            request(app).post(`/internal/restaurants/${RES_ID}/order-check`).set("x-internal-key", "internal-test-key").send({ table: t, items: [{ _id: item._id, quantity: 2 }] });
+            request(app)
+                .post(`/internal/restaurants/${RES_ID}/order-check`)
+                .set("x-internal-key", "internal-test-key")
+                .send({ table: t, items: [{ _id: item._id, quantity: 2 }] });
         expect((await check("A1")).status).toBe(409); // new tables start closed
         await request(app).patch(`/api/menu/${SLUG}/tables/${table._id}/availability`).set(owner).send({ isEnabled: true });
         const ok = await check("A1");

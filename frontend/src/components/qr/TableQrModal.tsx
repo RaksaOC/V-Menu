@@ -53,14 +53,20 @@ export default function TableQrModal({ slug, tableName, restaurantName, onClose 
                     >
                         <Download size={16} aria-hidden /> Download PNG
                     </a>
-                    <Button variant="solid" icon={<Printer size={16} aria-hidden />} onClick={() => printQrCards([{ restaurantName, tableName, url }])}>
+                    <Button
+                        variant="solid"
+                        icon={<Printer size={16} aria-hidden />}
+                        onClick={() => printQrCards([{ restaurantName, tableName, url }])}
+                    >
                         Print
                     </Button>
                 </>
             }
         >
             <div className="flex aspect-square items-center justify-center rounded-[var(--r-card)] border border-[var(--line)] bg-white p-3">
-                {dataUrl && <img src={dataUrl} alt={`QR code for table ${tableName}`} className="h-full w-full [image-rendering:pixelated]" />}
+                {dataUrl && (
+                    <img src={dataUrl} alt={`QR code for table ${tableName}`} className="h-full w-full [image-rendering:pixelated]" />
+                )}
                 {!dataUrl && !failed && <p className="text-sm text-[var(--muted)]">Making the code…</p>}
                 {failed && <p className="text-sm text-[var(--bad)]">Could not make the QR code. Please try again.</p>}
             </div>

@@ -1,6 +1,19 @@
 import { Router, type Request } from "express";
 import mongoose from "mongoose";
-import { assertRestaurantAccess, requireRole, type Role, assertId, badRequest, HttpError, notFound, requireInternal, lookupRestaurant as defaultLookup, type LookupRestaurant, baseApp, finish } from "@vmenu/common";
+import {
+    assertRestaurantAccess,
+    requireRole,
+    type Role,
+    assertId,
+    badRequest,
+    HttpError,
+    notFound,
+    requireInternal,
+    lookupRestaurant as defaultLookup,
+    type LookupRestaurant,
+    baseApp,
+    finish,
+} from "@vmenu/common";
 import { rateLimit } from "express-rate-limit";
 import { Item, Table } from "./models.js";
 import { PLACEHOLDER, imageUrl, isOwnImage, receivePhoto, reencode, removeImage, saveImage, sendImage } from "./images.js";
@@ -17,7 +30,8 @@ function itemFields(body: Record<string, unknown>, partial: boolean, slug: strin
     const price = Number(body.price);
     if (name) out.name = name;
     if (image && image !== currentImage) {
-        if (image !== PLACEHOLDER && !isOwnImage(image, slug)) throw badRequest("Upload the photo first; the image must be this restaurant's own photo");
+        if (image !== PLACEHOLDER && !isOwnImage(image, slug))
+            throw badRequest("Upload the photo first; the image must be this restaurant's own photo");
         out.image = image;
     }
     if (body.price !== undefined && Number.isFinite(price) && price >= 0) out.price = price;
@@ -60,7 +74,8 @@ export function createApp({
         try {
             return await restaurantFor(req);
         } catch (err) {
-            if (err instanceof HttpError && err.status === 404) throw new HttpError(404, "We couldn't find this restaurant.", "RESTAURANT_NOT_FOUND");
+            if (err instanceof HttpError && err.status === 404)
+                throw new HttpError(404, "We couldn't find this restaurant.", "RESTAURANT_NOT_FOUND");
             throw err;
         }
     }
@@ -95,7 +110,8 @@ export function createApp({
         const name = String(req.params.name);
         const table = await Table.findOne({ name, resId: restaurant._id }, { isEnabled: 1 }).lean();
         if (!table) throw new HttpError(404, `We couldn't find table ${name}.`, "TABLE_NOT_FOUND");
-        if (!table.isEnabled) throw new HttpError(404, `Table ${name} isn't open yet. Please ask a staff member to open it.`, "TABLE_CLOSED");
+        if (!table.isEnabled)
+            throw new HttpError(404, `Table ${name} isn't open yet. Please ask a staff member to open it.`, "TABLE_CLOSED");
         res.json({ message: "Table is available" });
     });
 
@@ -175,7 +191,9 @@ export function createApp({
             if (await Table.exists({ name: given, resId: restaurant._id })) throw badRequest("Name is taken");
             name = given;
         } else {
-            const numbers = (await Table.find({ resId: restaurant._id }, { name: 1 }).lean()).map((t) => parseInt(t.name)).filter((n) => !isNaN(n));
+            const numbers = (await Table.find({ resId: restaurant._id }, { name: 1 }).lean())
+                .map((t) => parseInt(t.name))
+                .filter((n) => !isNaN(n));
             name = String(numbers.length ? Math.max(...numbers) + 1 : 1);
         }
         // New tables start closed (decided for VM-04): the cashier opens a table when guests sit
@@ -242,7 +260,10 @@ export function createApp({
         res.json({
             items: lines.map((l) => {
                 const i = byId.get(String(l._id))!;
-                return { item: { _id: String(i._id), name: i.name, price: i.price, image: i.image, isEnabled: i.isEnabled }, quantity: l.quantity };
+                return {
+                    item: { _id: String(i._id), name: i.name, price: i.price, image: i.image, isEnabled: i.isEnabled },
+                    quantity: l.quantity,
+                };
             }),
         });
     });

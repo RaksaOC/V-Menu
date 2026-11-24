@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, FormEvent } from "react";
 import { createUserWithEmailAndPassword, UserCredential } from "firebase/auth";
@@ -6,7 +6,7 @@ import { auth } from "@/lib/firebase";
 import { signup } from "@/features/auth/api";
 import { motion } from "framer-motion";
 import { Store, User, Mail, Lock, ArrowRight } from "lucide-react";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const SignupPage = () => {
     const router = useRouter();
@@ -46,18 +46,17 @@ const SignupPage = () => {
         visible: {
             opacity: 1,
             y: 0,
-            transition: { duration: 0.6 }
-        }
+            transition: { duration: 0.6 },
+        },
     };
 
     const inputVariants = {
         focus: { scale: 1.02, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" },
-        blur: { scale: 1, boxShadow: "none" }
+        blur: { scale: 1, boxShadow: "none" },
     };
 
     return (
-        <div
-            className="min-h-screen flex items-center justify-center bg-[var(--stage)] text-[var(--ink)] px-4 relative">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--stage)] text-[var(--ink)] px-4 relative">
             <motion.form
                 initial="hidden"
                 animate="visible"
@@ -65,18 +64,13 @@ const SignupPage = () => {
                 onSubmit={handleSignup}
                 className="bg-[var(--bg)] border border-[var(--line)] rounded-2xl shadow-xl p-8 max-w-md w-full flex flex-col gap-2.5"
             >
-
                 <div className="relative z-10">
                     <div className="bg-blue-600 dark:bg-blue-700 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                         <Store className="w-8 h-8 text-white" />
                     </div>
 
-                    <h2 className="text-2xl font-bold text-center text-zinc-800 dark:text-white mb-1">
-                        Create a Restaurant Account
-                    </h2>
-                    <p className="text-center text-zinc-500 dark:text-zinc-400 mb-4">
-                        Get started with your restaurant management
-                    </p>
+                    <h2 className="text-2xl font-bold text-center text-zinc-800 dark:text-white mb-1">Create a Restaurant Account</h2>
+                    <p className="text-center text-zinc-500 dark:text-zinc-400 mb-4">Get started with your restaurant management</p>
                 </div>
 
                 <div className="flex flex-col gap-2 relative z-10">
@@ -170,7 +164,15 @@ const SignupPage = () => {
                 </motion.button>
 
                 <p className="text-center text-zinc-500 dark:text-zinc-400 text-sm mt-2 relative z-10">
-                    Already have an account? <a onClick={() => {router.push("/login")}} className="text-blue-600 dark:text-blue-400 hover:underline">Log in</a>
+                    Already have an account?{" "}
+                    <a
+                        onClick={() => {
+                            router.push("/login");
+                        }}
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                        Log in
+                    </a>
                 </p>
             </motion.form>
         </div>

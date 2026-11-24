@@ -8,5 +8,10 @@ export interface CardProps extends HTMLAttributes<HTMLElement> {
 
 /** A surface on the page background: line border, card radius (CL-09). */
 export default function Card({ as: Tag = "div", padded = true, className = "", ...rest }: CardProps) {
-    return <Tag className={`rounded-[var(--r-card)] border border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] ${padded ? "p-5" : ""} ${className}`} {...rest} />;
+    return (
+        <Tag
+            className={`rounded-[var(--r-card)] border border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] ${padded ? "p-5" : ""} ${className}`}
+            {...rest}
+        />
+    );
 }
