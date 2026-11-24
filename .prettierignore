@@ -16,3 +16,5 @@ docs/showcase/after/
 *.yaml
 *.html
 infra/
+# B5: recorded API data for the screenshot tests, written by the tests
+e2e/screens/data/

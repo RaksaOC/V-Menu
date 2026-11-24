@@ -133,7 +133,8 @@ These are the same commands CI runs:
 | `npm run check` | everything below except e2e, in order: format, lint, typecheck, import boundaries, tests |
 | `npm test` | backend tests (each service and `@vmenu/common`: Vitest, Supertest, in-memory MongoDB), frontend tests (Vitest, Testing Library, MSW) and the repo checks |
 | `npm run test:e2e` | Playwright against a running stack (`npm run dev` and `npm run seed` first). The suite places many orders, so set `ORDERS_PER_MINUTE=100000` and `ORDERS_PER_TABLE=100000` in `backend/services/order/.env` for that stack (CI does) |
-| `npm run lint` | ESLint on the frontend |
+| `npm --prefix e2e run screens` | the screenshot tests (`e2e/tests/screens.spec.ts`) on Linux, in the Playwright Docker image, against a running stack (`BASE_URL`). The reference images are in `e2e/screens/`; add `-- --update-snapshots` after a deliberate change, and say why in the PR. On macOS and Windows, `test:e2e` skips them |
+| `npm run lint` | ESLint on the backend and the frontend |
 | `npm run typecheck` | TypeScript for the backend workspace and the frontend |
 | `npm run deps` | import boundaries (dependency-cruiser, rules in `.dependency-cruiser.cjs`): no service imports another, routes don't reach models, packages don't import services, the frontend imports only `@vmenu/contracts` from the backend, and features don't import each other |
 | `npm run format` / `format:check` | Prettier (settings in `.prettierrc.json`, `.editorconfig` for editors) |

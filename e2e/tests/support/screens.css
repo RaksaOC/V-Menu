@@ -1,0 +1,10 @@
+/* B5: hidden in screenshot tests. Next's dev-mode overlay and badge (a dev server only), and
+   anything that moves on its own. */
+nextjs-portal {
+    display: none !important;
+}
+*,
+*::before,
+*::after {
+    caret-color: transparent !important;
+}

@@ -15,6 +15,8 @@ export default defineConfig({
     // B8: in CI, a forgotten test.only is an error. It would otherwise run that one test and pass.
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
+    // B5: the screenshot references (screens.spec.ts), one set, made on Linux
+    snapshotPathTemplate: "{testDir}/../screens/{arg}{ext}",
     reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
     use: {
         baseURL: process.env.BASE_URL ?? "http://localhost:3400",
