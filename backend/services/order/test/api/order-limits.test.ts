@@ -16,8 +16,9 @@ const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId:
 const ITEM = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 let closedTable: string | null = null;
 /** SEC-04: table link tokens (22 characters) and the table each one opens. */
-const LINKS: Record<string, string> = { ["t1".padEnd(22, "a")]: "1", ["t2".padEnd(22, "b")]: "2" };
-const [T1, T2] = Object.keys(LINKS);
+const T1 = "t1".padEnd(22, "a");
+const T2 = "t2".padEnd(22, "b");
+const LINKS: Record<string, string> = { [T1]: "1", [T2]: "2" };
 
 const clients: Clients = {
     listOwnerRestaurants: async () => [],
