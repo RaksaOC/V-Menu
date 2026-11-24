@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { server } from "../msw";
 
 // SEC-01 (review follow-up): Sign Out only says you're signed out once the server has cleared the
 // httpOnly cookie. Page scripts can't remove that cookie, and it stays a working session for up to
@@ -16,7 +17,6 @@ import DashboardHeader from "@/components/layout/DashboardHeader";
 import { ToastHost } from "@/components/ui";
 import KitchenHistory from "@/features/kitchen/components/KitchenHistory";
 import { navigation, signOut } from "@/lib/session";
-import { server } from "../msw";
 
 const FAILED = "Couldn't sign out, so you're still signed in. Please try again.";
 const logout = (answer: () => Response) => server.use(http.post("*/api/auth/logout", answer));

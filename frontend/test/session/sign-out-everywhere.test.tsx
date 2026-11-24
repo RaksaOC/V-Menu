@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { server } from "../msw";
 
 // SEC-03: "Sign out everywhere" ends every session of this account, on every device.
 const firebaseSignOut = vi.hoisted(() => vi.fn(async () => {}));
@@ -12,7 +13,6 @@ vi.mock("react-toastify/dist/ReactToastify.css", () => ({}));
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import { ToastHost } from "@/components/ui";
 import { navigation } from "@/lib/session";
-import { server } from "../msw";
 
 async function pressIt() {
     render(
