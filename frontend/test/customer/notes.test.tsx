@@ -70,9 +70,18 @@ describe("notes in the cart (VM-28)", () => {
     });
 
     it("toOrderBody leaves out empty notes", () => {
-        expect(toOrderBody("1", [{ item: dish, quantity: 1, note: "  " }], " ")).toEqual({
+        expect(toOrderBody({ token: null, name: "1" }, [{ item: dish, quantity: 1, note: "  " }], " ")).toEqual({
             table: "1",
             orderedItems: [{ item: { _id: dish._id }, quantity: 1 }],
+        });
+    });
+
+    it("toOrderBody sends the link token instead of the table's name, with the notes (SEC-04)", () => {
+        const token = "AbCdEfGhIjKlMnOpQrSt_-";
+        expect(toOrderBody({ token, name: "" }, [{ item: dish, quantity: 1, note: "no chilli" }], "birthday")).toEqual({
+            qrToken: token,
+            note: "birthday",
+            orderedItems: [{ item: { _id: dish._id }, quantity: 1, note: "no chilli" }],
         });
     });
 });

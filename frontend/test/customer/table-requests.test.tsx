@@ -14,6 +14,11 @@ vi.mock("next/navigation", () => ({ useParams: () => ({ res: "demo-bistro", tabl
 const { default: TableRequests } = await import("@/features/customer/components/TableRequests");
 const { default: OrderCard } = await import("@/features/cashier/components/orders/OrderCard");
 
+// SEC-04: the old page by table name, and a QR code's link token
+const byName = { slug: "demo-bistro", token: null, name: "T1", base: "/demo-bistro/customer/T1", cartId: "T1" };
+const TOKEN = "AbCdEfGhIjKlMnOpQrSt_-";
+const byToken = { slug: "demo-bistro", token: TOKEN, name: "", base: `/demo-bistro/t/${TOKEN}`, cartId: TOKEN };
+
 const openBill = (orders: unknown[]) =>
     http.get("*/api/orders/demo-bistro/tables/T1/open-bill", () =>
         HttpResponse.json({ table: "T1", orders, lines: [], subtotalCents: 0, totalCents: 0 }),
@@ -36,7 +41,7 @@ describe("the customer's buttons (VM-30)", () => {
 
     it("wait until the table has ordered", async () => {
         server.use(openBill([]));
-        render(<TableRequests slug="demo-bistro" table="T1" />);
+        render(<TableRequests link={byName} />);
         await waitFor(() => expect(screen.queryByRole("button", { name: "Request bill" })).toBeNull());
         expect(screen.queryByRole("button", { name: "Call staff" })).toBeNull();
     });
@@ -50,12 +55,29 @@ describe("the customer's buttons (VM-30)", () => {
                 return HttpResponse.json({ kind: "bill", at: new Date().toISOString() });
             }),
         );
-        render(<TableRequests slug="demo-bistro" table="T1" />);
+        render(<TableRequests link={byName} />);
         fireEvent.click(await screen.findByRole("button", { name: "Request bill" }));
         expect(await screen.findByText(/We've told the staff you'd like the bill/)).toBeTruthy();
         expect(asked).toEqual([{ kind: "bill" }]);
         expect((screen.getByRole("button", { name: "Bill requested" }) as HTMLButtonElement).disabled).toBe(true);
         expect((screen.getByRole("button", { name: "Call staff" }) as HTMLButtonElement).disabled).toBe(false);
+    });
+
+    it("from a QR code, both calls use the table's link token, never its name (SEC-04)", async () => {
+        const asked: string[] = [];
+        server.use(
+            http.get(`*/api/orders/demo-bistro/t/${TOKEN}/open-bill`, () =>
+                HttpResponse.json({ table: "T1", orders: [placed], lines: [], subtotalCents: 0, totalCents: 0 }),
+            ),
+            http.post(`*/api/orders/demo-bistro/t/${TOKEN}/requests`, async ({ request }) => {
+                asked.push(new URL(request.url).pathname);
+                return HttpResponse.json({ kind: "bill", at: new Date().toISOString() });
+            }),
+        );
+        render(<TableRequests link={byToken} />);
+        fireEvent.click(await screen.findByRole("button", { name: "Request bill" }));
+        expect(await screen.findByText(/We've told the staff you'd like the bill/)).toBeTruthy();
+        expect(asked).toEqual([`/api/orders/demo-bistro/t/${TOKEN}/requests`]);
     });
 
     it("pressed again too soon: the server's answer is shown", async () => {
@@ -68,7 +90,7 @@ describe("the customer's buttons (VM-30)", () => {
                 ),
             ),
         );
-        render(<TableRequests slug="demo-bistro" table="T1" />);
+        render(<TableRequests link={byName} />);
         fireEvent.click(await screen.findByRole("button", { name: "Call staff" }));
         expect(await screen.findByText("You asked a moment ago. Someone will be with you soon.")).toBeTruthy();
     });

@@ -122,7 +122,7 @@ export default function CustomerPage() {
                             <p className={`text-emerald-100 text-lg font-medium ${table ? "" : "invisible"}`}>Table {table}</p>
                             <p className="text-emerald-50/80 text-sm mt-1">Browse our delicious menu and order with ease</p>
                             {/* VM-30: once the table has ordered */}
-                            <TableRequests slug={resSlug} table={table} />
+                            <TableRequests link={link} />
                         </div>
                     </div>
 

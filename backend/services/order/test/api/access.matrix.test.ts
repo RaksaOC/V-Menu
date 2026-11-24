@@ -55,6 +55,7 @@ const MATRIX: [string, AccessRow][] = [
     ["POST /api/orders/:slug/tables/:table/requests", PUBLIC], // VM-30: Request bill, Call staff (no sign-in, like ordering)
     ["GET /api/orders/:slug/t/:token/orders/:id", PUBLIC], // SEC-04: the link token is the proof
     ["GET /api/orders/:slug/t/:token/open-bill", PUBLIC],
+    ["POST /api/orders/:slug/t/:token/requests", PUBLIC], // VM-30 by the table's link (SEC-04)
     ["GET /api/orders/:slug/kitchen", only(["chef"])],
     ["GET /api/orders/:slug/kitchen/history", only(["chef"])],
     ["PATCH /api/orders/:slug/kitchen/:id/status", only(["chef"])],

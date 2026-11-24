@@ -32,7 +32,8 @@ export function tableRoutes({ services, restaurant }: RouteContext, tableOf: Tab
     // VM-30: "Request bill" and "Call staff"
     r.post("/requests", async (req, res) => {
         const place = await restaurant(req);
-        res.json(await services(req).requests.ask(place._id, tableOf(req), req.body));
+        const s = services(req);
+        res.json(await s.requests.ask(place._id, await tableOf(req, place._id, s.orders), req.body));
     });
     r.get("/open-bill", async (req, res) => {
         const place = await restaurant(req);

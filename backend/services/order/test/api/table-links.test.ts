@@ -5,6 +5,7 @@ import request from "supertest";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Clients } from "../../src/clients/index.js";
 import { createApp } from "../../src/app.js";
+import { Bill } from "../../src/models/bill.model.js";
 import { Order } from "../../src/models/order.model.js";
 
 // SEC-04: customers order and read their table through its link token. menu-service owns the
@@ -14,7 +15,7 @@ const SLUG = "rest-a";
 const RES = { _id: "665f00000000000000000001", name: "A", slug: SLUG, ownerId: "owner-a" };
 const TOKEN = "AbCdEfGhIjKlMnOpQrSt_-";
 const WRONG = "AAAAAAAAAAAAAAAAAAAAAA";
-const DISH = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", price: 2.5, image: "k.jpg", isEnabled: true };
+const DISH = { _id: "665f0000000000000000aaaa", name: "Kuy Teav", priceCents: 250, image: "k.jpg", isEnabled: true };
 const invalid = () => new HttpError(404, "This table link isn't valid.", "TABLE_LINK_INVALID");
 
 const clients: Clients = {
@@ -91,8 +92,8 @@ describe("reading a table's orders with its link token (SEC-04)", () => {
 
     it("shows that table's order and open bill", async () => {
         const { body: order } = await place({ qrToken: TOKEN, orderedItems: lines });
-        expect((await viaToken(`/orders/${order._id}`)).body).toMatchObject({ _id: order._id, table: "T1", total: 5 });
-        expect((await viaToken("/open-bill")).body).toMatchObject({ table: "T1", total: 5 });
+        expect((await viaToken(`/orders/${order._id}`)).body).toMatchObject({ _id: order._id, table: "T1", totalCents: 500 });
+        expect((await viaToken("/open-bill")).body).toMatchObject({ table: "T1", totalCents: 500 });
     });
 
     it("a wrong token gets 404 for both", async () => {
@@ -117,5 +118,28 @@ describe("reading a table's orders with its link token (SEC-04)", () => {
             expect(res.status).toBe(404);
             expect(res.body.code).toBe("TABLE_LINK_INVALID");
         }
+        const asked = await request(app).post(`/api/orders/${SLUG}/tables/T1/requests`).send({ kind: "bill" }); // VM-30
+        expect(asked.status).toBe(404);
+        expect(asked.body.code).toBe("TABLE_LINK_INVALID");
+    });
+});
+
+describe("asking for the bill with the table's link token (VM-30, SEC-04)", () => {
+    const ask = (token: string) => request(app).post(`/api/orders/${SLUG}/t/${token}/requests`).send({ kind: "bill" });
+
+    it("flags the open bill of the table the token belongs to", async () => {
+        await place({ qrToken: TOKEN, orderedItems: lines });
+        const res = await ask(TOKEN);
+        expect(res.status).toBe(200);
+        expect(res.body.kind).toBe("bill");
+        expect((await Bill.findOne({ table: "T1" }).lean())?.billRequestedAt).toBeTruthy();
+    });
+
+    it("a wrong token gets 404, and no bill is flagged", async () => {
+        await place({ qrToken: TOKEN, orderedItems: lines });
+        const res = await ask(WRONG);
+        expect(res.status).toBe(404);
+        expect(res.body.code).toBe("TABLE_LINK_INVALID");
+        expect((await Bill.findOne({ table: "T1" }).lean())?.billRequestedAt).toBeFalsy();
     });
 });

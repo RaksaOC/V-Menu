@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { BellRing, Receipt } from "lucide-react";
 import type { TableRequestKind } from "@vmenu/contracts";
 import { askStaff, getTableBill } from "@/features/customer/api";
+import type { TableLink } from "@/features/customer/table-link";
 import { apiErrorMessage } from "@/lib/api";
 
 /** VM-30: a button works once per 2 minutes (the server checks it too). */
@@ -30,7 +31,7 @@ const BUTTONS: { kind: TableRequestKind; label: string; done: string; told: stri
  * VM-30: "Request bill" and "Call staff" on the customer's menu. They show once the table has
  * ordered: the request goes on the table's open bill, where the cashier sees it.
  */
-export default function TableRequests({ slug, table }: { slug: string; table: string }) {
+export default function TableRequests({ link }: { link: TableLink }) {
     const [hasOrdered, setHasOrdered] = useState(false);
     const [sent, setSent] = useState<Record<TableRequestKind, boolean>>({ bill: false, staff: false });
     const [busy, setBusy] = useState<TableRequestKind | null>(null);
@@ -39,13 +40,14 @@ export default function TableRequests({ slug, table }: { slug: string; table: st
 
     useEffect(() => {
         let current = true;
-        getTableBill(slug, table)
+        getTableBill(link)
             .then((bill) => current && setHasOrdered(bill.orders.length > 0))
             .catch(() => {}); // no buttons then; the menu still works
         return () => {
             current = false;
         };
-    }, [slug, table]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- link is rebuilt each render; its parts are listed
+    }, [link.slug, link.token, link.name]);
 
     useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -55,7 +57,7 @@ export default function TableRequests({ slug, table }: { slug: string; table: st
         setBusy(kind);
         setMessage(null);
         try {
-            await askStaff(slug, table, kind);
+            await askStaff(link, kind); // SEC-04: by the table's link token
             setSent((s) => ({ ...s, [kind]: true }));
             setMessage({ ok: true, text: told });
             timers.current.push(setTimeout(() => setSent((s) => ({ ...s, [kind]: false })), AGAIN_AFTER_MS));
