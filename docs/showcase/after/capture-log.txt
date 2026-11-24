@@ -77,3 +77,13 @@ ok   CL-09-owner-edit-table-1280-dark
 ok   CL-09-owner-menu-1280-dark
 ok   CL-09-ui-kit-1280-dark
 ok   CL-09-cashier-tables-360
+# ONLY=VM-06 (2026-11-23T13:01:25.283Z)
+ok   VM-06-cart-closed-1280
+ok   VM-06-cart-down-1280
+ok   VM-06-cart-sold-out-1280
+ok   VM-06-cart-closed-1280-dark
+ok   VM-06-cart-down-1280-dark
+ok   VM-06-cart-sold-out-1280-dark
+ok   VM-06-cart-closed-360
+ok   VM-06-cart-down-360
+ok   VM-06-cart-sold-out-360

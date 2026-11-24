@@ -31,10 +31,11 @@ export async function callService<T>(baseUrl: string, path: string, req: Request
         req.log?.error({ err, target: baseUrl + path }, "dependency unreachable");
         throw new HttpError(503, "A required service is unavailable");
     }
-    const body = (await res.json().catch(() => ({}))) as T & { message?: string };
+    const body = (await res.json().catch(() => ({}))) as T & { message?: string; code?: string };
     if (!res.ok) {
         // 4xx answers from the other service are passed on; 5xx become 502.
-        if (res.status < 500) throw new HttpError(res.status, body.message ?? "Request rejected");
+        // The code too (VM-06), so the browser can tell, say, a closed table from a sold-out dish.
+        if (res.status < 500) throw new HttpError(res.status, body.message ?? "Request rejected", body.code);
         req.log?.error({ status: res.status, target: baseUrl + path }, "dependency failed");
         throw new HttpError(502, "A required service failed");
     }

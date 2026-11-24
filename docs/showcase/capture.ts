@@ -435,6 +435,41 @@ await step("CL-09 phone", async () => {
     await context.close();
 });
 
+// VM-06: what the customer sees when an order fails (the order API is mocked, the menu is real).
+const ORDER_ERRORS = [
+    ["closed", 409, { message: "Table is not available", code: "TABLE_CLOSED" }],
+    ["down", 503, { message: "A required service is unavailable" }],
+    ["sold-out", 409, { message: "Some items are no longer available", code: "ITEMS_UNAVAILABLE" }],
+] as const;
+for (const [vp, theme] of [
+    [DESKTOP, "light"],
+    [DESKTOP, "dark"],
+    [PHONE, "light"],
+] as const) {
+    await step(`VM-06 order errors ${vp.width} ${theme}`, async () => {
+        for (const [name, status, body] of ORDER_ERRORS) {
+            const { context, page } = await newPage(browser, vp, theme);
+            const menu = (await (await page.request.get(`${BASE}/api/menu/${SLUG}/public/items`)).json()) as {
+                _id: string;
+                name: string;
+            }[];
+            const lines = menu.slice(0, 2).map((item) => ({ item, quantity: 1 }));
+            await context.addInitScript(([key, value]) => localStorage.setItem(key, value), [`cart:${SLUG}:T1`, JSON.stringify(lines)]);
+            await page.route(`**/api/orders/${SLUG}`, (route) => route.fulfill({ status, json: body }));
+            if (name === "sold-out")
+                await page.route(`**/api/menu/${SLUG}/public/items`, (route) =>
+                    route.fulfill({ json: menu.filter((i) => i._id !== lines[1].item._id) }),
+                );
+            await page.goto(`${BASE}/${SLUG}/customer/T1/cart`);
+            await settle(page);
+            await page.getByRole("button", { name: /place order/i }).click();
+            await page.waitForTimeout(1200);
+            await shot({ page, theme, width: vp.width }, `VM-06-cart-${name}`, false);
+            await context.close();
+        }
+    });
+}
+
 // ---------------------------------------------------------------- owner
 for (const theme of ["light", "dark"] as const) {
     await step(`owner ${theme}`, async () => {

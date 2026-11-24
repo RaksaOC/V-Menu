@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { ToastHost } from "@/components/ui";
 import { toast } from "@/lib/toast";
-import { placeOrder as sendOrder } from "@/features/customer/api";
-import { clearCart, readCart, saveCart } from "@/features/customer/cart";
+import { getMenu, placeOrder as sendOrder } from "@/features/customer/api";
+import { clearCart, readCart, reconcileCart, saveCart } from "@/features/customer/cart";
+import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
 import CartItemCard from "@/features/customer/components/CartItemCard";
 import { CartItem } from "@/lib/types/CartItem";
 import { OrderInput } from "@/lib/types/Order";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ShoppingBag, Receipt, Plus } from "lucide-react";
+import { AlertCircle, ArrowLeft, ShoppingBag, Receipt, Plus, RotateCcw } from "lucide-react";
 import { ItemOutput } from "@/lib/types/Item";
 import { addToCart } from "@/features/customer/cart";
 
@@ -17,6 +18,8 @@ export default function CartPage() {
     const router = useRouter();
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+    // VM-06: why the last order failed, and whether trying again could help
+    const [orderError, setOrderError] = useState<{ message: string; retry: boolean } | null>(null);
     const params = useParams();
 
     // VM-05: this restaurant's and table's own cart; the order goes to the table in the URL.
@@ -57,7 +60,24 @@ export default function CartPage() {
     const total = cartItems.reduce((sum, item) => sum + item.item.price * item.quantity, 0);
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+    /** Reloads the menu, removes the dishes that are no longer on it, and says which. */
+    const dropUnavailable = async () => {
+        const before = readCart(slug, table);
+        try {
+            reconcileCart(slug, table, await getMenu(slug));
+        } catch {
+            return "Check your cart and try again.";
+        }
+        const after = readCart(slug, table);
+        setCartItems(after);
+        const gone = before.filter((line) => !after.some((kept) => kept.item._id === line.item._id)).map((line) => line.item.name);
+        return gone.length
+            ? `Removed from your cart: ${gone.join(", ")}. Check it and place the order again.`
+            : "Check your cart and place the order again.";
+    };
+
     const placeOrder = async () => {
+        setOrderError(null);
         if (!cartItems.length) {
             toast.error("No items in cart! 🛒");
             return;
@@ -81,8 +101,14 @@ export default function CartPage() {
                 router.back();
             }, 2000);
         } catch (error) {
-            console.error("Order failed:", error);
-            toast.error("Failed to place order. Please try again.");
+            // VM-06: say why, and keep the cart. Dishes that went off the menu are taken out of it.
+            const message = apiErrorMessage(error, "Couldn't place the order. Please try again.");
+            if (apiErrorCode(error) === "ITEMS_UNAVAILABLE") {
+                setOrderError({ message: `${message}. ${await dropUnavailable()}`, retry: false });
+            } else {
+                const status = apiStatus(error);
+                setOrderError({ message, retry: status === undefined || status >= 500 });
+            }
         } finally {
             setIsPlacingOrder(false);
         }
@@ -194,38 +220,61 @@ export default function CartPage() {
                 </main>
 
                 {/* Enhanced Fixed Bottom Bar */}
-                {cartItems.length > 0 && (
+                {(cartItems.length > 0 || orderError) && (
                     <div className="fixed bottom-0 left-0 right-0 z-50">
                         {/* Backdrop blur effect */}
                         <div className="absolute inset-0 bg-white/90 backdrop-blur-lg border-t border-gray-200/50"></div>
 
                         <div className="relative p-4">
                             <div className="max-w-4xl mx-auto">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div>
-                                        <p className="text-lg font-bold text-gray-800">Total: ${total.toFixed(2)}</p>
-                                        <p className="text-sm text-gray-500">
-                                            {itemCount} item{itemCount !== 1 ? "s" : ""}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={placeOrder}
-                                        disabled={isPlacingOrder}
-                                        className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 disabled:transform-none disabled:cursor-not-allowed flex items-center gap-2"
+                                {orderError && (
+                                    <div
+                                        role="alert"
+                                        className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"
                                     >
-                                        {isPlacingOrder ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                Placing Order...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Receipt size={18} />
-                                                Place Order
-                                            </>
+                                        <p className="flex items-start gap-2">
+                                            <AlertCircle size={18} aria-hidden className="mt-0.5 shrink-0" />
+                                            <span>{orderError.message}</span>
+                                        </p>
+                                        {orderError.retry && (
+                                            <button
+                                                type="button"
+                                                onClick={placeOrder}
+                                                disabled={isPlacingOrder}
+                                                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-red-700 px-3 py-1.5 font-semibold text-white hover:bg-red-800 disabled:opacity-60"
+                                            >
+                                                <RotateCcw size={14} aria-hidden /> Try again
+                                            </button>
                                         )}
-                                    </button>
-                                </div>
+                                    </div>
+                                )}
+                                {cartItems.length > 0 && (
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div>
+                                            <p className="text-lg font-bold text-gray-800">Total: ${total.toFixed(2)}</p>
+                                            <p className="text-sm text-gray-500">
+                                                {itemCount} item{itemCount !== 1 ? "s" : ""}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={placeOrder}
+                                            disabled={isPlacingOrder}
+                                            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 disabled:transform-none disabled:cursor-not-allowed flex items-center gap-2"
+                                        >
+                                            {isPlacingOrder ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    Placing Order...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Receipt size={18} />
+                                                    Place Order
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
