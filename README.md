@@ -111,6 +111,7 @@ npm run seed           # demo data (in another terminal)
 - `npm run dev` starts a local MongoDB on `127.0.0.1:27017`, with data in `.data/mongo`. To use Atlas instead, set `MONGODB_URI` in each `services/*/.env`, using a separate database name per service, and run `npm run dev:services` plus `npm --prefix frontend run dev`.
 - `npm test` runs each service's tests (Vitest, Supertest and an in-memory MongoDB).
 - `npm run typecheck` type-checks all four packages.
+- `npm run test:repo` checks the issue forms (`.github/ISSUE_TEMPLATE/`) and the PR template (`.github/pull_request_template.md`) still have their required fields.
 
 ### Environment
 
