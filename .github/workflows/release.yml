@@ -118,7 +118,7 @@ jobs:
       # Fails the release (and so blocks deploy) on a fixable HIGH or CRITICAL CVE, and lists
       # them in the job summary (SEC-09).
       - name: Security summary (Trivy)
-        run: node scripts/security-summary.mjs trivy trivy.json --label "${{ matrix.name }}" --fail-on-high
+        run: node infra/checks/security-summary.mjs trivy trivy.json --label "${{ matrix.name }}" --fail-on-high
 
       - name: Summary
         run: |

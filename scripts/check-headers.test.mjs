@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
-const script = join(root, "scripts", "check-headers.mjs");
+const script = join(root, "infra", "checks", "check-headers.mjs");
 const GOOD = {
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     "X-Content-Type-Options": "nosniff",
@@ -60,5 +60,5 @@ test("fails when there is no Content-Security-Policy of either kind", async () =
 });
 
 test("the staging post-deploy job runs it", () => {
-    assert.match(readFileSync(join(root, ".github/workflows/deploy.yml"), "utf8"), /scripts\/check-headers\.mjs/);
+    assert.match(readFileSync(join(root, ".github/workflows/deploy.yml"), "utf8"), /infra\/checks\/check-headers\.mjs/);
 });

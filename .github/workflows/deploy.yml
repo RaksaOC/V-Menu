@@ -195,7 +195,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           for role in chef cashier; do
-            token=$(node scripts/staff-token.mjs "$role")
+            token=$(node infra/checks/staff-token.mjs "$role")
             echo "::add-mask::$token"
             echo "${role^^}_TOKEN=$token" >> "$GITHUB_ENV"
           done
@@ -204,12 +204,12 @@ jobs:
       - name: Demo data
         id: demo
         if: '!cancelled()'
-        run: node scripts/check-demo-data.mjs "$TARGET"
+        run: node infra/checks/check-demo-data.mjs "$TARGET"
 
       # SEC-02: the pages must send the security headers (landing, a customer page, staff logins).
       - name: Security headers
         if: '!cancelled()'
-        run: node scripts/check-headers.mjs "$TARGET" / /demo-bistro/customer/T1 /owner/login /demo-bistro/cashier/login
+        run: node infra/checks/check-headers.mjs "$TARGET" / /demo-bistro/customer/T1 /owner/login /demo-bistro/cashier/login
 
       - name: Install the browser tests
         if: steps.demo.outcome == 'success' && !cancelled()
@@ -237,7 +237,7 @@ jobs:
 
       - name: Security summary
         if: '!cancelled()'
-        run: node scripts/security-summary.mjs zap zap/report.json --label staging --known .zap/known-high.txt --fail-on-high
+        run: node infra/checks/security-summary.mjs zap zap/report.json --label staging --known .zap/known-high.txt --fail-on-high
 
       - uses: actions/upload-artifact@v7
         if: '!cancelled()'

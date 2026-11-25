@@ -11,7 +11,7 @@ runs:
     - name: Write CI .env files from .env.example (dummy secrets)
       shell: bash
       run: |
-        bash scripts/ci-env.sh
+        bash infra/checks/ci-env.sh
         # Same values for bake (build args) and compose; fixed project name = fixed image names.
         grep '^NEXT_PUBLIC_' .env >> "$GITHUB_ENV"
         # PHOTOS-S3: MinIO's published port, for compose and the frontend build's CSP

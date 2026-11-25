@@ -201,7 +201,7 @@ The frontend only needs the public Firebase web config, the three service URLs i
 - Order prices come from menu-service, not the cart.
 - Mongoose `sanitizeFilter` strips `$` operators from user input. Bodies are whitelisted field by field.
 - `helmet` headers, a 100 kB body limit, rate limiting on `/api/auth`, and a 5-second timeout on calls between services.
-- Rate limits count per visitor (SEC-06). Requests go browser → Caddy → Next.js rewrite → service. Caddy sets `X-Forwarded-For`, and the rewrite passes it on, so each service trusts exactly one proxy hop (`trust proxy` in `backend/packages/common/src/server.ts`). To check a deployment, run `node scripts/check-rate-limit.mjs https://<host>` a few times from one network, then once from another: the second network should start from the full limit.
+- Rate limits count per visitor (SEC-06). Requests go browser → Caddy → Next.js rewrite → service. Caddy sets `X-Forwarded-For`, and the rewrite passes it on, so each service trusts exactly one proxy hop (`trust proxy` in `backend/packages/common/src/server.ts`). To check a deployment, run `node infra/checks/check-rate-limit.mjs https://<host>` a few times from one network, then once from another: the second network should start from the full limit.
 - The firebase-admin service-account key is no longer used. Any old key should be revoked in the Firebase console.
 
 ## Security checks in the pipeline
@@ -214,7 +214,7 @@ The frontend only needs the public Firebase web config, the three service URLs i
 | Trivy | each image build (release.yml) | a fixable HIGH or CRITICAL CVE |
 | OWASP ZAP baseline (passive) | after each staging deploy (deploy.yml) | a High alert not listed in `.zap/known-high.txt` (report kept as the `zap-baseline` artifact) |
 
-Each one writes a "Security" section in its job summary (`scripts/security-summary.mjs`). Secret scanning push protection is on for the repository.
+Each one writes a "Security" section in its job summary (`infra/checks/security-summary.mjs`). Secret scanning push protection is on for the repository.
 
 ## Layout
 
@@ -245,7 +245,9 @@ infra/
   compose/                   docker-compose.yml (local stack), docker-compose.prod.yml (server)
   deploy/                    server setup and deploy scripts (see infra/deploy/README.md)
   monitoring/                Grafana Alloy agent, dashboards and alerts (see infra/monitoring/README.md)
-scripts/                     setup, local MongoDB, smoke test and repo checks
+  checks/                    what CI and deploys run against a stack: smoke test, demo data, headers,
+                             rate limit, DB isolation, staff tokens, security and coverage summaries
+scripts/                     developer helpers (setup, local MongoDB, a test order) and the repo checks
 .github/                     CI and deploy workflows, Dependabot, issue forms, PR template
 ```
 

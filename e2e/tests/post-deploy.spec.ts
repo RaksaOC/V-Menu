@@ -7,7 +7,7 @@ import { SLUG, sessionHeader } from "./support/auth";
 //
 // A customer opens the demo table's menu by its QR link and orders; the kitchen API sees the
 // order. SEC-04: on the servers a table opens only by its link token (links by name are off), so
-// the test reads T1's token as the cashier first, as scripts/smoke.mjs does. Then the
+// the test reads T1's token as the cashier first, as infra/checks/smoke.mjs does. Then the
 // cashier cancels it, so staging's kitchen queue doesn't fill up with test orders (and the
 // "order pending too long" alert stays quiet). No sign-in: against staging the job passes
 // short-lived CHEF_TOKEN and CASHIER_TOKEN (the seeded demo owner's, SEC-03); locally they're

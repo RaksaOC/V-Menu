@@ -8,7 +8,7 @@
 // all three roles at demo-bistro, so the token is the demo owner's (the same user smoke.mjs and
 // the e2e tests use), with session version 0, as the seeded rows have.
 //
-//   JWT_SECRET=... node scripts/staff-token.mjs <chef|cashier>     prints the token, nothing else
+//   JWT_SECRET=... node infra/checks/staff-token.mjs <chef|cashier>     prints the token, nothing else
 //   SLUG (default demo-bistro) and RES_ID (default the seeded demo restaurant) pick the restaurant;
 //   SEED_OWNER_UID and SEED_OWNER_EMAIL, if the seed was run with them, pick its owner.
 import { createHmac } from "node:crypto";

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SEC-02: checks that web pages send the security headers. Used after each staging deploy.
 //
-//   node scripts/check-headers.mjs <base-url> [path ...]     (default paths: /)
+//   node infra/checks/check-headers.mjs <base-url> [path ...]     (default paths: /)
 //
 // Exits 1 and lists what's missing if any page lacks a header. A Content-Security-Policy in
 // either form (enforced or report-only) counts.

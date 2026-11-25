@@ -142,9 +142,9 @@ test("root scripts and helper scripts use the new paths", () => {
     for (const f of [
         "package.json",
         "scripts/setup.mjs",
-        "scripts/ci-env.sh",
+        "infra/checks/ci-env.sh",
         "scripts/dev-db.mjs",
-        "scripts/smoke.mjs",
+        "infra/checks/smoke.mjs",
         "scripts/place-order.mjs",
     ]) {
         const m = read(f).match(stale);

@@ -2,8 +2,8 @@
 // infra/deploy/README.md. Read only: it reads the project's Identity Toolkit config and changes nothing.
 //
 //   FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" \
-//     node scripts/check-firebase-config.mjs v-menu-e9835 production v-menu.chanraksa.com
-//   ... node scripts/check-firebase-config.mjs v-menu-staging staging staging-v-menu.chanraksa.com
+//     node infra/checks/check-firebase-config.mjs v-menu-e9835 production v-menu.chanraksa.com
+//   ... node infra/checks/check-firebase-config.mjs v-menu-staging staging staging-v-menu.chanraksa.com
 //
 // The token needs only read access to the project (for example the "Firebase Viewer" role).
 // Exits non-zero and lists what's wrong when a setting doesn't match.
@@ -41,7 +41,7 @@ export function checkConfig(config, { production, domains }) {
 async function main([project, env, ...domains]) {
     const token = process.env.FIREBASE_ACCESS_TOKEN;
     if (!project || !["production", "staging"].includes(env) || domains.length === 0 || !token) {
-        console.error("usage: FIREBASE_ACCESS_TOKEN=... node scripts/check-firebase-config.mjs <project> <production|staging> <domain>...");
+        console.error("usage: FIREBASE_ACCESS_TOKEN=... node infra/checks/check-firebase-config.mjs <project> <production|staging> <domain>...");
         process.exit(2);
     }
     const res = await fetch(`https://identitytoolkit.googleapis.com/admin/v2/projects/${encodeURIComponent(project)}/config`, {

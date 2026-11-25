@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { checkConfig } from "./check-firebase-config.mjs";
+import { checkConfig } from "../infra/checks/check-firebase-config.mjs";
 
 // SEC-08: the read-only check of a Firebase project's sign-in settings. These tests feed it sample
 // answers; it is never run against a real project here.

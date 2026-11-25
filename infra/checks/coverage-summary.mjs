@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // B3: a short coverage table in the CI job summary.
 //
-//   node scripts/coverage-summary.mjs coverage/coverage-summary.json --label <name>
+//   node infra/checks/coverage-summary.mjs coverage/coverage-summary.json --label <name>
 //        [--minimum <n> | --config vitest.config.ts] [--target <n>]
 //
 // --config reads the lines minimum from the package's vitest config, so the number lives in one

@@ -3,11 +3,11 @@
 // each staging deploy, before the browser tests, so a missing seed fails with a clear message
 // instead of a timeout.
 //
-//   CASHIER_TOKEN=... node scripts/check-demo-data.mjs <base-url>   (SLUG=demo-bistro, TABLE=T1 by default)
+//   CASHIER_TOKEN=... node infra/checks/check-demo-data.mjs <base-url>   (SLUG=demo-bistro, TABLE=T1 by default)
 //
 // SEC-04: on the servers a table opens only by its QR link token (links by name are off), and
 // only staff can read a table's token. So this reads T1's token as the cashier (CASHIER_TOKEN, from
-// scripts/staff-token.mjs) and checks that its link opens the table, as smoke.mjs does.
+// infra/checks/staff-token.mjs) and checks that its link opens the table, as smoke.mjs does.
 //
 // Exits 1 if the restaurant, its dishes or its table are missing.
 import { appendFileSync } from "node:fs";
@@ -50,7 +50,7 @@ if (menu.status === 0) {
     dishes = items.length;
     if (!dishes) problems.push(`"${slug}" has no dishes on its menu. ${FIX}`);
     if (!cashier) {
-        problems.push(`CASHIER_TOKEN isn't set, so table ${table}'s QR link can't be read (node scripts/staff-token.mjs cashier).`);
+        problems.push(`CASHIER_TOKEN isn't set, so table ${table}'s QR link can't be read (node infra/checks/staff-token.mjs cashier).`);
     } else {
         const tables = await get(`/api/menu/${slug}/tables`, { token: cashier });
         const found = Array.isArray(tables.body) ? tables.body.find((t) => t.name === table) : undefined;

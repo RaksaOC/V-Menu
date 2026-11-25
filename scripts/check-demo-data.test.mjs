@@ -7,7 +7,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
-const script = join(root, "scripts", "check-demo-data.mjs");
+const script = join(root, "infra", "checks", "check-demo-data.mjs");
 
 const MENU = { categories: [{ _id: "c1", name: "Mains", items: [{ _id: "d1", name: "Soup", price: 4 }] }] };
 

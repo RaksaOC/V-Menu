@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # CI only: makes every .env that docker compose needs from the committed .env.example files,
 # with dummy secrets. Nothing here is real; the values only have to agree across services.
-#   bash scripts/ci-env.sh
+#   bash infra/checks/ci-env.sh
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 # Never clobber a developer's real .env files: outside CI, stop if any already exist.
 if [ -z "${CI:-}" ]; then

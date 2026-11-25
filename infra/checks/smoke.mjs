@@ -5,7 +5,7 @@
 //   3. the kitchen queue, read with a chef token, contains that order.
 // The chef token is signed here with the stack's JWT_SECRET, since real staff sign-in needs
 // Firebase. Exits non-zero on the first failure.
-//   JWT_SECRET=... BASE_URL=http://localhost:3400 node scripts/smoke.mjs
+//   JWT_SECRET=... BASE_URL=http://localhost:3400 node infra/checks/smoke.mjs
 import { createHmac } from "node:crypto";
 
 const base = process.env.BASE_URL ?? "http://localhost:3400";

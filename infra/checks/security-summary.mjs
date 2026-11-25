@@ -2,7 +2,7 @@
 // SEC-09: one "Security" summary for every scanner in the pipeline, and the rule for when a
 // scan fails the job.
 //
-//   node scripts/security-summary.mjs <tool> <report> [--label <name>] [--known <file>] [--fail-on-high]
+//   node infra/checks/security-summary.mjs <tool> <report> [--label <name>] [--known <file>] [--fail-on-high]
 //
 //   tool: semgrep (SARIF), zap (ZAP -J JSON), npm-audit (npm audit --json), trivy (trivy --format json)
 //

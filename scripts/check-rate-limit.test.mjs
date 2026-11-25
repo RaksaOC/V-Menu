@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { createServer } from "node:http";
 import { test } from "node:test";
 import { promisify } from "node:util";
-import { parseRateLimit } from "./check-rate-limit.mjs";
+import { parseRateLimit } from "../infra/checks/check-rate-limit.mjs";
 
 const run = promisify(execFile);
 
@@ -20,7 +20,7 @@ test("prints what is left for this network", async () => {
     });
     await new Promise((ok) => server.listen(0, ok));
     try {
-        const { stdout } = await run(process.execPath, ["scripts/check-rate-limit.mjs", `http://127.0.0.1:${server.address().port}`]);
+        const { stdout } = await run(process.execPath, ["infra/checks/check-rate-limit.mjs", `http://127.0.0.1:${server.address().port}`]);
         assert.match(stdout, /29 of 30 sign-in attempts left/);
     } finally {
         server.closeAllConnections();

@@ -55,7 +55,7 @@ jobs:
       # On a PR, fails on a new high finding; on staging and main it only reports.
       - name: Security summary
         if: always()
-        run: node scripts/security-summary.mjs semgrep semgrep.sarif ${{ github.event_name == 'pull_request' && '--fail-on-high' || '' }}
+        run: node infra/checks/security-summary.mjs semgrep semgrep.sarif ${{ github.event_name == 'pull_request' && '--fail-on-high' || '' }}
 
       - name: Upload to code scanning
         if: always() && hashFiles('semgrep.sarif') != ''

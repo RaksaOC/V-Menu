@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SEC-06: check, on a real deployment, that two clients get two rate-limit counters.
 //
-//   node scripts/check-rate-limit.mjs https://<staging host>
+//   node infra/checks/check-rate-limit.mjs https://<staging host>
 //
 // It makes one harmless request (POST /api/auth/logout) and prints how many sign-in attempts this
 // network has left this minute. Run it 3 times from one network (Wi-Fi), then once from another
@@ -20,7 +20,7 @@ export function parseRateLimit(header) {
 
 async function main([base]) {
     if (!base) {
-        console.error("usage: node scripts/check-rate-limit.mjs <base url>");
+        console.error("usage: node infra/checks/check-rate-limit.mjs <base url>");
         return 2;
     }
     const res = await fetch(new URL("/api/auth/logout", base), { method: "POST" });

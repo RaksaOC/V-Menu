@@ -1,5 +1,5 @@
 // SEC-11: each database user reaches only its own databases. The pure comparison is tested here;
-// scripts/check-db-isolation.sh proves the same against a real MongoDB with users (CI: integration).
+// infra/checks/check-db-isolation.sh proves the same against a real MongoDB with users (CI: integration).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -99,12 +99,12 @@ test("the setup README creates exactly the users the check expects", () => {
 test("the integration job runs the check against a real MongoDB", () => {
     const ci = read(".github/workflows/ci.yml");
     const integration = ci.slice(ci.indexOf("\n  integration:\n"), ci.indexOf("\n  e2e:\n"));
-    assert.match(integration, /bash scripts\/check-db-isolation\.sh/);
-    assert.ok(existsSync(join(root, "scripts/check-db-isolation.sh")));
+    assert.match(integration, /bash infra\/checks\/check-db-isolation\.sh/);
+    assert.ok(existsSync(join(root, "infra/checks/check-db-isolation.sh")));
 });
 
 test("the real-database script only works on a throwaway container and proves it can fail", () => {
-    const sh = read("scripts/check-db-isolation.sh");
+    const sh = read("infra/checks/check-db-isolation.sh");
     assert.match(sh, /docker run/);
     assert.match(sh, /--auth/);
     assert.doesNotMatch(sh, /-p \d+:27017|--publish/, "the throwaway MongoDB isn't published on a port");

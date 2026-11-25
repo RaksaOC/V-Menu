@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SEC-11: proves on a real MongoDB that each database user reaches only its own databases.
-# Runs in CI's integration job, and locally with Docker:  bash scripts/check-db-isolation.sh
+# Runs in CI's integration job, and locally with Docker:  bash infra/checks/check-db-isolation.sh
 #
 # It starts its own throwaway MongoDB with no network at all, creates the users from
 # infra/deploy/mongo-users.js (the same roles as on the server) with random passwords, and
 # removes it at the end. It can't reach any other database.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 name="vmenu-db-isolation-$$-$RANDOM"
 admin_password=$(openssl rand -hex 16)
