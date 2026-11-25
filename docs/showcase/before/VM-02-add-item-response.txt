@@ -1,1 +1,0 @@
-POST /items after choosing fixture-photo.jpg (1178916 bytes) -> 500 {"message":"Something went wrong"}

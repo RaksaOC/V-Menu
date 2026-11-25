@@ -22,7 +22,7 @@
     "docker:logs": "docker compose -f infra/compose/docker-compose.yml logs -f",
     "docker:seed": "docker compose -f infra/compose/docker-compose.yml exec -T restaurant-service node dist/seed.js && docker compose -f infra/compose/docker-compose.yml exec -T menu-service node dist/seed.js",
     "docker:order": "node scripts/place-order.mjs",
-    "smoke": "node scripts/smoke.mjs",
+    "smoke": "node infra/checks/smoke.mjs",
     "e2e": "npm --prefix e2e test"
   },
   "devDependencies": {

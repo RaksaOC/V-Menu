@@ -109,7 +109,7 @@ rm /tmp/mongo-users.js
   ```
 - **If the names differ from the table,** update the table and the two `.env.example` files, so the docs say what's real.
 
-CI proves the rules on a real MongoDB: `scripts/check-db-isolation.sh`, in the `integration` job, starts a throwaway MongoDB with these users. It checks that staging can't read or write production's databases and the other way round, and that the check catches a user with one role too many. You can run it locally with Docker.
+CI proves the rules on a real MongoDB: `infra/checks/check-db-isolation.sh`, in the `integration` job, starts a throwaway MongoDB with these users. It checks that staging can't read or write production's databases and the other way round, and that the check catches a user with one role too many. You can run it locally with Docker.
 
 ### 3. Run the setup script
 
@@ -323,11 +323,11 @@ These are console settings, so code can't make them. Do each one in **both** pro
 
 - [ ] Nothing to switch on: the app already requires a verified email before an invite counts. Check that the verification and password-reset email templates read well (Authentication → Templates).
 
-**Check it.** `scripts/check-firebase-config.mjs` reads a project's settings (read only) and lists anything that doesn't match items 2 to 4. It needs a token that can read the project, for example `gcloud auth print-access-token` for an account with the Firebase Viewer role:
+**Check it.** `infra/checks/check-firebase-config.mjs` reads a project's settings (read only) and lists anything that doesn't match items 2 to 4. It needs a token that can read the project, for example `gcloud auth print-access-token` for an account with the Firebase Viewer role:
 
 ```bash
-FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node scripts/check-firebase-config.mjs v-menu-e9835 production v-menu.chanraksa.com
-FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node scripts/check-firebase-config.mjs v-menu-staging staging staging-v-menu.chanraksa.com
+FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node infra/checks/check-firebase-config.mjs v-menu-e9835 production v-menu.chanraksa.com
+FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node infra/checks/check-firebase-config.mjs v-menu-staging staging staging-v-menu.chanraksa.com
 ```
 
 It doesn't check the API key restrictions (item 1); look at those in the console.
@@ -359,13 +359,13 @@ Once a staging deploy has passed its smoke test, the `post-deploy` job in `deplo
 
 | Step | What it checks | If it fails |
 |---|---|---|
-| Demo data | `scripts/check-demo-data.mjs`: `demo-bistro` exists, has dishes and has table `T1`, whose QR link opens it (read as the cashier: links by table name are off on the servers, SEC-04) | The message says how to load the demo data (see below). The browser tests are skipped. |
-| Security headers | `scripts/check-headers.mjs` (SEC-02) on `/`, a customer page and the staff logins | The job summary lists the missing headers per page |
+| Demo data | `infra/checks/check-demo-data.mjs`: `demo-bistro` exists, has dishes and has table `T1`, whose QR link opens it (read as the cashier: links by table name are off on the servers, SEC-04) | The message says how to load the demo data (see below). The browser tests are skipped. |
+| Security headers | `infra/checks/check-headers.mjs` (SEC-02) on `/`, a customer page and the staff logins | The job summary lists the missing headers per page |
 | Browser tests | The e2e specs tagged `@post-deploy`: a customer opens `T1` by its QR link and orders, the kitchen API sees the order, then the cashier cancels it so the kitchen queue stays clean | The Playwright report is in the `post-deploy` artifact |
 | ZAP baseline | Passive OWASP ZAP scan (SEC-09): spider plus passive checks only, no attacks | Fails on a High alert not listed in `.zap/known-high.txt`; the reports are in the `post-deploy` artifact |
 
 - **Every check runs**, even when an earlier one failed, so one run shows everything that's wrong.
-- **Staff tokens.** The checks need a chef and a cashier. The first step signs two 10-minute tokens for the demo restaurant with staging's `JWT_SECRET` (`scripts/staff-token.mjs`) and passes only the tokens on. Playwright never sees the secret, and no server secret reaches this job. The tokens are the seeded demo owner's (`demo-owner`, or `SEED_OWNER_UID` if the seed was run with it): SEC-03 accepts a token only for someone who has that role there, and the seed gives the demo owner all three. They carry session version 0, as the seeded rows do. So don't use **Sign out everywhere** as the demo owner on staging: it would end these tokens too, and the post-deploy checks would fail with 401 until the demo owner's rows are back at version 0.
+- **Staff tokens.** The checks need a chef and a cashier. The first step signs two 10-minute tokens for the demo restaurant with staging's `JWT_SECRET` (`infra/checks/staff-token.mjs`) and passes only the tokens on. Playwright never sees the secret, and no server secret reaches this job. The tokens are the seeded demo owner's (`demo-owner`, or `SEED_OWNER_UID` if the seed was run with it): SEC-03 accepts a token only for someone who has that role there, and the seed gives the demo owner all three. They carry session version 0, as the seeded rows do. So don't use **Sign out everywhere** as the demo owner on staging: it would end these tokens too, and the post-deploy checks would fail with 401 until the demo owner's rows are back at version 0.
 - **CI runs the same checks** in its `e2e` job, after the full suite, with links by table name turned off as on the servers (step "Post-deploy checks, table-name links off").
 - **On failure** the run turns red, and the `post-deploy-failed` job adds a `post-deploy-check <tag> failed` line to staging's `deploy-history.log` (`remote-deploy.sh staging --check-failed`). The monitoring agent ships it, and the **Deploy failed** alert fires. Staging keeps the new version: this is a signal for a person, not a rollback. Roll back by hand if the version is broken.
 - **Demo data missing?** Run it once: Actions → **Deploy** → Run workflow on `staging`, environment `staging`, the current tag, tick **Load demo data**. The post-deploy checks run again after it.

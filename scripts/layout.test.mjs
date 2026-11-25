@@ -3,7 +3,7 @@
 // Run with `npm run test:repo` (node:test, no dependencies). CI runs it in the `test` gate.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -142,11 +142,10 @@ test("root scripts and helper scripts use the new paths", () => {
     for (const f of [
         "package.json",
         "scripts/setup.mjs",
-        "scripts/ci-env.sh",
+        "infra/checks/ci-env.sh",
         "scripts/dev-db.mjs",
-        "scripts/smoke.mjs",
+        "infra/checks/smoke.mjs",
         "scripts/place-order.mjs",
-        "docs/showcase/capture.ts",
     ]) {
         const m = read(f).match(stale);
         assert.equal(m, null, `${f} still uses the old path ${m?.[0]?.trim()}`);
@@ -161,4 +160,31 @@ test("the CI stack action builds and runs infra/compose/docker-compose.yml", () 
     // ...and every later `docker compose` call in the job uses the same file.
     assert.match(action, /COMPOSE_FILE=\$GITHUB_WORKSPACE\/infra\/compose\/docker-compose\.yml/);
     assert.doesNotMatch(action, /services\/[a-z]+-service/);
+});
+
+// The before/after screenshots (B11) are kept outside the repo: 800+ images made every clone heavy,
+// and nothing builds, tests or deploys from them. PR screenshots are attached to the PR instead.
+test("the repo holds no screenshot showcase", () => {
+    assert.ok(!existsSync(join(root, "docs")), "docs/ is gone; keep screenshots outside the repo");
+    assert.doesNotMatch(read(".github/pull_request_template.md"), /docs\/showcase/, "the PR template still asks for docs/showcase");
+});
+
+// What runs against a stack or a deployed site lives with the rest of the operations code; scripts/
+// keeps only what a developer runs by hand, plus these repo tests.
+const CHECKS = [
+    "ci-env.sh",
+    "check-db-isolation.sh",
+    "check-demo-data.mjs",
+    "check-firebase-config.mjs",
+    "check-headers.mjs",
+    "check-rate-limit.mjs",
+    "coverage-summary.mjs",
+    "security-summary.mjs",
+    "smoke.mjs",
+    "staff-token.mjs",
+];
+test("CI and deploy checks live in infra/checks; scripts/ keeps the developer helpers", () => {
+    for (const f of CHECKS) assert.ok(existsSync(at("infra/checks", f)), `infra/checks/${f} is missing`);
+    const helpers = readdirSync(at("scripts")).filter((f) => !f.endsWith(".test.mjs"));
+    assert.deepEqual(helpers.sort(), ["dev-db.mjs", "place-order.mjs", "setup.mjs"]);
 });

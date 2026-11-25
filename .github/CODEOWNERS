@@ -20,7 +20,7 @@ Dockerfile                          @RaksaOC @Ra-Fat
 /.github/actions/                   @RaksaOC @Ra-Fat
 /.github/dependabot.yml             @RaksaOC @Ra-Fat
 /e2e/                               @RaksaOC @Ra-Fat
-/scripts/smoke.mjs                  @RaksaOC @Ra-Fat
+/infra/checks/smoke.mjs             @RaksaOC @Ra-Fat
 
 # Deployment and environments (M4): by Chey Rotana
 /infra/deploy/                      @RaksaOC @cheyrotana
