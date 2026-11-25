@@ -49,14 +49,7 @@ test("a bill is paid (isPaid); the old isPayed is only read for the switch-over"
         "backend/services/order/src/index.ts", // logs the migration
         "scripts/naming.test.mjs", // this test
     ];
-    const left = grep(
-        "isPayed",
-        "frontend/src",
-        "backend/services",
-        "backend/packages",
-        "e2e",
-        "scripts",
-    ).filter(
+    const left = grep("isPayed", "frontend/src", "backend/services", "backend/packages", "e2e", "scripts").filter(
         // tests keep the old name on purpose: they check it still works during the switch-over
         // B5: e2e/screens/data holds answers recorded from the server, which still sends both names
         (line) =>
