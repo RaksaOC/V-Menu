@@ -3,7 +3,7 @@
 // Run with `npm run test:repo` (node:test, no dependencies). CI runs it in the `test` gate.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -167,4 +167,24 @@ test("the CI stack action builds and runs infra/compose/docker-compose.yml", () 
 test("the repo holds no screenshot showcase", () => {
     assert.ok(!existsSync(join(root, "docs")), "docs/ is gone; keep screenshots outside the repo");
     assert.doesNotMatch(read(".github/pull_request_template.md"), /docs\/showcase/, "the PR template still asks for docs/showcase");
+});
+
+// What runs against a stack or a deployed site lives with the rest of the operations code; scripts/
+// keeps only what a developer runs by hand, plus these repo tests.
+const CHECKS = [
+    "ci-env.sh",
+    "check-db-isolation.sh",
+    "check-demo-data.mjs",
+    "check-firebase-config.mjs",
+    "check-headers.mjs",
+    "check-rate-limit.mjs",
+    "coverage-summary.mjs",
+    "security-summary.mjs",
+    "smoke.mjs",
+    "staff-token.mjs",
+];
+test("CI and deploy checks live in infra/checks; scripts/ keeps the developer helpers", () => {
+    for (const f of CHECKS) assert.ok(existsSync(at("infra/checks", f)), `infra/checks/${f} is missing`);
+    const helpers = readdirSync(at("scripts")).filter((f) => !f.endsWith(".test.mjs"));
+    assert.deepEqual(helpers.sort(), ["dev-db.mjs", "place-order.mjs", "setup.mjs"]);
 });
