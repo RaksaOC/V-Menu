@@ -8,7 +8,7 @@
 //   VMENU_STAGING_DBS=a,b,c VMENU_PROD_DBS=d,e,f mongosh ... --file mongo-users.js
 //
 // VMENU_USERS_MODE=create and =isolation create users and write test documents. They are for the
-// throwaway MongoDB in scripts/check-db-isolation.sh, and refuse to run without VMENU_THROWAWAY=1
+// throwaway MongoDB in infra/checks/check-db-isolation.sh, and refuse to run without VMENU_THROWAWAY=1
 // or on anything but this machine's own address.
 
 const DEFAULT_DBS = {
@@ -83,7 +83,7 @@ if (typeof db !== "undefined" && typeof quit === "function") {
     const throwawayOnly = () => {
         const { hostname } = new URL(db.getMongo().getURI());
         if (env.VMENU_THROWAWAY !== "1" || !["127.0.0.1", "localhost"].includes(hostname))
-            fail(`mode "${mode}" is only for the throwaway MongoDB of scripts/check-db-isolation.sh`);
+            fail(`mode "${mode}" is only for the throwaway MongoDB of infra/checks/check-db-isolation.sh`);
         if (!env.VMENU_TEST_PASSWORD) fail("VMENU_TEST_PASSWORD is not set");
     };
 

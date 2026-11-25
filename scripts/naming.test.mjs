@@ -23,7 +23,7 @@ const grep = (pattern, ...paths) => {
 const NEXT_FILES = /^(page|layout|loading|error|not-found|global-error|template|default|route)\.tsx$/;
 const PASCAL = /^[A-Z][A-Za-z0-9]*\.tsx$/;
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*\.(ts|tsx|mjs|js)$/;
-const SOURCE = ["frontend/src", "frontend/test", "backend/packages", "backend/services", "e2e", "scripts", "docs/showcase"];
+const SOURCE = ["frontend/src", "frontend/test", "backend/packages", "backend/services", "e2e", "scripts", "infra/checks"];
 
 test("component files are PascalCase.tsx, and a popup is a Popup", () => {
     const bad = files("frontend/src").filter((f) => f.endsWith(".tsx") && !PASCAL.test(basename(f)) && !NEXT_FILES.test(basename(f)));
@@ -49,15 +49,7 @@ test("a bill is paid (isPaid); the old isPayed is only read for the switch-over"
         "backend/services/order/src/index.ts", // logs the migration
         "scripts/naming.test.mjs", // this test
     ];
-    const left = grep(
-        "isPayed",
-        "frontend/src",
-        "backend/services",
-        "backend/packages",
-        "e2e",
-        "scripts",
-        "docs/showcase/capture.ts",
-    ).filter(
+    const left = grep("isPayed", "frontend/src", "backend/services", "backend/packages", "e2e", "scripts").filter(
         // tests keep the old name on purpose: they check it still works during the switch-over
         // B5: e2e/screens/data holds answers recorded from the server, which still sends both names
         (line) =>

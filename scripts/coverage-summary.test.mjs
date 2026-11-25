@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { promisify } from "node:util";
 
 const run = promisify(execFile);
-const { coverageMarkdown } = await import("./coverage-summary.mjs");
+const { coverageMarkdown } = await import("../infra/checks/coverage-summary.mjs");
 
 const total = (pct) => ({
     total: Object.fromEntries(
@@ -35,10 +35,21 @@ test("CLI appends to the job summary, and copes with a missing report", async ()
     const env = { ...process.env, GITHUB_STEP_SUMMARY: out };
     await run(
         process.execPath,
-        ["scripts/coverage-summary.mjs", join(dir, "coverage-summary.json"), "--label", "frontend", "--minimum", "34", "--target", "60"],
+        [
+            "infra/checks/coverage-summary.mjs",
+            join(dir, "coverage-summary.json"),
+            "--label",
+            "frontend",
+            "--minimum",
+            "34",
+            "--target",
+            "60",
+        ],
         { env },
     );
     assert.match(readFileSync(out, "utf8"), /### Coverage: frontend/);
-    const { stdout } = await run(process.execPath, ["scripts/coverage-summary.mjs", join(dir, "missing.json"), "--label", "x"], { env });
+    const { stdout } = await run(process.execPath, ["infra/checks/coverage-summary.mjs", join(dir, "missing.json"), "--label", "x"], {
+        env,
+    });
     assert.match(stdout, /no coverage report/);
 });

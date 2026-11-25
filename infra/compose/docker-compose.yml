@@ -137,7 +137,7 @@ services:
         NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:-}
         NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:-}
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:-}
-        # B6: set only by scripts/ci-env.sh (e2e runs against the Auth emulator)
+        # B6: set only by infra/checks/ci-env.sh (e2e runs against the Auth emulator)
         NEXT_PUBLIC_E2E: ${NEXT_PUBLIC_E2E:-}
         NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL: ${NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL:-}
         # rewrites are fixed at build time; M6: the aliases on the stack's own frontend network

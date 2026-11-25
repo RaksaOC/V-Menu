@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 env:
-  # Must match the default in scripts/ci-env.sh (dummy, CI only).
+  # Must match the default in infra/checks/ci-env.sh (dummy, CI only).
   JWT_SECRET: ci-dummy-jwt-secret-ci-dummy-jwt-secret-0001
 
 jobs:
@@ -116,7 +116,7 @@ jobs:
       - name: Coverage summary
         if: always() && (matrix.kind == 'service' || matrix.kind == 'web')
         run: >-
-          node "$GITHUB_WORKSPACE/scripts/coverage-summary.mjs" coverage/coverage-summary.json
+          node "$GITHUB_WORKSPACE/infra/checks/coverage-summary.mjs" coverage/coverage-summary.json
           --label "${{ matrix.name }}" --config "${{ matrix.kind == 'web' && 'vitest.config.mts' || 'vitest.config.ts' }}"
           --target "${{ matrix.kind == 'web' && '60' || '80' }}"
 
@@ -193,7 +193,7 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: |
           npm audit --json > "$RUNNER_TEMP/audit.json" || true
-          node "$GITHUB_WORKSPACE"/scripts/security-summary.mjs npm-audit "$RUNNER_TEMP/audit.json" --label "${{ matrix.name }}"
+          node "$GITHUB_WORKSPACE"/infra/checks/security-summary.mjs npm-audit "$RUNNER_TEMP/audit.json" --label "${{ matrix.name }}"
 
   # ---------------------------------------------------------------- real services
   integration:
@@ -210,12 +210,12 @@ jobs:
           node-version: 22
 
       - name: Smoke test (order -> kitchen queue)
-        run: node scripts/smoke.mjs
+        run: node infra/checks/smoke.mjs
 
       # SEC-11: on its own throwaway MongoDB, the staging user can't reach production's databases
       # and the other way round, with the same roles as on the server.
       - name: Database users reach only their own databases
-        run: bash scripts/check-db-isolation.sh
+        run: bash infra/checks/check-db-isolation.sh
 
       - name: Container status and logs
         if: failure()
@@ -264,17 +264,17 @@ jobs:
         run: npm run lighthouse
         working-directory: e2e
       # B7: the staging post-deploy checks, the way they run on a server: table links by name off
-      # (SEC-04), and staff tokens from scripts/staff-token.mjs (SEC-03). The rest of this job runs
+      # (SEC-04), and staff tokens from infra/checks/staff-token.mjs (SEC-03). The rest of this job runs
       # with links by name on, which is how these checks broke on staging unnoticed.
       - name: Post-deploy checks, table-name links off
         if: '!cancelled()'
         run: |
           sed -i 's/^ALLOW_TABLE_NAME_LINKS=.*/ALLOW_TABLE_NAME_LINKS=false/' backend/services/menu/.env backend/services/order/.env
           docker compose up -d --no-build --wait --wait-timeout 120 menu-service order-service
-          CHEF_TOKEN=$(node scripts/staff-token.mjs chef)
-          CASHIER_TOKEN=$(node scripts/staff-token.mjs cashier)
+          CHEF_TOKEN=$(node infra/checks/staff-token.mjs chef)
+          CASHIER_TOKEN=$(node infra/checks/staff-token.mjs cashier)
           export CHEF_TOKEN CASHIER_TOKEN
-          node scripts/check-demo-data.mjs http://localhost:3400
+          node infra/checks/check-demo-data.mjs http://localhost:3400
           cd e2e && npx playwright test --grep @post-deploy
 
       - name: Upload Playwright report

@@ -41,14 +41,14 @@ test("a post-deploy job runs after a staging deploy, never after a rollback or f
 
 test("it absorbs the ZAP job (SEC-09) and the header check (SEC-02)", () => {
     assert.equal(job(deploy, "zap"), "", "the separate zap job is folded into post-deploy");
-    assert.match(post, /node scripts\/check-headers\.mjs "\$TARGET"/);
+    assert.match(post, /node infra\/checks\/check-headers\.mjs "\$TARGET"/);
     assert.match(post, /zap-baseline\.py/);
     assert.match(post, /security-summary\.mjs zap .*--fail-on-high/);
     assert.match(post, /upload-artifact/);
 });
 
 test("it checks the demo restaurant first, and runs the short browser suite", () => {
-    assert.match(post, /node scripts\/check-demo-data\.mjs "\$TARGET"/);
+    assert.match(post, /node infra\/checks\/check-demo-data\.mjs "\$TARGET"/);
     assert.match(post, /playwright test --grep @post-deploy/);
     assert.match(post, /BASE_URL: \$\{\{ needs\.deploy\.outputs\.url \}\}/);
     // Every check runs even when an earlier one failed, so one run shows everything that's wrong.
@@ -61,7 +61,7 @@ test("JWT_SECRET only reaches the step that signs the short-lived staff tokens",
     assert.match(sign, /JWT_SECRET: \$\{\{ secrets\.JWT_SECRET \}\}/);
     assert.match(sign, /::add-mask::/);
     assert.match(sign, /for role in chef cashier/);
-    assert.match(sign, /node scripts\/staff-token\.mjs "\$role"/);
+    assert.match(sign, /node infra\/checks\/staff-token\.mjs "\$role"/);
     const others = post.replace(sign, "");
     assert.doesNotMatch(others, /secrets\.JWT_SECRET/);
     assert.doesNotMatch(others, /secrets\.(SSH_|MONGODB_)/, "the browser tests run without server secrets");
@@ -109,8 +109,8 @@ test("CI runs the post-deploy checks with table-name links off, as on the server
     assert.ok(off, "an e2e step named 'Post-deploy checks, table-name links off'");
     assert.match(off, /ALLOW_TABLE_NAME_LINKS=false/);
     assert.match(off, /docker compose up -d --no-build --wait/);
-    assert.match(off, /node scripts\/staff-token\.mjs/);
-    assert.match(off, /node scripts\/check-demo-data\.mjs/);
+    assert.match(off, /node infra\/checks\/staff-token\.mjs/);
+    assert.match(off, /node infra\/checks\/check-demo-data\.mjs/);
     assert.match(off, /playwright test --grep @post-deploy/);
 });
 

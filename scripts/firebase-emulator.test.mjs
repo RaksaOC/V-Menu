@@ -15,7 +15,7 @@ test("compose runs the Auth emulator only under the e2e profile", () => {
 });
 
 test("CI points the stack at the emulator, with a demo- project", () => {
-    const env = read("scripts/ci-env.sh");
+    const env = read("infra/checks/ci-env.sh");
     assert.match(env, /FIREBASE_PROJECT_ID=demo-vmenu/);
     assert.match(env, /NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-vmenu/);
     assert.match(env, /^E2E=1/m);

@@ -7,9 +7,9 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
-const script = join(root, "scripts", "staff-token.mjs");
+const script = join(root, "infra", "checks", "staff-token.mjs");
 const SECRET = "test-secret-test-secret-test-secret-01";
-const { signStaffToken } = await import("./staff-token.mjs").catch(() => ({}));
+const { signStaffToken } = await import("../infra/checks/staff-token.mjs").catch(() => ({}));
 
 const decode = (token) => {
     const [head, payload, sig] = token.split(".");

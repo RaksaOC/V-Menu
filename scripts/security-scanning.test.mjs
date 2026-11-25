@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
 const read = (p) => readFileSync(join(root, p), "utf8");
-const { summarize } = await import("./security-summary.mjs").catch(() => ({}));
+const { summarize } = await import("../infra/checks/security-summary.mjs").catch(() => ({}));
 
 const sarif = (...levels) => ({
     runs: [

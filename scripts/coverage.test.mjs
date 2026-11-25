@@ -31,7 +31,7 @@ test("ci.yml: the frontend runs its tests with coverage, and every package gets 
     assert.match(ci, /if: matrix\.kind == 'web'\s*\n\s*run: npm test -- --coverage/);
     const summary = ci.slice(ci.indexOf("name: Coverage summary"));
     assert.match(summary, /if: always\(\) && \(matrix\.kind == 'service' \|\| matrix\.kind == 'web'\)/);
-    assert.match(summary, /node .*scripts\/coverage-summary\.mjs/);
+    assert.match(summary, /node .*infra\/checks\/coverage-summary\.mjs/);
     const upload = ci.slice(ci.indexOf("name: Upload coverage report"));
     assert.match(upload, /if: always\(\) && \(matrix\.kind == 'service' \|\| matrix\.kind == 'web'\)/);
 });
