@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 env:
-  # Must match the default in scripts/ci-env.sh (dummy, CI only).
+  # Must match the default in infra/checks/ci-env.sh (dummy, CI only).
   JWT_SECRET: ci-dummy-jwt-secret-ci-dummy-jwt-secret-0001
 
 jobs:
@@ -27,10 +27,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: restaurant-service, dir: services/restaurant-service, kind: service }
-          - { name: menu-service, dir: services/menu-service, kind: service }
-          - { name: order-service, dir: services/order-service, kind: service }
-          - { name: frontend, dir: frontend, kind: web }
+          # backend/ is one npm workspace (CL-02) with one backend/package-lock.json. npm ci in a
+          # package's folder installs only that package's dependencies, so each package must list
+          # everything it imports, tests included (CL-05).
+          - { name: common, dir: backend/packages/common, kind: service, lock: backend/package-lock.json }
+          - { name: contracts, dir: backend/packages/contracts, kind: service, lock: backend/package-lock.json }
+          - { name: restaurant-service, dir: backend/services/restaurant, kind: service, lock: backend/package-lock.json }
+          - { name: menu-service, dir: backend/services/menu, kind: service, lock: backend/package-lock.json }
+          - { name: order-service, dir: backend/services/order, kind: service, lock: backend/package-lock.json }
+          # CL-13: ESLint over the whole backend (services, packages, their tests), from backend/.
+          - { name: backend-lint, dir: backend, kind: lint, lock: backend/package-lock.json }
+          - { name: frontend, dir: frontend, kind: web, lock: frontend/package-lock.json }
+          # Repo-level checks: issue and PR templates, repo hygiene, formatting.
+          - { name: repo, dir: ., kind: repo, lock: package-lock.json }
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -39,16 +48,38 @@ jobs:
       MONGOMS_DOWNLOAD_DIR: /home/runner/.cache/mongodb-binaries
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The repo checks read history (the formatting commit in .git-blame-ignore-revs).
+          fetch-depth: ${{ matrix.kind == 'repo' && '0' || '1' }} # strings: a bare 0 is falsy here
 
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+          cache-dependency-path: ${{ matrix.lock }}
 
       - run: npm ci --no-audit --no-fund
+        if: matrix.kind != 'repo'
+
+      # The repo job only needs the root tools (Prettier, CL-12); skip install scripts, so the
+      # root's mongodb-memory-server doesn't download MongoDB here.
+      - run: npm ci --no-audit --no-fund --ignore-scripts
+        if: matrix.kind == 'repo'
 
       - run: npm run typecheck
+        if: matrix.kind == 'service' || matrix.kind == 'web'
+
+      - name: Import boundaries (dependency-cruiser, CL-03)
+        if: matrix.kind == 'repo'
+        run: npm run deps
+
+      - name: Formatting (Prettier, CL-12)
+        if: matrix.kind == 'repo'
+        run: npm run format:check
+
+      - name: Repo checks (templates)
+        if: matrix.kind == 'repo'
+        run: npm run test:repo
 
       # ---- services: tests with a coverage threshold (vitest.config.ts) ----
       # mongodb-memory-server downloads a MongoDB binary on first use; keep it between runs.
@@ -57,33 +88,40 @@ jobs:
         uses: actions/cache@v6
         with:
           path: /home/runner/.cache/mongodb-binaries
-          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles(format('{0}/package-lock.json', matrix.dir)) }}
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles(matrix.lock) }}
           restore-keys: mongodb-binaries-${{ runner.os }}-
+
+      # PHOTOS-S3: menu-service's tests also run against a real MinIO (test/api/minio.test.ts),
+      # the same one the compose stack uses.
+      - name: Start MinIO (menu photos)
+        if: matrix.name == 'menu-service'
+        working-directory: .
+        run: docker compose -f infra/compose/docker-compose.yml -p vmenu-test up -d --wait --wait-timeout 120 minio
 
       - name: Test with coverage
         if: matrix.kind == 'service'
         run: npm test -- --coverage
+        env:
+          # PHOTOS-S3: compose's MinIO, local-only credentials (infra/compose/docker-compose.yml)
+          S3_TEST_ENDPOINT: ${{ matrix.name == 'menu-service' && 'http://127.0.0.1:9400' || '' }}
+          S3_TEST_ACCESS_KEY: vmenu-local
+          S3_TEST_SECRET_KEY: vmenu-local-only
 
+      # ---- frontend: unit tests (B1) with coverage (B3), then lint and the production build ----
+      - name: Unit tests with coverage
+        if: matrix.kind == 'web'
+        run: npm test -- --coverage
+
+      # ---- coverage, every package (B3): a table in the job summary, the HTML report as an artifact ----
       - name: Coverage summary
-        if: always() && matrix.kind == 'service'
-        run: |
-          node -e '
-            const fs = require("fs");
-            const f = "coverage/coverage-summary.json";
-            if (!fs.existsSync(f)) { console.log("no coverage report"); process.exit(0); }
-            const t = JSON.parse(fs.readFileSync(f, "utf8")).total;
-            const row = (k) => `| ${k} | ${t[k].pct}% | ${t[k].covered}/${t[k].total} |`;
-            const md = [
-              "### Coverage: ${{ matrix.name }}",
-              "| Metric | % | Covered |", "|---|---|---|",
-              ...["lines", "statements", "functions", "branches"].map(row),
-              "", "Threshold: 70% lines.", "",
-            ].join("\n");
-            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + "\n");
-          '
+        if: always() && (matrix.kind == 'service' || matrix.kind == 'web')
+        run: >-
+          node "$GITHUB_WORKSPACE/infra/checks/coverage-summary.mjs" coverage/coverage-summary.json
+          --label "${{ matrix.name }}" --config "${{ matrix.kind == 'web' && 'vitest.config.mts' || 'vitest.config.ts' }}"
+          --target "${{ matrix.kind == 'web' && '60' || '80' }}"
 
       - name: Upload coverage report
-        if: always() && matrix.kind == 'service'
+        if: always() && (matrix.kind == 'service' || matrix.kind == 'web')
         uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.name }}
@@ -91,9 +129,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      # ---- frontend: lint and production build instead of tests ----
       - name: Lint
-        if: matrix.kind == 'web'
+        if: matrix.kind == 'web' || matrix.kind == 'lint'
         run: npm run lint
 
       - name: Cache Next.js build
@@ -128,13 +165,19 @@ jobs:
 
   # ---------------------------------------------------------------- dependency audit
   audit:
-    name: audit (${{ matrix.dir }})
+    # The check names (audit (services/restaurant-service) ...) are required by the staging
+    # ruleset, so they keep the old folder names after CL-01 moved the services to backend/.
+    name: audit (${{ matrix.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        dir: [services/restaurant-service, services/menu-service, services/order-service, frontend]
+        include:
+          - { name: services/restaurant-service, dir: backend/services/restaurant }
+          - { name: services/menu-service, dir: backend/services/menu }
+          - { name: services/order-service, dir: backend/services/order }
+          - { name: frontend, dir: frontend }
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -143,6 +186,14 @@ jobs:
       # Reads package-lock.json only; no install needed.
       - run: npm audit --audit-level=high
         working-directory: ${{ matrix.dir }}
+
+      # SEC-09: the counts in the job summary, pass or fail.
+      - name: Security summary
+        if: always()
+        working-directory: ${{ matrix.dir }}
+        run: |
+          npm audit --json > "$RUNNER_TEMP/audit.json" || true
+          node "$GITHUB_WORKSPACE"/infra/checks/security-summary.mjs npm-audit "$RUNNER_TEMP/audit.json" --label "${{ matrix.name }}"
 
   # ---------------------------------------------------------------- real services
   integration:
@@ -159,7 +210,12 @@ jobs:
           node-version: 22
 
       - name: Smoke test (order -> kitchen queue)
-        run: node scripts/smoke.mjs
+        run: node infra/checks/smoke.mjs
+
+      # SEC-11: on its own throwaway MongoDB, the staging user can't reach production's databases
+      # and the other way round, with the same roles as on the server.
+      - name: Database users reach only their own databases
+        run: bash infra/checks/check-db-isolation.sh
 
       - name: Container status and logs
         if: failure()
@@ -190,13 +246,36 @@ jobs:
       - run: npm ci --no-audit --no-fund
         working-directory: e2e
 
+      # CL-13: the specs are TypeScript too, checked with strict settings
+      - name: Type-check the specs
+        run: npm run typecheck
+        working-directory: e2e
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
         working-directory: e2e
 
-      - name: Customer flow
+      - name: Browser tests (all e2e specs)
         run: npx playwright test
         working-directory: e2e
+
+      # VM-36: Lighthouse accessibility score of the customer menu, at least 90
+      - name: Lighthouse (customer menu, accessibility)
+        run: npm run lighthouse
+        working-directory: e2e
+      # B7: the staging post-deploy checks, the way they run on a server: table links by name off
+      # (SEC-04), and staff tokens from infra/checks/staff-token.mjs (SEC-03). The rest of this job runs
+      # with links by name on, which is how these checks broke on staging unnoticed.
+      - name: Post-deploy checks, table-name links off
+        if: '!cancelled()'
+        run: |
+          sed -i 's/^ALLOW_TABLE_NAME_LINKS=.*/ALLOW_TABLE_NAME_LINKS=false/' backend/services/menu/.env backend/services/order/.env
+          docker compose up -d --no-build --wait --wait-timeout 120 menu-service order-service
+          CHEF_TOKEN=$(node infra/checks/staff-token.mjs chef)
+          CASHIER_TOKEN=$(node infra/checks/staff-token.mjs cashier)
+          export CHEF_TOKEN CASHIER_TOKEN
+          node infra/checks/check-demo-data.mjs http://localhost:3400
+          cd e2e && npx playwright test --grep @post-deploy
 
       - name: Upload Playwright report
         if: failure()

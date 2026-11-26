@@ -1,0 +1,174 @@
+import {
+    callerHeaders,
+    CALLERS,
+    fakeRestaurantLookup,
+    listRoutes,
+    mismatches,
+    NO_APP_TOKEN,
+    only,
+    PUBLIC,
+    startMemoryMongo,
+    trackRoutes,
+    type AccessRow,
+    type Caller,
+} from "@vmenu/common/testing";
+import mongoose from "mongoose";
+import request from "supertest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { fakePhotoStore, NO_OPEN_BILLS } from "../unit/fakes.js";
+
+// SEC-07: every menu-service route, tried as every kind of caller. A new route fails the
+// inventory test until it's added here with its rule.
+process.env.JWT_SECRET = "test-secret-test-secret-test-secret-123";
+process.env.INTERNAL_API_KEY = "internal-test-key";
+trackRoutes();
+const { createApp } = await import("../../src/app.js");
+const { Item } = await import("../../src/models/item.model.js");
+const { Table } = await import("../../src/models/table.model.js");
+const { Category } = await import("../../src/models/category.model.js");
+const { photoKey } = await import("../../src/services/photos.js");
+
+const A = { _id: "665f00000000000000000001", name: "A", slug: "rest-a", ownerId: "owner-a" };
+const B = { _id: "665f00000000000000000002", name: "B", slug: "rest-b", ownerId: "owner-b" };
+const photos = fakePhotoStore(); // PHOTOS-S3: object storage in memory
+const app = createApp({
+    photos,
+    openBills: () => NO_OPEN_BILLS, // VM-15: order-service, mocked
+    lookupRestaurant: fakeRestaurantLookup([A, B]),
+});
+
+const staff = only(["owner", "cashier"]);
+const owner = only(["owner"]);
+
+// [route as Express lists it, rule]
+const MATRIX: [string, AccessRow][] = [
+    ["GET /health", PUBLIC],
+    ["GET /ready", PUBLIC],
+    ["GET /version", PUBLIC],
+    ["GET /metrics", PUBLIC],
+    ["GET /api/menu/:slug/public/items", PUBLIC],
+    ["GET /api/menu/:slug/public/tables/:name", PUBLIC],
+    ["GET /api/menu/:slug/public/t/:token", PUBLIC], // SEC-04: the link token is the proof
+    ["GET /api/menu/:slug/images/:id", PUBLIC],
+    ["GET /api/menu/:slug/items", staff],
+    ["PATCH /api/menu/:slug/items/:id/availability", staff],
+    ["GET /api/menu/:slug/tables", staff],
+    ["PATCH /api/menu/:slug/tables/:id/availability", staff],
+    ["POST /api/menu/:slug/items", owner],
+    ["PUT /api/menu/:slug/items/:id", owner],
+    ["DELETE /api/menu/:slug/items/:id", owner],
+    ["POST /api/menu/:slug/images", owner],
+    ["POST /api/menu/:slug/images/uploads", owner], // PHOTOS-S3: the signed upload form
+    ["POST /api/menu/:slug/tables", owner],
+    ["PUT /api/menu/:slug/tables/:id", owner],
+    ["DELETE /api/menu/:slug/tables/:id", owner],
+    ["POST /api/menu/:slug/tables/:id/qr-token", owner], // SEC-04
+    ["GET /api/menu/:slug/categories", staff],
+    ["POST /api/menu/:slug/categories", owner],
+    ["PUT /api/menu/:slug/categories/order", owner],
+    ["PUT /api/menu/:slug/categories/:id", owner],
+    ["DELETE /api/menu/:slug/categories/:id", owner],
+    ["GET /internal/restaurants/:resId/counts", NO_APP_TOKEN],
+    ["POST /internal/restaurants/:resId/order-check", NO_APP_TOKEN],
+    ["GET /internal/restaurants/:resId/tables/by-token/:token", NO_APP_TOKEN], // SEC-04
+];
+
+let mongo: Awaited<ReturnType<typeof startMemoryMongo>>;
+let headers: Awaited<ReturnType<typeof callerHeaders>>;
+const ids: Record<string, string> = {};
+beforeAll(async () => {
+    mongo = await startMemoryMongo("menu-access");
+    headers = await callerHeaders(A, B);
+});
+afterAll(async () => {
+    await mongo.stop();
+});
+beforeEach(async () => {
+    await mongoose.connection.db!.dropDatabase();
+    const img = `/api/menu/${A.slug}/images/${"a".repeat(24)}`;
+    ids.itemA = String((await Item.create({ name: "Amok", priceCents: 500, image: img, resId: A._id }))._id);
+    const tableA = await Table.create({ name: "T1", resId: A._id, isEnabled: true });
+    ids.tableA = String(tableA._id);
+    ids.tokenA = String(tableA.get("qrToken")); // SEC-04
+    ids.itemB = String((await Item.create({ name: "B dish", priceCents: 300, image: img, resId: B._id }))._id);
+    ids.tableB = String((await Table.create({ name: "B1", resId: B._id, isEnabled: true }))._id);
+    ids.imageB = "c".repeat(24);
+    await photos.put(photoKey(B._id, ids.imageB), Buffer.from("RIFF0000WEBPVP8 "), "image/webp");
+    ids.categoryA = String((await Category.create({ name: "Mains", sortOrder: 0, resId: A._id }))._id);
+    ids.categoryB = String((await Category.create({ name: "B drinks", sortOrder: 0, resId: B._id }))._id);
+});
+
+/** The route with A's slug and A's real ids filled in. */
+function urlFor(route: string) {
+    const path = route.split(" ")[1];
+    return path!
+        .replace(":slug", A.slug)
+        .replace(":resId", A._id)
+        .replace(":name", "T1")
+        .replace(":token", ids.tokenA!)
+        .replace(/items\/:id/, `items/${ids.itemA}`)
+        .replace(/tables\/:id/, `tables/${ids.tableA}`)
+        .replace(/categories\/:id/, `categories/${ids.categoryA}`)
+        .replace(/images\/:id/, `images/${"b".repeat(24)}`);
+}
+
+function send(method: string, url: string, caller: Caller, extra: Record<string, string> = {}, body: object = {}) {
+    const m = method.toLowerCase() as "get" | "post" | "put" | "patch" | "delete";
+    const agent = request(app);
+    return agent[m](url)
+        .set({ ...headers[caller], ...extra })
+        .send(method === "GET" || method === "DELETE" ? undefined : body);
+}
+
+describe("menu-service access matrix (SEC-07)", () => {
+    it("every registered route is in the matrix, and every row is a real route", () => {
+        expect(listRoutes(app)).toEqual(MATRIX.map(([r]) => r).sort());
+    });
+
+    it.each(MATRIX)("%s", async (route, row) => {
+        const method = route.split(" ")[0];
+        const got = {} as Record<Caller, number>;
+        // refused callers first, so an allowed DELETE can't change what they see
+        for (const caller of [...CALLERS].sort((x, y) => Number(row[x] === "ok") - Number(row[y] === "ok")))
+            got[caller] = (await send(method!, urlFor(route), caller)).status;
+        expect(mismatches(row, got)).toEqual([]);
+    });
+
+    it("internal routes answer with the internal key", async () => {
+        const key = { "x-internal-key": "internal-test-key" };
+        expect((await send("GET", `/internal/restaurants/${A._id}/counts`, "guest", key)).status).toBe(200);
+    });
+});
+
+// The classic attack: keep your own restaurant in the URL, put another restaurant's id in it.
+describe("another restaurant's ids, through your own restaurant (SEC-07)", () => {
+    const cases: [string, string, () => string, Caller][] = [
+        ["PUT", "item", () => `/api/menu/${A.slug}/items/${ids.itemB}`, "owner"],
+        ["DELETE", "item", () => `/api/menu/${A.slug}/items/${ids.itemB}`, "owner"],
+        ["PATCH", "item", () => `/api/menu/${A.slug}/items/${ids.itemB}/availability`, "cashier"],
+        ["PUT", "table", () => `/api/menu/${A.slug}/tables/${ids.tableB}`, "owner"],
+        ["DELETE", "table", () => `/api/menu/${A.slug}/tables/${ids.tableB}`, "owner"],
+        ["PATCH", "table", () => `/api/menu/${A.slug}/tables/${ids.tableB}/availability`, "cashier"],
+        ["GET", "image", () => `/api/menu/${A.slug}/images/${ids.imageB}`, "guest"],
+        ["PUT", "category", () => `/api/menu/${A.slug}/categories/${ids.categoryB}`, "owner"],
+        ["DELETE", "category", () => `/api/menu/${A.slug}/categories/${ids.categoryB}`, "owner"],
+    ];
+    it.each(cases)("%s B's %s through A is 404, and B's data is unchanged", async (method, _what, url, caller) => {
+        // a valid body, so only the restaurant check stands in the way
+        const body = url().endsWith("/availability") ? { isEnabled: false } : method === "PUT" ? { name: "Renamed" } : {};
+        const res = await send(method, url(), caller, {}, body);
+        expect(res.status).toBe(404);
+        expect(await Item.findById(ids.itemB).lean()).toMatchObject({ name: "B dish", priceCents: 300, isEnabled: true });
+        expect(await Table.findById(ids.tableB).lean()).toMatchObject({ name: "B1", isEnabled: true });
+        expect(await Category.findById(ids.categoryB).lean()).toMatchObject({ name: "B drinks" });
+    });
+
+    it("B's category can't be put in A's order, or on A's dish (VM-25)", async () => {
+        const order = await send("PUT", `/api/menu/${A.slug}/categories/order`, "owner", {}, { ids: [ids.categoryA, ids.categoryB] });
+        expect(order.status).toBe(400);
+        const dish = await send("PUT", `/api/menu/${A.slug}/items/${ids.itemA}`, "owner", {}, { categoryId: ids.categoryB });
+        expect(dish.status).toBe(400);
+        expect(await Item.findById(ids.itemA).lean()).not.toHaveProperty("categoryId", ids.categoryB);
+        expect(await Category.findById(ids.categoryB).lean()).toMatchObject({ sortOrder: 0 });
+    });
+});

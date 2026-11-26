@@ -5,9 +5,20 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "screens": "bash scripts/screens.sh",
+    "lighthouse": "node scripts/lighthouse.mjs"
   },
   "devDependencies": {
-    "@playwright/test": "^1.65.1"
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "^1.65.1",
+    "@types/pngjs": "^6.0.5",
+    "axe-core": "4.14.0",
+    "jose": "^6.2.18",
+    "jsqr": "^1.4.0",
+    "lighthouse": "13.6.0",
+    "pngjs": "^7.0.0",
+    "typescript": "5.9.3"
   }
 }

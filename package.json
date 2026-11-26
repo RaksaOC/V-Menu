@@ -5,21 +5,31 @@
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "dev:db": "node scripts/dev-db.mjs",
-    "dev": "concurrently -k -n db,restaurant,menu,order,web -c gray,magenta,yellow,cyan,green \"npm:dev:db\" \"npm --prefix services/restaurant-service run dev\" \"npm --prefix services/menu-service run dev\" \"npm --prefix services/order-service run dev\" \"npm --prefix frontend run dev\"",
-    "dev:services": "concurrently -k -n restaurant,menu,order -c magenta,yellow,cyan \"npm --prefix services/restaurant-service run dev\" \"npm --prefix services/menu-service run dev\" \"npm --prefix services/order-service run dev\"",
-    "test": "npm --prefix services/restaurant-service test && npm --prefix services/menu-service test && npm --prefix services/order-service test",
-    "typecheck": "npm --prefix services/restaurant-service run typecheck && npm --prefix services/menu-service run typecheck && npm --prefix services/order-service run typecheck && npm --prefix frontend run typecheck",
-    "seed": "npm --prefix services/restaurant-service run seed && npm --prefix services/menu-service run seed",
-    "docker:up": "GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo local) docker compose up --build -d",
-    "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f",
-    "docker:seed": "docker compose exec -T restaurant-service node dist/seed.js && docker compose exec -T menu-service node dist/seed.js",
+    "dev": "concurrently -k -n db,restaurant,menu,order,web -c gray,magenta,yellow,cyan,green \"npm:dev:db\" \"npm --prefix backend/services/restaurant run dev\" \"npm --prefix backend/services/menu run dev\" \"npm --prefix backend/services/order run dev\" \"npm --prefix frontend run dev\"",
+    "dev:services": "concurrently -k -n restaurant,menu,order -c magenta,yellow,cyan \"npm --prefix backend/services/restaurant run dev\" \"npm --prefix backend/services/menu run dev\" \"npm --prefix backend/services/order run dev\"",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run deps && npm test",
+    "test": "npm --prefix backend test && npm --prefix frontend test && npm run test:repo",
+    "test:repo": "node --test scripts/*.test.mjs",
+    "test:e2e": "npm --prefix e2e test",
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck && npm --prefix e2e run typecheck",
+    "deps": "depcruise --config .dependency-cruiser.cjs backend/services backend/packages frontend/src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "seed": "npm --prefix backend/services/restaurant run seed && npm --prefix backend/services/menu run seed",
+    "docker:up": "GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo local) docker compose --env-file .env -f infra/compose/docker-compose.yml up --build -d",
+    "docker:down": "docker compose -f infra/compose/docker-compose.yml down",
+    "docker:logs": "docker compose -f infra/compose/docker-compose.yml logs -f",
+    "docker:seed": "docker compose -f infra/compose/docker-compose.yml exec -T restaurant-service node dist/seed.js && docker compose -f infra/compose/docker-compose.yml exec -T menu-service node dist/seed.js",
     "docker:order": "node scripts/place-order.mjs",
-    "smoke": "node scripts/smoke.mjs",
+    "smoke": "node infra/checks/smoke.mjs",
     "e2e": "npm --prefix e2e test"
   },
   "devDependencies": {
     "concurrently": "^10.0.7",
-    "mongodb-memory-server": "^11.3.0"
+    "dependency-cruiser": "^18.9.0",
+    "mongodb-memory-server": "^11.3.0",
+    "prettier": "^3.10.1",
+    "typescript": "^5.9.3"
   }
 }

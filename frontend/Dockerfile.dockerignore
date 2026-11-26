@@ -1,0 +1,16 @@
+# The frontend image is built from the repo root (CL-05). Send only what it needs.
+*
+!frontend
+!backend/packages/contracts/src
+frontend/node_modules
+frontend/.next
+frontend/out
+frontend/coverage
+frontend/test
+frontend/vitest.config.mts
+frontend/Dockerfile*
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+**/*.log
+**/.DS_Store

@@ -1,0 +1,45 @@
+import type { Bill, MenuItem, Order, Overview, Restaurant, StaffMember, Table } from "@vmenu/contracts";
+
+// API answers the frontend tests mock, typed by @vmenu/contracts and checked against its schemas
+// (test/contracts.test.ts), so a mock can't drift from what the services really send (CL-05).
+export const dish: MenuItem = { _id: "665f00000000000000000011", name: "Kuy Teav", priceCents: 250, image: "/k.jpg", isEnabled: true };
+export const table: Table = { _id: "665f00000000000000000021", name: "T1", isEnabled: true, qrToken: "AbCdEfGhIjKlMnOpQrSt_-" };
+export const order: Order = {
+    _id: "665f00000000000000000031",
+    table: "T1",
+    status: "pending",
+    createdAt: "2026-11-23T10:00:00.000Z",
+    orderedItems: [{ item: dish, quantity: 2 }],
+};
+export const bill: Bill = {
+    _id: "665f00000000000000000041",
+    table: "T1",
+    isPaid: false,
+    createdAt: "2026-11-23T10:00:00.000Z",
+    orders: [order],
+    lines: [{ _id: dish._id, name: dish.name, priceCents: dish.priceCents, quantity: 2, totalCents: 500 }],
+    subtotalCents: 500,
+    totalCents: 500,
+};
+export const overview: Overview = {
+    activeTableCount: 1,
+    unpaidBillCount: 0,
+    tableCount: 4,
+    itemCount: 4,
+    orderCount: 2,
+    paymentCount: 1,
+    revenueCents: 500,
+    from: null,
+    to: null,
+};
+export const restaurant: Restaurant = { _id: "665f00000000000000000001", name: "Demo Bistro", slug: "demo-bistro", ownerId: "owner1" };
+export const staffMember: StaffMember = {
+    _id: "665f00000000000000000051",
+    name: "Bob",
+    tenantId: "bob",
+    email: "bob@x.test",
+    role: "chef",
+    resId: "665f00000000000000000001",
+    createdAt: "2026-11-23T10:00:00.000Z",
+    updatedAt: "2026-11-23T10:00:00.000Z",
+};

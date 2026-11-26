@@ -1,0 +1,178 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { Plus, Printer, Table as TableIcon } from "lucide-react";
+import type { CreateTableBody, Table } from "@vmenu/contracts";
+import { Button, Chip, Skeleton, toast } from "@/components/ui";
+import { printQrCards } from "@/components/qr/print";
+import { tableUrl } from "@/lib/table-url";
+import { apiErrorCode, apiErrorMessage, apiStatus } from "@/lib/api";
+import { useRestaurantName } from "@/lib/public-restaurant";
+import { createTable, deleteTable, getTables, resetTableQrToken, setTableAvailability, updateTable } from "@/features/restaurant/api";
+import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
+import TableCard from "./TableCard";
+import TableForm from "./TableForm";
+
+/**
+ * A restaurant's tables (CL-09; was two copies). The owner adds, renames, deletes and prints QR
+ * codes; the cashier opens and closes tables.
+ */
+export default function Tables({ role }: { role: "owner" | "cashier" }) {
+    const slug = useRestaurantSlug();
+    const restaurantName = useRestaurantName(slug) ?? undefined; // VM-21: on the QR popup and printed cards
+    const [tables, setTables] = useState<Table[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [editing, setEditing] = useState<Table | "new" | null>(null);
+
+    const load = useCallback(async () => {
+        if (!slug) return;
+        try {
+            setTables(await getTables(slug));
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [slug]);
+
+    useEffect(() => {
+        load();
+    }, [load]);
+
+    async function toggle(table: Table) {
+        const isEnabled = !table.isEnabled;
+        setTables((all) => all.map((t) => (t._id === table._id ? { ...t, isEnabled } : t)));
+        try {
+            await setTableAvailability(slug, table._id, isEnabled);
+            toast.info(`Table ${table.name} ${isEnabled ? "opened" : "closed"}`);
+        } catch {
+            setTables((all) => all.map((t) => (t._id === table._id ? table : t)));
+            toast.error(`Could not ${isEnabled ? "open" : "close"} table ${table.name}`);
+        }
+    }
+
+    async function create(input: CreateTableBody) {
+        try {
+            await createTable(slug, input);
+            setEditing(null);
+            await load();
+            return "ok" as const;
+        } catch (err) {
+            // VM-16: a taken name is 409, said in the popup next to the name
+            return apiErrorCode(err) === "NAME_TAKEN" && input.type === "manual" ? ("taken" as const) : ("error" as const);
+        }
+    }
+
+    async function rename(id: string, name: string) {
+        try {
+            await updateTable(slug, id, { name });
+            setEditing(null);
+            await load();
+            return "ok" as const;
+        } catch (err) {
+            if (apiErrorCode(err) === "TABLE_HAS_OPEN_BILL") return { reason: apiErrorMessage(err, "") }; // VM-15
+            return apiStatus(err) === 409 || apiStatus(err) === 400 ? ("taken" as const) : ("error" as const);
+        }
+    }
+
+    // SEC-04: a new QR link for the table, e.g. when a printed code was taken
+    async function resetQr(id: string) {
+        try {
+            const table = await resetTableQrToken(slug, id);
+            setEditing(null);
+            await load();
+            toast.info(`Table ${table.name} has a new QR code. Print it and replace the old one.`);
+        } catch {
+            toast.error("Could not reset the QR code");
+        }
+    }
+
+    async function remove(id: string) {
+        try {
+            await deleteTable(slug, id);
+            setEditing(null);
+            await load();
+            return "ok" as const;
+        } catch (err) {
+            // VM-15: a table with an unpaid bill stays; the popup says why
+            if (apiErrorCode(err) === "TABLE_HAS_OPEN_BILL") return { reason: apiErrorMessage(err, "") };
+            return "error" as const;
+        }
+    }
+
+    if (loading) return <Skeleton variant="table" count={4} />;
+
+    const open = tables.filter((t) => t.isEnabled).length;
+    return (
+        <div className="w-full space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-xl font-semibold text-[var(--ink)]">{role === "owner" ? "Manage Tables" : "Tables"}</h2>
+                    <p className="text-sm text-[var(--muted)]">
+                        {role === "owner"
+                            ? "Open a table when guests sit down. Add, rename and print QR codes here too."
+                            : "Open a table when guests sit down"}
+                    </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Chip tone="ok">{open} open</Chip>
+                    <Chip tone="neutral">{tables.length - open} closed</Chip>
+                    {role === "owner" && tables.length > 0 && (
+                        <Button
+                            variant="outline"
+                            icon={<Printer size={16} aria-hidden />}
+                            onClick={() =>
+                                printQrCards(tables.map((t) => ({ restaurantName, tableName: t.name, url: tableUrl(slug, t.qrToken) })))
+                            }
+                        >
+                            Print all QR codes
+                        </Button>
+                    )}
+                    {role === "owner" && (
+                        <Button icon={<Plus size={16} aria-hidden />} onClick={() => setEditing("new")}>
+                            Add Table
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {tables.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {tables.map((table) =>
+                        role === "owner" ? (
+                            <TableCard
+                                key={table._id}
+                                role="owner"
+                                table={table}
+                                restaurantName={restaurantName}
+                                onEdit={setEditing}
+                                onToggle={toggle}
+                            />
+                        ) : (
+                            <TableCard key={table._id} role="cashier" table={table} restaurantName={restaurantName} onToggle={toggle} />
+                        ),
+                    )}
+                </div>
+            ) : (
+                <div className="flex flex-col items-center py-16 text-center text-[var(--muted)]">
+                    <TableIcon size={40} aria-hidden className="mb-4" />
+                    <h3 className="text-lg font-semibold text-[var(--ink)]">No tables yet</h3>
+                    <p className="mt-1 max-w-md text-sm">
+                        {role === "owner" ? "Add your first table to print its QR code." : "Ask the owner to add the restaurant's tables."}
+                    </p>
+                </div>
+            )}
+
+            {editing && role === "owner" && (
+                <TableForm
+                    table={editing === "new" ? undefined : editing}
+                    onClose={() => setEditing(null)}
+                    onCreate={create}
+                    onRename={rename}
+                    onResetQr={resetQr}
+                    onDelete={remove}
+                />
+            )}
+        </div>
+    );
+}

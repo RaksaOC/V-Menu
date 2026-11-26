@@ -1,7 +1,11 @@
+# Built from the repo root (CL-05), so the API types in backend/packages/contracts are in reach:
+#   docker build -f frontend/Dockerfile .
+# frontend/Dockerfile.dockerignore keeps the context to frontend/ and the contracts' source.
+
 # ---- deps ----
 FROM node:26-slim AS deps
 WORKDIR /app
-COPY package*.json .npmrc* ./
+COPY frontend/package*.json frontend/.npmrc* ./
 RUN npm ci --no-audit --no-fund
 
 # ---- build ----
@@ -23,18 +27,32 @@ ARG NEXT_PUBLIC_FIREBASE_APP_ID
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 ARG NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 ENV NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+# B6: e2e builds only (CI's compose stack). Release builds leave both empty: real Firebase.
+ARG NEXT_PUBLIC_E2E
+ENV NEXT_PUBLIC_E2E=$NEXT_PUBLIC_E2E
+ARG NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL
+ENV NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL=$NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_URL
+# SEC-02: report-only (default) or enforce for the Content-Security-Policy
+ARG CSP_MODE=report-only
+ENV CSP_MODE=$CSP_MODE
+# PHOTOS-S3: object storage's public address (https://files.example.com). The CSP lets the
+# browser post photos to it and load them from it. Empty: not in the CSP.
+ARG S3_PUBLIC_URL=
+ENV S3_PUBLIC_URL=$S3_PUBLIC_URL
 
 # Configure microservice URLs
-ARG RESTAURANT_SERVICE_URL=http://restaurant-service:4101
+ARG RESTAURANT_SERVICE_URL=http://vmenu-restaurant-api:4101
 ENV RESTAURANT_SERVICE_URL=$RESTAURANT_SERVICE_URL
-ARG MENU_SERVICE_URL=http://menu-service:4102
+ARG MENU_SERVICE_URL=http://vmenu-menu-api:4102
 ENV MENU_SERVICE_URL=$MENU_SERVICE_URL
-ARG ORDER_SERVICE_URL=http://order-service:4103
+ARG ORDER_SERVICE_URL=http://vmenu-order-api:4103
 ENV ORDER_SERVICE_URL=$ORDER_SERVICE_URL
 
 # Copy dependencies from the previous stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY frontend/ .
+# tsconfig maps @vmenu/contracts here (../backend from /app). Types only, except money.ts (CL-07), which imports nothing
+COPY backend/packages/contracts/src /backend/packages/contracts/src
 RUN mkdir -p public && npm run build
 
 # ---- run: Next.js standalone server only ----
@@ -64,6 +82,6 @@ EXPOSE 3400
 # Cheap check: bash opens a socket and sends HEAD /favicon.ico (a static file), so no Node process
 # starts and no page is rendered. The old `node -e fetch('/')` check cost ~0.9 CPU-seconds per run.
 # Every 3 s while starting (so deploys and CI see "healthy" quickly), then every 30 s.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --start-interval=3s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --start-interval=3s --retries=3 \
     CMD ["bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/${PORT:-3400} && printf 'HEAD /favicon.ico HTTP/1.0\\r\\n\\r\\n' >&3 && read -r status <&3 && [[ $status == *' 200 '* ]]"]
 CMD ["node", "server.js"]

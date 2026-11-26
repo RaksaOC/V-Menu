@@ -46,12 +46,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: restaurant-service, context: services/restaurant-service }
-          - { name: menu-service, context: services/menu-service }
-          - { name: order-service, context: services/order-service }
-          - { name: frontend, context: frontend }
+          - { name: restaurant-service, context: backend, file: backend/services/restaurant/Dockerfile }
+          - { name: menu-service, context: backend, file: backend/services/menu/Dockerfile }
+          - { name: order-service, context: backend, file: backend/services/order/Dockerfile }
+          - { name: frontend, context: ., file: frontend/Dockerfile }
     env:
-      # Same names docker-compose.prod.yml pulls.
+      # Same names infra/compose/docker-compose.prod.yml pulls (unchanged by the CL-01 move).
       IMAGE: ghcr.io/${{ needs.meta.outputs.owner }}/vmenu-${{ matrix.name }}
     steps:
       - uses: actions/checkout@v7
@@ -77,6 +77,9 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
+          # The services build from backend/ (shared @vmenu/common) with their own Dockerfile;
+          # the frontend has no `file`, so its Dockerfile in the context is used.
+          file: ${{ matrix.file || format('{0}/Dockerfile', matrix.context) }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -92,10 +95,12 @@ jobs:
             NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ vars.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
             NEXT_PUBLIC_FIREBASE_APP_ID=${{ vars.NEXT_PUBLIC_FIREBASE_APP_ID }}
             NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ github.ref_name == 'main' && vars.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '' }}
+            CSP_MODE=${{ vars.CSP_MODE || 'report-only' }}
+            S3_PUBLIC_URL=${{ vars.S3_PUBLIC_URL }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
-      # Fails the release (and so blocks deploy) on a fixable HIGH or CRITICAL CVE.
+      # Scans for fixable HIGH and CRITICAL CVEs; the summary step below fails the release on one.
       # Pinned to a commit: this action's tags have been force-pushed before.
       - name: Scan image (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -103,11 +108,17 @@ jobs:
           image-ref: ${{ env.IMAGE }}:${{ needs.meta.outputs.sha_tag }}
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-          exit-code: "1"
-          format: table
+          exit-code: "0" # the next step decides, after writing the summary
+          format: json
+          output: trivy.json
         env:
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      # Fails the release (and so blocks deploy) on a fixable HIGH or CRITICAL CVE, and lists
+      # them in the job summary (SEC-09).
+      - name: Security summary (Trivy)
+        run: node infra/checks/security-summary.mjs trivy trivy.json --label "${{ matrix.name }}" --fail-on-high
 
       - name: Summary
         run: |

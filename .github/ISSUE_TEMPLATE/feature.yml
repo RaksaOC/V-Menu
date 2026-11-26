@@ -1,0 +1,46 @@
+name: Feature request
+description: A new feature or a change to how V-Menu works.
+title: "[Feature] "
+labels: [feature]
+body:
+  - type: input
+    id: ticket
+    attributes:
+      label: Ticket ID
+      description: If this feature belongs to a ticket in the task document, for example VM-25. Leave empty otherwise.
+      placeholder: VM-25
+    validations:
+      required: false
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who is stuck, and what can't they do today? Describe the problem before the solution.
+      placeholder: A cashier can't see new orders without reloading the page.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: What should change, and in which service or page.
+    validations:
+      required: true
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: How we know it works, ideally something that can be checked on staging.
+      placeholder: On staging, a new order appears on the cashier screen within 5 seconds without a reload.
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 - blocks a real restaurant from using the app
+        - P1 - a broken or missing step in a main journey
+        - P2 - usability and polish
+    validations:
+      required: false

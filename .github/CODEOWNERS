@@ -5,14 +5,14 @@
 
 *                                   @RaksaOC
 
-# App: services and frontend (lead)
-/services/                          @RaksaOC
+# App: backend services and frontend (lead)
+/backend/                           @RaksaOC
 /frontend/                          @RaksaOC
 
 # Containers (M2): Dockerfiles and Compose, by Ra-Fat
 Dockerfile                          @RaksaOC @Ra-Fat
 .dockerignore                       @RaksaOC @Ra-Fat
-/docker-compose*.yml                @RaksaOC @Ra-Fat
+/infra/compose/                     @RaksaOC @Ra-Fat
 
 # CI/CD and registry (M3): by Ra-Fat
 /.github/workflows/ci.yml           @RaksaOC @Ra-Fat
@@ -20,16 +20,16 @@ Dockerfile                          @RaksaOC @Ra-Fat
 /.github/actions/                   @RaksaOC @Ra-Fat
 /.github/dependabot.yml             @RaksaOC @Ra-Fat
 /e2e/                               @RaksaOC @Ra-Fat
-/scripts/smoke.mjs                  @RaksaOC @Ra-Fat
+/infra/checks/smoke.mjs             @RaksaOC @Ra-Fat
 
 # Deployment and environments (M4): by Chey Rotana
-/deploy/                            @RaksaOC @cheyrotana
+/infra/deploy/                      @RaksaOC @cheyrotana
 /.github/workflows/deploy.yml       @RaksaOC @cheyrotana
 /.github/workflows/rollback.yml     @RaksaOC @cheyrotana
 /.github/workflows/deploy-test.yml  @RaksaOC @cheyrotana
 
-# Observability (M5): add the member who builds /monitoring/ here.
-/monitoring/                        @RaksaOC
+# Observability (M5): add the member who builds /infra/monitoring/ here.
+/infra/monitoring/                  @RaksaOC
 
 # Branch rules and ownership
 /.github/CODEOWNERS                 @RaksaOC

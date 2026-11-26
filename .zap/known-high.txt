@@ -1,0 +1,4 @@
+# SEC-09: ZAP High alerts that are known and accepted, one plugin id per line, with a reason
+# and a ticket. The staging scan fails on any High alert that isn't listed here.
+# Example:
+#   40012  # Cross Site Scripting (Reflected): false positive on /x, see #123

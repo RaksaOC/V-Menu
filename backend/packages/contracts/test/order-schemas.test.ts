@@ -1,0 +1,184 @@
+import { describe, expect, it } from "vitest";
+import * as C from "../src/index.js";
+import { fieldsOf, ID, ok } from "./schema-helpers.js";
+
+// CL-05: valid and invalid examples for every schema.
+describe("internal calls", () => {
+    const line = { item: { _id: ID, name: "Amok", priceCents: 500, image: "/x", isEnabled: true }, quantity: 2 };
+
+    it("OrderCheckRequest: a table and 1 to 100 lines of an id and 1 to 99", () => {
+        ok(C.OrderCheckRequest, { table: "1", items: [{ _id: ID, quantity: 1 }] });
+        expect(fieldsOf(C.OrderCheckRequest, { table: "1", items: [] })).toEqual(["items"]);
+        expect(fieldsOf(C.OrderCheckRequest, { table: "1", items: [{ _id: "x", quantity: 0 }] }).sort()).toEqual([
+            "items.0._id",
+            "items.0.quantity",
+        ]);
+        expect(fieldsOf(C.OrderCheckRequest, { table: "1", items: [{ _id: ID, quantity: 1.5 }] })).toEqual(["items.0.quantity"]);
+        expect(fieldsOf(C.OrderCheckRequest, { items: [{ _id: ID, quantity: 1 }] })).toEqual(["table"]); // SEC-04: or a qrToken
+        fieldsOf(C.OrderCheckRequest, { table: "1", items: Array(101).fill({ _id: ID, quantity: 1 }) });
+    });
+
+    it("OrderCheckResponse, MenuCounts and RestaurantRef", () => {
+        ok(C.OrderCheckResponse, { items: [line] });
+        expect(fieldsOf(C.OrderCheckResponse, { items: [{ ...line, item: { ...line.item, priceCents: "5" } }] })).toEqual([
+            "items.0.item.priceCents",
+        ]);
+        fieldsOf(C.OrderCheckResponse, { items: [] });
+        ok(C.MenuCounts, { numOfTables: 4, numOfActiveTables: 2, numOfItems: 10 });
+        fieldsOf(C.MenuCounts, { numOfTables: -1, numOfActiveTables: 2, numOfItems: 10 });
+        ok(C.RestaurantRef, { _id: ID, name: "A", slug: "a", ownerId: "o" });
+        fieldsOf(C.RestaurantRef, { _id: ID, name: "A" });
+        ok(C.RestaurantRefList, [{ _id: ID, name: "A", slug: "a", ownerId: "o" }]);
+    });
+});
+
+describe("orders", () => {
+    const order = {
+        _id: ID,
+        table: "1",
+        status: "pending",
+        createdAt: "2026-11-23T10:00:00.000Z",
+        orderedItems: [{ item: { _id: ID, name: "Amok", priceCents: 500, image: "/x", isEnabled: true }, quantity: 1 }],
+    };
+
+    it("PlaceOrderBody: the table (text or number) and lines of an item id and 1 to 99; the browser's price is dropped", () => {
+        const body = C.PlaceOrderBody.parse({ table: 7, isDone: true, orderedItems: [{ item: { _id: ID, priceCents: 0 }, quantity: 2 }] });
+        expect(body).toEqual({ table: "7", orderedItems: [{ item: { _id: ID }, quantity: 2 }] });
+        expect(fieldsOf(C.PlaceOrderBody, { table: "", orderedItems: [] }).sort()).toEqual(["orderedItems", "table"]);
+        expect(fieldsOf(C.PlaceOrderBody, { table: "1", orderedItems: [{ item: {}, quantity: 100 }] }).sort()).toEqual([
+            "orderedItems.0.item._id",
+            "orderedItems.0.quantity",
+        ]);
+    });
+
+    it("UpdateBillBody takes isPaid, or the old isPayed for one release (CL-06)", () => {
+        expect(C.UpdateBillBody.parse({ isPaid: true })).toEqual({ isPaid: true });
+        expect(C.UpdateBillBody.parse({ isPayed: false })).toEqual({ isPaid: false });
+        expect(C.UpdateBillBody.parse({ isPaid: true, isPayed: false })).toEqual({ isPaid: true });
+        expect(fieldsOf(C.UpdateBillBody, {})).toEqual(["isPaid"]);
+        expect(fieldsOf(C.UpdateBillBody, { isPayed: "yes" })).toEqual(["isPaid"]);
+        ok(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPaid: true,
+            orders: [],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: "2026-11-23T10:00:00.000Z",
+        });
+        fieldsOf(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPayed: true,
+            orders: [],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: "2026-11-23T10:00:00.000Z",
+        });
+    });
+
+    it("UpdateBillBody, Order, Bill and the pages", () => {
+        ok(C.UpdateBillBody, { isPaid: true });
+        expect(fieldsOf(C.UpdateBillBody, { isPaid: "yes" })).toEqual(["isPaid"]);
+        ok(C.Order, order);
+        fieldsOf(C.Order, { ...order, status: "done" });
+        ok(C.Bill, {
+            _id: ID,
+            table: "1",
+            isPaid: false,
+            orders: [order],
+            lines: [],
+            subtotalCents: 0,
+            totalCents: 0,
+            createdAt: order.createdAt,
+        });
+        ok(C.KitchenHistoryPage, { orders: [order], page: 1, limit: 20, total: 1, pages: 1 });
+        fieldsOf(C.PaidBillsPage, { bills: [], page: 1, limit: 20, total: 1 });
+    });
+
+    it("what a customer sees, and the dashboards", () => {
+        const view = {
+            _id: ID,
+            number: "000001",
+            status: "pending",
+            table: "1",
+            placedAt: order.createdAt,
+            lines: [{ name: "Amok", priceCents: 500, quantity: 1, totalCents: 500 }],
+            totalCents: 500,
+        };
+        ok(C.TableOrderView, view);
+        ok(C.TableBill, { table: "1", orders: [view], lines: [], subtotalCents: 500, totalCents: 500 });
+        // VM-09: the counts are named xCount, and the revenue comes with the range it covers
+        const six = {
+            tableCount: 1,
+            activeTableCount: 1,
+            itemCount: 1,
+            orderCount: 1,
+            unpaidBillCount: 0,
+            paymentCount: 1,
+            revenueCents: 500,
+            from: null,
+            to: null,
+        };
+        ok(C.Overview, six);
+        fieldsOf(C.Overview, { ...six, numOfTables: 1, tableCount: undefined });
+        ok(C.OwnerRestaurantOverview, { ...six, resId: ID, resName: "A" });
+        fieldsOf(C.OwnerRestaurantOverview, six);
+        ok(C.OwnerOverview, {
+            unpaidBillCount: 0,
+            itemCount: 1,
+            orderCount: 1,
+            paymentCount: 1,
+            revenueCents: 500,
+            itemsSoldCount: 1,
+            avgItemsPerOrder: 1,
+            topSellingItems: [{ _id: ID, name: "Amok", quantity: 1 }],
+            from: "2026-11-01T00:00:00.000Z",
+            to: null,
+        });
+    });
+
+    it("a date range for the dashboards: optional dates, from before to (VM-09)", () => {
+        ok(C.DateRangeQuery, {});
+        expect(C.DateRangeQuery.parse({ from: "2026-11-01T00:00:00.000Z" })).toEqual({ from: new Date("2026-11-01T00:00:00.000Z") });
+        expect(fieldsOf(C.DateRangeQuery, { from: "yesterday" })).toEqual(["from"]);
+        expect(fieldsOf(C.DateRangeQuery, { from: "2026-11-10", to: "2026-11-01" })).toEqual(["to"]);
+    });
+});
+
+describe("the size of one order (VM-22)", () => {
+    const lines = (n: number) => Array.from({ length: n }, () => ({ item: { _id: ID }, quantity: 1 }));
+    it("is at most 50 lines", () => {
+        expect(C.MAX_ORDER_LINES).toBe(50);
+        ok(C.PlaceOrderBody, { table: "1", orderedItems: lines(50) });
+        expect(fieldsOf(C.PlaceOrderBody, { table: "1", orderedItems: lines(51) })).toEqual(["orderedItems"]);
+    });
+});
+
+describe("order status (VM-27)", () => {
+    it("five statuses, and the one step after each", () => {
+        expect(C.ORDER_STATUSES).toEqual(["pending", "preparing", "ready", "served", "cancelled"]);
+        expect(C.NEXT_STATUS).toEqual({ pending: "preparing", preparing: "ready", ready: "served" });
+        ok(C.UpdateOrderStatusBody, { status: "ready" });
+        expect(fieldsOf(C.UpdateOrderStatusBody, { status: "done" })).toEqual(["status"]);
+        expect(C.CancelOrderBody.parse({ reason: " Wrong dish " })).toEqual({ reason: "Wrong dish" });
+        expect(fieldsOf(C.CancelOrderBody, { reason: "" })).toEqual(["reason"]);
+        expect(fieldsOf(C.CancelOrderBody, { reason: "x".repeat(201) })).toEqual(["reason"]);
+    });
+
+    it("an order has a status and its history; no isDone", () => {
+        const order = {
+            _id: ID,
+            table: "1",
+            status: "cancelled",
+            statusHistory: [{ status: "pending", at: "2026-11-23T10:00:00.000Z", by: "customer" }],
+            cancelReason: "Wrong dish",
+            createdAt: "2026-11-23T10:00:00.000Z",
+            orderedItems: [],
+        };
+        ok(C.Order, order);
+        expect(fieldsOf(C.Order, { ...order, status: "done" })).toEqual(["status"]);
+    });
+});

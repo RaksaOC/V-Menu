@@ -1,8 +1,9 @@
 name: Start the V-Menu stack
 description: >
-  Builds the four images from docker-compose.yml with Docker layer caching (GitHub Actions
-  cache), starts the stack with dummy-secret .env files, waits for every healthcheck and
-  seeds the demo restaurant. Used by the integration and e2e jobs.
+  Builds the four images from infra/compose/docker-compose.yml with Docker layer caching (GitHub Actions
+  cache), starts the stack with dummy-secret .env files, MinIO for menu photos (PHOTOS-S3) and the
+  Firebase Auth emulator (B6), waits for every healthcheck and seeds the demo restaurant. Used by
+  the integration and e2e jobs.
 
 runs:
   using: composite
@@ -10,10 +11,16 @@ runs:
     - name: Write CI .env files from .env.example (dummy secrets)
       shell: bash
       run: |
-        bash scripts/ci-env.sh
+        bash infra/checks/ci-env.sh
         # Same values for bake (build args) and compose; fixed project name = fixed image names.
         grep '^NEXT_PUBLIC_' .env >> "$GITHUB_ENV"
+        # PHOTOS-S3: MinIO's published port, for compose and the frontend build's CSP
+        grep '^S3_PORT=' .env >> "$GITHUB_ENV"
         echo "COMPOSE_PROJECT_NAME=vmenu" >> "$GITHUB_ENV"
+        # B6: also start the Firebase Auth emulator; staff sign-ins in e2e go there
+        echo "COMPOSE_PROFILES=e2e" >> "$GITHUB_ENV"
+        # Every later `docker compose` call in the job (ps, logs, exec, down) uses this file.
+        echo "COMPOSE_FILE=$GITHUB_WORKSPACE/infra/compose/docker-compose.yml" >> "$GITHUB_ENV"
         echo "GIT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
     - uses: docker/setup-buildx-action@v4
@@ -23,7 +30,9 @@ runs:
     - name: Build images (cached)
       uses: docker/bake-action@v7
       with:
-        source: .
+        # A local source makes Bake run from that folder, so the compose file's relative
+        # build contexts (../../backend/...) mean the same to Bake as to docker compose.
+        source: infra/compose
         files: docker-compose.yml
         load: true
         set: |
@@ -43,6 +52,13 @@ runs:
     - name: Start and wait for every healthcheck
       shell: bash
       run: docker compose up -d --no-build --wait --wait-timeout 180
+
+    # PHOTOS-S3: menu-service is ready only once it reaches MinIO (its /ready checks storage)
+    - name: Photo storage is reachable
+      shell: bash
+      run: |
+        docker compose exec -T menu-service wget -qO- http://127.0.0.1:4102/ready
+        curl -fsS "http://localhost:${S3_PORT}/minio/health/ready"
 
     - name: Seed the demo restaurant, tables and dishes
       shell: bash

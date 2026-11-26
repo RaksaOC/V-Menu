@@ -1,0 +1,66 @@
+"use client";
+
+import { useState } from "react";
+import { CheckCircle, Pencil, QrCode, Table as TableIcon, XCircle } from "lucide-react";
+import type { Table } from "@vmenu/contracts";
+import { Button, Card } from "@/components/ui";
+import TableQrModal from "@/components/qr/TableQrModal";
+import { useRestaurantSlug } from "@/features/restaurant/use-restaurant-slug";
+
+type Props = { table: Table; restaurantName?: string; onToggle: (table: Table) => void } & (
+    { role: "owner"; onEdit: (table: Table) => void } | { role: "cashier" }
+);
+
+/** One table: both roles open and close it and show its QR code (VM-37); the owner also edits it (CL-09). */
+export default function TableCard(props: Props) {
+    const { table } = props;
+    const slug = useRestaurantSlug();
+    const [showQr, setShowQr] = useState(false);
+    return (
+        <Card className="relative flex flex-col items-center gap-4 text-center">
+            <span
+                aria-hidden
+                className={`absolute right-4 top-4 h-2.5 w-2.5 rounded-full ${table.isEnabled ? "bg-[var(--ok)]" : "bg-[var(--bad)]"}`}
+            />
+            <div
+                className={`rounded-[var(--r-card)] p-3 ${table.isEnabled ? "bg-[var(--ok-soft)] text-[var(--ok)]" : "bg-[var(--bad-soft)] text-[var(--bad)]"}`}
+            >
+                <TableIcon size={26} aria-hidden />
+            </div>
+            <h3 className="break-all text-lg font-semibold">Table {table.name}</h3>
+            {/* VM-35: a mono status chip */}
+            <span
+                className={`rounded-[var(--r-chip)] px-2.5 py-1 font-[family-name:var(--f-mono)] text-xs font-semibold uppercase tracking-[var(--label-track)] text-[var(--ink)] ${table.isEnabled ? "bg-[var(--ok-soft)]" : "bg-[var(--surface-2)]"}`}
+            >
+                {table.isEnabled ? "Open" : "Closed"}
+            </span>
+            <div className="mt-2 grid w-full gap-2">
+                <Button
+                    variant={table.isEnabled ? "danger" : "solid"}
+                    icon={table.isEnabled ? <XCircle size={16} aria-hidden /> : <CheckCircle size={16} aria-hidden />}
+                    onClick={() => props.onToggle(table)}
+                    block
+                >
+                    {table.isEnabled ? "Close Table" : "Open Table"}
+                </Button>
+                {props.role === "owner" && (
+                    <Button variant="outline" icon={<Pencil size={16} aria-hidden />} onClick={() => props.onEdit(table)} block>
+                        Edit Table
+                    </Button>
+                )}
+                <Button variant="outline" icon={<QrCode size={16} aria-hidden />} onClick={() => setShowQr(true)} block>
+                    View QR Code
+                </Button>
+            </div>
+            {showQr && (
+                <TableQrModal
+                    slug={slug}
+                    tableName={table.name}
+                    qrToken={table.qrToken}
+                    restaurantName={props.restaurantName}
+                    onClose={() => setShowQr(false)}
+                />
+            )}
+        </Card>
+    );
+}

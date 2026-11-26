@@ -7,11 +7,11 @@ on:
   push:
     branches: [staging]
     paths:
-      - "monitoring/**"
+      - "infra/monitoring/**"
       - ".github/workflows/monitoring.yml"
   pull_request:
     paths:
-      - "monitoring/**"
+      - "infra/monitoring/**"
       - ".github/workflows/monitoring.yml"
   workflow_dispatch:
 
@@ -33,26 +33,26 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Deploy script
-        run: shellcheck monitoring/deploy.sh
+        run: shellcheck infra/monitoring/deploy.sh
 
       - name: Dashboards and alert rules are valid JSON
-        run: for f in monitoring/dashboards/*.json monitoring/alerts/*.json; do jq empty "$f"; done
+        run: for f in infra/monitoring/dashboards/*.json infra/monitoring/alerts/*.json; do jq empty "$f"; done
 
       - name: Compose files
         run: |
-          docker compose -f monitoring/compose.yml -f monitoring/compose.server.yml config --quiet
-          docker compose -f monitoring/compose.yml -f monitoring/compose.local.yml config --quiet
+          docker compose -f infra/monitoring/compose.yml -f infra/monitoring/compose.server.yml config --quiet
+          docker compose -f infra/monitoring/compose.yml -f infra/monitoring/compose.local.yml config --quiet
 
       - name: Alloy config
         run: |
-          docker run --rm -v "$PWD/monitoring/config.alloy:/etc/alloy/config.alloy:ro" \
+          docker run --rm -v "$PWD/infra/monitoring/config.alloy:/etc/alloy/config.alloy:ro" \
             -e MONITOR_HOST -e GRAFANA_PROM_URL -e GRAFANA_PROM_USER -e GRAFANA_LOKI_URL \
             -e GRAFANA_LOKI_USER -e GRAFANA_CLOUD_TOKEN \
             grafana/alloy:v1.22.0 validate /etc/alloy/config.alloy
 
       - name: Docker API filter
         run: |
-          docker run --rm -v "$PWD/monitoring/docker-api.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" \
+          docker run --rm -v "$PWD/infra/monitoring/docker-api.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" \
             haproxy:3.4.8-alpine haproxy -c -f /usr/local/etc/haproxy/haproxy.cfg
 
   deploy:
@@ -79,4 +79,4 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Deploy the monitoring agent
-        run: bash monitoring/deploy.sh
+        run: bash infra/monitoring/deploy.sh

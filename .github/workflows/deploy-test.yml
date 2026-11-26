@@ -11,18 +11,18 @@ on:
   push:
     branches: ["infra/**"]
     paths:
-      - "deploy/**"
+      - "infra/deploy/**"
       - ".github/workflows/deploy.yml"
       - ".github/workflows/rollback.yml"
       - ".github/workflows/deploy-test.yml"
-      - "docker-compose.prod.yml"
+      - "infra/compose/docker-compose.prod.yml"
   pull_request:
     paths:
-      - "deploy/**"
+      - "infra/deploy/**"
       - ".github/workflows/deploy.yml"
       - ".github/workflows/rollback.yml"
       - ".github/workflows/deploy-test.yml"
-      - "docker-compose.prod.yml"
+      - "infra/compose/docker-compose.prod.yml"
   workflow_dispatch:
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: shellcheck
-        run: shellcheck deploy/*.sh
+        run: shellcheck infra/deploy/*.sh
       - name: actionlint
         # Only the deploy workflows: ci.yml and release.yml belong to M3.
         run: >-
@@ -56,9 +56,12 @@ jobs:
       - name: Build two versions of every image
         run: |
           set -euo pipefail
-          for svc in restaurant-service menu-service order-service; do
-            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V1" --build-arg "GIT_SHA=$SHA1" "services/$svc"
-            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V2" --build-arg "GIT_SHA=$SHA2" "services/$svc"
+          # Image names keep the -service suffix; the folders are backend/services/<name>.
+          for name in restaurant menu order; do
+            svc="$name-service"
+            # Built from backend/ so the shared @vmenu/common package is in the context.
+            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V1" --build-arg "GIT_SHA=$SHA1" -f "backend/services/$name/Dockerfile" backend
+            docker build -q -t "ghcr.io/raksaoc/vmenu-$svc:$V2" --build-arg "GIT_SHA=$SHA2" -f "backend/services/$name/Dockerfile" backend
           done
           # A small stand-in frontend: the real one is built and tested by M3's CI. This test is
           # about deploying, and only needs something healthy on port 3400.
@@ -76,6 +79,15 @@ jobs:
       - name: Stand-in for the server's own MongoDB
         run: docker run -d --name host-mongo --network host mongo:7 --bind_ip_all
 
+      # PHOTOS-S3: like the server, MinIO runs in Docker on its own network (Coolify's "coolify");
+      # menu-service joins it (compose.storage-network.yml) and its /ready checks it.
+      - name: Stand-in for the server's MinIO
+        run: |
+          docker network create vmenu-storage-test
+          docker run -d --name test-minio --network vmenu-storage-test \
+            -e MINIO_ROOT_USER=vmenu-test -e MINIO_ROOT_PASSWORD=vmenu-test-only \
+            pgsty/minio:RELEASE.2026-08-04T00-00-00Z server /data
+
       - name: Start an SSH server and make the CI key pair
         run: |
           set -euo pipefail
@@ -88,12 +100,12 @@ jobs:
           sudo STAGING_HOST=staging.localhost PROD_HOST=prod.localhost \
                DEPLOY_PUBKEY="$(cat "$RUNNER_TEMP/ci_key.pub")" \
                MONGO_MODE=host FIREWALL_FORCE=yes \
-               bash deploy/setup-server.sh
+               bash infra/deploy/setup-server.sh
           # A second run must also work.
           sudo STAGING_HOST=staging.localhost PROD_HOST=prod.localhost \
                DEPLOY_PUBKEY="$(cat "$RUNNER_TEMP/ci_key.pub")" \
                MONGO_MODE=host FIREWALL_FORCE=yes \
-               bash deploy/setup-server.sh > /dev/null
+               bash infra/deploy/setup-server.sh > /dev/null
           echo "setup-server.sh is re-runnable"
 
       - name: Run the deploy scenarios
@@ -103,13 +115,19 @@ jobs:
           SSH_KEY=$(cat "$RUNNER_TEMP/ci_key"); export SSH_KEY
           SSH_KNOWN_HOSTS=$(ssh-keyscan -T 10 127.0.0.1 2>/dev/null); export SSH_KNOWN_HOSTS
           export JWT_SECRET=test-jwt-secret-test-jwt-secret-0001 INTERNAL_API_KEY=test-internal-key FIREBASE_PROJECT_ID=v-menu-test
+          # PHOTOS-S3: the stand-in MinIO, one bucket per environment (menu-service makes it here)
+          export S3_ENDPOINT=http://test-minio:9000 S3_PUBLIC_URL=https://files.localhost S3_ACCESS_KEY=vmenu-test S3_SECRET_KEY=vmenu-test-only
+          export STORAGE_NETWORK=vmenu-storage-test
           uris() {
             export MONGODB_URI_RESTAURANT="mongodb://host.docker.internal:27017/vmenu_$1_restaurants"
             export MONGODB_URI_MENU="mongodb://host.docker.internal:27017/vmenu_$1_menu"
             export MONGODB_URI_ORDER="mongodb://host.docker.internal:27017/vmenu_$1_orders"
+            export S3_BUCKET="vmenu-$1"
           }
-          deploy() { TARGET=$1 DEPLOY_ACTION=$2 EXPECTED_SHA=${3:-} bash deploy/ci-deploy.sh; }
+          deploy() { TARGET=$1 DEPLOY_ACTION=$2 EXPECTED_SHA=${3:-} bash infra/deploy/ci-deploy.sh; }
           running() { docker exec "vmenu-$1-menu-service-1" wget -qO- http://127.0.0.1:4102/version; echo; }
+          # PHOTOS-S3: menu-service reaches MinIO over the storage network (its /ready says so)
+          storage_ready() { docker exec "vmenu-$1-menu-service-1" wget -qO- http://127.0.0.1:4102/ready | grep -q '"storage":true'; }
           expect_tag() {
             got=$(sudo cat "/srv/vmenu/$1/.current_tag")
             [[ "$got" == "$2" ]] || { echo "::error::$1 runs $got, expected $2"; exit 1; }
@@ -121,6 +139,7 @@ jobs:
           uris staging
           deploy staging "$V1" "$SHA1"
           expect_tag staging "$V1"
+          storage_ready staging || { echo "::error::staging's menu-service can't reach MinIO"; exit 1; }
           echo "::endgroup::"
 
           echo "::group::2. demo data"
@@ -147,6 +166,7 @@ jobs:
           uris prod
           deploy prod "$V2" "$SHA2"
           expect_tag prod "$V2"
+          storage_ready prod || { echo "::error::prod's menu-service can't reach MinIO"; exit 1; }
           https prod.localhost
           expect_tag staging "$V1"
           echo "::endgroup::"
@@ -160,11 +180,42 @@ jobs:
           https staging.localhost
           echo "::endgroup::"
 
-          echo "::group::8. wrong commit is caught by the /version check"
+          echo "::group::8. a failed post-deploy check is recorded, and nothing else changes (B7)"
+          deploy staging --check-failed
+          sudo tail -n1 /srv/vmenu/staging/deploy-history.log | grep -P "\tpost-deploy-check\t$V1\tfailed\t" \
+            || { echo "::error::no post-deploy-check failed line in the history"; exit 1; }
+          sudo grep -q "^TAG=$V1$" /srv/vmenu/staging/.env \
+            || { echo "::error::recording a failed check changed the server's .env"; exit 1; }
+          expect_tag staging "$V1"
+          if deploy prod --check-failed; then
+            echo "::error::--check-failed is for staging only"; exit 1
+          fi
+          echo "::endgroup::"
+
+          echo "::group::9. wrong commit is caught by the /version check"
           if deploy staging "$V2" "$SHA1"; then
             echo "::error::a /version mismatch should fail the deploy"; exit 1
           fi
           expect_tag staging "$V1"
+          echo "::endgroup::"
+
+          echo "::group::10. a failed rollback puts back the version that was running"
+          deploy staging "$V2" "$SHA2"
+          expect_tag staging "$V2"
+          # V1's menu-service no longer starts, so going back to V1 fails part-way
+          docker tag "ghcr.io/raksaoc/vmenu-menu-service:$V1" vmenu-test-menu-service-v1
+          printf 'FROM alpine:3.20\nCMD ["false"]\n' | docker build -q -t "ghcr.io/raksaoc/vmenu-menu-service:$V1" -
+          if deploy staging --rollback; then
+            echo "::error::a rollback to a version that doesn't start should fail"; exit 1
+          fi
+          expect_tag staging "$V2"
+          running staging | grep -q "$SHA2" || { echo "::error::staging's menu-service isn't back on $V2"; exit 1; }
+          storage_ready staging || { echo "::error::staging's menu-service isn't ready after the failed rollback"; exit 1; }
+          sudo grep -q "^TAG=$V2$" /srv/vmenu/staging/.env || { echo "::error::staging's .env doesn't name $V2"; exit 1; }
+          sudo tail -n2 /srv/vmenu/staging/deploy-history.log | grep -P "\tauto-rollback\t$V2\tok\t" \
+            || { echo "::error::no auto-rollback $V2 ok line in the history"; exit 1; }
+          https staging.localhost
+          docker tag vmenu-test-menu-service-v1 "ghcr.io/raksaoc/vmenu-menu-service:$V1"
           echo "::endgroup::"
 
       - name: Backup
