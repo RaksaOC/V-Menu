@@ -66,7 +66,9 @@ ENV NODE_ENV=production \
     
 # Debian security fixes newer than the base image (Trivy fails the release on fixable HIGHs),
 # and no npm: server.js runs with plain node, and npm's bundled packages get flagged.
-RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+# OS_PATCH_DAY changes daily (release.yml), so the build cache can't keep yesterday's packages.
+ARG OS_PATCH_DAY=unset
+RUN echo "OS packages as of ${OS_PATCH_DAY}" && apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/* \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 COPY --from=build --chown=node:node /app/.next/standalone ./
