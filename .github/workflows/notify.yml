@@ -1,0 +1,43 @@
+# Pipeline messages for the team's Telegram chat (infra/notify/README.md).
+#
+# Every pipeline below sends its result. Those that change the server also say when they start.
+# workflow_run only uses this file from the default branch and runs that branch's code, never a
+# pull request's, so the bot secrets stay safe. Runs from forks are ignored.
+name: Notify
+
+on:
+  workflow_run:
+    workflows: [CI, Code scanning, Release, Deploy, Rollback, Monitoring, Deploy test]
+    types: [requested, completed]
+  workflow_dispatch: # sends a test message
+
+permissions:
+  actions: read # the run's jobs, to name the environment and the jobs that failed
+  contents: read
+
+jobs:
+  telegram:
+    # Skips the runner for starts that get no message, such as every CI run.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.action == 'completed' ||
+      contains(fromJSON('["Release", "Deploy", "Rollback", "Monitoring"]'), github.event.workflow_run.name)))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: infra/notify
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Send to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GH_TOKEN: ${{ github.token }}
+        run: node infra/notify/telegram.mjs
