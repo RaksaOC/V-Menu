@@ -20,7 +20,7 @@ const grep = (pattern, ...paths) => {
 };
 
 // Next.js gives these files their names.
-const NEXT_FILES = /^(page|layout|loading|error|not-found|global-error|template|default|route)\.tsx$/;
+const NEXT_FILES = /^(page|layout|loading|error|not-found|global-error|template|default|route|opengraph-image)\.tsx$/;
 const PASCAL = /^[A-Z][A-Za-z0-9]*\.tsx$/;
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*\.(ts|tsx|mjs|js)$/;
 const SOURCE = ["frontend/src", "frontend/test", "backend/packages", "backend/services", "e2e", "scripts", "infra/checks"];

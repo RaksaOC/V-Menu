@@ -36,8 +36,10 @@ describe("frontend layout (CL-08)", () => {
         expect(fat.map((f) => f.slice(src.length + 1))).toEqual([]);
     });
 
-    it("keeps every component out of app/ (only page, layout and styles there)", () => {
-        const stray = files(join(src, "app")).filter((f) => !/[\\/](page|layout)\.tsx$|\.(css|ico)$/.test(f));
+    it("keeps every component out of app/ (only page, layout, styles and Next's SEO files there)", () => {
+        const stray = files(join(src, "app")).filter(
+            (f) => !/[\\/](page|layout|opengraph-image)\.tsx$|[\\/](robots|sitemap)\.ts$|\.(css|ico)$/.test(f),
+        );
         expect(stray.map((f) => f.slice(src.length + 1))).toEqual([]);
     });
 });
