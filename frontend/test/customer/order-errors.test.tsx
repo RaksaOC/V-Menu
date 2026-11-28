@@ -96,12 +96,12 @@ describe("order errors", () => {
         server.use(
             http.post("*/api/orders/demo-bistro", () =>
                 ++calls === 1
-                    ? HttpResponse.json({ message: "A required service is unavailable" }, { status: 503 })
+                    ? HttpResponse.json({ message: "We're having trouble right now. Please try again in a moment." }, { status: 503 })
                     : HttpResponse.json({ _id: "o1" }, { status: 201 }),
             ),
         );
         const alert = await placeOrder();
-        expect(alert).toHaveTextContent("A required service is unavailable");
+        expect(alert).toHaveTextContent("We're having trouble right now. Please try again in a moment.");
         expect(cart()).toHaveLength(2);
         fireEvent.click(within(alert).getByRole("button", { name: /try again/i }));
         await waitFor(() => expect(router.push).toHaveBeenCalledWith("/demo-bistro/customer/1/orders/o1"));

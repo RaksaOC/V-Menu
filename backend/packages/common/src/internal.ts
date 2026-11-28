@@ -29,7 +29,7 @@ export async function callService<T>(baseUrl: string, path: string, req: Request
         });
     } catch (err) {
         req.log?.error({ err, target: baseUrl + path }, "dependency unreachable");
-        throw new HttpError(503, "A required service is unavailable");
+        throw new HttpError(503, "We're having trouble right now. Please try again in a moment.");
     }
     const body = (await res.json().catch(() => ({}))) as T & { message?: string; code?: string };
     if (!res.ok) {
@@ -41,7 +41,7 @@ export async function callService<T>(baseUrl: string, path: string, req: Request
             throw passedOn;
         }
         req.log?.error({ status: res.status, target: baseUrl + path }, "dependency failed");
-        throw new HttpError(502, "A required service failed");
+        throw new HttpError(502, "We're having trouble right now. Please try again in a moment.");
     }
     return body;
 }

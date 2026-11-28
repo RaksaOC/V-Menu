@@ -58,7 +58,9 @@ describe("customer table page states", () => {
     it("offers Try again after a server error, and loads the menu when it works", async () => {
         let calls = 0;
         api(() =>
-            ++calls === 1 ? HttpResponse.json({ message: "A required service is unavailable" }, { status: 503 }) : HttpResponse.json({}),
+            ++calls === 1
+                ? HttpResponse.json({ message: "We're having trouble right now. Please try again in a moment." }, { status: 503 })
+                : HttpResponse.json({}),
         );
         render(<CustomerMenu />);
         expect(await screen.findByRole("heading", { name: "Something went wrong" })).toBeInTheDocument();

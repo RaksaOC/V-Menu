@@ -36,7 +36,7 @@ describe("the restaurant's name on the customer menu (VM-21)", () => {
     });
 
     it("if the name can't be loaded, the menu still works and the slug is never shown", async () => {
-        api(() => HttpResponse.json({ message: "A required service is unavailable" }, { status: 503 }));
+        api(() => HttpResponse.json({ message: "We're having trouble right now. Please try again in a moment." }, { status: 503 }));
         render(<CustomerMenu />);
         expect(await screen.findByText("Fish Amok")).toBeInTheDocument();
         expect(await screen.findByRole("heading", { level: 1, name: "Menu" })).toBeInTheDocument();

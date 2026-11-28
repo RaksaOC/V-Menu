@@ -47,7 +47,7 @@ export function apiStatus(err: unknown): number | undefined {
 export function apiErrorMessage(err: unknown, fallback = "Something went wrong. Please try again."): string {
     if (err instanceof StorageUploadError) return err.message;
     if (axios.isAxiosError(err)) {
-        if (!err.response) return "Can't reach the server. Check your connection and try again.";
+        if (!err.response) return "Can't reach V-Menu right now. Check your internet connection and try again.";
         const message = (err.response.data as { message?: unknown } | undefined)?.message;
         if (typeof message === "string" && message.trim()) return message;
     }
@@ -92,7 +92,7 @@ export class StorageUploadError extends Error {
 function storageProblem(status: number | undefined, xml: string): string {
     const code = /<Code>([^<]*)<\/Code>/.exec(xml)?.[1] ?? "";
     const message = /<Message>([^<]*)<\/Message>/.exec(xml)?.[1] ?? "";
-    if (status === undefined) return "Can't reach the photo storage. Check your connection and try again.";
+    if (status === undefined) return "Can't reach photo uploads right now. Check your internet connection and try again.";
     if (code === "EntityTooLarge" || /content-length-range|too large/i.test(message)) return "Photos can be at most 5 MB";
     if (/expired/i.test(message) || code === "ExpiredToken") return "The upload link expired. Please try again.";
     if (/Content-Type/i.test(message)) return "Please choose a JPG, PNG or WebP photo";

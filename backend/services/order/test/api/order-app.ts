@@ -26,7 +26,7 @@ export const clients: Clients = {
     listOwnerRestaurants: async (_req, ownerId) => (ownerId === "owner1" ? [R] : []),
     menuCounts: async () => ({ numOfTables: 4, numOfActiveTables: 2, numOfItems: 10 }),
     orderCheck: async (_req, _resId, body) => {
-        if (!menuUp) throw new HttpError(503, "A required service is unavailable");
+        if (!menuUp) throw new HttpError(503, "We're having trouble right now. Please try again in a moment.");
         if (body.table !== "1") throw new HttpError(409, "Table is not available");
         // The browser said the price was 0; the menu answers with the real one.
         return OrderCheckResponse.parse({ items: body.items.map((l) => ({ item: ITEM, quantity: l.quantity })) }); // CL-05
