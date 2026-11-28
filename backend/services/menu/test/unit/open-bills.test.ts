@@ -77,7 +77,7 @@ describe("renaming and deleting a table with an unpaid bill (VM-15)", () => {
         const t = await seating.create(A, { type: "manual", name: "4" });
         const down = {
             hasOpenBill: async () => {
-                throw Object.assign(new Error("A required service is unavailable"), { status: 503 });
+                throw Object.assign(new Error("We're having trouble right now. Please try again in a moment."), { status: 503 });
             },
         };
         expect((await outcome(seating.remove(A, t._id, down))).status).toBe(503);

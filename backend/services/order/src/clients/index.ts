@@ -16,7 +16,12 @@ export type { MenuCounts, OrderLine, RestaurantRef } from "@vmenu/contracts";
 function checked<T>(schema: Schema<T>, service: string) {
     return (answer: unknown): T => {
         const result = schema.safeParse(answer);
-        if (!result.success) throw new HttpError(502, `${service} answered in an unexpected shape`, "UPSTREAM_CONTRACT");
+        if (!result.success) {
+            // The caller sees a plain apology; our logs keep which service answered wrongly.
+            const err = new HttpError(502, "Something went wrong on our side. Please try again.", "UPSTREAM_CONTRACT");
+            err.cause = `${service} answered in an unexpected shape`;
+            throw err;
+        }
         return result.data;
     };
 }

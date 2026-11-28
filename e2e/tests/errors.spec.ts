@@ -32,7 +32,7 @@ test.describe("the table page", () => {
         await page.route(`**/api/menu/${SLUG}/public/tables/**`, async (route) => {
             if (failed) return route.continue();
             failed = true;
-            await route.fulfill({ status: 503, json: { message: "A required service is unavailable" } });
+            await route.fulfill({ status: 503, json: { message: "We're having trouble right now. Please try again in a moment." } });
         });
         await page.goto(`/${SLUG}/customer/T1`);
         await expect(page.getByRole("heading", { name: "Something went wrong" })).toBeVisible();
@@ -86,7 +86,7 @@ test.describe("placing an order", () => {
 
     for (const [status, body] of [
         [409, { message: "Table is not available", code: "TABLE_CLOSED" }],
-        [503, { message: "A required service is unavailable" }],
+        [503, { message: "We're having trouble right now. Please try again in a moment." }],
         // VM-22: too many orders from one phone or one table
         [429, { message: "You're ordering very quickly. Please wait a minute and try again.", code: "TOO_MANY_ORDERS" }],
     ] as const) {
@@ -123,7 +123,7 @@ test.describe("placing an order", () => {
         await page.route(`**/api/orders/${SLUG}`, async (route) => {
             if (first) {
                 first = false;
-                return route.fulfill({ status: 503, json: { message: "A required service is unavailable" } });
+                return route.fulfill({ status: 503, json: { message: "We're having trouble right now. Please try again in a moment." } });
             }
             return route.continue();
         });

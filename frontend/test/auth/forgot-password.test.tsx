@@ -96,7 +96,7 @@ describe("the reset form (VM-14)", () => {
         firebase.sendPasswordResetEmail.mockRejectedValue({ code: "auth/network-request-failed" });
         render(<OwnerLogin />);
         await askForReset(userEvent.setup(), "dara@x.test");
-        expect(await screen.findByText(/couldn't reach the server/i)).toBeTruthy();
+        expect(await screen.findByText(/couldn't reach V-Menu/i)).toBeTruthy();
         expect(screen.queryByText(SENT)).toBeNull();
     });
 

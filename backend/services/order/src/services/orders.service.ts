@@ -62,7 +62,7 @@ export function ordersService({ orders, bills, clients }: { orders: OrdersRepo; 
                 items: orderedItems.map((l) => ({ _id: l.item._id, quantity: l.quantity })),
             });
             const table = checked.table ?? name;
-            if (!table) throw new HttpError(502, "menu-service didn't say which table this is", "UPSTREAM_CONTRACT");
+            if (!table) throw new HttpError(502, "Something went wrong on our side. Please try again.", "UPSTREAM_CONTRACT");
             const lines = withNotes(checked.items, orderedItems);
             let billId: string;
             let order: OrderRecord;
