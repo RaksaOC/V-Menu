@@ -1,0 +1,535 @@
+/* Product pictures for the landing page and the tour: small, live-looking copies of V-Menu's
+   screens. Deep-lab tokens only, so they follow light and dark. */
+
+.surface {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 24px 60px -24px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+    min-width: 0;
+}
+.label {
+    font-family: var(--f-label);
+    text-transform: var(--label-tt);
+    letter-spacing: var(--label-track);
+    font-size: calc(0.72rem * var(--label-scale));
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* ---------- phone ---------- */
+.phone {
+    width: 100%;
+    max-width: 270px;
+    aspect-ratio: 9 / 18.5;
+    padding: 9px;
+    border-radius: 38px;
+    background: #101014;
+    box-shadow:
+        0 0 0 1.5px #2b2b33,
+        0 40px 80px -30px rgba(0, 0, 0, 0.55);
+    position: relative;
+}
+.phone::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    width: 30%;
+    height: 18px;
+    transform: translateX(-50%);
+    border-radius: 12px;
+    background: #101014;
+    z-index: 2;
+}
+.screen {
+    height: 100%;
+    border-radius: 30px;
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.band {
+    background: var(--g-600, #00695a);
+    color: #ffffff;
+    padding: 34px 14px 12px;
+}
+:global(.dark) .band {
+    background: var(--stage);
+}
+.band strong {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 1.02rem;
+}
+.band span {
+    font-size: 0.72rem;
+    opacity: 0.92;
+}
+.cats {
+    display: flex;
+    gap: 6px;
+    padding: 10px 12px 4px;
+    overflow: hidden;
+}
+.cat {
+    flex: none;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    background: var(--card);
+    color: var(--body);
+}
+.catOn {
+    background: var(--ink);
+    color: var(--bg);
+}
+.dishes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px 12px;
+    flex: 1;
+    align-content: start;
+}
+.dish {
+    position: relative;
+    border-radius: 12px;
+    background: var(--card);
+    overflow: hidden;
+    display: grid;
+}
+.dishImg {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 0.78;
+    object-fit: cover;
+    display: block;
+}
+.dishBody {
+    padding: 6px 8px 8px;
+    display: grid;
+    gap: 1px;
+}
+.dishName {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dishPrice {
+    font-size: 0.7rem;
+    color: var(--muted);
+}
+.dishTag {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 0.56rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.92);
+    color: #17171c;
+}
+.add {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--ink);
+    color: var(--bg);
+}
+.addOn {
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+.cartBar {
+    margin: 0 10px 10px;
+    padding: 9px 12px;
+    border-radius: 14px;
+    background: var(--ink);
+    color: var(--bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+.cartCount {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    margin-right: 6px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+
+/* ---------- kitchen board ---------- */
+.board {
+    text-align: left;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100%;
+}
+.boardHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #1d1d24;
+    color: #ffffff;
+    font-size: 0.8rem;
+}
+.boardHead strong {
+    font-family: var(--f-display);
+    font-size: 0.95rem;
+}
+.live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #a7f3d0;
+}
+.liveDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4fd1a5;
+    box-shadow: 0 0 0 0 rgba(79, 209, 165, 0.6);
+    animation: ping 1.8s infinite;
+}
+@keyframes ping {
+    70% {
+        box-shadow: 0 0 0 8px rgba(79, 209, 165, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(79, 209, 165, 0);
+    }
+}
+.cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px;
+    background: var(--stage);
+    min-height: 0;
+}
+.col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+.colHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2px;
+}
+.count {
+    font-size: 0.66rem;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+}
+.ticket {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: grid;
+    gap: 3px;
+    font-size: 0.7rem;
+    color: var(--body);
+}
+.ticketTop {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+}
+.ticketTop strong {
+    color: var(--ink);
+    font-size: 0.76rem;
+}
+.ticketTime {
+    color: var(--muted);
+    white-space: nowrap;
+}
+.ticketNote {
+    color: var(--accent-text);
+    font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .liveDot {
+        animation: none;
+    }
+}
+
+/* ---------- bill ---------- */
+.bill {
+    text-align: left;
+    position: relative;
+    padding: 16px 18px;
+    display: grid;
+    align-content: start;
+    align-self: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
+}
+.billHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.billHead strong {
+    font-family: var(--f-display);
+    color: var(--ink);
+    font-size: 1rem;
+}
+.round {
+    display: grid;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+}
+.line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--body);
+}
+.total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    font-weight: 700;
+}
+.total span:last-child {
+    font-family: var(--f-display);
+    font-size: 1.3rem;
+}
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+}
+.pillOk {
+    background: var(--ok-soft);
+    color: var(--ok);
+}
+.stamp {
+    position: absolute;
+    left: 50%;
+    bottom: 50px;
+    padding: 4px 12px;
+    border: 2.5px solid var(--ok);
+    border-radius: 8px;
+    color: var(--ok);
+    font-family: var(--f-display);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    background: var(--bg);
+}
+
+/* ---------- requests ---------- */
+.requests {
+    text-align: left;
+    display: grid;
+    align-content: start;
+    align-self: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 330px;
+}
+.request {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--pop);
+    font-size: 0.8rem;
+    color: var(--body);
+}
+.request strong {
+    color: var(--ink);
+}
+.bell {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+}
+
+/* ---------- chart ---------- */
+.chart {
+    display: grid;
+    gap: 12px;
+    padding: 16px 18px;
+    width: 100%;
+}
+.chartTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10px;
+}
+.big {
+    font-family: var(--f-display);
+    font-size: 1.7rem;
+    color: var(--ink);
+    line-height: 1;
+}
+.up {
+    font-size: 0.72rem;
+    color: var(--ok);
+    font-weight: 600;
+}
+.bars {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    align-items: end;
+    gap: 8px;
+    height: 120px;
+}
+.bar {
+    border-radius: 6px 6px 3px 3px;
+    background: linear-gradient(to top, var(--accent-mid), var(--accent));
+    transform-origin: bottom;
+}
+.barMuted {
+    background: var(--faint);
+}
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    text-align: center;
+}
+
+/* ---------- small pictures ---------- */
+.qrWrap {
+    position: relative;
+    width: 150px;
+    padding: 12px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: var(--pop);
+    overflow: hidden;
+}
+.qrBig {
+    width: clamp(230px, 24vw, 320px);
+    padding: 18px;
+    border-radius: 26px;
+}
+.qrImg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.beam {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--accent);
+    box-shadow: 0 0 16px 4px rgba(255, 119, 89, 0.55);
+}
+.rows {
+    display: grid;
+    align-content: start;
+    align-self: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 340px;
+}
+.row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    font-size: 0.8rem;
+    color: var(--ink);
+}
+.rowImg {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.grow {
+    flex: 1;
+    min-width: 0;
+}
+.switch {
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    padding: 2px;
+    background: var(--ok);
+    display: flex;
+}
+.switchOff {
+    background: var(--ctl);
+    justify-content: flex-start;
+}
+.knob {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+}
+.switchOn {
+    justify-content: flex-end;
+}
+.avatar {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #17171c;
+}
+.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}

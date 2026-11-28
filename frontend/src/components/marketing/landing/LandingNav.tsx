@@ -1,165 +1,99 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Menu, PlayCircle, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu, Moon, Sun, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ThemeToggle } from "../tour/ThemeToggle";
+import s from "./landing.module.css";
+import { Logo } from "./Parts";
 
-const navItems = [
-    { name: "Home", href: "#" },
-    { name: "About", href: "#about" },
-    { name: "Features", href: "#features" },
-    { name: "How It Works", href: "#how-it-works" },
+const LINKS = [
+    { href: "#how", label: "How it works" },
+    { href: "#features", label: "Features" },
+    { href: "#team", label: "For your team" },
+    { href: "#faq", label: "FAQ" },
 ];
 
-// The fixed top bar: links, theme switch, tour, log in and sign up, and the phone menu.
+// The top bar: it turns frosted once the page scrolls, and folds into a menu on small screens.
 export function LandingNav({ onOpenTour }: { onOpenTour: () => void }) {
-    const router = useRouter();
-    // Same theme switch as the rest of the app: .dark class + data-theme, saved as "vm-theme".
-    const [darkMode, setDarkMode] = useState(false);
-    useEffect(() => setDarkMode(document.documentElement.classList.contains("dark")), []);
-    const toggleTheme = () => {
-        const next = !darkMode;
-        const root = document.documentElement;
-        root.classList.toggle("dark", next);
-        root.dataset.theme = next ? "dark" : "light";
-        try {
-            localStorage.setItem("vm-theme", next ? "dark" : "light");
-        } catch {}
-        setDarkMode(next);
-    };
-
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
+        const onScroll = () => setScrolled(window.scrollY > 12);
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
+    const close = () => setOpen(false);
+
     return (
-        <header
-            className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md" : "bg-transparent"}`}
-        >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center py-4 md:py-6">
-                    <div className="flex items-center">
-                        <a href="#" className="flex items-center">
-                            <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
-                                <span className="text-xl font-bold text-white">V</span>
-                            </div>
-                            <span className="text-xl font-bold text-[var(--accent-text)]">V-Menu</span>
+        <header className={`${s.nav} ${scrolled || open ? s.navScrolled : ""}`}>
+            <div className={`${s.container} ${s.navInner}`}>
+                <Logo />
+                <nav aria-label="Main" className={s.navLinks}>
+                    {LINKS.map((l) => (
+                        <a key={l.href} href={l.href} className={s.navLink}>
+                            {l.label}
                         </a>
-                    </div>
-
-                    {/* Desktop Navigation */}
-                    <nav className="hidden lg:flex items-center space-x-8">
-                        {navItems.map((item) => (
-                            <a
-                                key={item.name}
-                                href={item.href}
-                                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
-                            >
-                                {item.name}
-                            </a>
-                        ))}
-                    </nav>
-
-                    <div className="hidden lg:flex items-center space-x-4">
-                        <button
-                            onClick={toggleTheme}
-                            aria-label="Toggle dark mode"
-                            className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
-                        >
-                            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
-
-                        <button
-                            onClick={onOpenTour}
-                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2"
-                        >
-                            Tour
-                        </button>
-
-                        <button
-                            onClick={() => router.push("/login")}
-                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium px-4 py-2"
-                        >
-                            Log In
-                        </button>
-
-                        <a
-                            onClick={() => {
-                                router.push("/signup");
-                            }}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
-                        >
-                            Sign Up Free
-                        </a>
-                    </div>
-
-                    {/* Mobile Menu Button */}
-                    <div className="lg:hidden flex items-center space-x-4">
-                        <button
-                            onClick={toggleTheme}
-                            aria-label="Toggle dark mode"
-                            className="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
-                        >
-                            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
-
-                        <button
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                        >
-                            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                        </button>
-                    </div>
+                    ))}
+                </nav>
+                <div className={s.navActions}>
+                    <ThemeToggle className={s.iconBtn} />
+                    <button type="button" className={`${s.navLink} ${s.hideSmall}`} onClick={onOpenTour}>
+                        <PlayCircle size={16} aria-hidden="true" /> Tour
+                    </button>
+                    <Link href="/login" className={`${s.navLink} ${s.hideSmall}`}>
+                        Log in
+                    </Link>
+                    <Link href="/signup" className={s.btnSm}>
+                        Start free <ArrowRight size={15} className={s.arrow} aria-hidden="true" />
+                    </Link>
+                    <button
+                        type="button"
+                        className={`${s.iconBtn} ${s.menuBtn}`}
+                        aria-expanded={open}
+                        aria-controls="mobile-menu"
+                        aria-label={open ? "Close menu" : "Open menu"}
+                        onClick={() => setOpen(!open)}
+                    >
+                        {open ? <X size={18} /> : <Menu size={18} />}
+                    </button>
                 </div>
             </div>
-
-            {/* Mobile Menu */}
-            {mobileMenuOpen && (
-                <div className="md:hidden bg-white dark:bg-gray-800 shadow-lg">
-                    <div className="px-2 pt-2 pb-3 space-y-1">
-                        {navItems.map((item) => (
-                            <a
-                                key={item.name}
-                                href={item.href}
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                {item.name}
+            <AnimatePresence>
+                {open && (
+                    <motion.nav
+                        id="mobile-menu"
+                        aria-label="Menu"
+                        className={`${s.container} ${s.mobileMenu}`}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                    >
+                        {LINKS.map((l) => (
+                            <a key={l.href} href={l.href} className={s.navLink} onClick={close}>
+                                {l.label}
                             </a>
                         ))}
-                        <div className="border-t border-gray-200 dark:border-gray-700 my-2 pt-2 flex flex-col space-y-2">
-                            <button
-                                onClick={() => {
-                                    setMobileMenuOpen(false);
-                                    onOpenTour();
-                                }}
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-center"
-                            >
-                                Tour
-                            </button>
-                            <a
-                                onClick={() => router.push("/login")}
-                                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-center"
-                            >
-                                Log In
-                            </a>
-                            <a
-                                onClick={() => router.push("/signup")}
-                                className="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 text-center"
-                            >
-                                Sign Up Free
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        <button
+                            type="button"
+                            className={s.navLink}
+                            onClick={() => {
+                                close();
+                                onOpenTour();
+                            }}
+                        >
+                            <PlayCircle size={16} aria-hidden="true" /> Take the tour
+                        </button>
+                        <Link href="/login" className={s.navLink}>
+                            Log in
+                        </Link>
+                    </motion.nav>
+                )}
+            </AnimatePresence>
         </header>
     );
 }

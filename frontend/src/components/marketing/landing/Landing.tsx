@@ -1,24 +1,36 @@
 "use client";
 
-import { AboutSection } from "./AboutSection";
+import { MotionConfig } from "framer-motion";
+import { Bento } from "./Bento";
 import { CallToAction } from "./CallToAction";
-import { FeaturesSection } from "./FeaturesSection";
-import { HeroSection } from "./HeroSection";
-import { HowItWorksSection } from "./HowItWorksSection";
+import { Faq } from "./Faq";
+import { Hero } from "./Hero";
 import { LandingFooter } from "./LandingFooter";
 import { LandingNav } from "./LandingNav";
+import s from "./landing.module.css";
+import { Marquee } from "./Marquee";
+import { Stats } from "./Stats";
+import { StorySection } from "./StorySection";
+import { TeamSection } from "./TeamSection";
 
-// The original marketing landing page, shown behind (and after) the technical tour.
+// The marketing landing page. Motion is turned down for anyone who asks their device for less.
 export function Landing({ onOpenTour }: { onOpenTour: () => void }) {
     return (
-        <main className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-sans transition-colors duration-300">
-            <LandingNav onOpenTour={onOpenTour} />
-            <HeroSection />
-            <AboutSection />
-            <FeaturesSection />
-            <HowItWorksSection />
-            <CallToAction />
-            <LandingFooter />
-        </main>
+        <MotionConfig reducedMotion="user">
+            <div className={s.page}>
+                <LandingNav onOpenTour={onOpenTour} />
+                <main>
+                    <Hero onOpenTour={onOpenTour} />
+                    <Marquee />
+                    <StorySection />
+                    <Stats />
+                    <Bento />
+                    <TeamSection />
+                    <Faq />
+                    <CallToAction />
+                </main>
+                <LandingFooter onOpenTour={onOpenTour} />
+            </div>
+        </MotionConfig>
     );
 }

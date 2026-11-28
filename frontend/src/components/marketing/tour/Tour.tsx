@@ -10,7 +10,7 @@ import styles from "./Tour.module.css";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-// The technical tour, shown as a centred dialog over the landing page.
+// The product tour, shown as a centred dialog over the landing page.
 export function Tour({ onClose }: { onClose: () => void }) {
     const [index, setIndex] = useState(0);
     const [direction, setDirection] = useState(1);
@@ -64,11 +64,9 @@ export function Tour({ onClose }: { onClose: () => void }) {
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: direction * -24, transition: { duration: 0.2 } }}
                                 >
-                                    <p className={styles.eyebrow}>{step.eyebrow}</p>
                                     <h2 id="tour-title" className={index === 0 ? styles.titleHero : styles.title}>
                                         {step.title}
                                     </h2>
-                                    <p className={styles.lead}>{step.lead}</p>
                                     <ul className={styles.points}>
                                         {step.points.map((point, i) => (
                                             <motion.li
@@ -81,7 +79,6 @@ export function Tour({ onClose }: { onClose: () => void }) {
                                             </motion.li>
                                         ))}
                                     </ul>
-                                    {step.note && <p className={styles.note}>{step.note}</p>}
                                 </motion.div>
                             </AnimatePresence>
                         </section>
@@ -129,7 +126,7 @@ export function Tour({ onClose }: { onClose: () => void }) {
                                 {String(index + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}
                             </span>
                             <button className={styles.primaryBtn} onClick={() => (last ? onClose() : go(index + 1))}>
-                                {last ? "Close tour" : index === 0 ? "Start the tour" : "Next"}
+                                {last ? "Explore V-Menu" : index === 0 ? "Start the tour" : "Next"}
                             </button>
                         </div>
                     </footer>
