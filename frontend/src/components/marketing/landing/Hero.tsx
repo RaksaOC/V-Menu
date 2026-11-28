@@ -54,8 +54,8 @@ export function Hero({ onOpenTour }: { onOpenTour: () => void }) {
 
                 <motion.div
                     className={s.ctaRow}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ y: 16, filter: "blur(10px)" }}
+                    animate={{ y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
                     transition={{ delay: 0.7, duration: 0.8, ease }}
                 >
                     <Link href="/signup" className={s.btn}>
@@ -66,7 +66,12 @@ export function Hero({ onOpenTour }: { onOpenTour: () => void }) {
                     </button>
                 </motion.div>
 
-                <motion.ul className={s.trust} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}>
+                <motion.ul
+                    className={s.trust}
+                    initial={{ y: 10, filter: "blur(8px)" }}
+                    animate={{ y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } }}
+                    transition={{ delay: 0.9, duration: 0.8 }}
+                >
                     {TRUST.map((t) => (
                         <li key={t}>
                             <Check size={16} className={s.tick} aria-hidden="true" /> {t}

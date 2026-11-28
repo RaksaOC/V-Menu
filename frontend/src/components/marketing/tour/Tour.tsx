@@ -39,7 +39,9 @@ export function Tour({ onClose }: { onClose: () => void }) {
 
     return (
         <MotionConfig reducedMotion="user" transition={{ duration: 0.45, ease }}>
-            <motion.div className={styles.backdrop} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div className={styles.backdrop}>
+                {/* The scrim fades on its own layer, so the dialog's text never fades with it. */}
+                <motion.div className={styles.scrim} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
                 <motion.div
                     ref={dialog}
                     tabIndex={-1}
@@ -47,9 +49,9 @@ export function Tour({ onClose }: { onClose: () => void }) {
                     aria-modal="true"
                     aria-labelledby="tour-title"
                     className={styles.dialog}
-                    initial={{ opacity: 0, y: 24, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.2 } }}
+                    initial={{ y: 40, scale: 0.96 }}
+                    animate={{ y: 0, scale: 1 }}
+                    exit={{ y: "110vh", transition: { duration: 0.3 } }}
                 >
                     <button className={styles.close} onClick={onClose} aria-label="Close the tour">
                         <X size={18} />
@@ -60,9 +62,9 @@ export function Tour({ onClose }: { onClose: () => void }) {
                             <AnimatePresence mode="wait" custom={direction} initial={false}>
                                 <motion.div
                                     key={step.id}
-                                    initial={{ opacity: 0, x: direction * 24 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: direction * -24, transition: { duration: 0.2 } }}
+                                    initial={{ x: direction * 24, filter: "blur(8px)" }}
+                                    animate={{ x: 0, filter: "blur(0px)" }}
+                                    exit={{ x: direction * -24, filter: "blur(8px)", transition: { duration: 0.2 } }}
                                 >
                                     <h2 id="tour-title" className={index === 0 ? styles.titleHero : styles.title}>
                                         {step.title}
@@ -71,8 +73,8 @@ export function Tour({ onClose }: { onClose: () => void }) {
                                         {step.points.map((point, i) => (
                                             <motion.li
                                                 key={point}
-                                                initial={{ opacity: 0, y: 8 }}
-                                                animate={{ opacity: 1, y: 0 }}
+                                                initial={{ y: 8, filter: "blur(6px)" }}
+                                                animate={{ y: 0, filter: "blur(0px)" }}
                                                 transition={{ delay: 0.12 + i * 0.07 }}
                                             >
                                                 {point}
@@ -88,9 +90,9 @@ export function Tour({ onClose }: { onClose: () => void }) {
                                 <motion.div
                                     key={step.id}
                                     className={styles.stageInner}
-                                    initial={{ opacity: 0, scale: 0.97 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.18 } }}
+                                    initial={{ scale: 0.92, filter: "blur(8px)" }}
+                                    animate={{ scale: 1, filter: "blur(0px)" }}
+                                    exit={{ scale: 0.96, filter: "blur(8px)", transition: { duration: 0.18 } }}
                                 >
                                     <Scene />
                                 </motion.div>

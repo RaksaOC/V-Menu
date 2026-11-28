@@ -30,13 +30,7 @@ export function BillCard({ table = "Table 4" }: { table?: string }) {
             </div>
             <AnimatePresence initial={false}>
                 {rounds.map((round, r) => (
-                    <motion.div
-                        key={r}
-                        className={s.round}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                    >
+                    <motion.div key={r} className={s.round} initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
                         <span className={s.label}>Round {r + 1}</span>
                         {round.map((l) => (
                             <div key={l.name} className={s.line}>
@@ -58,9 +52,9 @@ export function BillCard({ table = "Table 4" }: { table?: string }) {
                 {paid && (
                     <motion.span
                         className={s.stamp}
-                        initial={{ opacity: 0, scale: 1.8, rotate: -12, x: "-50%" }}
-                        animate={{ opacity: 1, scale: 1, rotate: -12, x: "-50%" }}
-                        exit={{ opacity: 0 }}
+                        initial={{ scale: 0, rotate: -12, x: "-50%" }}
+                        animate={{ scale: 1, rotate: -12, x: "-50%" }}
+                        exit={{ scale: 0 }}
                         transition={{ type: "spring", stiffness: 400, damping: 18 }}
                     >
                         PAID

@@ -55,9 +55,9 @@ export function PhoneMenu({ table = "Table 4" }: { table?: string }) {
                             <motion.span
                                 key={items}
                                 className={s.cartCount}
-                                initial={{ y: -10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                exit={{ y: 10, opacity: 0 }}
+                                initial={{ y: -10, scale: 0 }}
+                                animate={{ y: 0, scale: 1 }}
+                                exit={{ y: 10, scale: 0 }}
                             >
                                 {items}
                             </motion.span>

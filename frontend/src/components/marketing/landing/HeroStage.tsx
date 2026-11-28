@@ -43,8 +43,9 @@ export function HeroStage() {
             className={s.stageWrap}
             onMouseMove={onMove}
             onMouseLeave={onLeave}
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
+            style={{ originY: 0 }}
+            initial={{ scale: 0.86, rotateX: 14 }}
+            animate={{ scale: 1, rotateX: 0 }}
             transition={{ delay: 0.6, duration: 1.1, ease }}
             role="img"
             aria-label="V-Menu at work: a guest adds dishes on their phone, the order appears on the kitchen screen, and the table's bill adds up and is paid."
@@ -67,7 +68,7 @@ export function HeroStage() {
                 <motion.div
                     className={s.flyer}
                     aria-hidden="true"
-                    animate={{ x: [0, 90, 170, 170], y: [0, -150, -250, -250], opacity: [0, 1, 1, 0], scale: [0.7, 1, 0.85, 0.85] }}
+                    animate={{ x: [0, 90, 170, 170], y: [0, -150, -250, -250], scale: [0, 1, 0.85, 0] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", times: [0, 0.4, 0.85, 1] }}
                 >
                     New order · Table 4

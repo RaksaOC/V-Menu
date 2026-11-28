@@ -8,9 +8,13 @@
     place-items: center;
     padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
         max(16px, env(safe-area-inset-left));
+    overflow-y: auto;
+}
+.scrim {
+    position: fixed;
+    inset: 0;
     background: color-mix(in srgb, var(--bg) 55%, transparent);
     backdrop-filter: blur(6px);
-    overflow-y: auto;
 }
 
 .dialog {

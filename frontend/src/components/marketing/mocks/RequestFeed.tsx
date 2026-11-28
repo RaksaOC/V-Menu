@@ -21,9 +21,9 @@ export function RequestFeed({ show = 3 }: { show?: number }) {
                             key={k}
                             layout
                             className={s.request}
-                            initial={{ opacity: 0, y: -16, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 - i * 0.04 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
+                            initial={{ y: -16, scale: 0 }}
+                            animate={{ y: 0, scale: 1 - i * 0.04 }}
+                            exit={{ scale: 0 }}
                             transition={{ type: "spring", stiffness: 300, damping: 26 }}
                         >
                             <motion.span

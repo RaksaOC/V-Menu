@@ -24,18 +24,13 @@ const Phone = ({ table }: { table?: string }) => (
 function Welcome() {
     return (
         <div className={s.welcome}>
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+            <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
                 <Phone />
             </motion.div>
-            <motion.div className={s.welcomeQr} initial={{ x: -16, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+            <motion.div className={s.welcomeQr} initial={{ x: -16, scale: 0.9 }} animate={{ x: 0, scale: 1 }} transition={{ delay: 0.2 }}>
                 <QrScan />
             </motion.div>
-            <motion.div
-                className={s.welcomeBill}
-                initial={{ x: 16, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-            >
+            <motion.div className={s.welcomeBill} initial={{ x: 16, scale: 0.9 }} animate={{ x: 0, scale: 1 }} transition={{ delay: 0.3 }}>
                 <BillCard />
             </motion.div>
         </div>

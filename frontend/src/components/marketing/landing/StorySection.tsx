@@ -32,9 +32,9 @@ export function StorySection() {
                                 <motion.div
                                     key={active}
                                     className={s.stageScene}
-                                    initial={{ opacity: 0, scale: 0.94, y: 20 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.97, y: -16 }}
+                                    initial={{ scale: 0.6, y: 30, filter: "blur(10px)" }}
+                                    animate={{ scale: 1, y: 0, filter: "blur(0px)" }}
+                                    exit={{ scale: 0.6, y: -20, filter: "blur(10px)" }}
                                     transition={{ duration: 0.5, ease }}
                                 >
                                     <Scene />

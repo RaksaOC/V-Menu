@@ -58,8 +58,8 @@ export function TeamRoles() {
                 <motion.div
                     key={r.role}
                     className={s.row}
-                    initial={{ opacity: 0, x: -12 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ x: -12 }}
+                    whileInView={{ x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.12 }}
                 >

@@ -47,11 +47,11 @@ export function KitchenBoard({ compact = false }: { compact?: boolean }) {
                                         return (
                                             <motion.div
                                                 key={k}
-                                                layoutId={`${group}-${k}`}
+                                                layout
                                                 className={s.ticket}
-                                                initial={{ opacity: 0, y: -14, scale: 0.96 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.94 }}
+                                                initial={{ y: -14, scale: 0 }}
+                                                animate={{ y: 0, scale: 1 }}
+                                                exit={{ scale: 0 }}
                                                 transition={{ type: "spring", stiffness: 260, damping: 26 }}
                                             >
                                                 <div className={s.ticketTop}>
