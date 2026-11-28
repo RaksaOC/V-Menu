@@ -5,7 +5,7 @@ export const firebaseCode = (err: unknown) => (err as { code?: string } | null)?
 export function signInMessage(err: unknown): string {
     switch (firebaseCode(err)) {
         case "auth/network-request-failed":
-            return "Can't reach the server. Check your connection and try again.";
+            return "Can't reach V-Menu right now. Check your internet connection and try again.";
         case "auth/too-many-requests":
             return "Too many attempts. Wait a minute, or reset your password.";
         default:

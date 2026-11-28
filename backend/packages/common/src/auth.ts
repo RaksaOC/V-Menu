@@ -146,7 +146,7 @@ export function requireRole(...roles: Role[]) {
             version = await currentVersion(req, user);
         } catch {
             // can't tell: refuse this request, but as an outage, so nobody is signed out by it
-            return next(new HttpError(503, "A required service is unavailable"));
+            return next(new HttpError(503, "We're having trouble right now. Please try again in a moment."));
         }
         // SEC-03: the session was ended (signed out everywhere, removed, role changed); SEC-10 counts it as a bad token
         if (version === null || version !== (user.tv ?? 0)) return next(unauthorized("Your session has ended", "bad_token", user));

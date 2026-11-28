@@ -96,7 +96,7 @@ export function LoginForm({
             // the same answer whether or not the account exists; only a dead connection is different,
             // because then nothing was sent and it says nothing about the email
             if (firebaseCode(err) === "auth/network-request-failed")
-                setProblems({ notice: "Couldn't reach the server. Check your connection and try again." });
+                setProblems({ notice: "Couldn't reach V-Menu. Check your internet connection and try again." });
             else setResetSent(true);
         } finally {
             setBusy(false);

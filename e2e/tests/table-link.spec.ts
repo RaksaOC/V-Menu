@@ -29,7 +29,8 @@ test("the QR code holds the token form; it opens the menu, and a reset replaces 
         expect(code?.data).toBe(new URL(`/${SLUG}/t/${table.qrToken}`, baseURL).href);
 
         await page.goto(code!.data);
-        await expect(page.getByText(`Table ${name}`)).toBeVisible();
+        // exact: the page <title> also contains "Table <name>", and Next may stream it into the body
+        await expect(page.getByText(`Table ${name}`, { exact: true })).toBeVisible();
         await expect(page.getByRole("heading", { name: "Our Menu" })).toBeVisible();
 
         const reset = await page.request.post(`/api/menu/${SLUG}/tables/${table._id}/qr-token`);

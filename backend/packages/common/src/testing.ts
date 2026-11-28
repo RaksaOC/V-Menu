@@ -198,7 +198,7 @@ export function fakeRestaurantLookup<R extends { slug: string }>(
     const list = Array.isArray(restaurants) ? restaurants : Object.values(restaurants);
     return async (_req: unknown, slug: string): Promise<R> => {
         const { HttpError, notFound } = await import("./errors.js");
-        if (down()) throw new HttpError(503, "A required service is unavailable");
+        if (down()) throw new HttpError(503, "We're having trouble right now. Please try again in a moment.");
         const found = list.find((r) => r.slug === slug);
         if (!found) throw notFound("Restaurant not found");
         return found;
